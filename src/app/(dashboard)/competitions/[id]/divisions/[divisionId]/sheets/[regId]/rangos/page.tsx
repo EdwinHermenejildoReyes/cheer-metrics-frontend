@@ -42,11 +42,11 @@ const PART_MAX_OPTS = [
 ];
 
 const PYRAMID_RANGES = [
-  { low: 3.0, high: 3.5, label: 'No cumple (sin 2G)' },
-  { low: 3.5, high: 4.0, label: '2 Hab OP + 2 Estructuras' },
-  { low: 4.0, high: 4.5, label: '1 Hab OP + 3 Estructuras' },
-  { low: 4.5, high: 5.0, label: '1 Hab OP + 4 Estructuras' },
-  { low: 5.0, high: 5.5, label: '2 Hab OP + 4 Estructuras' },
+  { low: 3.0, high: 3.5, label: 'No cumple con 3.5' },
+  { low: 3.5, high: 4.0, label: '2 Hab Dif + 2 Estructuras' },
+  { low: 4.0, high: 4.5, label: '3 Hab Dif + 2 Estructuras' },
+  { low: 4.5, high: 5.0, label: '4 Hab Dif + 2 Estructuras' },
+  { low: 5.0, high: 5.5, label: '5 Hab Dif + 2 Estructuras' },
 ];
 const PYRAMID_FINE_STEPS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
 

@@ -35,6 +35,14 @@ const PART_MAX_OPTS = [
   { value: 0.3, label: 'Avz x MÁX · Elite x GRAN PARTE' },
   { value: 0.5, label: 'Elite x MÁX' },
 ];
+const PYRAMID_RANGO = [
+  { low: 3.0, high: 3.5, label: 'No cumple con 3.5' },
+  { low: 3.5, high: 4.0, label: '2 Hab Dif + 2 Estructuras' },
+  { low: 4.0, high: 4.5, label: '3 Hab Dif + 2 Estructuras' },
+  { low: 4.5, high: 5.0, label: '4 Hab Dif + 2 Estructuras' },
+  { low: 5.0, high: 5.5, label: '5 Hab Dif + 2 Estructuras' },
+];
+const PYRAMID_FINE_STEPS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
 const TOSS_DIFF_OPTS = [0.0, 1.0, 1.5, 2.0];
 const EXEC_CATS      = ['Volante', 'Base/Spotter', 'Transición', 'Sincronización'];
 const EXEC_DED_OPTS   = [0.05, 0.10, 0.20, 0.30];
@@ -163,7 +171,8 @@ export default function BuildingSheetPage() {
   const [stuntsExecDeds, setStuntsExecDeds] = useState<ExecDeds>([...EMPTY_EXEC]);
 
   // ── Pyramids ──────────────────────────────────────────────────────────────
-  const [pyramidsDiff,    setPyramidsDiff]    = useState<number>(0.0);
+  const [pyramidsRangeIdx,  setPyramidsRangeIdx]  = useState<number | null>(null);
+  const [pyramidsFine,      setPyramidsFine]      = useState<number>(0.0);
   const [pyramidsExecDeds, setPyramidsExecDeds] = useState<ExecDeds>([...EMPTY_EXEC]);
 
   // ── Tosses ────────────────────────────────────────────────────────────────
@@ -181,6 +190,9 @@ export default function BuildingSheetPage() {
   const stuntsExecTotal   = execScore(STUNTS_EXEC_MAX, stuntsExecDeds);
   const stuntsSectionTotal = parseFloat((stuntsDiffTotal + stuntsExecTotal + stuntsPartMax).toFixed(2));
 
+  const pyramidsDiff = pyramidsRangeIdx !== null
+    ? parseFloat((PYRAMID_RANGO[pyramidsRangeIdx].low + pyramidsFine).toFixed(1))
+    : 0.0;
   const pyramidsExecTotal   = execScore(PYRAMIDS_EXEC_MAX, pyramidsExecDeds);
   const pyramidsSectionTotal = parseFloat((pyramidsDiff + pyramidsExecTotal).toFixed(2));
 
@@ -208,7 +220,12 @@ export default function BuildingSheetPage() {
 
         // Pre-populate numeric fields where possible
         if (sheet.pyramids_difficulty) {
-          setPyramidsDiff(Math.min(5.5, parseFloat(sheet.pyramids_difficulty)));
+          const v = parseFloat(sheet.pyramids_difficulty);
+          const idx = PYRAMID_RANGO.findIndex(r => v >= r.low && v <= r.high);
+          if (idx >= 0) {
+            setPyramidsRangeIdx(idx);
+            setPyramidsFine(parseFloat((v - PYRAMID_RANGO[idx].low).toFixed(1)));
+          }
         }
         if (sheet.tosses_difficulty) {
           const v = parseFloat(sheet.tosses_difficulty);
@@ -431,30 +448,56 @@ export default function BuildingSheetPage() {
           <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
             <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
               <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Dificultad</span>
-              <span className="ml-2 text-xs text-zinc-400">0.0 – 5.5</span>
+              <p className="text-[10px] text-zinc-400 mt-0.5"># Habilidades Diferentes del Nivel + # Estructuras x Gran Parte</p>
             </div>
-            <div className="p-4 flex items-center gap-4">
-              <input
-                type="range"
-                min="0"
-                max="5.5"
-                step="0.1"
-                value={pyramidsDiff}
-                onChange={(e) => setPyramidsDiff(parseFloat(e.target.value))}
-                className="flex-1 accent-zinc-900"
-              />
-              <input
-                type="number"
-                min="0"
-                max="5.5"
-                step="0.1"
-                value={pyramidsDiff}
-                onChange={(e) => {
-                  const v = Math.min(5.5, Math.max(0, parseFloat(e.target.value) || 0));
-                  setPyramidsDiff(parseFloat(v.toFixed(2)));
-                }}
-                className="w-20 h-9 rounded-lg border border-zinc-300 px-3 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
-              />
+            <div className="p-4 flex flex-col gap-4">
+              <div>
+                <p className="text-xs font-medium text-zinc-500 mb-2">Rango</p>
+                <div className="flex flex-col gap-1.5">
+                  {PYRAMID_RANGO.map(({ low, high, label }, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => { setPyramidsRangeIdx(idx); setPyramidsFine(0.0); }}
+                      className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
+                        pyramidsRangeIdx === idx
+                          ? 'bg-zinc-900 text-white border-zinc-900'
+                          : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
+                      }`}
+                    >
+                      <span className="flex-1">{label}</span>
+                      <span className={`text-sm font-bold tabular-nums ml-3 shrink-0 ${pyramidsRangeIdx === idx ? 'text-zinc-300' : 'text-zinc-400'}`}>
+                        {low.toFixed(1)}–{high.toFixed(1)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {pyramidsRangeIdx !== null && (
+                <div>
+                  <p className="text-xs font-medium text-zinc-500 mb-2">Ajuste dentro del rango</p>
+                  <div className="grid grid-cols-6 gap-1">
+                    {PYRAMID_FINE_STEPS.map((step) => (
+                      <button
+                        key={step}
+                        type="button"
+                        onClick={() => setPyramidsFine(step)}
+                        className={`rounded-lg py-2 text-xs font-semibold tabular-nums transition-colors border ${
+                          pyramidsFine === step
+                            ? 'bg-zinc-900 text-white border-zinc-900'
+                            : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-600'
+                        }`}
+                      >
+                        +{step.toFixed(1)}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-right text-xs text-zinc-500">
+                    Dificultad: <strong className="text-zinc-900 tabular-nums">{pyramidsDiff.toFixed(1)}</strong>
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
