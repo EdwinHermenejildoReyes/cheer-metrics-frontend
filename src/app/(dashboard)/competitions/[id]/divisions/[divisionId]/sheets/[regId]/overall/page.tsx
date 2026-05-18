@@ -356,28 +356,31 @@ export default function OverallSheetPage() {
                 <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Creatividad</span>
                 <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(creativityOverall)}</span>
               </div>
-              <div className="p-4 flex items-center gap-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="2.0"
-                  step="0.1"
-                  value={creativityOverall}
-                  onChange={(e) => setCreativityOverall(parseFloat(e.target.value))}
-                  className="flex-1 accent-zinc-900"
-                />
-                <input
-                  type="number"
-                  min="0"
-                  max="2.0"
-                  step="0.1"
-                  value={creativityOverall}
-                  onChange={(e) => {
-                    const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
-                    setCreativityOverall(parseFloat(v.toFixed(2)));
-                  }}
-                  className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                />
+              <div className="p-4 flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="0"
+                    max="2.0"
+                    step="0.1"
+                    value={creativityOverall}
+                    onChange={(e) => setCreativityOverall(parseFloat(e.target.value))}
+                    className="flex-1 accent-zinc-900"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    max="2.0"
+                    step="0.1"
+                    value={creativityOverall}
+                    onChange={(e) => {
+                      const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
+                      setCreativityOverall(parseFloat(v.toFixed(2)));
+                    }}
+                    className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  />
+                </div>
+                <p className="text-[11px] text-zinc-400 leading-snug">Creatividad, Innovación y/o visual durante toda la rutina</p>
               </div>
             </div>
 
@@ -386,28 +389,31 @@ export default function OverallSheetPage() {
                 <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Showmanship</span>
                 <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(showmanshipOverall)}</span>
               </div>
-              <div className="p-4 flex items-center gap-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="2.0"
-                  step="0.1"
-                  value={showmanshipOverall}
-                  onChange={(e) => setShowmanshipOverall(parseFloat(e.target.value))}
-                  className="flex-1 accent-zinc-900"
-                />
-                <input
-                  type="number"
-                  min="0"
-                  max="2.0"
-                  step="0.1"
-                  value={showmanshipOverall}
-                  onChange={(e) => {
-                    const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
-                    setShowmanshipOverall(parseFloat(v.toFixed(2)));
-                  }}
-                  className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                />
+              <div className="p-4 flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="0"
+                    max="2.0"
+                    step="0.1"
+                    value={showmanshipOverall}
+                    onChange={(e) => setShowmanshipOverall(parseFloat(e.target.value))}
+                    className="flex-1 accent-zinc-900"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    max="2.0"
+                    step="0.1"
+                    value={showmanshipOverall}
+                    onChange={(e) => {
+                      const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
+                      setShowmanshipOverall(parseFloat(v.toFixed(2)));
+                    }}
+                    className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  />
+                </div>
+                <p className="text-[11px] text-zinc-400 leading-snug">Confianza, Limpieza y Conexión durante la rutina (Habilidades de Construcción)</p>
               </div>
             </div>
           </div>

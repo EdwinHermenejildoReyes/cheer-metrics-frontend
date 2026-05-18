@@ -347,6 +347,7 @@ export default function RangosSheetPage() {
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
                 <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Part Max — Spotter / Base</span>
+                <p className="text-[10px] text-zinc-400 mt-0.5">Habilidad en Canon o Sincronizado · Sin Repetir Atletas</p>
               </div>
               <div className="p-4">
                 <div className="flex gap-1.5">

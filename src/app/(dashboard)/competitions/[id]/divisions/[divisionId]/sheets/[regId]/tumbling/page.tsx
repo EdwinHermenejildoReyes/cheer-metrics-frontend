@@ -40,6 +40,7 @@ const STANDING_EXEC_CATS = ['Aprox.', 'Con. Corporal', 'Aterrizajes', 'Sinc'];
 const RUNNING_EXEC_CATS  = ['Aprox.', 'Con. Corporal', 'Aterrizajes', 'Sinc'];
 const JUMPS_EXEC_CATS    = ['P. Brazos', 'P. Piernas', 'Sinc'];
 const EXEC_DED_OPTS      = [0.05, 0.10, 0.20, 0.30];
+const EXEC_DED_LABELS    = ['Mínimos', 'Menores', 'Múltiples', 'Generalizados'];
 
 // ── Types & helpers ───────────────────────────────────────────────────────────
 type ExecDeds = (number | null)[];
@@ -72,9 +73,12 @@ function ExecSection({
 
   return (
     <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-        <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{label} — Ejecución</span>
-        <span className="text-sm font-semibold tabular-nums text-zinc-600">Máx: {fmt(max)}</span>
+      <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{label} — Ejecución</span>
+          <span className="text-sm font-semibold tabular-nums text-zinc-600">Máx: {fmt(max)}</span>
+        </div>
+        <p className="text-[10px] text-zinc-400 mt-0.5">Se Descuenta por Cantidad, Frecuencia y/o Gravedad de Errores</p>
       </div>
 
       <div className="divide-y divide-zinc-100">
@@ -82,7 +86,7 @@ function ExecSection({
           <div key={cat} className="flex items-center gap-3 px-4 py-2.5">
             <span className="w-36 shrink-0 text-sm text-zinc-700">{cat}</span>
             <div className="flex flex-1 gap-1.5">
-              {EXEC_DED_OPTS.map((amt) => {
+              {EXEC_DED_OPTS.map((amt, aidx) => {
                 const active = deds[i] === amt;
                 return (
                   <button
@@ -93,13 +97,14 @@ function ExecSection({
                       next[i] = active ? null : amt;
                       onChange(next);
                     }}
-                    className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors border ${
+                    className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors border flex flex-col items-center gap-0.5 ${
                       active
                         ? 'bg-red-600 text-white border-red-600'
                         : 'bg-white text-zinc-600 border-zinc-300 hover:border-red-400 hover:text-red-600'
                     }`}
                   >
-                    −{fmt(amt)}
+                    <span>−{fmt(amt)}</span>
+                    <span className={`text-[9px] ${active ? 'opacity-75' : 'opacity-50'}`}>{EXEC_DED_LABELS[aidx]}</span>
                   </button>
                 );
               })}
@@ -527,28 +532,31 @@ export default function TumblingSheetPage() {
                 <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Creatividad</span>
                 <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(creativityTumbling)}</span>
               </div>
-              <div className="p-4 flex items-center gap-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="2.0"
-                  step="0.1"
-                  value={creativityTumbling}
-                  onChange={(e) => setCreativityTumbling(parseFloat(e.target.value))}
-                  className="flex-1 accent-zinc-900"
-                />
-                <input
-                  type="number"
-                  min="0"
-                  max="2.0"
-                  step="0.1"
-                  value={creativityTumbling}
-                  onChange={(e) => {
-                    const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
-                    setCreativityTumbling(parseFloat(v.toFixed(2)));
-                  }}
-                  className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                />
+              <div className="p-4 flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="0"
+                    max="2.0"
+                    step="0.1"
+                    value={creativityTumbling}
+                    onChange={(e) => setCreativityTumbling(parseFloat(e.target.value))}
+                    className="flex-1 accent-zinc-900"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    max="2.0"
+                    step="0.1"
+                    value={creativityTumbling}
+                    onChange={(e) => {
+                      const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
+                      setCreativityTumbling(parseFloat(v.toFixed(2)));
+                    }}
+                    className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  />
+                </div>
+                <p className="text-[11px] text-zinc-400 leading-snug">Creatividad, Innovación y/o visual durante toda la rutina</p>
               </div>
             </div>
 
@@ -558,28 +566,31 @@ export default function TumblingSheetPage() {
                 <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Showmanship</span>
                 <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(showmanshipTumbling)}</span>
               </div>
-              <div className="p-4 flex items-center gap-3">
-                <input
-                  type="range"
-                  min="0"
-                  max="2.0"
-                  step="0.1"
-                  value={showmanshipTumbling}
-                  onChange={(e) => setShowmanshipTumbling(parseFloat(e.target.value))}
-                  className="flex-1 accent-zinc-900"
-                />
-                <input
-                  type="number"
-                  min="0"
-                  max="2.0"
-                  step="0.1"
-                  value={showmanshipTumbling}
-                  onChange={(e) => {
-                    const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
-                    setShowmanshipTumbling(parseFloat(v.toFixed(2)));
-                  }}
-                  className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                />
+              <div className="p-4 flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="0"
+                    max="2.0"
+                    step="0.1"
+                    value={showmanshipTumbling}
+                    onChange={(e) => setShowmanshipTumbling(parseFloat(e.target.value))}
+                    className="flex-1 accent-zinc-900"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    max="2.0"
+                    step="0.1"
+                    value={showmanshipTumbling}
+                    onChange={(e) => {
+                      const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
+                      setShowmanshipTumbling(parseFloat(v.toFixed(2)));
+                    }}
+                    className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  />
+                </div>
+                <p className="text-[11px] text-zinc-400 leading-snug">Confianza, Limpieza y Conexión durante la rutina (Habilidades de Gimnasia)</p>
               </div>
             </div>
           </div>
