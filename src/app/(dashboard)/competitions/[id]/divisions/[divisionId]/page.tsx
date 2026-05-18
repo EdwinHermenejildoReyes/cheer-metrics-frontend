@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, ClipboardList } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, ClipboardList, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -211,6 +211,14 @@ export default function DivisionDetailPage() {
                         onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/building`)}
                       >
                         <ClipboardList className="h-3.5 w-3.5 text-blue-500" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Planilla Tumbling"
+                        onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/tumbling`)}
+                      >
+                        <Activity className="h-3.5 w-3.5 text-green-500" />
                       </Button>
                       <Button size="icon" variant="ghost" onClick={() => { setEditingReg(reg); setRegModalOpen(true); }}>
                         <Pencil className="h-3.5 w-3.5" />
