@@ -1,0 +1,80 @@
+'use client';
+
+import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
+import { Trophy, Building2, Users, LogOut } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'sonner';
+import { cn } from '@/utils/cn';
+import { clearAuth } from '@/store/auth/slices';
+import type { RootState } from '@/core/rootReducer';
+import authRepository from '@/repositories/authRepository';
+
+const nav = [
+  { href: '/competitions', label: 'Competencias', icon: Trophy },
+  { href: '/athletes',     label: 'Atletas',       icon: Users },
+  { href: '/gyms',         label: 'Gimnasios',      icon: Building2 },
+];
+
+export function Sidebar() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const user = useSelector((s: RootState) => s.auth.user);
+
+  const handleLogout = async () => {
+    try {
+      await authRepository.logout();
+    } catch {
+      // Cookies get cleared by backend regardless
+    }
+    dispatch(clearAuth());
+    router.replace('/');
+    toast.success('Sesión cerrada');
+  };
+
+  return (
+    <aside className="flex h-screen w-56 flex-col border-r border-zinc-200 bg-white">
+      <div className="flex h-16 items-center border-b border-zinc-200 px-5">
+        <span className="text-base font-semibold tracking-tight text-zinc-900">Cheer Metrics</span>
+      </div>
+
+      <nav className="flex flex-1 flex-col gap-1 p-3">
+        {nav.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href || pathname.startsWith(href + '/');
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                active
+                  ? 'bg-zinc-900 text-white'
+                  : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* User + logout */}
+      <div className="border-t border-zinc-200 p-3">
+        {user && (
+          <p className="mb-2 truncate px-3 text-xs text-zinc-400" title={user.email}>
+            {user.first_name || user.email}
+          </p>
+        )}
+        <button
+          onClick={handleLogout}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors"
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          Cerrar sesión
+        </button>
+      </div>
+    </aside>
+  );
+}
