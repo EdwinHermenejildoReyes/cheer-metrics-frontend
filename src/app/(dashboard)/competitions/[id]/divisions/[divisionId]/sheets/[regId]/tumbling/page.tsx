@@ -9,36 +9,36 @@ import { PageSpinner } from '@/components/ui/spinner';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import type { ScoreSheet } from '@/types/competitions';
 
-// ── Paper-form execution maxima ──────────────────────────────────────────────
-const STANDING_EXEC_MAX = 3.70;
-const RUNNING_EXEC_MAX  = 3.40;
-const JUMPS_EXEC_MAX    = 1.60;
+// ── Execution maxima (confirmed from blank form screenshots) ──────────────────
+const STANDING_EXEC_MAX = 4.00;
+const RUNNING_EXEC_MAX  = 4.00;
+const JUMPS_EXEC_MAX    = 2.00;
 
-// ── Difficulty options ────────────────────────────────────────────────────────
+// ── Difficulty options (labels from real score sheet) ────────────────────────
 const TUMBLING_RANGO = [
-  { label: 'No cumple (sin 1G)', value: 0.5 },
-  { label: '+ Maneras de la Habilidad', value: 1.0 },
-  { label: '+ Avanzada', value: 1.5 },
+  { label: 'No cumple con 1G', value: 0.5 },
+  { label: 'Menos de la Mayoría', value: 1.0 },
+  { label: '+ Mayoría', value: 1.5 },
   { label: '+ Gran Parte', value: 2.0 },
 ];
 
 const HABILIDAD_OPTS = [
   { label: 'No Cumple', value: 0.0 },
-  { label: 'Avanzada o Gran Parte', value: 0.3 },
-  { label: 'Líder y Gran Parte', value: 0.5 },
+  { label: 'Avanzada x Gran Parte', value: 0.3 },
+  { label: 'Elite x Gran Parte', value: 0.5 },
 ];
 
 const JUMPS_DIFF_OPTS = [
-  { label: 'No cumple con 2G', value: 0.5 },
-  { label: 'Básico y 1 conectado', value: 1.0 },
-  { label: '2 Conectados (Avanzado)', value: 1.5 },
-  { label: '2+ Conectados (Elite)', value: 2.0 },
+  { label: 'No cumple con 1.0', value: 0.5 },
+  { label: 'Gran Parte Realiza 1', value: 1.0 },
+  { label: 'Gran Parte Realiza 2 Conectados', value: 1.5 },
+  { label: 'MAX Realiza 3 Conectados ó 2+1', value: 2.0 },
 ];
 
-// ── Execution categories per section ─────────────────────────────────────────
-const STANDING_EXEC_CATS = ['Aplomo', 'Amplitud', 'Aterrizaje'];
-const RUNNING_EXEC_CATS  = ['Aplomo', 'Potencia / Carrera', 'Aterrizaje'];
-const JUMPS_EXEC_CATS    = ['Forma', 'Amplitud / Altura', 'Aterrizaje'];
+// ── Execution categories (from blank form screenshots) ───────────────────────
+const STANDING_EXEC_CATS = ['Aprox.', 'Con. Corporal', 'Aterrizajes', 'Sinc'];
+const RUNNING_EXEC_CATS  = ['Aprox.', 'Con. Corporal', 'Aterrizajes', 'Sinc'];
+const JUMPS_EXEC_CATS    = ['P. Brazos', 'P. Piernas', 'Sinc'];
 const EXEC_DED_OPTS      = [0.05, 0.10, 0.20, 0.30];
 
 // ── Types & helpers ───────────────────────────────────────────────────────────

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, ClipboardList, Activity, Layers } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, ClipboardList, Activity, Layers, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -227,6 +227,14 @@ export default function DivisionDetailPage() {
                         onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/overall`)}
                       >
                         <Layers className="h-3.5 w-3.5 text-purple-500" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Planilla Partner Stunt"
+                        onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/partner-stunt`)}
+                      >
+                        <Users className="h-3.5 w-3.5 text-orange-500" />
                       </Button>
                       <Button size="icon" variant="ghost" onClick={() => { setEditingReg(reg); setRegModalOpen(true); }}>
                         <Pencil className="h-3.5 w-3.5" />
