@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, ClipboardList, Activity, Layers, Users, Target } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, ClipboardList, Activity, Layers, Users, Target, Flag } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -243,6 +243,14 @@ export default function DivisionDetailPage() {
                         onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/rangos`)}
                       >
                         <Target className="h-3.5 w-3.5 text-amber-500" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Planilla Deducciones"
+                        onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/deducciones`)}
+                      >
+                        <Flag className="h-3.5 w-3.5 text-red-500" />
                       </Button>
                       <Button size="icon" variant="ghost" onClick={() => { setEditingReg(reg); setRegModalOpen(true); }}>
                         <Pencil className="h-3.5 w-3.5" />
