@@ -326,242 +326,254 @@ export default function BuildingSheetPage() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-6 py-8 flex flex-col gap-10">
+      <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col gap-10">
 
         {/* ── STUNTS ──────────────────────────────────────────────────── */}
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-3">
           <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
             Elevaciones — Stunts
           </h2>
+          <div className="grid grid-cols-2 gap-5 items-start">
 
-          {/* Difficulty card */}
-          <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-            <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-              <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Dificultad</span>
-            </div>
-            <div className="p-4 flex flex-col gap-5">
-
-              {/* Rango Base */}
-              <div>
-                <p className="text-xs font-medium text-zinc-500 mb-2">Rango Base de Complejidad</p>
-                <div className="flex flex-col gap-1.5">
-                  {STUNT_RANGO.map(({ value, label }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setStuntsRango(value)}
-                      className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
-                        stuntsRango === value
-                          ? 'bg-zinc-900 text-white border-zinc-900'
-                          : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
-                      }`}
-                    >
-                      <span className="flex-1">{label}</span>
-                      <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${stuntsRango === value ? 'text-zinc-300' : 'text-zinc-400'}`}>
-                        {value.toFixed(1)}
-                      </span>
-                    </button>
-                  ))}
-                </div>
+            {/* LEFT: Difficulty */}
+            <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+              <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
+                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Dificultad</span>
               </div>
+              <div className="p-4 flex flex-col gap-5">
 
-              {/* Grado de Dificultad per skill */}
-              <div>
-                <p className="text-xs font-medium text-zinc-500 mb-2">Grado de Dificultad — Habilidades (+0.10 / +0.20)</p>
-                <div className="flex flex-col gap-2">
-                  {STUNT_SKILLS.map((skill, i) => (
-                    <div key={skill} className="flex items-center gap-3">
-                      <span className="w-28 shrink-0 text-sm text-zinc-700">{skill}</span>
-                      <div className="flex flex-1 gap-1.5">
-                        {SKILL_GRADES.map(({ label, value }) => (
-                          <button
-                            key={label}
-                            type="button"
-                            onClick={() => {
-                              const next = [...stuntsSkills];
-                              next[i] = value;
-                              setStuntsSkills(next);
-                            }}
-                            className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors border ${
-                              stuntsSkills[i] === value
-                                ? 'bg-zinc-900 text-white border-zinc-900'
-                                : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-600'
-                            }`}
-                          >
-                            {label}
-                            {value > 0 && (
-                              <span className="ml-1 opacity-70">+{value.toFixed(2)}</span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 flex justify-between text-xs border-t border-zinc-100 pt-2">
-                  <span className="text-zinc-500">
-                    Base {fmt(stuntsRango)} + bonus {fmt(stuntsSkills.reduce((s, v) => s + v, 0))}
-                  </span>
-                  <span className="font-semibold text-zinc-900">Dificultad: {fmt(stuntsDiffTotal)}</span>
-                </div>
-              </div>
-
-              {/* Part Max */}
-              <div>
-                <p className="text-xs font-medium text-zinc-500 mb-0.5">Part Max — Spotter / Base</p>
-                <p className="text-[10px] text-zinc-400 mb-2">Habilidad en Canon o Sincronizado · Sin Repetir Atletas</p>
-                <div className="flex flex-col gap-1.5">
-                  {PART_MAX_OPTS.map(({ value, label }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setStuntsPartMax(value)}
-                      className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
-                        stuntsPartMax === value
-                          ? 'bg-violet-600 text-white border-violet-600'
-                          : 'bg-white text-zinc-700 border-zinc-300 hover:border-violet-400 hover:text-violet-700'
-                      }`}
-                    >
-                      <span className="flex-1">{label}</span>
-                      <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${stuntsPartMax === value ? 'text-white/80' : 'text-zinc-400'}`}>
-                        {value.toFixed(1)}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Execution */}
-          <ExecSection label="Elevaciones" max={STUNTS_EXEC_MAX} deds={stuntsExecDeds} onChange={setStuntsExecDeds} />
-
-          {/* Section total */}
-          <SectionTotal
-            label="Total Elevaciones"
-            breakdown={[
-              { key: 'Dif', value: stuntsDiffTotal },
-              { key: 'Ejec', value: stuntsExecTotal },
-              { key: 'PM', value: stuntsPartMax },
-            ]}
-            total={stuntsSectionTotal}
-          />
-        </section>
-
-        {/* ── PYRAMIDS ────────────────────────────────────────────────── */}
-        <section className="flex flex-col gap-4">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Pirámides</h2>
-
-          <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-            <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-              <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Dificultad</span>
-              <p className="text-[10px] text-zinc-400 mt-0.5"># Habilidades Diferentes del Nivel + # Estructuras x Gran Parte</p>
-            </div>
-            <div className="p-4 flex flex-col gap-4">
-              <div>
-                <p className="text-xs font-medium text-zinc-500 mb-2">Rango</p>
-                <div className="flex flex-col gap-1.5">
-                  {PYRAMID_RANGO.map(({ low, high, label }, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => { setPyramidsRangeIdx(idx); setPyramidsFine(0.0); }}
-                      className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
-                        pyramidsRangeIdx === idx
-                          ? 'bg-zinc-900 text-white border-zinc-900'
-                          : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
-                      }`}
-                    >
-                      <span className="flex-1">{label}</span>
-                      <span className={`text-sm font-bold tabular-nums ml-3 shrink-0 ${pyramidsRangeIdx === idx ? 'text-zinc-300' : 'text-zinc-400'}`}>
-                        {low.toFixed(1)}–{high.toFixed(1)}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {pyramidsRangeIdx !== null && (
+                {/* Rango Base */}
                 <div>
-                  <p className="text-xs font-medium text-zinc-500 mb-2">Ajuste dentro del rango</p>
-                  <div className="grid grid-cols-6 gap-1">
-                    {PYRAMID_FINE_STEPS.map((step) => (
+                  <p className="text-xs font-medium text-zinc-500 mb-2">Rango Base de Complejidad</p>
+                  <div className="flex flex-col gap-1.5">
+                    {STUNT_RANGO.map(({ value, label }) => (
                       <button
-                        key={step}
+                        key={value}
                         type="button"
-                        onClick={() => setPyramidsFine(step)}
-                        className={`rounded-lg py-2 text-xs font-semibold tabular-nums transition-colors border ${
-                          pyramidsFine === step
+                        onClick={() => setStuntsRango(value)}
+                        className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
+                          stuntsRango === value
                             ? 'bg-zinc-900 text-white border-zinc-900'
-                            : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-600'
+                            : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                         }`}
                       >
-                        +{step.toFixed(1)}
+                        <span className="flex-1">{label}</span>
+                        <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${stuntsRango === value ? 'text-zinc-300' : 'text-zinc-400'}`}>
+                          {value.toFixed(1)}
+                        </span>
                       </button>
                     ))}
                   </div>
-                  <p className="mt-2 text-right text-xs text-zinc-500">
-                    Dificultad: <strong className="text-zinc-900 tabular-nums">{pyramidsDiff.toFixed(1)}</strong>
-                  </p>
                 </div>
-              )}
+
+                {/* Grado de Dificultad per skill */}
+                <div>
+                  <p className="text-xs font-medium text-zinc-500 mb-2">Grado de Dificultad — Habilidades (+0.10 / +0.20)</p>
+                  <div className="flex flex-col gap-2">
+                    {STUNT_SKILLS.map((skill, i) => (
+                      <div key={skill} className="flex items-center gap-3">
+                        <span className="w-28 shrink-0 text-sm text-zinc-700">{skill}</span>
+                        <div className="flex flex-1 gap-1.5">
+                          {SKILL_GRADES.map(({ label, value }) => (
+                            <button
+                              key={label}
+                              type="button"
+                              onClick={() => {
+                                const next = [...stuntsSkills];
+                                next[i] = value;
+                                setStuntsSkills(next);
+                              }}
+                              className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors border ${
+                                stuntsSkills[i] === value
+                                  ? 'bg-zinc-900 text-white border-zinc-900'
+                                  : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-600'
+                              }`}
+                            >
+                              {label}
+                              {value > 0 && (
+                                <span className="ml-1 opacity-70">+{value.toFixed(2)}</span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 flex justify-between text-xs border-t border-zinc-100 pt-2">
+                    <span className="text-zinc-500">
+                      Base {fmt(stuntsRango)} + bonus {fmt(stuntsSkills.reduce((s, v) => s + v, 0))}
+                    </span>
+                    <span className="font-semibold text-zinc-900">Dificultad: {fmt(stuntsDiffTotal)}</span>
+                  </div>
+                </div>
+
+                {/* Part Max */}
+                <div>
+                  <p className="text-xs font-medium text-zinc-500 mb-0.5">Part Max — Spotter / Base</p>
+                  <p className="text-[10px] text-zinc-400 mb-2">Habilidad en Canon o Sincronizado · Sin Repetir Atletas</p>
+                  <div className="flex flex-col gap-1.5">
+                    {PART_MAX_OPTS.map(({ value, label }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setStuntsPartMax(value)}
+                        className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
+                          stuntsPartMax === value
+                            ? 'bg-violet-600 text-white border-violet-600'
+                            : 'bg-white text-zinc-700 border-zinc-300 hover:border-violet-400 hover:text-violet-700'
+                        }`}
+                      >
+                        <span className="flex-1">{label}</span>
+                        <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${stuntsPartMax === value ? 'text-white/80' : 'text-zinc-400'}`}>
+                          {value.toFixed(1)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT: Execution + Total */}
+            <div className="flex flex-col gap-4">
+              <ExecSection label="Elevaciones" max={STUNTS_EXEC_MAX} deds={stuntsExecDeds} onChange={setStuntsExecDeds} />
+              <SectionTotal
+                label="Total Elevaciones"
+                breakdown={[
+                  { key: 'Dif', value: stuntsDiffTotal },
+                  { key: 'Ejec', value: stuntsExecTotal },
+                  { key: 'PM', value: stuntsPartMax },
+                ]}
+                total={stuntsSectionTotal}
+              />
             </div>
           </div>
+        </section>
 
-          <ExecSection label="Pirámides" max={PYRAMIDS_EXEC_MAX} deds={pyramidsExecDeds} onChange={setPyramidsExecDeds} />
+        {/* ── PYRAMIDS ────────────────────────────────────────────────── */}
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Pirámides</h2>
+          <div className="grid grid-cols-2 gap-5 items-start">
 
-          <SectionTotal
-            label="Total Pirámides"
-            breakdown={[
-              { key: 'Dif', value: pyramidsDiff },
-              { key: 'Ejec', value: pyramidsExecTotal },
-            ]}
-            total={pyramidsSectionTotal}
-          />
+            {/* LEFT: Difficulty */}
+            <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+              <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
+                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Dificultad</span>
+                <p className="text-[10px] text-zinc-400 mt-0.5"># Habilidades Diferentes del Nivel + # Estructuras x Gran Parte</p>
+              </div>
+              <div className="p-4 flex flex-col gap-4">
+                <div>
+                  <p className="text-xs font-medium text-zinc-500 mb-2">Rango</p>
+                  <div className="flex flex-col gap-1.5">
+                    {PYRAMID_RANGO.map(({ low, high, label }, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => { setPyramidsRangeIdx(idx); setPyramidsFine(0.0); }}
+                        className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
+                          pyramidsRangeIdx === idx
+                            ? 'bg-zinc-900 text-white border-zinc-900'
+                            : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
+                        }`}
+                      >
+                        <span className="flex-1">{label}</span>
+                        <span className={`text-sm font-bold tabular-nums ml-3 shrink-0 ${pyramidsRangeIdx === idx ? 'text-zinc-300' : 'text-zinc-400'}`}>
+                          {low.toFixed(1)}–{high.toFixed(1)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {pyramidsRangeIdx !== null && (
+                  <div>
+                    <p className="text-xs font-medium text-zinc-500 mb-2">Ajuste dentro del rango</p>
+                    <div className="grid grid-cols-6 gap-1">
+                      {PYRAMID_FINE_STEPS.map((step) => (
+                        <button
+                          key={step}
+                          type="button"
+                          onClick={() => setPyramidsFine(step)}
+                          className={`rounded-lg py-2 text-xs font-semibold tabular-nums transition-colors border ${
+                            pyramidsFine === step
+                              ? 'bg-zinc-900 text-white border-zinc-900'
+                              : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-600'
+                          }`}
+                        >
+                          +{step.toFixed(1)}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="mt-2 text-right text-xs text-zinc-500">
+                      Dificultad: <strong className="text-zinc-900 tabular-nums">{pyramidsDiff.toFixed(1)}</strong>
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* RIGHT: Execution + Total */}
+            <div className="flex flex-col gap-4">
+              <ExecSection label="Pirámides" max={PYRAMIDS_EXEC_MAX} deds={pyramidsExecDeds} onChange={setPyramidsExecDeds} />
+              <SectionTotal
+                label="Total Pirámides"
+                breakdown={[
+                  { key: 'Dif', value: pyramidsDiff },
+                  { key: 'Ejec', value: pyramidsExecTotal },
+                ]}
+                total={pyramidsSectionTotal}
+              />
+            </div>
+          </div>
         </section>
 
         {/* ── TOSSES ──────────────────────────────────────────────────── */}
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-3">
           <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Lanzamientos — Tosses</h2>
+          <div className="grid grid-cols-2 gap-5 items-start">
 
-          <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-            <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-              <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Dificultad</span>
-              <p className="text-[10px] text-zinc-400 mt-0.5">Lanzamiento Apropiado del Nivel</p>
-            </div>
-            <div className="p-4">
-              <div className="flex flex-col gap-1.5">
-                {TOSS_DIFF_OPTS.map(({ value, label }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setTossesDiff(value)}
-                    className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
-                      tossesDiff === value
-                        ? 'bg-zinc-900 text-white border-zinc-900'
-                        : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
-                    }`}
-                  >
-                    <span className="flex-1">{label}</span>
-                    <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${tossesDiff === value ? 'text-zinc-300' : 'text-zinc-400'}`}>
-                      {value.toFixed(1)}
-                    </span>
-                  </button>
-                ))}
+            {/* LEFT: Difficulty */}
+            <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+              <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
+                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Dificultad</span>
+                <p className="text-[10px] text-zinc-400 mt-0.5">Lanzamiento Apropiado del Nivel</p>
+              </div>
+              <div className="p-4">
+                <div className="flex flex-col gap-1.5">
+                  {TOSS_DIFF_OPTS.map(({ value, label }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setTossesDiff(value)}
+                      className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
+                        tossesDiff === value
+                          ? 'bg-zinc-900 text-white border-zinc-900'
+                          : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
+                      }`}
+                    >
+                      <span className="flex-1">{label}</span>
+                      <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${tossesDiff === value ? 'text-zinc-300' : 'text-zinc-400'}`}>
+                        {value.toFixed(1)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
+
+            {/* RIGHT: Execution + Total */}
+            <div className="flex flex-col gap-4">
+              <ExecSection label="Lanzamientos" max={TOSSES_EXEC_MAX} deds={tossesExecDeds} onChange={setTossesExecDeds} cats={TOSS_EXEC_CATS} />
+              <SectionTotal
+                label="Total Lanzamientos"
+                breakdown={[
+                  { key: 'Dif', value: tossesDiff },
+                  { key: 'Ejec', value: tossesExecTotal },
+                ]}
+                total={tossesSectionTotal}
+              />
+            </div>
           </div>
-
-          <ExecSection label="Lanzamientos" max={TOSSES_EXEC_MAX} deds={tossesExecDeds} onChange={setTossesExecDeds} cats={TOSS_EXEC_CATS} />
-
-          <SectionTotal
-            label="Total Lanzamientos"
-            breakdown={[
-              { key: 'Dif', value: tossesDiff },
-              { key: 'Ejec', value: tossesExecTotal },
-            ]}
-            total={tossesSectionTotal}
-          />
         </section>
 
         {/* ── BUILDING SUBTOTAL ────────────────────────────────────────── */}
