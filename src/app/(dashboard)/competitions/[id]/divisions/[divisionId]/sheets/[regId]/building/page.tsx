@@ -50,6 +50,7 @@ const TOSS_DIFF_OPTS = [
   { value: 2.0, label: 'MAYORÍA Sincronizado o en Canon' },
 ];
 const EXEC_CATS      = ['Volante', 'Base/Spotter', 'Transición', 'Sincronización'];
+const TOSS_EXEC_CATS = ['Flyer', 'Base/Spotter', 'Altura'];
 const EXEC_DED_OPTS   = [0.05, 0.10, 0.20, 0.30];
 const EXEC_DED_LABELS = ['Mínimos', 'Menores', 'Múltiples', 'Generalizados'];
 
@@ -68,12 +69,13 @@ function fmt(n: number) {
 
 // ── Execution sub-component ──────────────────────────────────────────────────
 function ExecSection({
-  label, max, deds, onChange,
+  label, max, deds, onChange, cats = EXEC_CATS,
 }: {
   label: string;
   max: number;
   deds: ExecDeds;
   onChange: (deds: ExecDeds) => void;
+  cats?: string[];
 }) {
   const score = execScore(max, deds);
   const totalDed = deds.reduce<number>((s, d) => s + (d ?? 0), 0);
@@ -89,7 +91,7 @@ function ExecSection({
       </div>
 
       <div className="divide-y divide-zinc-100">
-        {EXEC_CATS.map((cat, i) => (
+        {cats.map((cat, i) => (
           <div key={cat} className="flex items-center gap-3 px-4 py-2.5">
             <span className="w-28 shrink-0 text-sm text-zinc-700">{cat}</span>
             <div className="flex flex-1 gap-1.5">
@@ -182,7 +184,7 @@ export default function BuildingSheetPage() {
 
   // ── Tosses ────────────────────────────────────────────────────────────────
   const [tossesDiff,    setTossesDiff]    = useState<number>(0.0);
-  const [tossesExecDeds, setTossesExecDeds] = useState<ExecDeds>([...EMPTY_EXEC]);
+  const [tossesExecDeds, setTossesExecDeds] = useState<ExecDeds>([null, null, null]);
 
   // ── Cross-sheet ───────────────────────────────────────────────────────────
   const [creativityBuilding,  setCreativityBuilding]  = useState<number>(0.0);
@@ -550,7 +552,7 @@ export default function BuildingSheetPage() {
             </div>
           </div>
 
-          <ExecSection label="Lanzamientos" max={TOSSES_EXEC_MAX} deds={tossesExecDeds} onChange={setTossesExecDeds} />
+          <ExecSection label="Lanzamientos" max={TOSSES_EXEC_MAX} deds={tossesExecDeds} onChange={setTossesExecDeds} cats={TOSS_EXEC_CATS} />
 
           <SectionTotal
             label="Total Lanzamientos"
