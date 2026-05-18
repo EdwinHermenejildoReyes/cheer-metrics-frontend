@@ -43,7 +43,12 @@ const PYRAMID_RANGO = [
   { low: 5.0, high: 5.5, label: '5 Hab Dif + 2 Estructuras' },
 ];
 const PYRAMID_FINE_STEPS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
-const TOSS_DIFF_OPTS = [0.0, 1.0, 1.5, 2.0];
+const TOSS_DIFF_OPTS = [
+  { value: 0.0, label: 'No Realiza' },
+  { value: 1.0, label: 'Menos de la MAYORÍA' },
+  { value: 1.5, label: 'MAYORÍA Acumulativo' },
+  { value: 2.0, label: 'MAYORÍA Sincronizado o en Canon' },
+];
 const EXEC_CATS      = ['Volante', 'Base/Spotter', 'Transición', 'Sincronización'];
 const EXEC_DED_OPTS   = [0.05, 0.10, 0.20, 0.30];
 const EXEC_DED_LABELS = ['Mínimos', 'Menores', 'Múltiples', 'Generalizados'];
@@ -229,7 +234,7 @@ export default function BuildingSheetPage() {
         }
         if (sheet.tosses_difficulty) {
           const v = parseFloat(sheet.tosses_difficulty);
-          setTossesDiff(TOSS_DIFF_OPTS.includes(v) ? v : 0.0);
+          setTossesDiff(TOSS_DIFF_OPTS.some((o) => o.value === v) ? v : 0.0);
         }
         if (sheet.stunts_drivers) {
           const v = parseFloat(sheet.stunts_drivers);
@@ -520,21 +525,25 @@ export default function BuildingSheetPage() {
           <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
             <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
               <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Dificultad</span>
+              <p className="text-[10px] text-zinc-400 mt-0.5">Lanzamiento Apropiado del Nivel</p>
             </div>
             <div className="p-4">
-              <div className="grid grid-cols-4 gap-1.5">
-                {TOSS_DIFF_OPTS.map((v) => (
+              <div className="flex flex-col gap-1.5">
+                {TOSS_DIFF_OPTS.map(({ value, label }) => (
                   <button
-                    key={v}
+                    key={value}
                     type="button"
-                    onClick={() => setTossesDiff(v)}
-                    className={`rounded-lg py-3 text-sm font-semibold transition-colors border ${
-                      tossesDiff === v
+                    onClick={() => setTossesDiff(value)}
+                    className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
+                      tossesDiff === value
                         ? 'bg-zinc-900 text-white border-zinc-900'
                         : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                     }`}
                   >
-                    {v === 0 ? '—' : v.toFixed(1)}
+                    <span className="flex-1">{label}</span>
+                    <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${tossesDiff === value ? 'text-zinc-300' : 'text-zinc-400'}`}>
+                      {value.toFixed(1)}
+                    </span>
                   </button>
                 ))}
               </div>

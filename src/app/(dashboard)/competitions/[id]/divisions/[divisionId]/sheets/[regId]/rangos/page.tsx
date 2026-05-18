@@ -51,10 +51,10 @@ const PYRAMID_RANGES = [
 const PYRAMID_FINE_STEPS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
 
 const TOSS_DIFF_OPTS = [
-  { value: 0.0, label: 'No tienen' },
-  { value: 1.0, label: '1.0' },
-  { value: 1.5, label: 'Mayoría Acumulativa' },
-  { value: 2.0, label: 'Sincronizados / Canon' },
+  { value: 0.0, label: 'No Realiza' },
+  { value: 1.0, label: 'Menos de la MAYORÍA' },
+  { value: 1.5, label: 'MAYORÍA Acumulativo' },
+  { value: 2.0, label: 'MAYORÍA Sincronizado o en Canon' },
 ];
 
 const TUMBLING_RANGO = [
