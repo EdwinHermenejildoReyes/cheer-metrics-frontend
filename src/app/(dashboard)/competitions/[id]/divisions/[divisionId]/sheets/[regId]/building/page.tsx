@@ -15,14 +15,26 @@ const PYRAMIDS_EXEC_MAX = 4.00;
 const TOSSES_EXEC_MAX  = 2.00;
 
 // ── Selection options ────────────────────────────────────────────────────────
-const STUNT_RANGO = [3.5, 4.0, 4.5, 5.0, 5.5, 6.0];
-const STUNT_SKILLS = ['Eje principal', 'Volante', 'Bajada', 'Transición', 'Construcción'];
+const STUNT_RANGO = [
+  { value: 3.5, label: 'No cumple con 4.0' },
+  { value: 4.0, label: '4 Acumulativas' },
+  { value: 4.5, label: '2 Habilidades Diferentes' },
+  { value: 5.0, label: '3 Habilidades Diferentes' },
+  { value: 5.5, label: '4 Habilidades Diferentes' },
+  { value: 6.0, label: '5 Had Dif / 1 Hab Coed (Niv 3/4.2/4)' },
+];
+const STUNT_SKILLS = ['Habilidad #1', 'Habilidad #2', 'Habilidad #3', 'Habilidad #4', 'Habilidad #5 / Coed'];
 const SKILL_GRADES = [
   { label: 'No Cumple', value: 0 },
   { label: 'Avanzado',  value: 0.10 },
   { label: 'Elite',     value: 0.20 },
 ];
-const PART_MAX_OPTS  = [0.0, 0.1, 0.3, 0.5];
+const PART_MAX_OPTS = [
+  { value: 0.0, label: 'No Cumple' },
+  { value: 0.1, label: 'Nivel x MÁX · Avz x GRAN PARTE' },
+  { value: 0.3, label: 'Avz x MÁX · Elite x GRAN PARTE' },
+  { value: 0.5, label: 'Elite x MÁX' },
+];
 const TOSS_DIFF_OPTS = [0.0, 1.0, 1.5, 2.0];
 const EXEC_CATS      = ['Volante', 'Base/Spotter', 'Transición', 'Sincronización'];
 const EXEC_DED_OPTS   = [0.05, 0.10, 0.20, 0.30];
@@ -204,7 +216,7 @@ export default function BuildingSheetPage() {
         }
         if (sheet.stunts_drivers) {
           const v = parseFloat(sheet.stunts_drivers);
-          setStuntsPartMax(PART_MAX_OPTS.includes(v) ? v : 0.0);
+          setStuntsPartMax(PART_MAX_OPTS.some((o) => o.value === v) ? v : 0.0);
         }
         if (sheet.creativity_building) {
           setCreativityBuilding(Math.min(2.0, parseFloat(sheet.creativity_building)));
@@ -308,19 +320,22 @@ export default function BuildingSheetPage() {
               {/* Rango Base */}
               <div>
                 <p className="text-xs font-medium text-zinc-500 mb-2">Rango Base de Complejidad</p>
-                <div className="grid grid-cols-6 gap-1.5">
-                  {STUNT_RANGO.map((v) => (
+                <div className="flex flex-col gap-1.5">
+                  {STUNT_RANGO.map(({ value, label }) => (
                     <button
-                      key={v}
+                      key={value}
                       type="button"
-                      onClick={() => setStuntsRango(v)}
-                      className={`rounded-lg py-2.5 text-sm font-semibold transition-colors border ${
-                        stuntsRango === v
+                      onClick={() => setStuntsRango(value)}
+                      className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
+                        stuntsRango === value
                           ? 'bg-zinc-900 text-white border-zinc-900'
                           : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                       }`}
                     >
-                      {v.toFixed(1)}
+                      <span className="flex-1">{label}</span>
+                      <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${stuntsRango === value ? 'text-zinc-300' : 'text-zinc-400'}`}>
+                        {value.toFixed(1)}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -371,19 +386,22 @@ export default function BuildingSheetPage() {
               <div>
                 <p className="text-xs font-medium text-zinc-500 mb-0.5">Part Max — Spotter / Base</p>
                 <p className="text-[10px] text-zinc-400 mb-2">Habilidad en Canon o Sincronizado · Sin Repetir Atletas</p>
-                <div className="flex gap-1.5">
-                  {PART_MAX_OPTS.map((v) => (
+                <div className="flex flex-col gap-1.5">
+                  {PART_MAX_OPTS.map(({ value, label }) => (
                     <button
-                      key={v}
+                      key={value}
                       type="button"
-                      onClick={() => setStuntsPartMax(v)}
-                      className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-colors border ${
-                        stuntsPartMax === v
+                      onClick={() => setStuntsPartMax(value)}
+                      className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
+                        stuntsPartMax === value
                           ? 'bg-violet-600 text-white border-violet-600'
                           : 'bg-white text-zinc-700 border-zinc-300 hover:border-violet-400 hover:text-violet-700'
                       }`}
                     >
-                      {v.toFixed(1)}
+                      <span className="flex-1">{label}</span>
+                      <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${stuntsPartMax === value ? 'text-white/80' : 'text-zinc-400'}`}>
+                        {value.toFixed(1)}
+                      </span>
                     </button>
                   ))}
                 </div>

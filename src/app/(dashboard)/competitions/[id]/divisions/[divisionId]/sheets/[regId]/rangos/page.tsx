@@ -17,7 +17,7 @@ const STUNT_RANGO = [
   { value: 4.5, label: '2 Habilidades Diferentes' },
   { value: 5.0, label: '3 Habilidades Diferentes' },
   { value: 5.5, label: '4 Habilidades Diferentes' },
-  { value: 6.0, label: '5 Hab OP / 1 Hab Level Mix' },
+  { value: 6.0, label: '5 Had Dif / 1 Hab Coed (Niv 3/4.2/4)' },
 ];
 
 const STUNT_SKILLS = [
@@ -34,7 +34,12 @@ const SKILL_GRADES = [
   { label: 'Elite',     value: 0.20 },
 ];
 
-const PART_MAX_OPTS = [0.0, 0.1, 0.3, 0.5];
+const PART_MAX_OPTS = [
+  { value: 0.0, label: 'No Cumple' },
+  { value: 0.1, label: 'Nivel x MÁX · Avz x GRAN PARTE' },
+  { value: 0.3, label: 'Avz x MÁX · Elite x GRAN PARTE' },
+  { value: 0.5, label: 'Elite x MÁX' },
+];
 
 const PYRAMID_RANGES = [
   { low: 3.0, high: 3.5, label: 'No cumple (sin 2G)' },
@@ -141,7 +146,7 @@ export default function RangosSheetPage() {
         // Part Max
         if (sheet.stunts_drivers) {
           const v = parseFloat(sheet.stunts_drivers);
-          setStuntsPartMax(PART_MAX_OPTS.includes(v) ? v : 0.0);
+          setStuntsPartMax(PART_MAX_OPTS.some((o) => o.value === v) ? v : 0.0);
         }
 
         // Pyramids: reverse-engineer range + fine-tune
@@ -350,19 +355,22 @@ export default function RangosSheetPage() {
                 <p className="text-[10px] text-zinc-400 mt-0.5">Habilidad en Canon o Sincronizado · Sin Repetir Atletas</p>
               </div>
               <div className="p-4">
-                <div className="flex gap-1.5">
-                  {PART_MAX_OPTS.map((v) => (
+                <div className="flex flex-col gap-1.5">
+                  {PART_MAX_OPTS.map(({ value, label }) => (
                     <button
-                      key={v}
+                      key={value}
                       type="button"
-                      onClick={() => setStuntsPartMax(v)}
-                      className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors border ${
-                        stuntsPartMax === v
+                      onClick={() => setStuntsPartMax(value)}
+                      className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
+                        stuntsPartMax === value
                           ? 'bg-violet-600 text-white border-violet-600'
                           : 'bg-white text-zinc-700 border-zinc-300 hover:border-violet-400 hover:text-violet-700'
                       }`}
                     >
-                      {v.toFixed(1)}
+                      <span className="flex-1">{label}</span>
+                      <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${stuntsPartMax === value ? 'text-white/80' : 'text-zinc-400'}`}>
+                        {value.toFixed(1)}
+                      </span>
                     </button>
                   ))}
                 </div>
