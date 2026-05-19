@@ -190,7 +190,9 @@ export default function BuildingSheetPage() {
   const [creativityBuilding,  setCreativityBuilding]  = useState<number>(0.0);
   const [showmanshipBuilding, setShowmanshipBuilding] = useState<number>(0.0);
 
-  const [notes, setNotes] = useState('');
+  const [stuntsNotes,   setStuntsNotes]   = useState('');
+  const [pyramidsNotes, setPyramidsNotes] = useState('');
+  const [tossesNotes,   setTossesNotes]   = useState('');
 
   // ── Computed totals ───────────────────────────────────────────────────────
   const stuntsDiffTotal   = parseFloat((stuntsRango + stuntsSkills.reduce((s, v) => s + v, 0)).toFixed(2));
@@ -248,7 +250,16 @@ export default function BuildingSheetPage() {
         if (sheet.showmanship_building) {
           setShowmanshipBuilding(Math.min(2.0, parseFloat(sheet.showmanship_building)));
         }
-        if (sheet.notes) setNotes(sheet.notes);
+        if (sheet.notes) {
+          try {
+            const parsed = JSON.parse(sheet.notes);
+            setStuntsNotes(parsed.stunts ?? '');
+            setPyramidsNotes(parsed.pyramids ?? '');
+            setTossesNotes(parsed.tosses ?? '');
+          } catch {
+            setStuntsNotes(sheet.notes);
+          }
+        }
       }
     } finally {
       setLoading(false);
@@ -271,7 +282,7 @@ export default function BuildingSheetPage() {
         tosses_execution:     String(tossesExecTotal),
         creativity_building:  String(creativityBuilding),
         showmanship_building: String(showmanshipBuilding),
-        notes,
+        notes: JSON.stringify({ stunts: stuntsNotes, pyramids: pyramidsNotes, tosses: tossesNotes }),
       };
 
       let saved: ScoreSheet;
@@ -434,7 +445,7 @@ export default function BuildingSheetPage() {
               </div>
             </div>
 
-            {/* RIGHT: Execution + Total */}
+            {/* RIGHT: Execution + Total + Comments */}
             <div className="flex flex-col gap-4">
               <ExecSection label="Elevaciones" max={STUNTS_EXEC_MAX} deds={stuntsExecDeds} onChange={setStuntsExecDeds} />
               <SectionTotal
@@ -446,6 +457,20 @@ export default function BuildingSheetPage() {
                 ]}
                 total={stuntsSectionTotal}
               />
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+                <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Elevaciones</span>
+                </div>
+                <div className="p-3">
+                  <textarea
+                    value={stuntsNotes}
+                    onChange={(e) => setStuntsNotes(e.target.value)}
+                    placeholder="Observaciones sobre Elevaciones..."
+                    rows={3}
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -512,7 +537,7 @@ export default function BuildingSheetPage() {
               </div>
             </div>
 
-            {/* RIGHT: Execution + Total */}
+            {/* RIGHT: Execution + Total + Comments */}
             <div className="flex flex-col gap-4">
               <ExecSection label="Pirámides" max={PYRAMIDS_EXEC_MAX} deds={pyramidsExecDeds} onChange={setPyramidsExecDeds} />
               <SectionTotal
@@ -523,6 +548,20 @@ export default function BuildingSheetPage() {
                 ]}
                 total={pyramidsSectionTotal}
               />
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+                <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Pirámides</span>
+                </div>
+                <div className="p-3">
+                  <textarea
+                    value={pyramidsNotes}
+                    onChange={(e) => setPyramidsNotes(e.target.value)}
+                    placeholder="Observaciones sobre Pirámides..."
+                    rows={3}
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -561,7 +600,7 @@ export default function BuildingSheetPage() {
               </div>
             </div>
 
-            {/* RIGHT: Execution + Total */}
+            {/* RIGHT: Execution + Total + Comments */}
             <div className="flex flex-col gap-4">
               <ExecSection label="Lanzamientos" max={TOSSES_EXEC_MAX} deds={tossesExecDeds} onChange={setTossesExecDeds} cats={TOSS_EXEC_CATS} />
               <SectionTotal
@@ -572,6 +611,20 @@ export default function BuildingSheetPage() {
                 ]}
                 total={tossesSectionTotal}
               />
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+                <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Lanzamientos</span>
+                </div>
+                <div className="p-3">
+                  <textarea
+                    value={tossesNotes}
+                    onChange={(e) => setTossesNotes(e.target.value)}
+                    placeholder="Observaciones sobre Lanzamientos..."
+                    rows={3}
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -656,24 +709,6 @@ export default function BuildingSheetPage() {
                 </div>
                 <p className="text-[11px] text-zinc-400 leading-snug">Ritmo, Confianza y Conexión durante la rutina</p>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── NOTES ────────────────────────────────────────────────────── */}
-        <section>
-          <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-            <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-              <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Notas del juez</span>
-            </div>
-            <div className="p-4">
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Observaciones, comentarios sobre la rutina..."
-                rows={3}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
-              />
             </div>
           </div>
         </section>
