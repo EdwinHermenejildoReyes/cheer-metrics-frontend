@@ -100,7 +100,8 @@ export default function OverallSheetPage() {
   const [danceExecution,     setDanceExecution]     = useState<number>(0);
   const [creativityOverall,  setCreativityOverall]  = useState<number>(0.0);
   const [showmanshipOverall, setShowmanshipOverall] = useState<number>(0.0);
-  const [notes,              setNotes]              = useState('');
+  const [formationsNotes,    setFormationsNotes]    = useState('');
+  const [danceNotes,         setDanceNotes]         = useState('');
 
   // ── Computed ──────────────────────────────────────────────────────────────
   const overallSubtotal = parseFloat((formationsScore + danceDifficulty + danceExecution).toFixed(2));
@@ -140,7 +141,15 @@ export default function OverallSheetPage() {
         if (sheet.showmanship_overall) {
           setShowmanshipOverall(Math.min(2.0, parseFloat(sheet.showmanship_overall)));
         }
-        if (sheet.notes) setNotes(sheet.notes);
+        if (sheet.notes) {
+          try {
+            const p = JSON.parse(sheet.notes);
+            setFormationsNotes(p.formations ?? '');
+            setDanceNotes(p.dance ?? '');
+          } catch {
+            setFormationsNotes(sheet.notes);
+          }
+        }
       }
     } finally {
       setLoading(false);
@@ -159,7 +168,7 @@ export default function OverallSheetPage() {
         dance_execution:     String(danceExecution),
         creativity_overall:  String(creativityOverall),
         showmanship_overall: String(showmanshipOverall),
-        notes,
+        notes: JSON.stringify({ formations: formationsNotes, dance: danceNotes }),
       };
 
       let saved: ScoreSheet;
@@ -215,104 +224,91 @@ export default function OverallSheetPage() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-6 py-8 flex flex-col gap-10">
+      <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col gap-10">
 
-        {/* ── FORMACIONES Y TRANSICIONES ───────────────────────────────── */}
-        <section className="flex flex-col gap-4">
-          <div>
-            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
-              Formaciones y Transiciones
-            </h2>
-            <p className="text-xs text-zinc-400 mt-0.5">
-              −0.1 por cada problema de espaciado en formaciones o choque/empalme en transiciones
-            </p>
-          </div>
+        {/* ── DOS COLUMNAS: Formaciones | Baile ────────────────────────── */}
+        <div className="grid grid-cols-2 gap-5 items-start">
 
-          <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-              <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                Valor Inicial
-              </span>
-              <div className="flex items-center gap-3">
-                {errorsCount > 0 && (
-                  <span className="text-xs text-red-500 tabular-nums">
-                    {errorsCount} error{errorsCount !== 1 ? 'es' : ''} × −0.1
+          {/* LEFT: Formaciones */}
+          <section className="flex flex-col gap-3">
+            <div>
+              <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Formaciones y Transiciones</h2>
+              <p className="text-xs text-zinc-400 mt-0.5">−0.1 por cada problema de espaciado en formaciones o choque/empalme en transiciones</p>
+            </div>
+
+            <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
+                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Valor Inicial</span>
+                <div className="flex items-center gap-3">
+                  {errorsCount > 0 && (
+                    <span className="text-xs text-red-500 tabular-nums">{errorsCount} error{errorsCount !== 1 ? 'es' : ''} × −0.1</span>
+                  )}
+                  <span className={`text-xl font-bold tabular-nums ${formationsScore < 2.0 ? 'text-red-700' : 'text-zinc-900'}`}>
+                    {fmt(formationsScore)}
                   </span>
-                )}
-                <span className={`text-xl font-bold tabular-nums ${
-                  formationsScore < 2.0 ? 'text-red-700' : 'text-zinc-900'
-                }`}>
-                  {fmt(formationsScore)}
-                </span>
+                </div>
+              </div>
+              <div className="p-4">
+                <div className="grid grid-cols-11 gap-1">
+                  {FORMATIONS_VALUES.map((v) => {
+                    const active = formationsScore === v;
+                    const errors = Math.round((2.0 - v) * 10);
+                    return (
+                      <button key={v} type="button" onClick={() => setFormationsScore(v)}
+                        title={errors === 0 ? 'Sin errores' : `${errors} error${errors !== 1 ? 'es' : ''}`}
+                        className={`flex flex-col items-center gap-0.5 rounded-lg py-2.5 text-xs font-semibold transition-colors border ${
+                          active ? 'bg-zinc-900 text-white border-zinc-900'
+                            : v < 1.5 ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+                            : v < 1.8 ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+                            : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
+                        }`}
+                      >
+                        <span className="tabular-nums">{v.toFixed(1)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex justify-between mt-2 text-[10px] text-zinc-400">
+                  <span>← Más errores</span>
+                  <span>Sin errores →</span>
+                </div>
               </div>
             </div>
 
-            {/* Value selector grid */}
-            <div className="p-4">
-              <div className="grid grid-cols-11 gap-1">
-                {FORMATIONS_VALUES.map((v) => {
-                  const active = formationsScore === v;
-                  const errors = Math.round((2.0 - v) * 10);
-                  return (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => setFormationsScore(v)}
-                      title={errors === 0 ? 'Sin errores' : `${errors} error${errors !== 1 ? 'es' : ''}`}
-                      className={`flex flex-col items-center gap-0.5 rounded-lg py-2.5 text-xs font-semibold transition-colors border ${
-                        active
-                          ? 'bg-zinc-900 text-white border-zinc-900'
-                          : v < 1.5
-                          ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
-                          : v < 1.8
-                          ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
-                          : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
-                      }`}
-                    >
-                      <span className="tabular-nums">{v.toFixed(1)}</span>
-                    </button>
-                  );
-                })}
+            <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+              <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
+                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Formaciones</span>
               </div>
-              <div className="flex justify-between mt-2 text-[10px] text-zinc-400">
-                <span>← Más errores</span>
-                <span>Sin errores →</span>
+              <div className="p-3">
+                <textarea value={formationsNotes} onChange={(e) => setFormationsNotes(e.target.value)}
+                  placeholder="Observaciones sobre formaciones y transiciones..." rows={4}
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* ── DIFICULTAD DE BAILE ───────────────────────────────────────── */}
-        <section className="flex flex-col gap-4">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Dificultad de Baile</h2>
+          {/* RIGHT: Baile */}
+          <section className="flex flex-col gap-3">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Baile</h2>
 
-          <DanceLevelSelector
-            label="Dificultad de Baile"
-            criteria={DANCE_DIFF_CRITERIA}
-            value={danceDifficulty}
-            onChange={setDanceDifficulty}
-          />
+            <DanceLevelSelector label="Dificultad de Baile" criteria={DANCE_DIFF_CRITERIA} value={danceDifficulty} onChange={setDanceDifficulty} />
+            {danceDifficulty === 0 && <p className="text-xs text-amber-600 text-center">— Selecciona un nivel de dificultad —</p>}
 
-          {danceDifficulty === 0 && (
-            <p className="text-xs text-amber-600 text-center">— Selecciona un nivel de dificultad —</p>
-          )}
-        </section>
+            <DanceLevelSelector label="Ejecución de Baile" criteria={DANCE_EXEC_CRITERIA} value={danceExecution} onChange={setDanceExecution} />
+            {danceExecution === 0 && <p className="text-xs text-amber-600 text-center">— Selecciona un nivel de ejecución —</p>}
 
-        {/* ── EJECUCIÓN DE BAILE ────────────────────────────────────────── */}
-        <section className="flex flex-col gap-4">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Ejecución de Baile</h2>
-
-          <DanceLevelSelector
-            label="Ejecución de Baile"
-            criteria={DANCE_EXEC_CRITERIA}
-            value={danceExecution}
-            onChange={setDanceExecution}
-          />
-
-          {danceExecution === 0 && (
-            <p className="text-xs text-amber-600 text-center">— Selecciona un nivel de ejecución —</p>
-          )}
-        </section>
+            <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+              <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
+                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Baile</span>
+              </div>
+              <div className="p-3">
+                <textarea value={danceNotes} onChange={(e) => setDanceNotes(e.target.value)}
+                  placeholder="Observaciones sobre dificultad y ejecución de baile..." rows={4}
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+              </div>
+            </div>
+          </section>
+        </div>
 
         {/* ── OVERALL SUBTOTAL ──────────────────────────────────────────── */}
         <div className="flex items-center justify-between rounded-xl bg-purple-600 px-5 py-4 text-white shadow-sm">
@@ -324,24 +320,6 @@ export default function OverallSheetPage() {
           </div>
           <span className="text-2xl font-bold tabular-nums">{fmt(overallSubtotal)}</span>
         </div>
-
-        {/* ── COMENTARIOS ───────────────────────────────────────────────── */}
-        <section>
-          <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-            <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-              <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios</span>
-            </div>
-            <div className="p-4">
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Observaciones sobre formaciones, baile, transiciones..."
-                rows={4}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
-              />
-            </div>
-          </div>
-        </section>
 
         {/* ── CREATIVITY + SHOWMANSHIP ─────────────────────────────────── */}
         <section className="flex flex-col gap-4">

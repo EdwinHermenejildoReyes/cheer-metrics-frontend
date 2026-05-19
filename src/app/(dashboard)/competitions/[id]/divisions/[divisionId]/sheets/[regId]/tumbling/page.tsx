@@ -256,7 +256,9 @@ export default function TumblingSheetPage() {
   const [creativityTumbling,  setCreativityTumbling]  = useState<number>(0.0);
   const [showmanshipTumbling, setShowmanshipTumbling] = useState<number>(0.0);
 
-  const [notes, setNotes] = useState('');
+  const [standingNotes, setStandingNotes] = useState('');
+  const [runningNotes,  setRunningNotes]  = useState('');
+  const [jumpsNotes,    setJumpsNotes]    = useState('');
 
   // ── Computed totals ───────────────────────────────────────────────────────
   const standingExecTotal   = execScore(STANDING_EXEC_MAX, standingExecDeds);
@@ -319,7 +321,16 @@ export default function TumblingSheetPage() {
         if (sheet.showmanship_tumbling) {
           setShowmanshipTumbling(Math.min(2.0, parseFloat(sheet.showmanship_tumbling)));
         }
-        if (sheet.notes) setNotes(sheet.notes);
+        if (sheet.notes) {
+          try {
+            const p = JSON.parse(sheet.notes);
+            setStandingNotes(p.standing ?? '');
+            setRunningNotes(p.running ?? '');
+            setJumpsNotes(p.jumps ?? '');
+          } catch {
+            setStandingNotes(sheet.notes);
+          }
+        }
       }
     } finally {
       setLoading(false);
@@ -343,7 +354,7 @@ export default function TumblingSheetPage() {
         jumps_execution:      String(jumpsExecTotal),
         creativity_tumbling:  String(creativityTumbling),
         showmanship_tumbling: String(showmanshipTumbling),
-        notes,
+        notes: JSON.stringify({ standing: standingNotes, running: runningNotes, jumps: jumpsNotes }),
       };
 
       let saved: ScoreSheet;
@@ -399,117 +410,129 @@ export default function TumblingSheetPage() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-6 py-8 flex flex-col gap-10">
+      <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col gap-10">
 
         {/* ── GIMNASIA ESTÁTICA ────────────────────────────────────────── */}
-        <section className="flex flex-col gap-4">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
-            Gimnasia Estática (Standing)
-          </h2>
-
-          <TumblingDiffCard
-            label="Estática"
-            rango={standingRango} onRango={setStandingRango}
-            habilidad={standingHabilidad} onHabilidad={setStandingHabilidad}
-          />
-
-          <ExecSection
-            label="Gimnasia Estática"
-            max={STANDING_EXEC_MAX}
-            categories={STANDING_EXEC_CATS}
-            deds={standingExecDeds}
-            onChange={setStandingExecDeds}
-          />
-
-          <SectionTotal
-            label="Total Estática"
-            breakdown={[
-              { key: 'Base', value: standingRango },
-              { key: 'Hab', value: standingHabilidad },
-              { key: 'Ejec', value: standingExecTotal },
-            ]}
-            total={standingTotal}
-          />
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Gimnasia Estática (Standing)</h2>
+          <div className="grid grid-cols-2 gap-5 items-start">
+            <TumblingDiffCard
+              label="Estática"
+              rango={standingRango} onRango={setStandingRango}
+              habilidad={standingHabilidad} onHabilidad={setStandingHabilidad}
+            />
+            <div className="flex flex-col gap-4">
+              <ExecSection
+                label="Gimnasia Estática"
+                max={STANDING_EXEC_MAX}
+                categories={STANDING_EXEC_CATS}
+                deds={standingExecDeds}
+                onChange={setStandingExecDeds}
+              />
+              <SectionTotal
+                label="Total Estática"
+                breakdown={[
+                  { key: 'Base', value: standingRango },
+                  { key: 'Hab', value: standingHabilidad },
+                  { key: 'Ejec', value: standingExecTotal },
+                ]}
+                total={standingTotal}
+              />
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+                <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Estática</span>
+                </div>
+                <div className="p-3">
+                  <textarea value={standingNotes} onChange={(e) => setStandingNotes(e.target.value)}
+                    placeholder="Observaciones sobre Gimnasia Estática..." rows={3}
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* ── GIMNASIA CON CARRERA ─────────────────────────────────────── */}
-        <section className="flex flex-col gap-4">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
-            Gimnasia con Carrera (Running)
-          </h2>
-
-          <TumblingDiffCard
-            label="Con Carrera"
-            rango={runningRango} onRango={setRunningRango}
-            habilidad={runningHabilidad} onHabilidad={setRunningHabilidad}
-          />
-
-          <ExecSection
-            label="Gimnasia con Carrera"
-            max={RUNNING_EXEC_MAX}
-            categories={RUNNING_EXEC_CATS}
-            deds={runningExecDeds}
-            onChange={setRunningExecDeds}
-          />
-
-          <SectionTotal
-            label="Total Carrera"
-            breakdown={[
-              { key: 'Base', value: runningRango },
-              { key: 'Hab', value: runningHabilidad },
-              { key: 'Ejec', value: runningExecTotal },
-            ]}
-            total={runningTotal}
-          />
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Gimnasia con Carrera (Running)</h2>
+          <div className="grid grid-cols-2 gap-5 items-start">
+            <TumblingDiffCard
+              label="Con Carrera"
+              rango={runningRango} onRango={setRunningRango}
+              habilidad={runningHabilidad} onHabilidad={setRunningHabilidad}
+            />
+            <div className="flex flex-col gap-4">
+              <ExecSection
+                label="Gimnasia con Carrera"
+                max={RUNNING_EXEC_MAX}
+                categories={RUNNING_EXEC_CATS}
+                deds={runningExecDeds}
+                onChange={setRunningExecDeds}
+              />
+              <SectionTotal
+                label="Total Carrera"
+                breakdown={[
+                  { key: 'Base', value: runningRango },
+                  { key: 'Hab', value: runningHabilidad },
+                  { key: 'Ejec', value: runningExecTotal },
+                ]}
+                total={runningTotal}
+              />
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+                <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Con Carrera</span>
+                </div>
+                <div className="p-3">
+                  <textarea value={runningNotes} onChange={(e) => setRunningNotes(e.target.value)}
+                    placeholder="Observaciones sobre Gimnasia con Carrera..." rows={3}
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* ── SALTOS ───────────────────────────────────────────────────── */}
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-3">
           <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Saltos (Jumps)</h2>
-
-          <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-            <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-              <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Dificultad — Saltos Avanzados</span>
+          <div className="grid grid-cols-2 gap-5 items-start">
+            <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+              <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
+                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Dificultad — Saltos Avanzados</span>
+              </div>
+              <div className="p-4 flex flex-col gap-1.5">
+                {JUMPS_DIFF_OPTS.map(({ label: lbl, value }) => (
+                  <button key={value} type="button" onClick={() => setJumpsDiff(value)}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
+                      jumpsDiff === value ? 'bg-zinc-900 text-white border-zinc-900' : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
+                    }`}>
+                    <span className={`w-8 text-center rounded font-bold tabular-nums text-xs ${jumpsDiff === value ? 'text-zinc-300' : 'text-zinc-400'}`}>
+                      {value.toFixed(1)}
+                    </span>
+                    <span className="flex-1">{lbl}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="p-4 flex flex-col gap-1.5">
-              {JUMPS_DIFF_OPTS.map(({ label: lbl, value }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setJumpsDiff(value)}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
-                    jumpsDiff === value
-                      ? 'bg-zinc-900 text-white border-zinc-900'
-                      : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
-                  }`}
-                >
-                  <span className={`w-8 text-center rounded font-bold tabular-nums text-xs ${
-                    jumpsDiff === value ? 'text-zinc-300' : 'text-zinc-400'
-                  }`}>
-                    {value.toFixed(1)}
-                  </span>
-                  <span className="flex-1">{lbl}</span>
-                </button>
-              ))}
+            <div className="flex flex-col gap-4">
+              <ExecSection label="Saltos" max={JUMPS_EXEC_MAX} categories={JUMPS_EXEC_CATS} deds={jumpsExecDeds} onChange={setJumpsExecDeds} />
+              <SectionTotal
+                label="Total Saltos"
+                breakdown={[{ key: 'Dif', value: jumpsDiff }, { key: 'Ejec', value: jumpsExecTotal }]}
+                total={jumpsTotal}
+              />
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+                <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Saltos</span>
+                </div>
+                <div className="p-3">
+                  <textarea value={jumpsNotes} onChange={(e) => setJumpsNotes(e.target.value)}
+                    placeholder="Observaciones sobre Saltos..." rows={3}
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                </div>
+              </div>
             </div>
           </div>
-
-          <ExecSection
-            label="Saltos"
-            max={JUMPS_EXEC_MAX}
-            categories={JUMPS_EXEC_CATS}
-            deds={jumpsExecDeds}
-            onChange={setJumpsExecDeds}
-          />
-
-          <SectionTotal
-            label="Total Saltos"
-            breakdown={[
-              { key: 'Dif', value: jumpsDiff },
-              { key: 'Ejec', value: jumpsExecTotal },
-            ]}
-            total={jumpsTotal}
-          />
         </section>
 
         {/* ── TUMBLING SUBTOTAL ─────────────────────────────────────────── */}
@@ -592,24 +615,6 @@ export default function TumblingSheetPage() {
                 </div>
                 <p className="text-[11px] text-zinc-400 leading-snug">Confianza, Limpieza y Conexión durante la rutina (Habilidades de Gimnasia)</p>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── NOTES ────────────────────────────────────────────────────── */}
-        <section>
-          <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-            <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-              <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Notas del juez</span>
-            </div>
-            <div className="p-4">
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Observaciones, comentarios sobre la rutina..."
-                rows={3}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
-              />
             </div>
           </div>
         </section>

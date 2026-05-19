@@ -115,6 +115,10 @@ export default function RangosSheetPage() {
   // ── Jumps difficulty ──────────────────────────────────────────────────────
   const [jumpsDiff, setJumpsDiff] = useState<number>(0.5);
 
+  // ── Notes ─────────────────────────────────────────────────────────────────
+  const [construccionesNotes, setConstruccionesNotes] = useState('');
+  const [gimnasiaNotes,       setGimnasiaNotes]       = useState('');
+
   // ── Computed ──────────────────────────────────────────────────────────────
   const stuntsDiffTotal = parseFloat(
     (stuntsRango + stuntsSkills.reduce((s, v) => s + v, 0)).toFixed(2)
@@ -197,6 +201,17 @@ export default function RangosSheetPage() {
           const match = JUMPS_DIFF_OPTS.find((o) => o.value === v);
           if (match) setJumpsDiff(match.value);
         }
+
+        // Notes
+        if (sheet.notes) {
+          try {
+            const p = JSON.parse(sheet.notes);
+            setConstruccionesNotes(p.construcciones ?? '');
+            setGimnasiaNotes(p.gimnasia ?? '');
+          } catch {
+            setConstruccionesNotes(sheet.notes);
+          }
+        }
       }
     } finally {
       setLoading(false);
@@ -219,6 +234,7 @@ export default function RangosSheetPage() {
         running_difficulty:  String(runningDiff),
         running_drivers:     String(runningDrvs),
         jumps_difficulty:    String(jumpsDiff),
+        notes: JSON.stringify({ construcciones: construccionesNotes, gimnasia: gimnasiaNotes }),
       };
 
       let saved: ScoreSheet;
@@ -268,7 +284,8 @@ export default function RangosSheetPage() {
         </Button>
       </div>
 
-      <div className="max-w-2xl mx-auto px-6 py-8 flex flex-col gap-10">
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-2 gap-8 items-start">
 
         {/* ══ CONSTRUCCIONES ════════════════════════════════════════════════ */}
         <div>
@@ -485,6 +502,18 @@ export default function RangosSheetPage() {
               </div>
             </div>
           </section>
+
+          {/* Comentarios Construcciones */}
+          <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden mt-4">
+            <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
+              <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Construcciones</span>
+            </div>
+            <div className="p-3">
+              <textarea value={construccionesNotes} onChange={(e) => setConstruccionesNotes(e.target.value)}
+                placeholder="Observaciones sobre Elevaciones, Pirámides y Lanzamientos..." rows={4}
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+            </div>
+          </div>
         </div>
 
         {/* ══ GIMNASIA ══════════════════════════════════════════════════════ */}
@@ -588,8 +617,21 @@ export default function RangosSheetPage() {
               </div>
             </div>
           </section>
+
+          {/* Comentarios Gimnasia */}
+          <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden mt-4">
+            <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
+              <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Gimnasia</span>
+            </div>
+            <div className="p-3">
+              <textarea value={gimnasiaNotes} onChange={(e) => setGimnasiaNotes(e.target.value)}
+                placeholder="Observaciones sobre Estática, Con Carrera y Saltos..." rows={4}
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+            </div>
+          </div>
         </div>
 
+        </div>{/* end grid */}
       </div>
     </div>
   );
