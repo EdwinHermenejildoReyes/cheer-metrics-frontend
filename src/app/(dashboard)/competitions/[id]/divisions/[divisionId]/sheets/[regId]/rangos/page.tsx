@@ -12,12 +12,12 @@ import type { ScoreSheet } from '@/types/competitions';
 // ── Constants matching planillaRangos.png ───────────────────────────────────
 
 const STUNT_RANGO = [
-  { value: 3.5, label: 'No cumple sin 1G' },
-  { value: 4.0, label: '1 Habilidad Diferente' },
-  { value: 4.5, label: '2 Habilidades Diferentes' },
-  { value: 5.0, label: '3 Habilidades Diferentes' },
-  { value: 5.5, label: '4 Habilidades Diferentes' },
-  { value: 6.0, label: '5 Had Dif / 1 Hab Coed (Niv 3/4.2/4)' },
+  { value: 3.5, label: 'No cumple con 4.0' },
+  { value: 4.0, label: '4 Hab Dif por Gran Parte (Acumulativas)' },
+  { value: 4.5, label: '2 Hab Dif Simultáneas por Gran Parte' },
+  { value: 5.0, label: '3 Hab Dif Simultáneas por Gran Parte' },
+  { value: 5.5, label: '4 Hab Dif Simultáneas por Gran Parte' },
+  { value: 6.0, label: '5 Hab Dif Simultáneas por Gran Parte' },
 ];
 
 const STUNT_SKILLS = [
@@ -53,15 +53,15 @@ const PYRAMID_FINE_STEPS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
 const TOSS_DIFF_OPTS = [
   { value: 0.0, label: 'No Realiza' },
   { value: 1.0, label: 'Menos de la MAYORÍA' },
-  { value: 1.5, label: 'MAYORÍA Acumulativo' },
+  { value: 1.5, label: 'MAYORÍA del Nivel' },
   { value: 2.0, label: 'MAYORÍA Sincronizado o en Canon' },
 ];
 
 const TUMBLING_RANGO = [
-  { value: 0.5, label: 'No cumple con 1G' },
-  { value: 1.0, label: 'Menos de la Mayoría' },
-  { value: 1.5, label: '+ Mayoría' },
-  { value: 2.0, label: '+ Gran Parte' },
+  { value: 0.5, label: 'No cumple con 1.0' },
+  { value: 1.0, label: 'Menos de la MAYORÍA: 1 pase del nivel' },
+  { value: 1.5, label: 'MAYORÍA: 1 pase del nivel' },
+  { value: 2.0, label: 'GRAN PARTE: 1 pase del nivel' },
 ];
 
 const HABILIDAD_OPTS = [
@@ -72,9 +72,9 @@ const HABILIDAD_OPTS = [
 
 const JUMPS_DIFF_OPTS = [
   { value: 0.5, label: 'No cumple con 1.0' },
-  { value: 1.0, label: 'Gran Parte Realiza 1' },
-  { value: 1.5, label: 'Gran Parte Realiza 2 Conectados' },
-  { value: 2.0, label: 'MAX: 3 Conectados ó 2+1' },
+  { value: 1.0, label: 'MAYORÍA: 1 Salto Avanzado' },
+  { value: 1.5, label: 'GRAN PARTE: 2 Conectados + Variedad' },
+  { value: 2.0, label: 'GRAN PARTE: 3 Conectados ó 2+1 (variedad)' },
 ];
 
 function fmt(n: number) { return n.toFixed(2); }
@@ -120,9 +120,8 @@ export default function RangosSheetPage() {
   const [gimnasiaNotes,       setGimnasiaNotes]       = useState('');
 
   // ── Computed ──────────────────────────────────────────────────────────────
-  const stuntsDiffTotal = parseFloat(
-    (stuntsRango + stuntsSkills.reduce((s, v) => s + v, 0)).toFixed(2)
-  );
+  const stuntsSkillsTotal  = parseFloat(stuntsSkills.reduce((s, v) => s + v, 0).toFixed(2));
+  const stuntsDriversTotal = parseFloat((stuntsSkillsTotal + stuntsPartMax).toFixed(2));
   const pyramidsDiff = pyramidsRangeIdx !== null
     ? parseFloat((PYRAMID_RANGES[pyramidsRangeIdx].low + pyramidsFine).toFixed(2))
     : 0.0;
@@ -147,10 +146,10 @@ export default function RangosSheetPage() {
         setExistingSheet(sheet);
         if (!reg) setTeamName(sheet.team_name);
 
-        // Part Max
-        if (sheet.stunts_drivers) {
-          const v = parseFloat(sheet.stunts_drivers);
-          setStuntsPartMax(PART_MAX_OPTS.some((o) => o.value === v) ? v : 0.0);
+        // Stunts rango from difficulty field
+        if (sheet.stunts_difficulty) {
+          const v = parseFloat(sheet.stunts_difficulty);
+          if (STUNT_RANGO.some(r => r.value === v)) setStuntsRango(v);
         }
 
         // Pyramids: reverse-engineer range + fine-tune
@@ -202,10 +201,16 @@ export default function RangosSheetPage() {
           if (match) setJumpsDiff(match.value);
         }
 
-        // Notes
+        // Notes + raw score restoration
         if (sheet.notes) {
           try {
             const p = JSON.parse(sheet.notes);
+            if (p._scores) {
+              const s = p._scores;
+              if (s.stuntsRango !== undefined && STUNT_RANGO.some(r => r.value === s.stuntsRango)) setStuntsRango(s.stuntsRango);
+              if (Array.isArray(s.stuntsSkills) && s.stuntsSkills.length === 5) setStuntsSkills(s.stuntsSkills);
+              if (s.stuntsPartMax !== undefined && PART_MAX_OPTS.some(o => o.value === s.stuntsPartMax)) setStuntsPartMax(s.stuntsPartMax);
+            }
             setConstruccionesNotes(p.construcciones ?? '');
             setGimnasiaNotes(p.gimnasia ?? '');
           } catch {
@@ -225,8 +230,8 @@ export default function RangosSheetPage() {
     setSaving(true);
     try {
       const payload: Partial<ScoreSheet> = {
-        stunts_difficulty:   String(stuntsDiffTotal),
-        stunts_drivers:      String(stuntsPartMax),
+        stunts_difficulty:   String(stuntsRango),
+        stunts_drivers:      String(stuntsDriversTotal),
         pyramids_difficulty: String(pyramidsDiff),
         tosses_difficulty:   String(tossesDiff),
         standing_difficulty: String(standingDiff),
@@ -234,7 +239,11 @@ export default function RangosSheetPage() {
         running_difficulty:  String(runningDiff),
         running_drivers:     String(runningDrvs),
         jumps_difficulty:    String(jumpsDiff),
-        notes: JSON.stringify({ construcciones: construccionesNotes, gimnasia: gimnasiaNotes }),
+        notes: JSON.stringify({
+          construcciones: construccionesNotes,
+          gimnasia: gimnasiaNotes,
+          _scores: { stuntsRango, stuntsSkills, stuntsPartMax },
+        }),
       };
 
       let saved: ScoreSheet;
@@ -359,9 +368,9 @@ export default function RangosSheetPage() {
               </div>
               <div className="flex justify-between px-4 py-2.5 bg-zinc-50 border-t border-zinc-100 text-xs">
                 <span className="text-zinc-500">
-                  Base {fmt(stuntsRango)} + bonus {fmt(stuntsSkills.reduce((s, v) => s + v, 0))}
+                  Rango {fmt(stuntsRango)} + Grado Dif {fmt(stuntsSkillsTotal)}
                 </span>
-                <span className="font-bold text-zinc-900">Dificultad: {fmt(stuntsDiffTotal)}</span>
+                <span className="font-bold text-zinc-900">Total Drivers: {fmt(stuntsDriversTotal)}</span>
               </div>
             </div>
 
@@ -398,11 +407,11 @@ export default function RangosSheetPage() {
             <div className="flex items-center justify-between rounded-xl bg-zinc-900 px-5 py-3 text-white">
               <div className="flex items-center gap-4 text-sm">
                 <span className="text-zinc-400 text-xs uppercase tracking-wide">Total Elevaciones</span>
-                <span>Dif: <strong className="tabular-nums">{fmt(stuntsDiffTotal)}</strong></span>
-                <span>PM: <strong className="tabular-nums">{fmt(stuntsPartMax)}</strong></span>
+                <span>Dif: <strong className="tabular-nums">{fmt(stuntsRango)}</strong></span>
+                <span>Drivers: <strong className="tabular-nums">{fmt(stuntsDriversTotal)}</strong></span>
               </div>
               <span className="text-xl font-bold tabular-nums">
-                {fmt(parseFloat((stuntsDiffTotal + stuntsPartMax).toFixed(2)))}
+                {fmt(parseFloat((stuntsRango + stuntsDriversTotal).toFixed(2)))}
               </span>
             </div>
           </section>

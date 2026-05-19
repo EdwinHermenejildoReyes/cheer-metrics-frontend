@@ -16,10 +16,10 @@ const JUMPS_EXEC_MAX    = 2.00;
 
 // ── Difficulty options (labels from real score sheet) ────────────────────────
 const TUMBLING_RANGO = [
-  { label: 'No cumple con 1G', value: 0.5 },
-  { label: 'Menos de la Mayoría', value: 1.0 },
-  { label: '+ Mayoría', value: 1.5 },
-  { label: '+ Gran Parte', value: 2.0 },
+  { label: 'No cumple con 1.0', value: 0.5 },
+  { label: 'Menos de la MAYORÍA: 1 pase del nivel', value: 1.0 },
+  { label: 'MAYORÍA: 1 pase del nivel', value: 1.5 },
+  { label: 'GRAN PARTE: 1 pase del nivel', value: 2.0 },
 ];
 
 const HABILIDAD_OPTS = [
@@ -30,9 +30,9 @@ const HABILIDAD_OPTS = [
 
 const JUMPS_DIFF_OPTS = [
   { label: 'No cumple con 1.0', value: 0.5 },
-  { label: 'Gran Parte Realiza 1', value: 1.0 },
-  { label: 'Gran Parte Realiza 2 Conectados', value: 1.5 },
-  { label: 'MAX Realiza 3 Conectados ó 2+1', value: 2.0 },
+  { label: 'MAYORÍA: 1 Salto Avanzado', value: 1.0 },
+  { label: 'GRAN PARTE: 2 Conectados + Variedad', value: 1.5 },
+  { label: 'GRAN PARTE: 3 Conectados ó 2+1 (variedad)', value: 2.0 },
 ];
 
 // ── Execution categories (from blank form screenshots) ───────────────────────

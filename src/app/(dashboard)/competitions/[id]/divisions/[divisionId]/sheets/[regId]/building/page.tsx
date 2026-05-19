@@ -17,11 +17,11 @@ const TOSSES_EXEC_MAX  = 2.00;
 // ── Selection options ────────────────────────────────────────────────────────
 const STUNT_RANGO = [
   { value: 3.5, label: 'No cumple con 4.0' },
-  { value: 4.0, label: '4 Acumulativas' },
-  { value: 4.5, label: '2 Habilidades Diferentes' },
-  { value: 5.0, label: '3 Habilidades Diferentes' },
-  { value: 5.5, label: '4 Habilidades Diferentes' },
-  { value: 6.0, label: '5 Had Dif / 1 Hab Coed (Niv 3/4.2/4)' },
+  { value: 4.0, label: '4 Hab Dif por Gran Parte (Acumulativas)' },
+  { value: 4.5, label: '2 Hab Dif Simultáneas por Gran Parte' },
+  { value: 5.0, label: '3 Hab Dif Simultáneas por Gran Parte' },
+  { value: 5.5, label: '4 Hab Dif Simultáneas por Gran Parte' },
+  { value: 6.0, label: '5 Hab Dif Simultáneas por Gran Parte' },
 ];
 const STUNT_SKILLS = ['Habilidad #1', 'Habilidad #2', 'Habilidad #3', 'Habilidad #4', 'Habilidad #5 / Coed'];
 const SKILL_GRADES = [
@@ -46,7 +46,7 @@ const PYRAMID_FINE_STEPS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
 const TOSS_DIFF_OPTS = [
   { value: 0.0, label: 'No Realiza' },
   { value: 1.0, label: 'Menos de la MAYORÍA' },
-  { value: 1.5, label: 'MAYORÍA Acumulativo' },
+  { value: 1.5, label: 'MAYORÍA del Nivel' },
   { value: 2.0, label: 'MAYORÍA Sincronizado o en Canon' },
 ];
 const EXEC_CATS      = ['Volante', 'Base/Spotter', 'Transición', 'Sincronización'];
@@ -195,9 +195,10 @@ export default function BuildingSheetPage() {
   const [tossesNotes,   setTossesNotes]   = useState('');
 
   // ── Computed totals ───────────────────────────────────────────────────────
-  const stuntsDiffTotal   = parseFloat((stuntsRango + stuntsSkills.reduce((s, v) => s + v, 0)).toFixed(2));
-  const stuntsExecTotal   = execScore(STUNTS_EXEC_MAX, stuntsExecDeds);
-  const stuntsSectionTotal = parseFloat((stuntsDiffTotal + stuntsExecTotal + stuntsPartMax).toFixed(2));
+  const stuntsSkillsTotal  = parseFloat(stuntsSkills.reduce((s, v) => s + v, 0).toFixed(2));
+  const stuntsDriversTotal = parseFloat((stuntsSkillsTotal + stuntsPartMax).toFixed(2));
+  const stuntsExecTotal    = execScore(STUNTS_EXEC_MAX, stuntsExecDeds);
+  const stuntsSectionTotal  = parseFloat((stuntsRango + stuntsExecTotal + stuntsDriversTotal).toFixed(2));
 
   const pyramidsDiff = pyramidsRangeIdx !== null
     ? parseFloat((PYRAMID_RANGO[pyramidsRangeIdx].low + pyramidsFine).toFixed(1))
@@ -228,6 +229,11 @@ export default function BuildingSheetPage() {
         if (!reg) setTeamName(sheet.team_name);
 
         // Pre-populate numeric fields where possible
+        // Stunts rango from difficulty field
+        if (sheet.stunts_difficulty) {
+          const v = parseFloat(sheet.stunts_difficulty);
+          if (STUNT_RANGO.some(r => r.value === v)) setStuntsRango(v);
+        }
         if (sheet.pyramids_difficulty) {
           const v = parseFloat(sheet.pyramids_difficulty);
           const idx = PYRAMID_RANGO.findIndex(r => v >= r.low && v <= r.high);
@@ -240,10 +246,6 @@ export default function BuildingSheetPage() {
           const v = parseFloat(sheet.tosses_difficulty);
           setTossesDiff(TOSS_DIFF_OPTS.some((o) => o.value === v) ? v : 0.0);
         }
-        if (sheet.stunts_drivers) {
-          const v = parseFloat(sheet.stunts_drivers);
-          setStuntsPartMax(PART_MAX_OPTS.some((o) => o.value === v) ? v : 0.0);
-        }
         if (sheet.creativity_building) {
           setCreativityBuilding(Math.min(2.0, parseFloat(sheet.creativity_building)));
         }
@@ -253,6 +255,13 @@ export default function BuildingSheetPage() {
         if (sheet.notes) {
           try {
             const parsed = JSON.parse(sheet.notes);
+            // Restore individual score selections from _scores metadata
+            if (parsed._scores) {
+              const s = parsed._scores;
+              if (s.stuntsRango !== undefined && STUNT_RANGO.some(r => r.value === s.stuntsRango)) setStuntsRango(s.stuntsRango);
+              if (Array.isArray(s.stuntsSkills) && s.stuntsSkills.length === 5) setStuntsSkills(s.stuntsSkills);
+              if (s.stuntsPartMax !== undefined && PART_MAX_OPTS.some(o => o.value === s.stuntsPartMax)) setStuntsPartMax(s.stuntsPartMax);
+            }
             setStuntsNotes(parsed.stunts ?? '');
             setPyramidsNotes(parsed.pyramids ?? '');
             setTossesNotes(parsed.tosses ?? '');
@@ -273,16 +282,21 @@ export default function BuildingSheetPage() {
     setSaving(true);
     try {
       const payload: Partial<ScoreSheet> = {
-        stunts_difficulty:    String(stuntsDiffTotal),
+        stunts_difficulty:    String(stuntsRango),
         stunts_execution:     String(stuntsExecTotal),
-        stunts_drivers:       String(stuntsPartMax),
+        stunts_drivers:       String(stuntsDriversTotal),
         pyramids_difficulty:  String(pyramidsDiff),
         pyramids_execution:   String(pyramidsExecTotal),
         tosses_difficulty:    String(tossesDiff),
         tosses_execution:     String(tossesExecTotal),
         creativity_building:  String(creativityBuilding),
         showmanship_building: String(showmanshipBuilding),
-        notes: JSON.stringify({ stunts: stuntsNotes, pyramids: pyramidsNotes, tosses: tossesNotes }),
+        notes: JSON.stringify({
+          stunts: stuntsNotes,
+          pyramids: pyramidsNotes,
+          tosses: tossesNotes,
+          _scores: { stuntsRango, stuntsSkills, stuntsPartMax },
+        }),
       };
 
       let saved: ScoreSheet;
@@ -412,9 +426,9 @@ export default function BuildingSheetPage() {
                   </div>
                   <div className="mt-3 flex justify-between text-xs border-t border-zinc-100 pt-2">
                     <span className="text-zinc-500">
-                      Base {fmt(stuntsRango)} + bonus {fmt(stuntsSkills.reduce((s, v) => s + v, 0))}
+                      Rango {fmt(stuntsRango)} + Grado Dif {fmt(stuntsSkillsTotal)}
                     </span>
-                    <span className="font-semibold text-zinc-900">Dificultad: {fmt(stuntsDiffTotal)}</span>
+                    <span className="font-semibold text-zinc-900">Total Drivers: {fmt(stuntsDriversTotal)}</span>
                   </div>
                 </div>
 
@@ -451,9 +465,9 @@ export default function BuildingSheetPage() {
               <SectionTotal
                 label="Total Elevaciones"
                 breakdown={[
-                  { key: 'Dif', value: stuntsDiffTotal },
+                  { key: 'Dif', value: stuntsRango },
                   { key: 'Ejec', value: stuntsExecTotal },
-                  { key: 'PM', value: stuntsPartMax },
+                  { key: 'Drivers', value: stuntsDriversTotal },
                 ]}
                 total={stuntsSectionTotal}
               />
@@ -732,9 +746,9 @@ export default function BuildingSheetPage() {
           <table className="w-full">
             <tbody className="divide-y divide-zinc-100">
               {[
-                { label: 'Stunts — Dificultad',  value: stuntsDiffTotal },
-                { label: 'Stunts — Ejecución',   value: stuntsExecTotal },
-                { label: 'Stunts — Part Max',     value: stuntsPartMax },
+                { label: 'Stunts — Dificultad (Rango)',  value: stuntsRango },
+                { label: 'Stunts — Ejecución',           value: stuntsExecTotal },
+                { label: 'Stunts — Drivers (Grado+PM)',  value: stuntsDriversTotal },
                 { label: 'Pirámides — Dificultad', value: pyramidsDiff },
                 { label: 'Pirámides — Ejecución', value: pyramidsExecTotal },
                 { label: 'Lanzamientos — Dificultad', value: tossesDiff },
