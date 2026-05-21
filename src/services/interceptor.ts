@@ -52,8 +52,8 @@ export default (axiosClient: AxiosInstance): void => {
     } catch (refreshError) {
       processQueue(refreshError as Error);
       toast('Su sesión ha expirado, por favor inicie sesión nuevamente.');
-      if (typeof window !== 'undefined' && window.location.pathname !== '/') {
-        window.location.href = '/';
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.href = '/login';
       }
       return Promise.reject(refreshError);
     } finally {

@@ -1,14 +1,17 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { JudgeAssignment } from '@/types/competitions';
 
-interface User {
+export interface AuthUser {
   id: number;
   email: string;
   first_name: string;
   last_name: string;
+  is_staff: boolean;
+  judge_assignments: JudgeAssignment[];
 }
 
 interface AuthState {
-  user: User | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
 }
 
@@ -21,7 +24,7 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setUser(state, action: PayloadAction<User>) {
+    setUser(state, action: PayloadAction<AuthUser>) {
       state.user = action.payload;
       state.isAuthenticated = true;
     },

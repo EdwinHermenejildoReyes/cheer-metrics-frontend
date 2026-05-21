@@ -20,6 +20,13 @@ interface ResetPasswordConfirmBody {
   re_new_password: string;
 }
 
+export interface SimpleUser {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+}
+
 class AuthRepository {
   login = (body: LoginBody) => api.post('/auth/login/', body);
 
@@ -28,6 +35,8 @@ class AuthRepository {
   signUp = (body: SignUpBody) => api.post('/auth/users/', body);
 
   me = () => api.get('/auth/users/me/');
+
+  listUsers = () => api.get<SimpleUser[]>('/users/');
 
   resetPassword = (email: string) =>
     api.post('/auth/users/reset_password/', { email });

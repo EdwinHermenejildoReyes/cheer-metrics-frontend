@@ -11,6 +11,7 @@ import { RegistrationModal } from '@/components/competitions/RegistrationModal';
 import { ScoringSheetModal } from '@/components/competitions/ScoringSheetModal';
 import { DeductionModal } from '@/components/competitions/DeductionModal';
 import competitionsRepository from '@/repositories/competitionsRepository';
+import { useJudge } from '@/hooks/useJudge';
 import {
   AGE_GROUP_LABELS,
   SKILL_LEVEL_LABELS,
@@ -36,6 +37,7 @@ export default function DivisionDetailPage() {
   const competitionId = Number(id);
   const divId = Number(divisionId);
 
+  const { isJudge, canViewSheet } = useJudge();
   const [division, setDivision]       = useState<Division | null>(null);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [scoreSheets, setScoreSheets]     = useState<Record<number, ScoreSheet>>({});
@@ -151,10 +153,12 @@ export default function DivisionDetailPage() {
           <h2 className="text-base font-semibold text-zinc-900">
             Inscripciones <span className="font-normal text-zinc-400">({registrations.length})</span>
           </h2>
-          <Button size="sm" onClick={() => { setEditingReg(undefined); setRegModalOpen(true); }}>
-            <Plus className="h-4 w-4" />
-            Inscribir equipo
-          </Button>
+          {!isJudge && (
+            <Button size="sm" onClick={() => { setEditingReg(undefined); setRegModalOpen(true); }}>
+              <Plus className="h-4 w-4" />
+              Inscribir equipo
+            </Button>
+          )}
         </div>
 
         {registrations.length === 0 ? (
@@ -196,68 +200,86 @@ export default function DivisionDetailPage() {
                       <span className="text-xs text-zinc-400">Sin puntaje</span>
                     )}
                     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                      <Button
-                        size="sm"
-                        variant={sheet ? 'secondary' : 'primary'}
-                        onClick={() => { setScoringReg(reg); setScoreModalOpen(true); }}
-                      >
-                        {sheet ? <Pencil className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                        {sheet ? 'Editar' : 'Calificar'}
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        title="Planilla Building"
-                        onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/building`)}
-                      >
-                        <ClipboardList className="h-3.5 w-3.5 text-blue-500" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        title="Planilla Tumbling"
-                        onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/tumbling`)}
-                      >
-                        <Activity className="h-3.5 w-3.5 text-green-500" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        title="Planilla Overall"
-                        onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/overall`)}
-                      >
-                        <Layers className="h-3.5 w-3.5 text-purple-500" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        title="Planilla Partner Stunt"
-                        onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/partner-stunt`)}
-                      >
-                        <Users className="h-3.5 w-3.5 text-orange-500" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        title="Planilla Rangos (Dificultad)"
-                        onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/rangos`)}
-                      >
-                        <Target className="h-3.5 w-3.5 text-amber-500" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        title="Planilla Deducciones"
-                        onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/deducciones`)}
-                      >
-                        <Flag className="h-3.5 w-3.5 text-red-500" />
-                      </Button>
-                      <Button size="icon" variant="ghost" onClick={() => { setEditingReg(reg); setRegModalOpen(true); }}>
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button size="icon" variant="ghost" onClick={() => handleDeleteReg(reg)}>
-                        <Trash2 className="h-3.5 w-3.5 text-red-400" />
-                      </Button>
+                      {!isJudge && (
+                        <Button
+                          size="sm"
+                          variant={sheet ? 'secondary' : 'primary'}
+                          onClick={() => { setScoringReg(reg); setScoreModalOpen(true); }}
+                        >
+                          {sheet ? <Pencil className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                          {sheet ? 'Editar' : 'Calificar'}
+                        </Button>
+                      )}
+                      {canViewSheet(competitionId, 'building') && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Planilla Building"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/building`)}
+                        >
+                          <ClipboardList className="h-3.5 w-3.5 text-blue-500" />
+                        </Button>
+                      )}
+                      {canViewSheet(competitionId, 'tumbling') && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Planilla Tumbling"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/tumbling`)}
+                        >
+                          <Activity className="h-3.5 w-3.5 text-green-500" />
+                        </Button>
+                      )}
+                      {canViewSheet(competitionId, 'overall') && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Planilla Overall"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/overall`)}
+                        >
+                          <Layers className="h-3.5 w-3.5 text-purple-500" />
+                        </Button>
+                      )}
+                      {canViewSheet(competitionId, 'partner_stunt') && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Planilla Partner Stunt"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/partner-stunt`)}
+                        >
+                          <Users className="h-3.5 w-3.5 text-orange-500" />
+                        </Button>
+                      )}
+                      {canViewSheet(competitionId, 'rangos') && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Planilla Rangos (Dificultad)"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/rangos`)}
+                        >
+                          <Target className="h-3.5 w-3.5 text-amber-500" />
+                        </Button>
+                      )}
+                      {canViewSheet(competitionId, 'deducciones') && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Planilla Deducciones"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/deducciones`)}
+                        >
+                          <Flag className="h-3.5 w-3.5 text-red-500" />
+                        </Button>
+                      )}
+                      {!isJudge && (
+                        <>
+                          <Button size="icon" variant="ghost" onClick={() => { setEditingReg(reg); setRegModalOpen(true); }}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="icon" variant="ghost" onClick={() => handleDeleteReg(reg)}>
+                            <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
 

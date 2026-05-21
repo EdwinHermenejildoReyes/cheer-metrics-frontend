@@ -2,18 +2,25 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Trophy, Building2, Users, LogOut } from 'lucide-react';
+import { Trophy, Building2, Users, LogOut, Landmark } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
 import { clearAuth } from '@/store/auth/slices';
 import type { RootState } from '@/core/rootReducer';
 import authRepository from '@/repositories/authRepository';
+import { useBranding } from '@/contexts/BrandingContext';
+import { useJudge } from '@/hooks/useJudge';
 
-const nav = [
+const ADMIN_NAV = [
+  { href: '/competitions',  label: 'Competencias',   icon: Trophy },
+  { href: '/organizations', label: 'Organizaciones', icon: Landmark },
+  { href: '/athletes',      label: 'Atletas',         icon: Users },
+  { href: '/gyms',          label: 'Gimnasios',       icon: Building2 },
+];
+
+const JUDGE_NAV = [
   { href: '/competitions', label: 'Competencias', icon: Trophy },
-  { href: '/athletes',     label: 'Atletas',       icon: Users },
-  { href: '/gyms',         label: 'Gimnasios',      icon: Building2 },
 ];
 
 export function Sidebar() {
@@ -21,6 +28,9 @@ export function Sidebar() {
   const router = useRouter();
   const dispatch = useDispatch();
   const user = useSelector((s: RootState) => s.auth.user);
+  const { organization } = useBranding();
+  const { isJudge } = useJudge();
+  const nav = isJudge ? JUDGE_NAV : ADMIN_NAV;
 
   const handleLogout = async () => {
     try {
@@ -29,7 +39,7 @@ export function Sidebar() {
       // Cookies get cleared by backend regardless
     }
     dispatch(clearAuth());
-    router.replace('/');
+    router.replace('/login');
     toast.success('Sesión cerrada');
   };
 
@@ -42,15 +52,21 @@ export function Sidebar() {
       <nav className="flex flex-1 flex-col gap-1 p-3">
         {nav.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + '/');
+          const activeStyle = active && organization
+            ? { backgroundColor: organization.primary_color, color: organization.text_on_primary }
+            : undefined;
           return (
             <Link
               key={href}
               href={href}
+              style={activeStyle}
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                active
+                active && !organization
                   ? 'bg-zinc-900 text-white'
-                  : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
+                  : !active
+                  ? 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
+                  : '',
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />

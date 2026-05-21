@@ -3,6 +3,8 @@ import type {
   Competition,
   Division,
   Gym,
+  JudgeAssignment,
+  Organization,
   Team,
   Registration,
   ScoreSheet,
@@ -11,6 +13,28 @@ import type {
 } from '@/types/competitions';
 
 class CompetitionsRepository {
+  // Organizations
+  listOrganizations = (params?: Record<string, string>) =>
+    api.get<PaginatedResponse<Organization>>('/organizations/', { params });
+
+  getOrganization = (id: number) =>
+    api.get<Organization>(`/organizations/${id}/`);
+
+  createOrganization = (data: FormData) =>
+    api.post<Organization>('/organizations/', data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
+  updateOrganization = (id: number, data: FormData | Partial<Organization>) =>
+    api.patch<Organization>(`/organizations/${id}/`, data,
+      data instanceof FormData
+        ? { headers: { 'Content-Type': 'multipart/form-data' } }
+        : undefined,
+    );
+
+  deleteOrganization = (id: number) =>
+    api.delete(`/organizations/${id}/`);
+
   // Competitions
   listCompetitions = (params?: Record<string, string>) =>
     api.get<PaginatedResponse<Competition>>('/competitions/', { params });
@@ -89,6 +113,16 @@ class CompetitionsRepository {
 
   deleteDeduction = (id: number) =>
     api.delete(`/deductions/${id}/`);
+
+  // Judge assignments
+  listJudgeAssignments = (params?: Record<string, string>) =>
+    api.get<PaginatedResponse<JudgeAssignment>>('/judge-assignments/', { params });
+
+  createJudgeAssignment = (data: Partial<JudgeAssignment>) =>
+    api.post<JudgeAssignment>('/judge-assignments/', data);
+
+  deleteJudgeAssignment = (id: number) =>
+    api.delete(`/judge-assignments/${id}/`);
 }
 
 export default new CompetitionsRepository();

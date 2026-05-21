@@ -1,3 +1,25 @@
+export type SheetType =
+  | 'building' | 'tumbling' | 'rangos' | 'overall' | 'partner_stunt' | 'deducciones';
+
+export const SHEET_TYPE_LABELS: Record<SheetType, string> = {
+  building:      'Building (Elevaciones)',
+  tumbling:      'Tumbling (Gimnasia)',
+  rangos:        'Rangos (Dificultad)',
+  overall:       'Overall (General)',
+  partner_stunt: 'Partner Stunt',
+  deducciones:   'Deducciones',
+};
+
+export interface JudgeAssignment {
+  id: number;
+  user: number;
+  user_name: string;
+  competition: number;
+  competition_name: string;
+  competition_date: string;
+  sheet_type: SheetType;
+}
+
 export type Regulation = 'UCA' | 'IASF' | 'ICU';
 export type AgeGroup = 'tiny' | 'mini' | 'youth' | 'junior' | 'senior' | 'open';
 export type SkillLevel =
@@ -30,8 +52,21 @@ export type ScoreFieldKey =
   | 'pg_technique' | 'pg_difficulty' | 'pg_form_appearance'
   | 'pg_transitions' | 'pg_expressiveness';
 
+export interface Organization {
+  id: number;
+  name: string;
+  logo: string | null;
+  primary_color: string;
+  secondary_color: string;
+  accent_color: string;
+  text_on_primary: string;
+  is_enable: boolean;
+}
+
 export interface Competition {
   id: number;
+  organization: number | null;
+  organization_detail: Organization | null;
   name: string;
   date: string;
   venue: string;

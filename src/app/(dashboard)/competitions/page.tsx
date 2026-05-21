@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { PageSpinner } from '@/components/ui/spinner';
 import { CompetitionModal } from '@/components/competitions/CompetitionModal';
 import competitionsRepository from '@/repositories/competitionsRepository';
+import { useJudge } from '@/hooks/useJudge';
 import type { Competition } from '@/types/competitions';
 
 export default function CompetitionsPage() {
@@ -16,6 +17,7 @@ export default function CompetitionsPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Competition | undefined>();
+  const { isJudge, canViewCompetition } = useJudge();
 
   const load = async () => {
     try {
@@ -49,12 +51,14 @@ export default function CompetitionsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-zinc-900">Competencias</h1>
-          <p className="text-sm text-zinc-500">{competitions.length} competencia{competitions.length !== 1 ? 's' : ''}</p>
+          <p className="text-sm text-zinc-500">{competitions.filter((c) => canViewCompetition(c.id)).length} competencia{competitions.filter((c) => canViewCompetition(c.id)).length !== 1 ? 's' : ''}</p>
         </div>
-        <Button onClick={openNew}>
-          <Plus className="h-4 w-4" />
-          Nueva competencia
-        </Button>
+        {!isJudge && (
+          <Button onClick={openNew}>
+            <Plus className="h-4 w-4" />
+            Nueva competencia
+          </Button>
+        )}
       </div>
 
       {loading ? (
@@ -78,13 +82,32 @@ export default function CompetitionsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
-              {competitions.map((c) => (
+              {competitions.filter((c) => canViewCompetition(c.id)).map((c) => (
                 <tr
                   key={c.id}
                   className="cursor-pointer hover:bg-zinc-50 transition-colors"
                   onClick={() => router.push(`/competitions/${c.id}`)}
                 >
-                  <td className="px-5 py-3.5 font-medium text-zinc-900">{c.name}</td>
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                      {c.organization_detail && (
+                        <div
+                          className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0 overflow-hidden"
+                          style={{ backgroundColor: c.organization_detail.primary_color }}
+                        >
+                          {c.organization_detail.logo ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={c.organization_detail.logo} alt="" className="h-full w-full object-contain p-0.5" />
+                          ) : (
+                            <span className="text-[10px] font-black" style={{ color: c.organization_detail.text_on_primary }}>
+                              {c.organization_detail.name.charAt(0)}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <span className="font-medium text-zinc-900">{c.name}</span>
+                    </div>
+                  </td>
                   <td className="px-5 py-3.5 text-zinc-600">
                     <span className="flex items-center gap-1.5">
                       <CalendarDays className="h-3.5 w-3.5 text-zinc-400" />
@@ -100,11 +123,13 @@ export default function CompetitionsPage() {
                   <td className="px-5 py-3.5">
                     <Badge variant="info">{c.regulation}</Badge>
                   </td>
-                  <td className="px-5 py-3.5 text-right">
-                    <Button size="icon" variant="ghost" onClick={(e) => openEdit(e, c)}>
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                  </td>
+                  {!isJudge && (
+                    <td className="px-5 py-3.5 text-right">
+                      <Button size="icon" variant="ghost" onClick={(e) => openEdit(e, c)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
