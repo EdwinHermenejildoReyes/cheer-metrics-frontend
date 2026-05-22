@@ -44,6 +44,14 @@ class AuthRepository {
 
   approveUser = (userId: number) => api.post(`/users/${userId}/approve/`);
 
+  updateMe = (data: FormData | { first_name?: string; last_name?: string }) =>
+    api.patch('/auth/users/me/', data, {
+      headers: data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {},
+    });
+
+  setPassword = (body: { current_password: string; new_password: string }) =>
+    api.post('/auth/users/set_password/', body);
+
   resetPassword = (email: string) =>
     api.post('/auth/users/reset_password/', { email });
 

@@ -9,6 +9,7 @@ export interface AuthUser {
   is_staff: boolean;
   is_approved: boolean;
   role: string;
+  avatar: string | null;
   judge_assignments: JudgeAssignment[];
 }
 
