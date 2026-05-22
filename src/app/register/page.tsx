@@ -56,6 +56,7 @@ export default function RegisterPage() {
     handleSubmit,
     watch,
     setValue,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
@@ -66,9 +67,30 @@ export default function RegisterPage() {
       await authRepository.signUp(values);
     } catch (err: unknown) {
       const data = (err as { response?: { data?: Record<string, string[]> } })?.response?.data;
-      if (data?.email) {
-        toast.error(data.email[0]);
-      } else {
+      if (!data) {
+        toast.error('No se pudo crear la cuenta. Intente nuevamente.');
+        return;
+      }
+
+      // Map backend field errors to inline form errors
+      const fieldMap: Record<string, keyof FormValues> = {
+        first_name: 'first_name',
+        last_name:  'last_name',
+        email:      'email',
+        password:   'password',
+        re_password: 're_password',
+        role:       'role',
+      };
+      let hasFieldError = false;
+      for (const [key, field] of Object.entries(fieldMap)) {
+        if (data[key]?.length) {
+          setError(field, { message: data[key][0] });
+          hasFieldError = true;
+        }
+      }
+      if (data.non_field_errors?.length) {
+        toast.error(data.non_field_errors[0]);
+      } else if (!hasFieldError) {
         toast.error('No se pudo crear la cuenta. Intente nuevamente.');
       }
       return;
