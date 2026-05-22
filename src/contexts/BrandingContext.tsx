@@ -19,6 +19,21 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   const lastCompId = useRef<number | null>(null);
 
   useEffect(() => {
+    const root = document.documentElement;
+    if (organization) {
+      root.style.setProperty('--brand-primary', organization.primary_color);
+      root.style.setProperty('--brand-primary-text', organization.text_on_primary);
+      root.style.setProperty('--brand-secondary', organization.secondary_color);
+      root.style.setProperty('--brand-accent', organization.accent_color);
+    } else {
+      root.style.removeProperty('--brand-primary');
+      root.style.removeProperty('--brand-primary-text');
+      root.style.removeProperty('--brand-secondary');
+      root.style.removeProperty('--brand-accent');
+    }
+  }, [organization]);
+
+  useEffect(() => {
     const match = pathname.match(/^\/competitions\/(\d+)/);
     const compId = match ? Number(match[1]) : null;
 

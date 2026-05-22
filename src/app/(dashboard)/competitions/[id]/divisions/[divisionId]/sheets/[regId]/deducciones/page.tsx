@@ -385,9 +385,9 @@ export default function DeduccionesSheetPage() {
                   <span className="text-sm font-semibold uppercase tracking-wide">Total Descuentos</span>
                   <span className="text-2xl font-bold tabular-nums">−{fmt(totalDed)}</span>
                 </div>
-                <div className="flex items-center justify-between rounded-xl bg-zinc-900 px-5 py-3 text-white">
+                <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
                   <div className="flex items-center gap-4 text-sm">
-                    <span className="text-zinc-400 text-xs uppercase tracking-wide">Score final</span>
+                    <span className="text-xs uppercase tracking-wide opacity-60">Score final</span>
                     <span>Escalado: <strong className="tabular-nums">{fmt(scaledScore)}</strong></span>
                     <span>−<strong className="text-red-400 tabular-nums">{fmt(totalDed)}</strong></span>
                   </div>

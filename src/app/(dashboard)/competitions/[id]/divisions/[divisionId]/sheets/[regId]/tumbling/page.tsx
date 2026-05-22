@@ -109,9 +109,9 @@ function SectionTotal({ label, breakdown, total }: {
   total: number;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-xl bg-zinc-900 px-5 py-3 text-white">
+    <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
       <div className="flex items-center gap-4 text-sm">
-        <span className="text-zinc-400 text-xs uppercase tracking-wide">{label}</span>
+        <span className="text-xs uppercase tracking-wide opacity-60">{label}</span>
         {breakdown.map(({ key, value }) => (
           <span key={key}>
             {key}: <strong className="tabular-nums">{fmt(value)}</strong>
@@ -154,9 +154,10 @@ function TumblingDiffCard({
                 onClick={() => onRango(value)}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
                   rango === value
-                    ? 'bg-zinc-900 text-white border-zinc-900'
+                    ? 'border-transparent'
                     : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                 }`}
+                style={rango === value ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
               >
                 <span className={`w-8 text-center rounded font-bold tabular-nums text-xs ${
                   rango === value ? 'text-zinc-300' : 'text-zinc-400'
@@ -181,9 +182,10 @@ function TumblingDiffCard({
                   onClick={() => onHabilidad(value)}
                   className={`flex-1 flex flex-col items-center gap-0.5 rounded-lg px-2 py-2.5 text-xs font-medium transition-colors border ${
                     habilidad === value
-                      ? 'bg-violet-600 text-white border-violet-600'
+                      ? 'border-transparent'
                       : 'bg-white text-zinc-600 border-zinc-300 hover:border-violet-400 hover:text-violet-700'
                   }`}
+                  style={habilidad === value ? { backgroundColor: 'var(--brand-accent)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-accent)' } : undefined}
                 >
                   <span className="font-bold text-sm">{value.toFixed(1)}</span>
                   <span className="leading-tight text-center opacity-80">{lbl}</span>
@@ -543,8 +545,9 @@ export default function TumblingSheetPage() {
                     {tCfg.jumpsDiffOpts.map(({ label: lbl, value }) => (
                       <button key={value} type="button" onClick={() => setJumpsDiff(value)}
                         className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
-                          jumpsDiff === value ? 'bg-zinc-900 text-white border-zinc-900' : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
-                        }`}>
+                          jumpsDiff === value ? 'border-transparent' : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
+                        }`}
+                        style={jumpsDiff === value ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}>
                         <span className={`w-8 text-center rounded font-bold tabular-nums text-xs ${jumpsDiff === value ? 'text-zinc-300' : 'text-zinc-400'}`}>
                           {value.toFixed(1)}
                         </span>
@@ -588,7 +591,7 @@ export default function TumblingSheetPage() {
         )}
 
         {/* ── TUMBLING SUBTOTAL ─────────────────────────────────────────── */}
-        <div className="flex items-center justify-between rounded-xl bg-green-600 px-5 py-4 text-white shadow-sm">
+        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
           <span className="text-sm font-semibold uppercase tracking-wide">Subtotal Gimnasia</span>
           <span className="text-2xl font-bold tabular-nums">{fmt(tumblingSubtotal)}</span>
         </div>
@@ -672,10 +675,10 @@ export default function TumblingSheetPage() {
         </section>
 
         {/* ── GRAND TOTAL ───────────────────────────────────────────────── */}
-        <div className="rounded-xl bg-zinc-900 px-6 py-5 text-white flex items-center justify-between shadow-lg">
+        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
           <div>
-            <p className="text-xs uppercase tracking-wide text-zinc-400 font-medium">Total Planilla Tumbling</p>
-            <p className="text-xs text-zinc-500 mt-0.5">
+            <p className="text-xs uppercase tracking-wide opacity-60 font-medium">Total Planilla Tumbling</p>
+            <p className="text-xs opacity-40 mt-0.5">
               Gimnasia + Creatividad ({fmt(creativityTumbling)}) + Showmanship ({fmt(showmanshipTumbling)})
             </p>
           </div>
@@ -737,9 +740,9 @@ export default function TumblingSheetPage() {
                   <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(jumpsExecTotal)}</td>
                 </tr>
               )}
-              <tr className="bg-green-50">
-                <td className="px-4 py-2.5 font-semibold text-green-800">Subtotal Gimnasia</td>
-                <td className="px-4 py-2.5 text-right font-bold tabular-nums text-green-800">{fmt(tumblingSubtotal)}</td>
+              <tr className="bg-zinc-50">
+                <td className="px-4 py-2.5 font-semibold" style={{ color: 'var(--brand-primary)' }}>Subtotal Gimnasia</td>
+                <td className="px-4 py-2.5 text-right font-bold tabular-nums" style={{ color: 'var(--brand-primary)' }}>{fmt(tumblingSubtotal)}</td>
               </tr>
               <tr>
                 <td className="px-4 py-2.5 text-zinc-600">Creatividad (este juez)</td>
@@ -749,9 +752,9 @@ export default function TumblingSheetPage() {
                 <td className="px-4 py-2.5 text-zinc-600">Showmanship (este juez)</td>
                 <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(showmanshipTumbling)}</td>
               </tr>
-              <tr className="bg-zinc-900">
-                <td className="px-4 py-2.5 font-bold text-white">TOTAL</td>
-                <td className="px-4 py-2.5 text-right font-bold tabular-nums text-white text-lg">{fmt(sheetTotal)}</td>
+              <tr style={{ backgroundColor: 'var(--brand-primary)' }}>
+                <td className="px-4 py-2.5 font-bold" style={{ color: 'var(--brand-primary-text)' }}>TOTAL</td>
+                <td className="px-4 py-2.5 text-right font-bold tabular-nums text-lg" style={{ color: 'var(--brand-primary-text)' }}>{fmt(sheetTotal)}</td>
               </tr>
             </tbody>
           </table>

@@ -42,11 +42,11 @@ function DanceLevelSelector({
 }) {
   return (
     <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-      <div className="px-4 py-2.5 bg-zinc-800 border-b border-zinc-700">
+      <div className="px-4 py-2.5 border-b border-black/20" style={{ backgroundColor: 'var(--brand-secondary)' }}>
         <span className="text-xs font-semibold uppercase tracking-wide text-white">{label}</span>
         <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
           {criteria.map((c) => (
-            <span key={c} className="text-[10px] text-zinc-400">· {c}</span>
+            <span key={c} className="text-[10px] text-white/50">· {c}</span>
           ))}
         </div>
       </div>
@@ -59,18 +59,18 @@ function DanceLevelSelector({
               type="button"
               onClick={() => onChange(v)}
               className={`flex flex-col items-center gap-1 py-5 px-3 transition-colors ${
-                active
-                  ? 'bg-zinc-900 text-white'
-                  : 'bg-white text-zinc-700 hover:bg-zinc-50'
+                active ? '' : 'bg-white text-zinc-700 hover:bg-zinc-50'
               }`}
+              style={active ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' } : undefined}
             >
-              <span className={`text-2xl font-bold tabular-nums ${active ? 'text-white' : 'text-zinc-900'}`}>
+              <span className={`text-2xl font-bold tabular-nums ${active ? '' : 'text-zinc-900'}`}
+                style={active ? { color: 'var(--brand-primary-text)' } : undefined}>
                 {v.toFixed(1)}
               </span>
-              <span className={`text-xs font-semibold ${active ? 'text-zinc-300' : 'text-zinc-700'}`}>
+              <span className={`text-xs font-semibold ${active ? 'opacity-90' : 'text-zinc-700'}`}>
                 {lbl}
               </span>
-              <span className={`text-[10px] text-center ${active ? 'text-zinc-400' : 'text-zinc-400'}`}>
+              <span className={`text-[10px] text-center ${active ? 'opacity-60' : 'text-zinc-400'}`}>
                 {sublabel}
               </span>
             </button>
@@ -257,11 +257,12 @@ export default function OverallSheetPage() {
                       <button key={v} type="button" onClick={() => setFormationsScore(v)}
                         title={errors === 0 ? 'Sin errores' : `${errors} error${errors !== 1 ? 'es' : ''}`}
                         className={`flex flex-col items-center gap-0.5 rounded-lg py-2.5 text-xs font-semibold transition-colors border ${
-                          active ? 'bg-zinc-900 text-white border-zinc-900'
+                          active ? 'border-transparent'
                             : v < 1.5 ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
                             : v < 1.8 ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
                             : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                         }`}
+                        style={active ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
                       >
                         <span className="tabular-nums">{v.toFixed(1)}</span>
                       </button>
@@ -311,9 +312,9 @@ export default function OverallSheetPage() {
         </div>
 
         {/* ── OVERALL SUBTOTAL ──────────────────────────────────────────── */}
-        <div className="flex items-center justify-between rounded-xl bg-purple-600 px-5 py-4 text-white shadow-sm">
+        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
           <div className="flex gap-6 text-sm items-center">
-            <span className="text-purple-300 text-xs uppercase tracking-wide">Subtotal General</span>
+            <span className="text-xs uppercase tracking-wide opacity-70">Subtotal General</span>
             <span>Form: <strong>{fmt(formationsScore)}</strong></span>
             <span>Dif: <strong>{fmt(danceDifficulty)}</strong></span>
             <span>Ejec: <strong>{fmt(danceExecution)}</strong></span>
@@ -398,10 +399,10 @@ export default function OverallSheetPage() {
         </section>
 
         {/* ── GRAND TOTAL ───────────────────────────────────────────────── */}
-        <div className="rounded-xl bg-zinc-900 px-6 py-5 text-white flex items-center justify-between shadow-lg">
+        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
           <div>
-            <p className="text-xs uppercase tracking-wide text-zinc-400 font-medium">Total Planilla Overall</p>
-            <p className="text-xs text-zinc-500 mt-0.5">
+            <p className="text-xs uppercase tracking-wide opacity-60 font-medium">Total Planilla Overall</p>
+            <p className="text-xs opacity-40 mt-0.5">
               General + Creatividad ({fmt(creativityOverall)}) + Showmanship ({fmt(showmanshipOverall)})
             </p>
           </div>
@@ -438,7 +439,7 @@ export default function OverallSheetPage() {
                 </p>
               </div>
             </div>
-            <div className="border-t border-zinc-100 flex items-center justify-between px-6 py-4 bg-zinc-900 rounded-b-xl">
+            <div className="border-t border-zinc-100 flex items-center justify-between px-6 py-4 rounded-b-xl" style={{ backgroundColor: 'var(--brand-primary)' }}>
               <div>
                 <p className="text-xs text-zinc-400 uppercase tracking-wide">Puntaje Final</p>
                 <div className="flex items-center gap-2 mt-0.5">
@@ -476,9 +477,9 @@ export default function OverallSheetPage() {
                   <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(value)}</td>
                 </tr>
               ))}
-              <tr className="bg-purple-50">
-                <td className="px-4 py-2.5 font-semibold text-purple-800">Subtotal General</td>
-                <td className="px-4 py-2.5 text-right font-bold tabular-nums text-purple-800">{fmt(overallSubtotal)}</td>
+              <tr className="bg-zinc-50">
+                <td className="px-4 py-2.5 font-semibold" style={{ color: 'var(--brand-primary)' }}>Subtotal General</td>
+                <td className="px-4 py-2.5 text-right font-bold tabular-nums" style={{ color: 'var(--brand-primary)' }}>{fmt(overallSubtotal)}</td>
               </tr>
               <tr>
                 <td className="px-4 py-2.5 text-zinc-600">Creatividad (este juez)</td>
@@ -488,9 +489,9 @@ export default function OverallSheetPage() {
                 <td className="px-4 py-2.5 text-zinc-600">Showmanship (este juez)</td>
                 <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(showmanshipOverall)}</td>
               </tr>
-              <tr className="bg-zinc-900">
-                <td className="px-4 py-2.5 font-bold text-white">TOTAL</td>
-                <td className="px-4 py-2.5 text-right font-bold tabular-nums text-white text-lg">{fmt(sheetTotal)}</td>
+              <tr style={{ backgroundColor: 'var(--brand-primary)' }}>
+                <td className="px-4 py-2.5 font-bold" style={{ color: 'var(--brand-primary-text)' }}>TOTAL</td>
+                <td className="px-4 py-2.5 text-right font-bold tabular-nums text-lg" style={{ color: 'var(--brand-primary-text)' }}>{fmt(sheetTotal)}</td>
               </tr>
             </tbody>
           </table>

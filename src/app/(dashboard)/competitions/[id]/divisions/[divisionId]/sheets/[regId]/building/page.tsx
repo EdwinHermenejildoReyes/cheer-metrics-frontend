@@ -116,9 +116,9 @@ function SectionTotal({ label, breakdown, total }: {
   total: number;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-xl bg-zinc-900 px-5 py-3 text-white">
+    <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
       <div className="flex items-center gap-4 text-sm">
-        <span className="text-zinc-400 text-xs uppercase tracking-wide">{label}</span>
+        <span className="text-xs uppercase tracking-wide opacity-60">{label}</span>
         {breakdown.map(({ key, value }) => (
           <span key={key}>
             {key}: <strong className="tabular-nums">{fmt(value)}</strong>
@@ -379,9 +379,10 @@ export default function BuildingSheetPage() {
                             onClick={() => setStuntsRango(value)}
                             className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
                               stuntsRango === value
-                                ? 'bg-zinc-900 text-white border-zinc-900'
+                                ? 'border-transparent'
                                 : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                             }`}
+                            style={stuntsRango === value ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
                           >
                             <span className="flex-1">{label}</span>
                             <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${stuntsRango === value ? 'text-zinc-300' : 'text-zinc-400'}`}>
@@ -412,9 +413,10 @@ export default function BuildingSheetPage() {
                                     }}
                                     className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors border ${
                                       stuntsSkills[i] === value
-                                        ? 'bg-zinc-900 text-white border-zinc-900'
+                                        ? 'border-transparent'
                                         : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-600'
                                     }`}
+                                    style={stuntsSkills[i] === value ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
                                   >
                                     {label}
                                     {value > 0 && (
@@ -448,9 +450,10 @@ export default function BuildingSheetPage() {
                               onClick={() => setStuntsPartMax(value)}
                               className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
                                 stuntsPartMax === value
-                                  ? 'bg-violet-600 text-white border-violet-600'
+                                  ? 'border-transparent'
                                   : 'bg-white text-zinc-700 border-zinc-300 hover:border-violet-400 hover:text-violet-700'
                               }`}
+                              style={stuntsPartMax === value ? { backgroundColor: 'var(--brand-accent)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-accent)' } : undefined}
                             >
                               <span className="flex-1">{label}</span>
                               <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${stuntsPartMax === value ? 'text-white/80' : 'text-zinc-400'}`}>
@@ -533,9 +536,10 @@ export default function BuildingSheetPage() {
                             onClick={() => { setPyramidsRangeIdx(idx); setPyramidsFine(0.0); }}
                             className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
                               pyramidsRangeIdx === idx
-                                ? 'bg-zinc-900 text-white border-zinc-900'
+                                ? 'border-transparent'
                                 : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                             }`}
+                            style={pyramidsRangeIdx === idx ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
                           >
                             <span className="flex-1">{label}</span>
                             <span className={`text-sm font-bold tabular-nums ml-3 shrink-0 ${pyramidsRangeIdx === idx ? 'text-zinc-300' : 'text-zinc-400'}`}>
@@ -557,9 +561,10 @@ export default function BuildingSheetPage() {
                               onClick={() => setPyramidsFine(step)}
                               className={`rounded-lg py-2 text-xs font-semibold tabular-nums transition-colors border ${
                                 pyramidsFine === step
-                                  ? 'bg-zinc-900 text-white border-zinc-900'
+                                  ? 'border-transparent'
                                   : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-600'
                               }`}
+                              style={pyramidsFine === step ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
                             >
                               +{step.toFixed(1)}
                             </button>
@@ -626,9 +631,10 @@ export default function BuildingSheetPage() {
                         onClick={() => setTossesDiff(value)}
                         className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
                           tossesDiff === value
-                            ? 'bg-zinc-900 text-white border-zinc-900'
+                            ? 'border-transparent'
                             : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                         }`}
+                        style={tossesDiff === value ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
                       >
                         <span className="flex-1">{label}</span>
                         <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${tossesDiff === value ? 'text-zinc-300' : 'text-zinc-400'}`}>
@@ -671,7 +677,7 @@ export default function BuildingSheetPage() {
         )}
 
         {/* ── BUILDING SUBTOTAL ────────────────────────────────────────── */}
-        <div className="flex items-center justify-between rounded-xl bg-blue-600 px-5 py-4 text-white shadow-sm">
+        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
           <span className="text-sm font-semibold uppercase tracking-wide">Subtotal Elevaciones</span>
           <span className="text-2xl font-bold tabular-nums">{fmt(buildingTotal)}</span>
         </div>
@@ -755,10 +761,10 @@ export default function BuildingSheetPage() {
         </section>
 
         {/* ── GRAND TOTAL ───────────────────────────────────────────────── */}
-        <div className="rounded-xl bg-zinc-900 px-6 py-5 text-white flex items-center justify-between shadow-lg">
+        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
           <div>
-            <p className="text-xs uppercase tracking-wide text-zinc-400 font-medium">Total Planilla Building</p>
-            <p className="text-xs text-zinc-500 mt-0.5">
+            <p className="text-xs uppercase tracking-wide opacity-60 font-medium">Total Planilla Building</p>
+            <p className="text-xs opacity-40 mt-0.5">
               Elevaciones + Creatividad ({fmt(creativityBuilding)}) + Showmanship ({fmt(showmanshipBuilding)})
             </p>
           </div>
@@ -814,9 +820,9 @@ export default function BuildingSheetPage() {
                   </tr>
                 </>
               )}
-              <tr className="bg-blue-50">
-                <td className="px-4 py-2.5 font-semibold text-blue-800">Subtotal Elevaciones</td>
-                <td className="px-4 py-2.5 text-right font-bold tabular-nums text-blue-800">{fmt(buildingTotal)}</td>
+              <tr className="bg-zinc-50">
+                <td className="px-4 py-2.5 font-semibold" style={{ color: 'var(--brand-primary)' }}>Subtotal Elevaciones</td>
+                <td className="px-4 py-2.5 text-right font-bold tabular-nums" style={{ color: 'var(--brand-primary)' }}>{fmt(buildingTotal)}</td>
               </tr>
               <tr>
                 <td className="px-4 py-2.5 text-zinc-600">Creatividad (este juez)</td>
@@ -826,9 +832,9 @@ export default function BuildingSheetPage() {
                 <td className="px-4 py-2.5 text-zinc-600">Showmanship (este juez)</td>
                 <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(showmanshipBuilding)}</td>
               </tr>
-              <tr className="bg-zinc-900">
-                <td className="px-4 py-2.5 font-bold text-white">TOTAL</td>
-                <td className="px-4 py-2.5 text-right font-bold tabular-nums text-white text-lg">{fmt(sheetTotal)}</td>
+              <tr style={{ backgroundColor: 'var(--brand-primary)' }}>
+                <td className="px-4 py-2.5 font-bold" style={{ color: 'var(--brand-primary-text)' }}>TOTAL</td>
+                <td className="px-4 py-2.5 text-right font-bold tabular-nums text-lg" style={{ color: 'var(--brand-primary-text)' }}>{fmt(sheetTotal)}</td>
               </tr>
             </tbody>
           </table>

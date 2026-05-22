@@ -291,9 +291,10 @@ export default function RangosSheetPage() {
                           onClick={() => setStuntsRango(value)}
                           className={`flex items-center justify-between rounded-lg px-4 py-2.5 text-sm font-medium transition-colors border ${
                             stuntsRango === value
-                              ? 'bg-zinc-900 text-white border-zinc-900'
+                              ? 'border-transparent'
                               : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                           }`}
+                          style={stuntsRango === value ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
                         >
                           <span>{label}</span>
                           <span className={`text-base font-bold tabular-nums ${stuntsRango === value ? 'text-white' : 'text-zinc-400'}`}>
@@ -326,9 +327,10 @@ export default function RangosSheetPage() {
                                   }}
                                   className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors border ${
                                     stuntsSkills[i] === value
-                                      ? 'bg-zinc-900 text-white border-zinc-900'
+                                      ? 'border-transparent'
                                       : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-600'
                                   }`}
+                                  style={stuntsSkills[i] === value ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
                                 >
                                   {label}
                                   {value > 0 && <span className="ml-1 opacity-70">+{value.toFixed(2)}</span>}
@@ -363,9 +365,10 @@ export default function RangosSheetPage() {
                               onClick={() => setStuntsPartMax(value)}
                               className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
                                 stuntsPartMax === value
-                                  ? 'bg-violet-600 text-white border-violet-600'
+                                  ? 'border-transparent'
                                   : 'bg-white text-zinc-700 border-zinc-300 hover:border-violet-400 hover:text-violet-700'
                               }`}
+                              style={stuntsPartMax === value ? { backgroundColor: 'var(--brand-accent)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-accent)' } : undefined}
                             >
                               <span className="flex-1">{label}</span>
                               <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${stuntsPartMax === value ? 'text-white/80' : 'text-zinc-400'}`}>
@@ -379,9 +382,9 @@ export default function RangosSheetPage() {
                   )}
 
                   {/* Stunts subtotal */}
-                  <div className="flex items-center justify-between rounded-xl bg-zinc-900 px-5 py-3 text-white">
+                  <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
                     <div className="flex items-center gap-4 text-sm">
-                      <span className="text-zinc-400 text-xs uppercase tracking-wide">Total Elevaciones</span>
+                      <span className="text-xs uppercase tracking-wide opacity-60">Total Elevaciones</span>
                       <span>Dif: <strong className="tabular-nums">{fmt(stuntsRango)}</strong></span>
                       <span>Drivers: <strong className="tabular-nums">{fmt(stuntsDriversTotal)}</strong></span>
                     </div>
@@ -427,9 +430,10 @@ export default function RangosSheetPage() {
                         }}
                         className={`flex items-center justify-between rounded-lg px-4 py-2.5 text-sm font-medium transition-colors border ${
                           pyramidsRangeIdx === idx
-                            ? 'bg-zinc-900 text-white border-zinc-900'
+                            ? 'border-transparent'
                             : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                         }`}
+                        style={pyramidsRangeIdx === idx ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
                       >
                         <span>{label}</span>
                         <span className={`text-sm font-bold tabular-nums ${pyramidsRangeIdx === idx ? 'text-white' : 'text-zinc-400'}`}>
@@ -454,9 +458,10 @@ export default function RangosSheetPage() {
                               onClick={() => setPyramidsFine(step)}
                               className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-colors border ${
                                 pyramidsFine === step
-                                  ? 'bg-amber-500 text-white border-amber-500'
+                                  ? 'border-transparent'
                                   : 'bg-white text-zinc-700 border-zinc-300 hover:border-amber-400 hover:text-amber-700'
                               }`}
+                              style={pyramidsFine === step ? { backgroundColor: 'var(--brand-accent)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-accent)' } : undefined}
                             >
                               {val.toFixed(1)}
                             </button>
@@ -492,9 +497,10 @@ export default function RangosSheetPage() {
                       onClick={() => setTossesDiff(value)}
                       className={`flex items-center justify-between rounded-lg px-4 py-2.5 text-sm font-medium transition-colors border ${
                         tossesDiff === value
-                          ? 'bg-zinc-900 text-white border-zinc-900'
+                          ? 'border-transparent'
                           : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                       }`}
+                      style={tossesDiff === value ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
                     >
                       <span>{label}</span>
                       <span className={`text-base font-bold tabular-nums ${tossesDiff === value ? 'text-white' : 'text-zinc-400'}`}>
@@ -554,9 +560,9 @@ export default function RangosSheetPage() {
                     accent="emerald"
                   />
 
-                  <div className="flex items-center justify-between rounded-xl bg-zinc-900 px-5 py-3 text-white">
+                  <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
                     <div className="flex items-center gap-4 text-sm">
-                      <span className="text-zinc-400 text-xs uppercase tracking-wide">Total Estática</span>
+                      <span className="text-xs uppercase tracking-wide opacity-60">Total Estática</span>
                       <span>Rango: <strong className="tabular-nums">{fmt(standingDiff)}</strong></span>
                       <span>Hab: <strong className="tabular-nums">{fmt(standingDrvs)}</strong></span>
                     </div>
@@ -597,9 +603,9 @@ export default function RangosSheetPage() {
                     accent="emerald"
                   />
 
-                  <div className="flex items-center justify-between rounded-xl bg-zinc-900 px-5 py-3 text-white">
+                  <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
                     <div className="flex items-center gap-4 text-sm">
-                      <span className="text-zinc-400 text-xs uppercase tracking-wide">Total Con Carrera</span>
+                      <span className="text-xs uppercase tracking-wide opacity-60">Total Con Carrera</span>
                       <span>Rango: <strong className="tabular-nums">{fmt(runningDiff)}</strong></span>
                       <span>Hab: <strong className="tabular-nums">{fmt(runningDrvs)}</strong></span>
                     </div>
@@ -686,9 +692,10 @@ function TumblingDiffCard({
   onSelect: (v: number) => void;
   accent?: 'zinc' | 'emerald';
 }) {
-  const activeClass = accent === 'emerald'
-    ? 'bg-emerald-600 text-white border-emerald-600'
-    : 'bg-zinc-900 text-white border-zinc-900';
+  const activeClass = 'border-transparent';
+  const activeStyle = accent === 'emerald'
+    ? { backgroundColor: 'var(--brand-accent)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-accent)' }
+    : { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' };
   const hoverClass  = accent === 'emerald'
     ? 'hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700'
     : 'hover:border-zinc-600 hover:bg-zinc-50';
@@ -709,6 +716,7 @@ function TumblingDiffCard({
                 ? activeClass
                 : `bg-white text-zinc-700 border-zinc-300 ${hoverClass}`
             }`}
+            style={selected === value ? activeStyle : undefined}
           >
             <span>{optLabel}</span>
             <span className={`text-base font-bold tabular-nums ${selected === value ? 'text-white' : 'text-zinc-400'}`}>

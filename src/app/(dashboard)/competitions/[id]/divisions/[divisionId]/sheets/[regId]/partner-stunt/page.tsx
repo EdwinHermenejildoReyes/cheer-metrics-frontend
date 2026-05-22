@@ -398,10 +398,10 @@ export default function PartnerStuntSheetPage() {
               })}
             </tbody>
           </table>
-          <div className="flex items-center justify-between bg-zinc-900 text-white px-4 py-4 rounded-b-xl">
+          <div className="flex items-center justify-between px-4 py-4 rounded-b-xl" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
             <div>
-              <p className="text-xs uppercase tracking-wide text-zinc-400 font-medium">TOTAL Partner Stunt</p>
-              <p className="text-xs text-zinc-500 mt-0.5">{pct.toFixed(1)}% de perfección</p>
+              <p className="text-xs uppercase tracking-wide opacity-60 font-medium">TOTAL Partner Stunt</p>
+              <p className="text-xs opacity-40 mt-0.5">{pct.toFixed(1)}% de perfección</p>
             </div>
             <span className="text-3xl font-bold tabular-nums">{fmt(total)}</span>
           </div>
@@ -431,9 +431,9 @@ export default function PartnerStuntSheetPage() {
                 <p className="text-2xl font-bold tabular-nums text-zinc-900">{existingSheet.percentage}%</p>
               </div>
             </div>
-            <div className="border-t border-zinc-100 flex items-center justify-between px-6 py-4 bg-zinc-900 rounded-b-xl">
-              <p className="text-xs text-zinc-400 uppercase tracking-wide">Puntaje Final</p>
-              <span className="text-3xl font-bold tabular-nums text-white">
+            <div className="border-t border-zinc-100 flex items-center justify-between px-6 py-4 rounded-b-xl" style={{ backgroundColor: 'var(--brand-primary)' }}>
+              <p className="text-xs uppercase tracking-wide opacity-60">Puntaje Final</p>
+              <span className="text-3xl font-bold tabular-nums" style={{ color: 'var(--brand-primary-text)' }}>
                 {parseFloat(existingSheet.final_score).toFixed(2)}
               </span>
             </div>
