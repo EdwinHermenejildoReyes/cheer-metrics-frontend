@@ -6,8 +6,7 @@ export function useJudge() {
   const user = useSelector((s: RootState) => s.auth.user);
   const assignments = user?.judge_assignments ?? [];
   const isAdmin = user?.is_staff ?? false;
-  // A user with no assignments and not staff can still see everything (legacy/setup users)
-  const isJudge = !isAdmin && assignments.length > 0;
+  const isJudge = !isAdmin && user?.role === 'judge';
 
   const myCompetitionIds = [...new Set(assignments.map((a) => a.competition))];
 

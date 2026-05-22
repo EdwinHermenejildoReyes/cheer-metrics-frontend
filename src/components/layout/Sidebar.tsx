@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Trophy, Building2, Users, LogOut, Landmark } from 'lucide-react';
+import { Trophy, Building2, Users, LogOut, Landmark, UserCog } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
@@ -17,6 +17,7 @@ const ADMIN_NAV = [
   { href: '/organizations', label: 'Organizaciones', icon: Landmark },
   { href: '/athletes',      label: 'Atletas',         icon: Users },
   { href: '/gyms',          label: 'Gimnasios',       icon: Building2 },
+  { href: '/users',         label: 'Usuarios',        icon: UserCog },
 ];
 
 const JUDGE_NAV = [

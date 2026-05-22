@@ -11,6 +11,7 @@ interface SignUpBody {
   re_password: string;
   first_name?: string;
   last_name?: string;
+  role?: string;
 }
 
 interface ResetPasswordConfirmBody {
@@ -25,6 +26,9 @@ export interface SimpleUser {
   email: string;
   first_name: string;
   last_name: string;
+  role: string;
+  is_approved: boolean;
+  is_staff: boolean;
 }
 
 class AuthRepository {
@@ -37,6 +41,8 @@ class AuthRepository {
   me = () => api.get('/auth/users/me/');
 
   listUsers = () => api.get<SimpleUser[]>('/users/');
+
+  approveUser = (userId: number) => api.post(`/users/${userId}/approve/`);
 
   resetPassword = (email: string) =>
     api.post('/auth/users/reset_password/', { email });

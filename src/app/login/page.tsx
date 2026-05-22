@@ -24,11 +24,17 @@ type FormValues = z.infer<typeof schema>;
 export default function LoginPage() {
   const router = useRouter();
   const dispatch = useDispatch();
+  const user = useSelector((s: RootState) => s.auth.user);
   const isAuthenticated = useSelector((s: RootState) => s.auth.isAuthenticated);
 
   useEffect(() => {
-    if (isAuthenticated) router.replace('/competitions');
-  }, [isAuthenticated, router]);
+    if (!isAuthenticated) return;
+    if (!user?.is_staff && !user?.is_approved) {
+      router.replace('/pending');
+    } else {
+      router.replace('/competitions');
+    }
+  }, [isAuthenticated, user, router]);
 
   const {
     register,
@@ -41,7 +47,11 @@ export default function LoginPage() {
       await authRepository.login(values);
       const meRes = await authRepository.me();
       dispatch(setUser(meRes.data));
-      router.replace('/competitions');
+      if (!meRes.data.is_staff && !meRes.data.is_approved) {
+        router.replace('/pending');
+      } else {
+        router.replace('/competitions');
+      }
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
       if (status === 401) {

@@ -14,12 +14,19 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import authRepository from '@/repositories/authRepository';
 
+const ROLES = [
+  { value: 'judge',   label: 'Juez',    description: 'Califico planillas en competencias' },
+  { value: 'athlete', label: 'Atleta',  description: 'Compito en divisiones' },
+  { value: 'coach',   label: 'Coach',   description: 'Dirijo un equipo o gimnasio' },
+] as const;
+
 const schema = z
   .object({
-    first_name: z.string().min(1, 'Requerido'),
-    last_name:  z.string().min(1, 'Requerido'),
-    email:      z.string().email('Correo inválido'),
-    password:   z.string().min(8, 'Mínimo 8 caracteres'),
+    first_name:  z.string().min(1, 'Requerido'),
+    last_name:   z.string().min(1, 'Requerido'),
+    email:       z.string().email('Correo inválido'),
+    role:        z.string().refine((v) => ['judge', 'athlete', 'coach'].includes(v), 'Selecciona un rol'),
+    password:    z.string().min(8, 'Mínimo 8 caracteres'),
     re_password: z.string().min(1, 'Requerido'),
   })
   .refine((d) => d.password === d.re_password, {
@@ -32,17 +39,27 @@ type FormValues = z.infer<typeof schema>;
 export default function RegisterPage() {
   const router = useRouter();
   const dispatch = useDispatch();
+  const user = useSelector((s: RootState) => s.auth.user);
   const isAuthenticated = useSelector((s: RootState) => s.auth.isAuthenticated);
 
   useEffect(() => {
-    if (isAuthenticated) router.replace('/competitions');
-  }, [isAuthenticated, router]);
+    if (!isAuthenticated) return;
+    if (!user?.is_staff && !user?.is_approved) {
+      router.replace('/pending');
+    } else {
+      router.replace('/competitions');
+    }
+  }, [isAuthenticated, user, router]);
 
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
+
+  const selectedRole = watch('role');
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -62,8 +79,8 @@ export default function RegisterPage() {
       await authRepository.login({ email: values.email, password: values.password });
       const meRes = await authRepository.me();
       dispatch(setUser(meRes.data));
-      toast.success('Cuenta creada. ¡Bienvenido!');
-      router.replace('/competitions');
+      toast.success('Cuenta creada. Tu solicitud está pendiente de aprobación.');
+      router.replace('/pending');
     } catch {
       toast.success('Cuenta creada. Inicia sesión para continuar.');
       router.replace('/login');
@@ -76,7 +93,7 @@ export default function RegisterPage() {
         {/* Brand */}
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Cheer Metrics</h1>
-          <p className="mt-1 text-sm text-zinc-500">Crea tu cuenta de juez</p>
+          <p className="mt-1 text-sm text-zinc-500">Crea tu cuenta</p>
         </div>
 
         {/* Card */}
@@ -108,6 +125,35 @@ export default function RegisterPage() {
               error={errors.email?.message}
               {...register('email')}
             />
+
+            {/* Role picker */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium text-zinc-700">¿Cuál es tu rol?</span>
+              <div className="grid grid-cols-3 gap-2">
+                {ROLES.map((r) => (
+                  <button
+                    key={r.value}
+                    type="button"
+                    onClick={() => setValue('role', r.value, { shouldValidate: true })}
+                    className={[
+                      'flex flex-col items-center gap-1 rounded-xl border px-3 py-3 text-center transition-colors',
+                      selectedRole === r.value
+                        ? 'border-zinc-900 bg-zinc-900 text-white'
+                        : 'border-zinc-200 bg-white text-zinc-700 hover:border-zinc-400',
+                    ].join(' ')}
+                  >
+                    <span className="text-sm font-semibold">{r.label}</span>
+                    <span className={['text-[10px] leading-tight', selectedRole === r.value ? 'text-zinc-300' : 'text-zinc-400'].join(' ')}>
+                      {r.description}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {errors.role && (
+                <p className="text-xs text-red-500">{errors.role.message}</p>
+              )}
+            </div>
+
             <Input
               label="Contraseña"
               id="password"
