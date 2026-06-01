@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
 import competitionsRepository from '@/repositories/competitionsRepository';
+import { useJudge } from '@/hooks/useJudge';
 import type { ScoreSheet } from '@/types/competitions';
 
 // ── Formations scale (2.0 → 1.0 in steps of −0.1) ───────────────────────────
@@ -88,6 +89,15 @@ export default function OverallSheetPage() {
   const competitionId  = Number(id);
   const divId          = Number(divisionId);
   const registrationId = Number(regId);
+
+  const { isJudge, isCompetitionActive } = useJudge();
+
+  useEffect(() => {
+    if (isJudge && !isCompetitionActive(competitionId)) {
+      toast.error('El evento ha finalizado. Ya no puedes acceder a las planillas.');
+      router.replace(`/competitions/${competitionId}`);
+    }
+  }, [isJudge, competitionId, isCompetitionActive, router]);
 
   const [teamName,      setTeamName]      = useState<string>('');
   const [existingSheet, setExistingSheet] = useState<ScoreSheet | null>(null);

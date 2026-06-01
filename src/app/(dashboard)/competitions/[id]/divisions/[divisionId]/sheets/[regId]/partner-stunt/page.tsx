@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
 import competitionsRepository from '@/repositories/competitionsRepository';
+import { useJudge } from '@/hooks/useJudge';
 import type { ScoreSheet } from '@/types/competitions';
 
 // ── Each category scores 0–5 (max 25 total) ──────────────────────────────────
@@ -182,6 +183,15 @@ export default function PartnerStuntSheetPage() {
   const competitionId  = Number(id);
   const divId          = Number(divisionId);
   const registrationId = Number(regId);
+
+  const { isJudge, isCompetitionActive } = useJudge();
+
+  useEffect(() => {
+    if (isJudge && !isCompetitionActive(competitionId)) {
+      toast.error('El evento ha finalizado. Ya no puedes acceder a las planillas.');
+      router.replace(`/competitions/${competitionId}`);
+    }
+  }, [isJudge, competitionId, isCompetitionActive, router]);
 
   const [teamName,      setTeamName]      = useState<string>('');
   const [existingSheet, setExistingSheet] = useState<ScoreSheet | null>(null);
