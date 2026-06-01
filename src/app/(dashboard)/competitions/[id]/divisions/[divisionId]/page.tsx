@@ -37,7 +37,15 @@ export default function DivisionDetailPage() {
   const competitionId = Number(id);
   const divId = Number(divisionId);
 
-  const { isJudge, canViewSheet } = useJudge();
+  const { isJudge, isCompetitionActive, canViewSheet } = useJudge();
+
+  useEffect(() => {
+    if (isJudge && !isCompetitionActive(competitionId)) {
+      toast.error('El evento ha finalizado. Ya no puedes acceder a las planillas.');
+      router.replace(`/competitions/${competitionId}`);
+    }
+  }, [isJudge, competitionId, isCompetitionActive, router]);
+
   const [division, setDivision]       = useState<Division | null>(null);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [scoreSheets, setScoreSheets]     = useState<Record<number, ScoreSheet>>({});
