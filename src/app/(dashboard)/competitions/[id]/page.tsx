@@ -43,7 +43,14 @@ export default function CompetitionDetailPage() {
   const [newJudgeUserId, setNewJudgeUserId] = useState('');
   const [newJudgeSheet, setNewJudgeSheet] = useState<SheetType>('building');
   const [addingJudge, setAddingJudge] = useState(false);
-  const { isJudge } = useJudge();
+  const { isJudge, isCompetitionActive } = useJudge();
+
+  useEffect(() => {
+    if (isJudge && !isCompetitionActive(competitionId)) {
+      toast.error('El evento ha finalizado.');
+      router.replace('/competitions');
+    }
+  }, [isJudge, competitionId, isCompetitionActive, router]);
 
   const load = useCallback(async () => {
     try {
