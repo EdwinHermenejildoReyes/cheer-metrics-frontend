@@ -2,6 +2,7 @@ import api from '@/services/api';
 import type {
   Competition,
   Division,
+  DivisionRankings,
   Gym,
   JudgeAssignment,
   Organization,
@@ -54,6 +55,9 @@ class CompetitionsRepository {
 
   getDivision = (id: number) =>
     api.get<Division>(`/divisions/${id}/`);
+
+  getDivisionRankings = (id: number) =>
+    api.get<DivisionRankings>(`/divisions/${id}/rankings/`);
 
   createDivision = (data: Partial<Division>) =>
     api.post<Division>('/divisions/', data);

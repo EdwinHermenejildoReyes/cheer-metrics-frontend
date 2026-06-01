@@ -196,6 +196,30 @@ export interface ScoreSheet {
   percentage:           string;
 }
 
+export interface RankingEntry {
+  rank: number | null;
+  registration_id: number;
+  team_name: string;
+  gym_name: string;
+  performance_order: number | null;
+  status: RegistrationStatus;
+  has_score: boolean;
+  score_sheet_id: number | null;
+  raw_score: string | null;
+  scaled_score: string | null;
+  total_deductions: string | null;
+  final_score: string | null;
+  percentage: string | null;
+}
+
+export interface DivisionRankings {
+  division_id: number;
+  division_name: string;
+  competition_id: number;
+  competition_name: string;
+  entries: RankingEntry[];
+}
+
 export interface PaginatedResponse<T> {
   count: number;
   next: string | null;

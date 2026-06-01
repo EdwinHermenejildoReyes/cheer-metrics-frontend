@@ -161,12 +161,18 @@ export default function DivisionDetailPage() {
           <h2 className="text-base font-semibold text-zinc-900">
             Inscripciones <span className="font-normal text-zinc-400">({registrations.length})</span>
           </h2>
-          {!isJudge && (
-            <Button size="sm" onClick={() => { setEditingReg(undefined); setRegModalOpen(true); }}>
-              <Plus className="h-4 w-4" />
-              Inscribir equipo
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/rankings`)}>
+              <Trophy className="h-4 w-4" />
+              Ver ranking
             </Button>
-          )}
+            {!isJudge && (
+              <Button size="sm" onClick={() => { setEditingReg(undefined); setRegModalOpen(true); }}>
+                <Plus className="h-4 w-4" />
+                Inscribir equipo
+              </Button>
+            )}
+          </div>
         </div>
 
         {registrations.length === 0 ? (
