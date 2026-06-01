@@ -17,6 +17,8 @@ export interface JudgeAssignment {
   competition: number;
   competition_name: string;
   competition_date: string;
+  competition_end_datetime: string | null;
+  competition_is_active: boolean;
   sheet_type: SheetType;
 }
 
@@ -69,11 +71,13 @@ export interface Competition {
   organization_detail: Organization | null;
   name: string;
   date: string;
+  end_datetime: string | null;
   venue: string;
   city: string;
   regulation: Regulation;
   notes: string;
   is_enable: boolean;
+  is_active: boolean;
 }
 
 export interface Division {

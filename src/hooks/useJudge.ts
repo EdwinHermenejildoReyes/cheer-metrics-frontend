@@ -15,10 +15,18 @@ export function useJudge() {
       .filter((a) => a.competition === competitionId)
       .map((a) => a.sheet_type);
 
+  const isCompetitionActive = (competitionId: number): boolean => {
+    const assignment = assignments.find((a) => a.competition === competitionId);
+    return assignment?.competition_is_active ?? false;
+  };
+
   const canViewSheet = (competitionId: number, sheetType: SheetType): boolean => {
     if (!isJudge) return true;
     return assignments.some(
-      (a) => a.competition === competitionId && a.sheet_type === sheetType,
+      (a) =>
+        a.competition === competitionId &&
+        a.sheet_type === sheetType &&
+        a.competition_is_active,
     );
   };
 
@@ -32,6 +40,7 @@ export function useJudge() {
     isJudge,
     assignments,
     myCompetitionIds,
+    isCompetitionActive,
     sheetTypesForCompetition,
     canViewSheet,
     canViewCompetition,
