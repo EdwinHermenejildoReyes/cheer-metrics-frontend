@@ -329,7 +329,7 @@ export default function BuildingSheetPage() {
   return (
     <div className="min-h-screen bg-zinc-50 pb-16">
       {/* ── Sticky top bar ─────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 bg-white border-b border-zinc-200 px-6 py-3 shadow-sm">
+      <div className="print:hidden sticky top-0 z-10 flex items-center justify-between gap-4 bg-white border-b border-zinc-200 px-6 py-3 shadow-sm">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}`)}

@@ -92,62 +92,61 @@ export function ScoreSheetPrintView({ sheet, teamName, sheetTypeLabel, organizat
   ].filter(r => r.value && Number(r.value) > 0);
 
   return (
-    <div className="hidden print:block text-black text-sm font-sans">
+    <div className="hidden print:block text-black font-sans" style={{ fontSize: '11px', lineHeight: '1.4' }}>
 
       {/* ── Branded header bar ─────────────────────────────────────────── */}
       <div
-        className="flex items-center justify-between px-6 py-4"
+        className="flex items-center justify-between px-5 py-2.5"
         style={{ backgroundColor: primary, color: primaryText }}
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {organization?.logo && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={organization.logo}
               alt=""
-              className="h-12 w-auto object-contain"
-              style={{ filter: 'brightness(0) invert(1)' }}
+              style={{ height: '32px', width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
             />
           )}
           <div>
             {organization?.name && (
-              <p className="text-base font-bold leading-tight" style={{ color: primaryText }}>
+              <p style={{ fontSize: '13px', fontWeight: 700, color: primaryText, lineHeight: 1.2 }}>
                 {organization.name}
               </p>
             )}
-            <p className="text-xs mt-0.5" style={{ color: primaryText, opacity: 0.75 }}>
+            <p style={{ fontSize: '10px', color: primaryText, opacity: 0.75, marginTop: '1px' }}>
               Planilla de Puntuación · Cheer Metrics
             </p>
           </div>
         </div>
-        <div className="text-right text-xs" style={{ color: primaryText, opacity: 0.75 }}>
+        <div className="text-right" style={{ fontSize: '10px', color: primaryText, opacity: 0.75 }}>
           <p>Fecha de impresión</p>
-          <p className="font-semibold mt-0.5" style={{ opacity: 1 }}>{today}</p>
+          <p style={{ fontWeight: 600, opacity: 1, marginTop: '1px' }}>{today}</p>
         </div>
       </div>
 
       {/* ── Team / division info ───────────────────────────────────────── */}
-      <div className="px-6 pt-4 pb-3 mb-4" style={{ borderBottom: `2px solid ${primary}` }}>
-        <h1 className="text-2xl font-bold text-zinc-900 leading-tight">{teamName}</h1>
-        <p className="text-sm text-zinc-500 mt-0.5">{sheet.division_name} · {sheetTypeLabel}</p>
+      <div className="px-5 pt-3 pb-2" style={{ borderBottom: `2px solid ${primary}`, marginBottom: '10px' }}>
+        <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#18181b', lineHeight: 1.2 }}>{teamName}</h1>
+        <p style={{ fontSize: '11px', color: '#71717a', marginTop: '2px' }}>{sheet.division_name} · {sheetTypeLabel}</p>
       </div>
 
       {/* ── Score groups ──────────────────────────────────────────────── */}
-      <div className="px-6">
+      <div className="px-5">
         {visibleGroups.map(group => (
-          <div key={group.label} className="mb-4">
-            <div className="flex items-center gap-2 mb-1.5 pb-0.5" style={{ borderBottom: `1px solid ${primary}20` }}>
-              <div className="w-1 h-3.5 rounded-sm shrink-0" style={{ backgroundColor: primary }} />
-              <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">{group.label}</p>
+          <div key={group.label} style={{ marginBottom: '8px' }}>
+            <div className="flex items-center gap-1.5" style={{ borderBottom: `1px solid ${primary}25`, paddingBottom: '2px', marginBottom: '3px' }}>
+              <div style={{ width: '3px', height: '12px', borderRadius: '2px', backgroundColor: primary, flexShrink: 0 }} />
+              <p style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#71717a' }}>{group.label}</p>
             </div>
-            <table className="w-full text-xs">
+            <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse' }}>
               <tbody>
                 {group.fields
                   .filter(f => sheet[f as keyof ScoreSheet] !== null && sheet[f as keyof ScoreSheet] !== undefined)
                   .map(field => (
                     <tr key={field} style={{ borderBottom: '1px solid #f4f4f5' }}>
-                      <td className="py-1 pr-4 text-zinc-600">{FIELD_LABELS[field]}</td>
-                      <td className="py-1 text-right font-semibold tabular-nums text-zinc-900 w-16">
+                      <td style={{ padding: '2px 12px 2px 0', color: '#52525b' }}>{FIELD_LABELS[field]}</td>
+                      <td style={{ padding: '2px 0', textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: '#18181b', width: '56px' }}>
                         {fmt(sheet[field as keyof ScoreSheet] as string)}
                       </td>
                     </tr>
@@ -159,17 +158,17 @@ export function ScoreSheetPrintView({ sheet, teamName, sheetTypeLabel, organizat
 
         {/* ── Subtotals ──────────────────────────────────────────────── */}
         {subtotals.length > 0 && (
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-1.5 pb-0.5" style={{ borderBottom: `1px solid ${primary}20` }}>
-              <div className="w-1 h-3.5 rounded-sm shrink-0" style={{ backgroundColor: primary }} />
-              <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Subtotales</p>
+          <div style={{ marginBottom: '8px' }}>
+            <div className="flex items-center gap-1.5" style={{ borderBottom: `1px solid ${primary}25`, paddingBottom: '2px', marginBottom: '3px' }}>
+              <div style={{ width: '3px', height: '12px', borderRadius: '2px', backgroundColor: primary, flexShrink: 0 }} />
+              <p style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#71717a' }}>Subtotales</p>
             </div>
-            <table className="w-full text-xs">
+            <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse' }}>
               <tbody>
                 {subtotals.map(r => (
                   <tr key={r.label} style={{ borderBottom: '1px solid #f4f4f5' }}>
-                    <td className="py-1 pr-4 text-zinc-600">{r.label}</td>
-                    <td className="py-1 text-right font-semibold tabular-nums text-zinc-900 w-16">{fmt(r.value)}</td>
+                    <td style={{ padding: '2px 12px 2px 0', color: '#52525b' }}>{r.label}</td>
+                    <td style={{ padding: '2px 0', textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: '#18181b', width: '56px' }}>{fmt(r.value)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -179,25 +178,25 @@ export function ScoreSheetPrintView({ sheet, teamName, sheetTypeLabel, organizat
 
         {/* ── Deductions ─────────────────────────────────────────────── */}
         {sheet.deductions?.length > 0 && (
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-1.5 pb-0.5" style={{ borderBottom: '1px solid #fca5a520' }}>
-              <div className="w-1 h-3.5 rounded-sm shrink-0 bg-red-500" />
-              <p className="text-[11px] font-bold uppercase tracking-wider text-red-500">Deducciones</p>
+          <div style={{ marginBottom: '8px' }}>
+            <div className="flex items-center gap-1.5" style={{ borderBottom: '1px solid #fca5a530', paddingBottom: '2px', marginBottom: '3px' }}>
+              <div style={{ width: '3px', height: '12px', borderRadius: '2px', backgroundColor: '#ef4444', flexShrink: 0 }} />
+              <p style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#ef4444' }}>Deducciones</p>
             </div>
-            <table className="w-full text-xs">
+            <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse' }}>
               <thead>
-                <tr className="text-zinc-400">
-                  <th className="text-left py-1 pr-4 font-medium">Tipo</th>
-                  <th className="text-right py-1 pr-4 font-medium w-12">Cnt.</th>
-                  <th className="text-right py-1 font-medium w-16">Total</th>
+                <tr style={{ color: '#a1a1aa' }}>
+                  <th style={{ textAlign: 'left', padding: '2px 12px 2px 0', fontWeight: 500 }}>Tipo</th>
+                  <th style={{ textAlign: 'right', padding: '2px 12px 2px 0', fontWeight: 500, width: '40px' }}>Cnt.</th>
+                  <th style={{ textAlign: 'right', padding: '2px 0', fontWeight: 500, width: '56px' }}>Total</th>
                 </tr>
               </thead>
               <tbody>
                 {sheet.deductions.map(d => (
                   <tr key={d.id} style={{ borderBottom: '1px solid #f4f4f5' }}>
-                    <td className="py-1 pr-4 text-zinc-600">{d.deduction_type_display}</td>
-                    <td className="py-1 pr-4 text-right tabular-nums">{d.count}</td>
-                    <td className="py-1 text-right tabular-nums text-red-700">−{fmt(d.total_amount)}</td>
+                    <td style={{ padding: '2px 12px 2px 0', color: '#52525b' }}>{d.deduction_type_display}</td>
+                    <td style={{ padding: '2px 12px 2px 0', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{d.count}</td>
+                    <td style={{ padding: '2px 0', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: '#b91c1c' }}>−{fmt(d.total_amount)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -206,47 +205,41 @@ export function ScoreSheetPrintView({ sheet, teamName, sheetTypeLabel, organizat
         )}
 
         {/* ── Final scores ───────────────────────────────────────────── */}
-        <div className="mt-2" style={{ borderTop: `2px solid ${primary}` }}>
-          <table className="w-full text-sm mt-3">
+        <div style={{ borderTop: `2px solid ${primary}`, marginTop: '4px' }}>
+          <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse', marginTop: '6px' }}>
             <tbody>
               <tr>
-                <td className="py-1 pr-4 text-zinc-500">Puntaje bruto</td>
-                <td className="py-1 text-right font-semibold tabular-nums text-zinc-700 w-20">{fmt(sheet.raw_score)}</td>
+                <td style={{ padding: '2px 12px 2px 0', color: '#71717a' }}>Puntaje bruto</td>
+                <td style={{ padding: '2px 0', textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: '#3f3f46', width: '72px' }}>{fmt(sheet.raw_score)}</td>
               </tr>
               <tr>
-                <td className="py-1 pr-4 text-zinc-500">Puntaje escalado</td>
-                <td className="py-1 text-right font-semibold tabular-nums text-zinc-700">{fmt(sheet.scaled_score)}</td>
+                <td style={{ padding: '2px 12px 2px 0', color: '#71717a' }}>Puntaje escalado</td>
+                <td style={{ padding: '2px 0', textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: '#3f3f46' }}>{fmt(sheet.scaled_score)}</td>
               </tr>
               {Number(sheet.total_deductions) > 0 && (
                 <tr>
-                  <td className="py-1 pr-4 text-red-600">Total deducciones</td>
-                  <td className="py-1 text-right font-semibold tabular-nums text-red-600">−{fmt(sheet.total_deductions)}</td>
+                  <td style={{ padding: '2px 12px 2px 0', color: '#dc2626' }}>Total deducciones</td>
+                  <td style={{ padding: '2px 0', textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: '#dc2626' }}>−{fmt(sheet.total_deductions)}</td>
                 </tr>
               )}
               <tr>
-                <td
-                  className="py-2.5 pl-4 font-bold text-base rounded-l-lg"
-                  style={{ backgroundColor: primary, color: primaryText }}
-                >
+                <td style={{ padding: '6px 12px 6px 12px', fontWeight: 700, fontSize: '13px', backgroundColor: primary, color: primaryText, borderRadius: '6px 0 0 6px' }}>
                   Puntaje final
                 </td>
-                <td
-                  className="py-2.5 pr-4 text-right font-bold tabular-nums text-base rounded-r-lg"
-                  style={{ backgroundColor: primary, color: primaryText }}
-                >
+                <td style={{ padding: '6px 12px 6px 0', textAlign: 'right', fontWeight: 700, fontSize: '13px', fontVariantNumeric: 'tabular-nums', backgroundColor: primary, color: primaryText, borderRadius: '0 6px 6px 0' }}>
                   {fmt(sheet.final_score)}
                 </td>
               </tr>
               <tr>
-                <td className="pt-1.5 pr-4 text-zinc-400 text-xs">Porcentaje del máximo</td>
-                <td className="pt-1.5 text-right text-xs tabular-nums text-zinc-400">{Number(sheet.percentage).toFixed(1)}%</td>
+                <td style={{ padding: '3px 12px 0 0', color: '#a1a1aa', fontSize: '10px' }}>Porcentaje del máximo</td>
+                <td style={{ padding: '3px 0 0 0', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: '#a1a1aa', fontSize: '10px' }}>{Number(sheet.percentage).toFixed(1)}%</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <p className="mt-8 mx-6 pt-4 text-[10px] text-zinc-400 text-center" style={{ borderTop: '1px solid #e4e4e7' }}>
+      <p style={{ marginTop: '16px', marginLeft: '20px', marginRight: '20px', paddingTop: '8px', fontSize: '9px', color: '#a1a1aa', textAlign: 'center', borderTop: '1px solid #e4e4e7' }}>
         Generado por Cheer Metrics · Ecuador
       </p>
     </div>
