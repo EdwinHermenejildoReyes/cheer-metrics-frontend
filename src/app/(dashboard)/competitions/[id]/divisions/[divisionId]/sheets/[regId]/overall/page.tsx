@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
+import { toastApiError } from '@/utils/apiErrors';
 import type { ScoreSheet } from '@/types/competitions';
 
 // ── Formations scale (2.0 → 1.0 in steps of −0.1) ───────────────────────────
@@ -194,8 +195,8 @@ export default function OverallSheetPage() {
       }
       setExistingSheet(saved);
       toast.success('Planilla guardada');
-    } catch {
-      toast.error('No se pudo guardar');
+    } catch (err) {
+      toastApiError(err);
     } finally {
       setSaving(false);
     }

@@ -9,6 +9,7 @@ import { PageSpinner } from '@/components/ui/spinner';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { getScoringConfig, DEFAULT_TUMBLING_CONFIG } from '@/lib/scoringConfig';
 import { useJudge } from '@/hooks/useJudge';
+import { toastApiError } from '@/utils/apiErrors';
 import type { TumblingConfig } from '@/lib/scoringConfig';
 import type { ScoreSheet } from '@/types/competitions';
 
@@ -385,8 +386,8 @@ export default function TumblingSheetPage() {
       }
       setExistingSheet(saved);
       toast.success('Planilla guardada');
-    } catch {
-      toast.error('No se pudo guardar');
+    } catch (err) {
+      toastApiError(err);
     } finally {
       setSaving(false);
     }

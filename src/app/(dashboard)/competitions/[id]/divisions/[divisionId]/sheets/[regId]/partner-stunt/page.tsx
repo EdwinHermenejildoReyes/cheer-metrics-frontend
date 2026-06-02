@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
+import { toastApiError } from '@/utils/apiErrors';
 import type { ScoreSheet } from '@/types/competitions';
 
 // ── Each category scores 0–5 (max 25 total) ──────────────────────────────────
@@ -276,8 +277,8 @@ export default function PartnerStuntSheetPage() {
       }
       setExistingSheet(saved);
       toast.success('Planilla guardada');
-    } catch {
-      toast.error('No se pudo guardar');
+    } catch (err) {
+      toastApiError(err);
     } finally {
       setSaving(false);
     }
