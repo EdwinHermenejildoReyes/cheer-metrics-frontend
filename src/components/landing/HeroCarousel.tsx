@@ -38,8 +38,16 @@ export function HeroCarousel() {
 
   return (
     <>
-      {/* Overlay so text is readable */}
-      <div className="absolute inset-0 bg-zinc-950/60 z-10" />
+      {/* Gradient overlay — darker on the left (text side), lighter on the right */}
+      <div
+        className="absolute inset-0 z-10"
+        style={{
+          background:
+            'linear-gradient(105deg, rgba(9,9,11,0.82) 0%, rgba(9,9,11,0.65) 55%, rgba(9,9,11,0.35) 100%)',
+        }}
+      />
+      {/* Extra bottom fade so dots stay readable */}
+      <div className="absolute inset-x-0 bottom-0 h-32 z-10 bg-gradient-to-t from-zinc-950/70 to-transparent" />
 
       {images.map((src, i) => (
         <div

@@ -39,19 +39,19 @@ function Hero() {
 
       <div className="relative z-20 max-w-6xl mx-auto px-6 pt-24 pb-20">
         <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-1.5 text-xs font-semibold text-orange-400 mb-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-orange-400/50 bg-orange-500/20 backdrop-blur-sm px-4 py-1.5 text-xs font-semibold text-orange-300 mb-8">
             <Star className="w-3 h-3" />
             Plataforma oficial · Ecuador
           </div>
 
-          <h1 className="text-5xl font-bold text-white leading-tight mb-6">
+          <h1 className="text-5xl font-bold text-white leading-tight mb-6 drop-shadow-lg">
             La plataforma para{' '}
-            <span className="bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
               competencias de cheerleading
             </span>
           </h1>
 
-          <p className="text-lg text-zinc-400 mb-10 max-w-2xl leading-relaxed">
+          <p className="text-lg text-zinc-200 mb-10 max-w-2xl leading-relaxed drop-shadow">
             Gestión completa de competencias, planillas de puntuación digital,
             rankings en tiempo real y control de jueces. Todo en una sola plataforma.
           </p>
