@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Trophy, Building2, Users, LogOut, Landmark, UserCog, User as UserIcon, ClipboardList } from 'lucide-react';
+import { Trophy, Building2, Users, LogOut, Landmark, UserCog, User as UserIcon, ClipboardList, LayoutDashboard } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
@@ -13,8 +13,9 @@ import { useBranding } from '@/contexts/BrandingContext';
 import { useJudge } from '@/hooks/useJudge';
 
 const ADMIN_NAV = [
-  { href: '/competitions',  label: 'Competencias',   icon: Trophy },
-  { href: '/organizations', label: 'Organizaciones', icon: Landmark },
+  { href: '/',              label: 'Inicio',          icon: LayoutDashboard },
+  { href: '/competitions',  label: 'Competencias',    icon: Trophy },
+  { href: '/organizations', label: 'Organizaciones',  icon: Landmark },
   { href: '/athletes',      label: 'Atletas',         icon: Users },
   { href: '/gyms',          label: 'Gimnasios',       icon: Building2 },
   { href: '/users',         label: 'Usuarios',        icon: UserCog },
@@ -57,7 +58,7 @@ export function Sidebar() {
 
       <nav className="flex flex-1 flex-col gap-1 p-3">
         {nav.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href || pathname.startsWith(href + '/');
+          const active = href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(href + '/');
           const activeStyle = active && organization
             ? { backgroundColor: organization.primary_color, color: organization.text_on_primary }
             : undefined;
