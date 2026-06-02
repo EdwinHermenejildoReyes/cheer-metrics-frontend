@@ -14,13 +14,10 @@ import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
 import type { ScoreSheet } from '@/types/competitions';
 
-// ── Each category scores 0–5 (max 25 total) ──────────────────────────────────
-const FIELD_MAX = 5;
+// ── Per-category config (regulation: UCA National Experience 2025) ────────────
 
-// Score steps shown as button grid: 0.0 → 5.0 in 0.5 increments
-const SCORE_STEPS = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
+type Band = { label: string; range: string; min: number; max: number; color: 'red' | 'amber' | 'emerald' };
 
-// ── Category definitions ──────────────────────────────────────────────────────
 const CATEGORIES: {
   key: keyof Pick<ScoreSheet,
     'pg_technique' | 'pg_difficulty' | 'pg_form_appearance' |
@@ -28,68 +25,78 @@ const CATEGORIES: {
   >;
   label: string;
   description: string;
-  criteria: string[];
+  max: number;
+  bands: Band[];
 }[] = [
   {
     key: 'pg_technique',
-    label: 'Técnica',
-    description: 'Calidad técnica de las habilidades ejecutadas',
-    criteria: [
-      'Posición de base y cargadores',
-      'Control del volante en el aire',
-      'Alineación y postura corporal',
-      'Seguridad y estabilidad',
+    label: 'Ejecución de Técnica',
+    max: 30,
+    description: 'Ejecución técnica correcta de las elevaciones, que parezcan fáciles',
+    bands: [
+      { label: 'Bajo el promedio',  range: '0 – 10',  min: 0,  max: 10,  color: 'red' },
+      { label: 'Promedio',          range: '10 – 20', min: 10, max: 20,  color: 'amber' },
+      { label: 'Sobre el promedio', range: '20 – 30', min: 20, max: 30,  color: 'emerald' },
     ],
   },
   {
     key: 'pg_difficulty',
     label: 'Dificultad',
-    description: 'Nivel de complejidad de las habilidades y construcciones',
-    criteria: [
-      'Variedad de habilidades',
-      'Nivel de construcciones y elevaciones',
-      'Conexiones y pirámides',
-      'Lanzamientos y salidas',
+    max: 25,
+    description: 'Dificultad y capacidad para realizar las elevaciones en la rutina',
+    bands: [
+      { label: '3 habilidades del nivel', range: '0 – 10',  min: 0,  max: 10, color: 'red' },
+      { label: '4 habilidades del nivel', range: '15 – 20', min: 15, max: 20, color: 'amber' },
+      { label: '5+ habilidades del nivel', range: '20 – 25', min: 20, max: 25, color: 'emerald' },
     ],
   },
   {
     key: 'pg_form_appearance',
     label: 'Forma y Apariencia',
-    description: 'Presentación visual y uniformidad del equipo',
-    criteria: [
-      'Forma y extensión en el aire',
-      'Uniformidad entre pareja/trío',
-      'Presencia escénica',
-      'Apariencia general',
+    max: 20,
+    description: 'Brazos rectos, flexibilidad, inmovilidad, línea base-flyer, expresiones',
+    bands: [
+      { label: 'Le cuesta mucho mostrar', range: '0 – 7',   min: 0,  max: 7,  color: 'red' },
+      { label: 'Le cuesta mostrar',       range: '7 – 15',  min: 7,  max: 15, color: 'amber' },
+      { label: 'No le cuesta mostrar',    range: '15 – 20', min: 15, max: 20, color: 'emerald' },
     ],
   },
   {
     key: 'pg_transitions',
     label: 'Transiciones',
-    description: 'Fluidez y coreografía entre habilidades',
-    criteria: [
-      'Conexión entre elementos',
-      'Fluidez del movimiento',
-      'Creatividad coreográfica',
-      'Uso del espacio',
+    max: 15,
+    description: 'Ritmo, efecto visual, creatividad, menor cantidad de pausas',
+    bands: [
+      { label: 'Múltiples problemas / pausas', range: '0 – 7',   min: 0,  max: 7,  color: 'red' },
+      { label: 'Pocos problemas',              range: '8 – 12',  min: 8,  max: 12, color: 'amber' },
+      { label: 'Sin problemas',                range: '12 – 15', min: 12, max: 15, color: 'emerald' },
     ],
   },
   {
     key: 'pg_expressiveness',
-    label: 'Expresividad',
-    description: 'Energía, emoción y valor de entretenimiento',
-    criteria: [
-      'Confianza y carisma',
-      'Energía y dinamismo',
-      'Conexión con la música',
-      'Entretenimiento al público',
+    label: 'Expresividad / Showmanship',
+    max: 10,
+    description: 'Energía, coreografía adaptada a la música, expresiones faciales',
+    bands: [
+      { label: 'Reducido',  range: '0 – 4',  min: 0, max: 4,  color: 'red' },
+      { label: 'Moderado',  range: '4 – 7',  min: 4, max: 7,  color: 'amber' },
+      { label: 'Elevado',   range: '7 – 10', min: 7, max: 10, color: 'emerald' },
     ],
   },
 ];
 
-function fmt(n: number) { return n.toFixed(2); }
+const MAX_TOTAL = CATEGORIES.reduce((s, c) => s + c.max, 0); // 100
 
-// ── Score selector per category ───────────────────────────────────────────────
+function fmt(n: number) { return n.toFixed(0); }
+
+// ── Score selector (slider + ±buttons, per-category max) ─────────────────────
+
+const BAND_COLORS: Record<Band['color'], { chip: string; bar: string }> = {
+  red:     { chip: 'bg-red-50 text-red-700 border-red-300',       bar: 'bg-red-400' },
+  amber:   { chip: 'bg-amber-50 text-amber-700 border-amber-300', bar: 'bg-amber-400' },
+  emerald: { chip: 'bg-emerald-50 text-emerald-700 border-emerald-300', bar: 'bg-emerald-500' },
+};
+
 function ScoreSelector({
   category, value, onChange,
 }: {
@@ -97,7 +104,12 @@ function ScoreSelector({
   value: number;
   onChange: (v: number) => void;
 }) {
-  const pct = (value / FIELD_MAX) * 100;
+  const pct = (value / category.max) * 100;
+  const activeBand = [...category.bands].reverse().find(b => value >= b.min) ?? category.bands[0];
+
+  const adjust = (delta: number) => {
+    onChange(Math.min(category.max, Math.max(0, value + delta)));
+  };
 
   return (
     <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
@@ -109,72 +121,74 @@ function ScoreSelector({
         </div>
         <div className="text-right ml-4 shrink-0">
           <span className="text-2xl font-bold tabular-nums text-zinc-900">{fmt(value)}</span>
-          <p className="text-[10px] text-zinc-400">/ {FIELD_MAX}.00</p>
+          <p className="text-[10px] text-zinc-400">/ {category.max}</p>
         </div>
       </div>
 
-      {/* Criteria */}
-      <div className="px-4 pt-3 flex flex-wrap gap-x-4 gap-y-0.5">
-        {category.criteria.map((c) => (
-          <span key={c} className="text-[10px] text-zinc-400">· {c}</span>
-        ))}
+      {/* Band reference chips */}
+      <div className="px-4 pt-2.5 pb-1 flex flex-wrap gap-1.5">
+        {category.bands.map(b => {
+          const isActive = activeBand === b;
+          const colors = BAND_COLORS[b.color];
+          return (
+            <span key={b.label} className={`text-[10px] px-2 py-0.5 rounded-full border font-medium transition-colors ${
+              isActive ? colors.chip : 'text-zinc-400 border-zinc-200'
+            }`}>
+              {b.range} · {b.label}
+            </span>
+          );
+        })}
       </div>
 
-      {/* Score grid */}
-      <div className="p-4 flex flex-col gap-2">
-        <div className="grid grid-cols-11 gap-1">
-          {SCORE_STEPS.map((step) => {
-            const active = value === step;
-            const quality =
-              step >= 4.5 ? 'elite' :
-              step >= 3.5 ? 'high' :
-              step >= 2.5 ? 'mid' :
-              step >= 1.5 ? 'low' : 'none';
-            const colorMap = {
-              none:  active ? 'bg-zinc-900 text-white border-zinc-900' : 'bg-zinc-100 text-zinc-400 border-zinc-200 hover:border-zinc-400',
-              low:   active ? 'bg-red-600 text-white border-red-600'   : 'bg-red-50 text-red-500 border-red-200 hover:border-red-400',
-              mid:   active ? 'bg-amber-500 text-white border-amber-500' : 'bg-amber-50 text-amber-600 border-amber-200 hover:border-amber-400',
-              high:  active ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-50 text-blue-600 border-blue-200 hover:border-blue-400',
-              elite: active ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:border-emerald-400',
-            };
-            return (
-              <button
-                key={step}
-                type="button"
-                onClick={() => onChange(step)}
-                className={`rounded-lg py-2 text-xs font-bold transition-colors border ${colorMap[quality]}`}
-              >
-                {step % 1 === 0 ? step.toFixed(0) : step.toFixed(1)}
-              </button>
-            );
-          })}
+      {/* Controls */}
+      <div className="px-4 pb-4 flex flex-col gap-2.5">
+        {/* Adjust buttons + score display */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex gap-1">
+            <button type="button" onClick={() => adjust(-5)} disabled={value <= 0}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold text-zinc-600 bg-zinc-100 hover:bg-zinc-200 disabled:opacity-30 transition-colors">
+              −5
+            </button>
+            <button type="button" onClick={() => adjust(-1)} disabled={value <= 0}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold text-zinc-600 bg-zinc-100 hover:bg-zinc-200 disabled:opacity-30 transition-colors">
+              −1
+            </button>
+          </div>
+
+          <div className="text-4xl font-bold tabular-nums text-zinc-900 w-16 text-center select-none">
+            {value}
+          </div>
+
+          <div className="flex gap-1">
+            <button type="button" onClick={() => adjust(+1)} disabled={value >= category.max}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold text-zinc-600 bg-zinc-100 hover:bg-zinc-200 disabled:opacity-30 transition-colors">
+              +1
+            </button>
+            <button type="button" onClick={() => adjust(+5)} disabled={value >= category.max}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold text-zinc-600 bg-zinc-100 hover:bg-zinc-200 disabled:opacity-30 transition-colors">
+              +5
+            </button>
+          </div>
         </div>
+
+        {/* Slider */}
+        <input
+          type="range"
+          min={0}
+          max={category.max}
+          step={1}
+          value={value}
+          onChange={e => onChange(Number(e.target.value))}
+          className="w-full accent-zinc-900 cursor-pointer"
+        />
 
         {/* Progress bar */}
         <div className="h-1.5 rounded-full bg-zinc-100 overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all duration-200 ${
-              pct >= 90 ? 'bg-emerald-500' :
-              pct >= 70 ? 'bg-blue-500' :
-              pct >= 50 ? 'bg-amber-500' :
-              pct >= 30 ? 'bg-red-500' : 'bg-zinc-300'
-            }`}
+            className={`h-full rounded-full transition-all duration-200 ${BAND_COLORS[activeBand.color].bar}`}
             style={{ width: `${pct}%` }}
           />
         </div>
-
-        {/* Level label */}
-        <p className={`text-xs font-medium ${
-          pct >= 90 ? 'text-emerald-600' :
-          pct >= 70 ? 'text-blue-600' :
-          pct >= 50 ? 'text-amber-600' :
-          pct > 0   ? 'text-red-500' : 'text-zinc-400'
-        }`}>
-          {pct >= 90 ? 'Elite' :
-           pct >= 70 ? 'Elevado / Sobre el Promedio' :
-           pct >= 50 ? 'Moderado / Promedio' :
-           pct > 0   ? 'Reducido / Bajo el Promedio' : '—'}
-        </p>
       </div>
     </div>
   );
@@ -203,7 +217,6 @@ export default function PartnerStuntSheetPage() {
   const [loading,       setLoading]       = useState(true);
   const [saving,        setSaving]        = useState(false);
 
-  // ── Scores ────────────────────────────────────────────────────────────────
   const [scores, setScores] = useState<Record<string, number>>({
     pg_technique:       0,
     pg_difficulty:      0,
@@ -214,16 +227,13 @@ export default function PartnerStuntSheetPage() {
 
   const [notes, setNotes] = useState('');
 
-  // ── Computed ──────────────────────────────────────────────────────────────
-  const total    = Object.values(scores).reduce((s, v) => s + v, 0);
-  const maxTotal = CATEGORIES.length * FIELD_MAX; // 25
-  const pct      = maxTotal > 0 ? (total / maxTotal) * 100 : 0;
+  const total = Object.values(scores).reduce((s, v) => s + v, 0);
+  const pct   = MAX_TOTAL > 0 ? (total / MAX_TOTAL) * 100 : 0;
 
   const setScore = (key: string, value: number) => {
-    setScores((prev) => ({ ...prev, [key]: value }));
+    setScores(prev => ({ ...prev, [key]: value }));
   };
 
-  // ── Load ──────────────────────────────────────────────────────────────────
   const load = useCallback(async () => {
     try {
       const [sheetRes, regRes] = await Promise.all([
@@ -231,14 +241,13 @@ export default function PartnerStuntSheetPage() {
         competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' }),
       ]);
 
-      const reg = regRes.data.results.find((r) => r.id === registrationId);
+      const reg = regRes.data.results.find(r => r.id === registrationId);
       if (reg) setTeamName(reg.team_name);
 
       if (sheetRes.data.results.length > 0) {
         const sheet = sheetRes.data.results[0];
         setExistingSheet(sheet);
         if (!reg) setTeamName(sheet.team_name);
-
         setScores({
           pg_technique:       sheet.pg_technique       ? parseFloat(sheet.pg_technique)       : 0,
           pg_difficulty:      sheet.pg_difficulty      ? parseFloat(sheet.pg_difficulty)      : 0,
@@ -255,7 +264,6 @@ export default function PartnerStuntSheetPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // ── Save ──────────────────────────────────────────────────────────────────
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -314,7 +322,7 @@ export default function PartnerStuntSheetPage() {
             <p className="text-[10px] text-zinc-400 uppercase tracking-wide">Total</p>
             <p className="text-2xl font-bold tabular-nums text-zinc-900">
               {fmt(total)}
-              <span className="text-sm font-normal text-zinc-400 ml-1">/ {maxTotal}</span>
+              <span className="text-sm font-normal text-zinc-400 ml-1">/ {MAX_TOTAL}</span>
             </p>
           </div>
           <PrintButton />
@@ -357,17 +365,17 @@ export default function PartnerStuntSheetPage() {
           </div>
           <div className="text-right shrink-0">
             <p className="text-3xl font-bold tabular-nums text-zinc-900">{fmt(total)}</p>
-            <p className="text-xs text-zinc-400">de {maxTotal} pts</p>
+            <p className="text-xs text-zinc-400">de {MAX_TOTAL} pts</p>
           </div>
         </div>
 
         {/* ── Category scorers ─────────────────────────────────────────── */}
-        {CATEGORIES.map((cat) => (
+        {CATEGORIES.map(cat => (
           <ScoreSelector
             key={cat.key}
             category={cat}
             value={scores[cat.key] ?? 0}
-            onChange={(v) => setScore(cat.key, v)}
+            onChange={v => setScore(cat.key, v)}
           />
         ))}
 
@@ -379,7 +387,7 @@ export default function PartnerStuntSheetPage() {
           <div className="p-4">
             <textarea
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={e => setNotes(e.target.value)}
               placeholder="Observaciones sobre el desempeño de la pareja/trío..."
               rows={3}
               className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
@@ -394,29 +402,23 @@ export default function PartnerStuntSheetPage() {
           </div>
           <table className="w-full">
             <tbody className="divide-y divide-zinc-100">
-              {CATEGORIES.map((cat) => {
-                const v = scores[cat.key] ?? 0;
-                const catPct = (v / FIELD_MAX) * 100;
+              {CATEGORIES.map(cat => {
+                const v   = scores[cat.key] ?? 0;
+                const catPct = (v / cat.max) * 100;
+                const activeBand = [...cat.bands].reverse().find(b => v >= b.min) ?? cat.bands[0];
                 return (
                   <tr key={cat.key}>
                     <td className="px-4 py-3 text-zinc-700 font-medium">{cat.label}</td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 rounded-full bg-zinc-100 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${
-                              catPct >= 90 ? 'bg-emerald-500' :
-                              catPct >= 70 ? 'bg-blue-500' :
-                              catPct >= 50 ? 'bg-amber-500' :
-                              catPct > 0   ? 'bg-red-500' : 'bg-zinc-200'
-                            }`}
-                            style={{ width: `${catPct}%` }}
-                          />
-                        </div>
+                      <div className="h-1.5 rounded-full bg-zinc-100 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${BAND_COLORS[activeBand.color].bar}`}
+                          style={{ width: `${catPct}%` }}
+                        />
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right font-bold tabular-nums text-zinc-900 w-20">
-                      {fmt(v)} <span className="text-zinc-400 font-normal">/ {FIELD_MAX}</span>
+                    <td className="px-4 py-3 text-right font-bold tabular-nums text-zinc-900 w-24">
+                      {fmt(v)} <span className="text-zinc-400 font-normal">/ {cat.max}</span>
                     </td>
                   </tr>
                 );
@@ -426,7 +428,7 @@ export default function PartnerStuntSheetPage() {
           <div className="flex items-center justify-between px-4 py-4 rounded-b-xl" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
             <div>
               <p className="text-xs uppercase tracking-wide opacity-60 font-medium">TOTAL Partner Stunt</p>
-              <p className="text-xs opacity-40 mt-0.5">{pct.toFixed(1)}% de perfección</p>
+              <p className="text-xs opacity-40 mt-0.5">{pct.toFixed(1)}% de {MAX_TOTAL} puntos</p>
             </div>
             <span className="text-3xl font-bold tabular-nums">{fmt(total)}</span>
           </div>
@@ -442,7 +444,7 @@ export default function PartnerStuntSheetPage() {
               <div className="px-4 py-4">
                 <p className="text-[10px] text-zinc-400 uppercase tracking-wide mb-1">Puntaje Bruto</p>
                 <p className="text-2xl font-bold tabular-nums text-zinc-900">
-                  {parseFloat(existingSheet.raw_score).toFixed(2)}
+                  {parseFloat(existingSheet.raw_score).toFixed(0)}
                 </p>
               </div>
               <div className="px-4 py-4">
@@ -459,7 +461,7 @@ export default function PartnerStuntSheetPage() {
             <div className="border-t border-zinc-100 flex items-center justify-between px-6 py-4 rounded-b-xl" style={{ backgroundColor: 'var(--brand-primary)' }}>
               <p className="text-xs uppercase tracking-wide opacity-60">Puntaje Final</p>
               <span className="text-3xl font-bold tabular-nums" style={{ color: 'var(--brand-primary-text)' }}>
-                {parseFloat(existingSheet.final_score).toFixed(2)}
+                {parseFloat(existingSheet.final_score).toFixed(0)}
               </span>
             </div>
           </div>
