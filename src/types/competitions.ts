@@ -33,12 +33,14 @@ export type RegistrationStatus = 'pending' | 'confirmed' | 'withdrawn';
 // Deduction codes matching the Level Up / Adventure Brands United system
 export type DeductionType =
   | 'x' | 'ca' | 'csa' | 'ec' | 'cc' | 'csc'
-  | 'tiempo'
-  | 'pi' | 'eap' | 'rg' | 'gfn' | 'bfn' | 'seg';
+  | 'tiempo' | 'tiempo_grave'
+  | 'pi' | 'eap' | 'rg' | 'gfn' | 'bfn' | 'seg'
+  | 'ad' | 'div';
 
 export type ScoringSystem =
   | 'tiny_novice' | 'mini_novice' | 'novice_plus' | 'prep'
-  | 'elite_l1' | 'elite_l2_7' | 'elite_nt' | 'partner_stunt' | 'iasf_l6_7';
+  | 'elite_l1' | 'elite_l2_7' | 'elite_nt' | 'partner_stunt' | 'iasf_l6_7'
+  | 'iasf_world_l6_7';
 
 // Keys of all sub-score fields on ScoreSheet
 export type ScoreFieldKey =
@@ -267,52 +269,61 @@ export const REGISTRATION_STATUS_LABELS: Record<RegistrationStatus, string> = {
 
 // Deduction labels — format: "CODE  Description"
 export const DEDUCTION_TYPE_LABELS: Record<DeductionType, string> = {
-  x:      'Salida de superficie',
-  ca:     'Caída de atleta',
-  csa:    'Caída seria de atleta',
-  ec:     'Error de construcción',
-  cc:     'Caída de construcción',
-  csc:    'Caída seria de construcción',
-  tiempo: 'Exceso de tiempo',
-  pi:     'Política de imagen',
-  eap:    'Estándares atléticos de presentación',
-  rg:     'Reglas generales',
-  gfn:    'Gimnasia fuera del nivel',
-  bfn:    'Acrobacia fuera del nivel',
-  seg:    'Infracción de seguridad',
+  x:           'Salida de superficie',
+  ca:          'Caída de atleta',
+  csa:         'Caída seria de atleta',
+  ec:          'Error de construcción',
+  cc:          'Caída de construcción',
+  csc:         'Caída seria de construcción',
+  tiempo:      'Exceso de tiempo (por segundo)',
+  tiempo_grave:'Exceso de tiempo grave (≥10 seg)',
+  pi:          'Política de imagen',
+  eap:         'Estándares atléticos de presentación',
+  rg:          'Reglas generales',
+  gfn:         'Gimnasia fuera del nivel',
+  bfn:         'Acrobacia fuera del nivel',
+  seg:         'Infracción de seguridad',
+  ad:          'Actitud antideportiva',
+  div:         'Infracción de división',
 };
 
 export const DEDUCTION_CODES: Record<DeductionType, string> = {
   x: 'X', ca: 'CA', csa: 'CSA', ec: 'EC', cc: 'CC', csc: 'CSC',
-  tiempo: 'TIEMPO', pi: 'PI', eap: 'EAP', rg: 'RG', gfn: 'GFN', bfn: 'BFN', seg: 'SEG',
+  tiempo: 'TIEMPO', tiempo_grave: 'TIEMPO+',
+  pi: 'PI', eap: 'EAP', rg: 'RG', gfn: 'GFN', bfn: 'BFN', seg: 'SEG',
+  ad: 'AD', div: 'DIV',
 };
 
 export const DEDUCTION_AMOUNTS: Record<DeductionType, string> = {
-  x:      '0.05',
-  ca:     '0.15',
-  csa:    '0.15',
-  ec:     '0.25',
-  cc:     '0.75',
-  csc:    '1.25',
-  tiempo: '0.05',
-  pi:     '0.01',
-  eap:    '0.25',
-  rg:     '0.05',
-  gfn:    '0.05',
-  bfn:    '0.10',
-  seg:    '0.50',
+  x:           '0.05',
+  ca:          '0.15',
+  csa:         '0.25',
+  ec:          '0.25',
+  cc:          '0.75',
+  csc:         '1.25',
+  tiempo:      '0.05',
+  tiempo_grave:'1.25',
+  pi:          '0.01',
+  eap:         '0.25',
+  rg:          '0.05',
+  gfn:         '0.05',
+  bfn:         '0.10',
+  seg:         '0.50',
+  ad:          '3.00',
+  div:         '5.00',
 };
 
 export const SCORING_SYSTEM_LABELS: Record<ScoringSystem, string> = {
-  tiny_novice:   'Tiny & All Star Novice',
-  mini_novice:   'Mini Novice',
-  novice_plus:   'Novice Plus',
-  prep:          'Prep / Escolar',
-  elite_l1:      'Elite Nivel 1',
-  elite_l2_7:    'Elite Nivel 2–7',
-  elite_nt:      'Elite Non-Tumbling',
-  partner_stunt: 'Partner Stunt',
-  iasf_l6_7:     'IASF Nivel 6–7',
+  tiny_novice:     'Tiny & All Star Novice',
+  mini_novice:     'Mini Novice',
+  novice_plus:     'Novice Plus',
+  prep:            'Prep / Escolar',
+  elite_l1:        'Elite Nivel 1',
+  elite_l2_7:      'Elite Nivel 2–7',
+  elite_nt:        'Elite Non-Tumbling',
+  partner_stunt:   'Partner Stunt',
+  iasf_l6_7:       'IASF Nivel 6–7',
+  iasf_world_l6_7: 'IASF World L6-L7',
 };
 
 // Active score fields per scoring system (mirrors backend SCORING_SYSTEM_CONFIG)
@@ -344,8 +355,20 @@ export const SCORING_SYSTEM_FIELDS: Record<ScoringSystem, ScoreFieldKey[]> = {
   elite_l1:      [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   elite_l2_7:    [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   elite_nt:      [..._BUILDING_BASE, ..._TOSSES, ..._JUMPS, ..._OVERALL, ..._CROSS],
-  partner_stunt: _PARTNER,
-  iasf_l6_7:     [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
+  partner_stunt:   _PARTNER,
+  iasf_l6_7:       [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
+  iasf_world_l6_7: [
+    'stunts_difficulty', 'stunts_execution',
+    'pyramids_difficulty', 'pyramids_execution',
+    'tosses_difficulty', 'tosses_execution',
+    'standing_difficulty', 'standing_execution',
+    'running_difficulty',
+    'jumps_difficulty', 'jumps_execution',
+    'formations_score',
+    'dance_difficulty', 'dance_execution',
+    'creativity_overall',
+    'showmanship_overall',
+  ],
 };
 
 // Max value per field (used for live totals in the modal)
@@ -375,11 +398,11 @@ export const FIELD_MAXIMA: Record<ScoreFieldKey, number> = {
   showmanship_building: 2,
   showmanship_tumbling: 2,
   showmanship_overall:  2,
-  pg_technique:         5,
-  pg_difficulty:        5,
-  pg_form_appearance:   5,
-  pg_transitions:       5,
-  pg_expressiveness:    5,
+  pg_technique:         30,
+  pg_difficulty:        25,
+  pg_form_appearance:   20,
+  pg_transitions:       15,
+  pg_expressiveness:    10,
 };
 
 // Fields whose contribution to raw_score is averaged across the group, not summed

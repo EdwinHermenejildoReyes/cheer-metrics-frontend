@@ -17,23 +17,27 @@ import {
 } from '@/types/competitions';
 
 const FALLS:   DeductionType[] = ['x', 'ca', 'csa', 'ec', 'cc', 'csc'];
-const TIME:    DeductionType[] = ['tiempo'];
+const TIME:    DeductionType[] = ['tiempo', 'tiempo_grave'];
 const ILLEGAL: DeductionType[] = ['pi', 'eap', 'rg', 'gfn', 'bfn', 'seg'];
+const ADMIN:   DeductionType[] = ['ad', 'div'];
 // Short labels that fit in compact buttons
 const SHORT_LABELS: Record<DeductionType, string> = {
-  x:      'Salida superf.',
-  ca:     'Caída atleta',
-  csa:    'Caída seria atl.',
-  ec:     'Error construc.',
-  cc:     'Caída construc.',
-  csc:    'Caída seria c.',
-  tiempo: 'Por segundo',
-  pi:     'Pol. imagen',
-  eap:    'Est. atlét. pres.',
-  rg:     'Reglas grales.',
-  gfn:    'Gimn. fuera niv.',
-  bfn:    'Acr. fuera niv.',
-  seg:    'Infr. seguridad',
+  x:           'Salida superf.',
+  ca:          'Caída atleta',
+  csa:         'Caída seria atl.',
+  ec:          'Error construc.',
+  cc:          'Caída construc.',
+  csc:         'Caída seria c.',
+  tiempo:      'Por segundo',
+  tiempo_grave:'Tiempo grave',
+  pi:          'Pol. imagen',
+  eap:         'Est. atlét. pres.',
+  rg:          'Reglas grales.',
+  gfn:         'Gimn. fuera niv.',
+  bfn:         'Acr. fuera niv.',
+  seg:         'Infr. seguridad',
+  ad:          'Antideportivo',
+  div:         'Infr. división',
 };
 
 type ColorKey = 'red' | 'orange' | 'amber';
@@ -258,45 +262,51 @@ export default function DeduccionesSheetPage() {
             <section className="flex flex-col gap-3">
               <div className="flex items-baseline gap-2">
                 <h2 className="text-[10px] font-bold uppercase tracking-widest text-orange-500">Tiempo</h2>
-                <span className="text-[10px] text-zinc-400">−0.05 por segundo de exceso</span>
+                <span className="text-[10px] text-zinc-400">−0.05 por segundo · −1.25 si ≥10 seg</span>
               </div>
-              {/* Tiempo as a single wide button */}
-              <button
-                type="button"
-                onClick={() => handleSelectType('tiempo')}
-                className={`flex items-center justify-between rounded-xl border px-5 py-3 transition-colors ${
-                  addingType === 'tiempo'
-                    ? COLOR.orange.active
-                    : `bg-white border-zinc-200 ${COLOR.orange.hover}`
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Clock className={`h-5 w-5 shrink-0 ${addingType === 'tiempo' ? 'text-white' : 'text-orange-500'}`} />
-                  <div className="text-left">
-                    <p className={`text-base font-black tracking-tight ${addingType === 'tiempo' ? 'text-white' : 'text-zinc-900'}`}>
-                      TIEMPO
-                    </p>
-                    <p className={`text-xs ${addingType === 'tiempo' ? 'text-white/75' : 'text-zinc-400'}`}>
-                      Exceso de tiempo de rutina
-                    </p>
-                  </div>
+              {/* Tiempo buttons */}
+              {(['tiempo', 'tiempo_grave'] as DeductionType[]).map(type => (
+                <div key={type}>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectType(type)}
+                    className={`w-full flex items-center justify-between rounded-xl border px-5 py-3 transition-colors ${
+                      addingType === type
+                        ? COLOR.orange.active
+                        : `bg-white border-zinc-200 ${COLOR.orange.hover}`
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Clock className={`h-5 w-5 shrink-0 ${addingType === type ? 'text-white' : 'text-orange-500'}`} />
+                      <div className="text-left">
+                        <p className={`text-base font-black tracking-tight ${addingType === type ? 'text-white' : 'text-zinc-900'}`}>
+                          {type === 'tiempo' ? 'TIEMPO' : 'TIEMPO+'}
+                        </p>
+                        <p className={`text-xs ${addingType === type ? 'text-white/75' : 'text-zinc-400'}`}>
+                          {type === 'tiempo' ? 'Exceso de tiempo (1–9 seg)' : 'Exceso grave (≥10 seg)'}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`text-sm font-bold tabular-nums ${addingType === type ? 'text-white/90' : 'text-orange-600'}`}>
+                      {type === 'tiempo' ? '−0.05 / seg' : '−1.25'}
+                    </span>
+                  </button>
+                  {addingType === type && (
+                    <div className="mt-2">
+                      <InlineForm
+                        type={type}
+                        color="orange"
+                        form={addForm}
+                        onChange={setAddForm}
+                        onAdd={handleAdd}
+                        onCancel={() => setAddingType(null)}
+                        saving={saving}
+                        countLabel={type === 'tiempo' ? 'Segundos de exceso' : 'Cantidad'}
+                      />
+                    </div>
+                  )}
                 </div>
-                <span className={`text-sm font-bold tabular-nums ${addingType === 'tiempo' ? 'text-white/90' : 'text-orange-600'}`}>
-                  −0.05 / seg
-                </span>
-              </button>
-              {addingType === 'tiempo' && (
-                <InlineForm
-                  type="tiempo"
-                  color="orange"
-                  form={addForm}
-                  onChange={setAddForm}
-                  onAdd={handleAdd}
-                  onCancel={() => setAddingType(null)}
-                  saving={saving}
-                  countLabel="Segundos de exceso"
-                />
-              )}
+              ))}
             </section>
 
             {/* ══ ILEGALIDADES ═════════════════════════════════════════════ */}
@@ -312,6 +322,31 @@ export default function DeduccionesSheetPage() {
                 color="amber"
               />
               {addingType && ILLEGAL.includes(addingType) && (
+                <InlineForm
+                  type={addingType}
+                  color="amber"
+                  form={addForm}
+                  onChange={setAddForm}
+                  onAdd={handleAdd}
+                  onCancel={() => setAddingType(null)}
+                  saving={saving}
+                />
+              )}
+            </section>
+
+            {/* ══ ADMINISTRATIVAS ══════════════════════════════════════════ */}
+            <section className="flex flex-col gap-3">
+              <div className="flex items-baseline gap-2">
+                <h2 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Administrativas</h2>
+                <span className="text-[10px] text-zinc-400">AD · DIV</span>
+              </div>
+              <CodeGrid
+                types={ADMIN}
+                active={addingType}
+                onSelect={handleSelectType}
+                color="amber"
+              />
+              {addingType && ADMIN.includes(addingType) && (
                 <InlineForm
                   type={addingType}
                   color="amber"

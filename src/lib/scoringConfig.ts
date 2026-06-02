@@ -316,10 +316,12 @@ const CONFIGS: Record<ScoringSystem, ScoringConfig> = {
   tiny_novice:   { building: TINY_NOVICE_BUILDING,  tumbling: MINI_NOVICE_TUMBLING },
   mini_novice:   { building: MINI_NOVICE_BUILDING,  tumbling: MINI_NOVICE_TUMBLING },
   novice_plus:   { building: NOVICE_PLUS_BUILDING,  tumbling: NOVICE_PLUS_TUMBLING },
-  // IASF L6-L7: same scoring structure as Elite for our purposes
-  iasf_l6_7:    { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
+  // IASF L6-L7: same UCA scoring structure as Elite for our purposes
+  iasf_l6_7:      { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
+  // IASF World has dedicated slider-based pages; use elite as fallback for modal
+  iasf_world_l6_7: { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
   // Partner stunt has a completely different page, use elite as safe fallback
-  partner_stunt: { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
+  partner_stunt:   { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
 };
 
 export function getScoringConfig(division: Division): ScoringConfig {

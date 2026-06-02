@@ -25,6 +25,13 @@ import {
   type ScoringSystem,
 } from '@/types/competitions';
 
+function sheetRoute(base: string, sheet: 'building' | 'tumbling' | 'overall', isIasfWorld: boolean) {
+  if (isIasfWorld) {
+    return `${base}/iasf-${sheet}`;
+  }
+  return `${base}/${sheet}`;
+}
+
 const STATUS_VARIANT: Record<RegistrationStatus, 'default' | 'success' | 'warning' | 'danger'> = {
   pending:   'warning',
   confirmed: 'success',
@@ -130,6 +137,7 @@ export default function DivisionDetailPage() {
   if (!division) return <div className="p-8 text-zinc-500">División no encontrada.</div>;
 
   const activeScoringSystem = (division.scoring_system || division.suggested_scoring_system) as ScoringSystem;
+  const isIasfWorld = activeScoringSystem === 'iasf_world_l6_7';
 
   return (
     <div className="flex flex-col gap-6 p-8">
@@ -228,8 +236,8 @@ export default function DivisionDetailPage() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          title="Planilla Building"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/building`)}
+                          title={isIasfWorld ? 'IASF World — Elevaciones' : 'Planilla Building'}
+                          onClick={() => router.push(sheetRoute(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}`, 'building', isIasfWorld))}
                         >
                           <ClipboardList className="h-3.5 w-3.5 text-blue-500" />
                         </Button>
@@ -238,8 +246,8 @@ export default function DivisionDetailPage() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          title="Planilla Tumbling"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/tumbling`)}
+                          title={isIasfWorld ? 'IASF World — Gimnasia' : 'Planilla Tumbling'}
+                          onClick={() => router.push(sheetRoute(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}`, 'tumbling', isIasfWorld))}
                         >
                           <Activity className="h-3.5 w-3.5 text-green-500" />
                         </Button>
@@ -248,8 +256,8 @@ export default function DivisionDetailPage() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          title="Planilla Overall"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/overall`)}
+                          title={isIasfWorld ? 'IASF World — General' : 'Planilla Overall'}
+                          onClick={() => router.push(sheetRoute(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}`, 'overall', isIasfWorld))}
                         >
                           <Layers className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
