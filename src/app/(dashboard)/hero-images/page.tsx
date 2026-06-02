@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ImageIcon, Trash2, Upload, GripVertical } from 'lucide-react';
 import { toast } from 'sonner';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
 import competitionsRepository from '@/repositories/competitionsRepository';
@@ -110,13 +109,8 @@ export default function HeroImagesPage() {
           {images.map((img, idx) => (
             <div key={img.id} className="group relative rounded-xl border border-zinc-200 overflow-hidden bg-zinc-50">
               <div className="relative aspect-video">
-                <Image
-                  src={img.image}
-                  alt=""
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
               </div>
 
               <div className="px-3 py-2 flex items-center justify-between gap-2 bg-white border-t border-zinc-100">

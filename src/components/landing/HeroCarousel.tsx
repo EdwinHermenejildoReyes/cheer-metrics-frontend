@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 
 interface HeroImage {
   id: number;
@@ -55,14 +54,8 @@ export function HeroCarousel() {
           className="absolute inset-0 transition-opacity duration-1000"
           style={{ opacity: i === current ? 1 : 0 }}
         >
-          <Image
-            src={src}
-            alt=""
-            fill
-            priority={i === 0}
-            className="object-cover object-center"
-            sizes="100vw"
-          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={src} alt="" className="absolute inset-0 w-full h-full object-cover object-center" />
         </div>
       ))}
 
