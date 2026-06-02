@@ -32,7 +32,7 @@ export default function LoginPage() {
     if (!user?.is_staff && !user?.is_approved) {
       router.replace('/pending');
     } else {
-      router.replace('/');
+      router.replace('/home');
     }
   }, [isAuthenticated, user, router]);
 
@@ -50,7 +50,7 @@ export default function LoginPage() {
       if (!meRes.data.is_staff && !meRes.data.is_approved) {
         router.replace('/pending');
       } else {
-        router.replace('/');
+        router.replace('/home');
       }
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;

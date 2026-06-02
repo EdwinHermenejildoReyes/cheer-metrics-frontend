@@ -13,7 +13,7 @@ import { useBranding } from '@/contexts/BrandingContext';
 import { useJudge } from '@/hooks/useJudge';
 
 const ADMIN_NAV = [
-  { href: '/',              label: 'Inicio',          icon: LayoutDashboard },
+  { href: '/home',          label: 'Inicio',          icon: LayoutDashboard },
   { href: '/competitions',  label: 'Competencias',    icon: Trophy },
   { href: '/organizations', label: 'Organizaciones',  icon: Landmark },
   { href: '/athletes',      label: 'Atletas',         icon: Users },
@@ -58,7 +58,7 @@ export function Sidebar() {
 
       <nav className="flex flex-1 flex-col gap-1 p-3">
         {nav.map(({ href, label, icon: Icon }) => {
-          const active = href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(href + '/');
+          const active = href === '/home' ? pathname === '/home' : pathname === href || pathname.startsWith(href + '/');
           const activeStyle = active && organization
             ? { backgroundColor: organization.primary_color, color: organization.text_on_primary }
             : undefined;

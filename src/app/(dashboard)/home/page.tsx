@@ -222,7 +222,7 @@ export default function DashboardPage() {
       {/* ── Greeting ──────────────────────────────────────────────────────── */}
       <div>
         <h1 className="text-2xl font-semibold text-zinc-900">
-          Bienvenido{greeting} 👋
+          Bienvenido{greeting}
         </h1>
         <p className="text-sm text-zinc-400 mt-1">Panel de administración — Cheer Metrics</p>
       </div>
