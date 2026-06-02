@@ -11,6 +11,7 @@ import { ScoreSheetPrintView } from '@/components/print/ScoreSheetPrintView';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { getScoringConfig, DEFAULT_BUILDING_CONFIG } from '@/lib/scoringConfig';
 import { useJudge } from '@/hooks/useJudge';
+import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
 import type { BuildingConfig } from '@/lib/scoringConfig';
 import type { ScoreSheet } from '@/types/competitions';
@@ -143,6 +144,7 @@ export default function BuildingSheetPage() {
   const registrationId = Number(regId);
 
   const { isJudge, isCompetitionActive } = useJudge();
+  const { organization } = useBranding();
 
   useEffect(() => {
     if (isJudge && !isCompetitionActive(competitionId)) {
@@ -361,6 +363,7 @@ export default function BuildingSheetPage() {
           sheet={existingSheet}
           teamName={teamName || `Inscripción #${registrationId}`}
           sheetTypeLabel="Building — Elevaciones"
+          organization={organization}
         />
       )}
 

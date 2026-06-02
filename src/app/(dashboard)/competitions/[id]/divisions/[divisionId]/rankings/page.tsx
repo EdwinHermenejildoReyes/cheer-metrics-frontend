@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { PageSpinner } from '@/components/ui/spinner';
 import { PrintButton } from '@/components/print/PrintButton';
 import competitionsRepository from '@/repositories/competitionsRepository';
+import { useBranding } from '@/contexts/BrandingContext';
 import { REGISTRATION_STATUS_LABELS, type DivisionRankings, type RankingEntry } from '@/types/competitions';
 
 function RankIcon({ rank }: { rank: number }) {
@@ -60,6 +61,8 @@ export default function DivisionRankingsPage() {
 
   const [data, setData] = useState<DivisionRankings | null>(null);
   const [loading, setLoading] = useState(true);
+  const { organization } = useBranding();
+  const today = new Date().toLocaleDateString('es-EC', { day: '2-digit', month: 'long', year: 'numeric' });
 
   const load = useCallback(async () => {
     try {
@@ -78,10 +81,41 @@ export default function DivisionRankingsPage() {
   const scored   = data.entries.filter(e => e.has_score);
   const unscored = data.entries.filter(e => !e.has_score);
 
+  const primary     = organization?.primary_color  ?? '#18181b';
+  const primaryText = organization?.text_on_primary ?? '#ffffff';
+
   return (
     <div className="min-h-screen bg-zinc-50">
+
+      {/* Print-only branded header */}
+      <div className="hidden print:block">
+        <div className="flex items-center justify-between px-6 py-4" style={{ backgroundColor: primary, color: primaryText }}>
+          <div className="flex items-center gap-4">
+            {organization?.logo && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={organization.logo} alt="" className="h-12 w-auto object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+            )}
+            <div>
+              {organization?.name && (
+                <p className="text-base font-bold" style={{ color: primaryText }}>{organization.name}</p>
+              )}
+              <p className="text-xs mt-0.5" style={{ color: primaryText, opacity: 0.75 }}>Ranking de División · Cheer Metrics</p>
+            </div>
+          </div>
+          <div className="text-right text-xs" style={{ color: primaryText, opacity: 0.75 }}>
+            <p>Fecha de impresión</p>
+            <p className="font-semibold mt-0.5" style={{ opacity: 1 }}>{today}</p>
+          </div>
+        </div>
+        <div className="px-6 pt-4 pb-3" style={{ borderBottom: `2px solid ${primary}` }}>
+          <p className="text-xs text-zinc-400">{data.competition_name}</p>
+          <h1 className="text-2xl font-bold text-zinc-900 leading-tight">Ranking — {data.division_name}</h1>
+          <p className="text-sm text-zinc-500 mt-0.5">{scored.length} equipo{scored.length !== 1 ? 's' : ''} calificado{scored.length !== 1 ? 's' : ''}</p>
+        </div>
+      </div>
+
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-zinc-200 px-4 py-3 flex items-center gap-3 print:static print:border-b-2 print:border-zinc-900">
+      <div className="sticky top-0 z-10 bg-white border-b border-zinc-200 px-4 py-3 flex items-center gap-3 print:hidden">
         <button
           onClick={() => router.back()}
           className="print:hidden p-1 rounded-md text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"

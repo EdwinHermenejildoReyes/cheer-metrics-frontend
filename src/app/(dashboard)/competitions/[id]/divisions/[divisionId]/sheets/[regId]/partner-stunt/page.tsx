@@ -10,6 +10,7 @@ import { PrintButton } from '@/components/print/PrintButton';
 import { ScoreSheetPrintView } from '@/components/print/ScoreSheetPrintView';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
+import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
 import type { ScoreSheet } from '@/types/competitions';
 
@@ -188,6 +189,7 @@ export default function PartnerStuntSheetPage() {
   const registrationId = Number(regId);
 
   const { isJudge, isCompetitionActive } = useJudge();
+  const { organization } = useBranding();
 
   useEffect(() => {
     if (isJudge && !isCompetitionActive(competitionId)) {
@@ -328,6 +330,7 @@ export default function PartnerStuntSheetPage() {
           sheet={existingSheet}
           teamName={teamName || `Inscripción #${registrationId}`}
           sheetTypeLabel="Partner Stunt"
+          organization={organization}
         />
       )}
 
