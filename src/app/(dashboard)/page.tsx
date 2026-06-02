@@ -8,6 +8,7 @@ import {
   ArrowRight, CalendarDays, CheckCircle2, Clock,
   ChevronRight,
 } from 'lucide-react';
+import { useSelector } from 'react-redux';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
@@ -15,13 +16,13 @@ import competitionsRepository from '@/repositories/competitionsRepository';
 import athletesRepository from '@/repositories/athletesRepository';
 import { useJudge } from '@/hooks/useJudge';
 import { REGISTRATION_STATUS_LABELS } from '@/types/competitions';
+import type { RootState } from '@/core/rootReducer';
 import type { Competition, Registration, ScoreSheet } from '@/types/competitions';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function fmtDate(dateStr: string, opts?: Intl.DateTimeFormatOptions) {
-  const date = new Date(dateStr + 'T12:00:00');
-  return date.toLocaleDateString('es-EC', opts ?? { day: 'numeric', month: 'long', year: 'numeric' });
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString('es-EC', opts ?? { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 function statusVariant(status: string): 'success' | 'warning' | 'secondary' {
@@ -30,36 +31,35 @@ function statusVariant(status: string): 'success' | 'warning' | 'secondary' {
   return 'secondary';
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── Stat card (parapente-fenix style) ─────────────────────────────────────────
 
-function StatCard({ label, value, sub, icon: Icon }: {
-  label: string; value: number; sub?: string; icon: React.ElementType;
+function StatCard({ label, value, sub, icon: Icon, color, href }: {
+  label: string; value: number; sub?: string; icon: React.ElementType; color: string; href: string;
 }) {
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-5 flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wide text-zinc-400">{label}</span>
-        <div className="rounded-lg bg-zinc-100 p-2">
-          <Icon className="h-4 w-4 text-zinc-500" />
+    <Link href={href}>
+      <div className="rounded-xl border border-zinc-200 bg-white p-5 flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer group">
+        <div className="rounded-xl p-3 shrink-0 transition-transform group-hover:scale-110" style={{ backgroundColor: color }}>
+          <Icon className="h-6 w-6 text-white" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-2xl font-bold tabular-nums text-zinc-900 leading-none">{value}</p>
+          <p className="text-sm font-medium text-zinc-600 mt-0.5">{label}</p>
+          {sub && <p className="text-xs text-zinc-400 mt-0.5">{sub}</p>}
         </div>
       </div>
-      <div>
-        <p className="text-3xl font-bold tabular-nums text-zinc-900">{value}</p>
-        {sub && <p className="text-xs text-zinc-400 mt-0.5">{sub}</p>}
-      </div>
-    </div>
+    </Link>
   );
 }
 
+// ── Active competition breakdown card ─────────────────────────────────────────
+
 function CompBreakdownCard({ comp, regs, sheeted }: {
-  comp: Competition;
-  regs: Registration[];
-  sheeted: number;
+  comp: Competition; regs: Registration[]; sheeted: number;
 }) {
-  const total    = regs.length;
-  const pending  = total - sheeted;
-  const pct      = total > 0 ? Math.round((sheeted / total) * 100) : 0;
-  const confirmed = regs.filter(r => r.status === 'confirmed').length;
+  const total   = regs.length;
+  const pending = total - sheeted;
+  const pct     = total > 0 ? Math.round((sheeted / total) * 100) : 0;
 
   return (
     <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
@@ -70,10 +70,10 @@ function CompBreakdownCard({ comp, regs, sheeted }: {
             <span className="text-[11px] font-semibold uppercase tracking-wide text-green-600">Activa</span>
           </div>
           <h3 className="text-sm font-semibold text-zinc-900 truncate">{comp.name}</h3>
-          <p className="text-xs text-zinc-400 mt-0.5 flex items-center gap-1">
+          <p className="text-xs text-zinc-400 mt-0.5 flex items-center gap-1.5">
             <CalendarDays className="w-3 h-3 shrink-0" />
             {fmtDate(comp.date, { weekday: 'long', day: 'numeric', month: 'long' })}
-            {comp.venue && <><span className="text-zinc-300 mx-0.5">·</span>{comp.venue}</>}
+            {comp.venue && <><span className="text-zinc-300">·</span>{comp.venue}</>}
           </p>
         </div>
         <Link href={`/competitions/${comp.id}`}>
@@ -85,26 +85,20 @@ function CompBreakdownCard({ comp, regs, sheeted }: {
 
       {total > 0 ? (
         <div className="px-5 pb-4 space-y-3">
-          {/* Progress bar */}
           <div>
             <div className="flex items-center justify-between text-xs mb-1.5">
               <span className="text-zinc-500">Planillas completadas</span>
-              <span className="font-semibold tabular-nums text-zinc-700">{sheeted} / {confirmed}</span>
+              <span className="font-semibold tabular-nums text-zinc-700">{sheeted} / {total}</span>
             </div>
             <div className="h-1.5 rounded-full bg-zinc-100 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-green-500 transition-all"
-                style={{ width: `${pct}%` }}
-              />
+              <div className="h-full rounded-full bg-green-500 transition-all" style={{ width: `${pct}%` }} />
             </div>
           </div>
-
-          {/* Stat row */}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: 'Inscripciones',  value: total,    color: 'text-zinc-900' },
-              { label: 'Con planilla',   value: sheeted,  color: 'text-green-600' },
-              { label: 'Sin planilla',   value: pending,  color: pending > 0 ? 'text-amber-600' : 'text-zinc-400' },
+              { label: 'Inscripciones', value: total,   color: 'text-zinc-900' },
+              { label: 'Con planilla',  value: sheeted, color: 'text-green-600' },
+              { label: 'Sin planilla',  value: pending, color: pending > 0 ? 'text-amber-600' : 'text-zinc-400' },
             ].map(({ label, value, color }) => (
               <div key={label} className="rounded-lg bg-zinc-50 px-3 py-2 text-center">
                 <p className={`text-xl font-bold tabular-nums ${color}`}>{value}</p>
@@ -143,9 +137,7 @@ function RecentRegRow({ reg }: { reg: Registration }) {
     <div className="flex items-center justify-between gap-3 py-3 border-b border-zinc-100 last:border-0">
       <div className="min-w-0">
         <p className="text-sm font-medium text-zinc-900 truncate">{reg.team_name}</p>
-        <p className="text-xs text-zinc-400 truncate">
-          {reg.division_name} · {reg.competition_name}
-        </p>
+        <p className="text-xs text-zinc-400 truncate">{reg.division_name} · {reg.competition_name}</p>
       </div>
       <Badge variant={statusVariant(reg.status)} className="shrink-0 text-[10px]">
         {REGISTRATION_STATUS_LABELS[reg.status]}
@@ -170,22 +162,19 @@ type DashboardData = {
 };
 
 export default function DashboardPage() {
-  const router = useRouter();
+  const router  = useRouter();
   const { isJudge } = useJudge();
+  const user    = useSelector((s: RootState) => s.auth.user);
 
-  const [data, setData]     = useState<DashboardData | null>(null);
+  const [data, setData]       = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (isJudge) {
-      router.replace('/assignments');
-      return;
-    }
+    if (isJudge) { router.replace('/assignments'); return; }
 
     async function load() {
       try {
         const today = new Date().toISOString().slice(0, 10);
-
         const [compsRes, regsRes, sheetsRes, athletesRes, gymsRes] = await Promise.all([
           competitionsRepository.listCompetitions({ page_size: '100' }),
           competitionsRepository.listRegistrations({ page_size: '200' }),
@@ -194,20 +183,17 @@ export default function DashboardPage() {
           competitionsRepository.listGyms({ page_size: '1' }),
         ]);
 
-        const allComps   = compsRes.data.results;
-        const allRegs    = regsRes.data.results as Registration[];
-        const allSheets  = sheetsRes.data.results as ScoreSheet[];
+        const allComps  = compsRes.data.results;
+        const allRegs   = regsRes.data.results as Registration[];
+        const allSheets = sheetsRes.data.results as ScoreSheet[];
 
         const activeComps   = allComps.filter(c => c.is_active);
         const upcomingComps = allComps.filter(c => !c.is_active && c.date >= today);
-
         const sheetedRegIds = new Set(allSheets.map(s => s.registration));
-
-        const regsByComp = allRegs.reduce<Record<string, Registration[]>>((acc, r) => {
+        const regsByComp    = allRegs.reduce<Record<string, Registration[]>>((acc, r) => {
           (acc[r.competition_name] ??= []).push(r);
           return acc;
         }, {});
-
         const recentRegs = [...allRegs].sort((a, b) => b.id - a.id).slice(0, 6);
 
         setData({
@@ -216,52 +202,70 @@ export default function DashboardPage() {
           totalRegistrations: regsRes.data.count,
           totalAthletes:      athletesRes.data.count,
           totalGyms:          gymsRes.data.count,
-          activeComps,
-          upcomingComps,
-          recentRegs,
-          regsByComp,
-          sheetedRegIds,
+          activeComps, upcomingComps, recentRegs, regsByComp, sheetedRegIds,
         });
       } finally {
         setLoading(false);
       }
     }
-
     load();
   }, [isJudge, router]);
 
   if (isJudge || loading) return <PageSpinner />;
 
   const d = data!;
+  const greeting = user?.first_name ? `, ${user.first_name}` : '';
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-8">
 
+      {/* ── Greeting ──────────────────────────────────────────────────────── */}
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900">Inicio</h1>
-        <p className="text-sm text-zinc-400 mt-1">Resumen general de la plataforma.</p>
+        <h1 className="text-2xl font-semibold text-zinc-900">
+          Bienvenido{greeting} 👋
+        </h1>
+        <p className="text-sm text-zinc-400 mt-1">Panel de administración — Cheer Metrics</p>
       </div>
 
-      {/* ── Stats ───────────────────────────────────────────────────────────── */}
+      {/* ── Stat cards ────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           label="Competencias"
           value={d.totalCompetitions}
           sub={`${d.activeCompetitions} activa${d.activeCompetitions !== 1 ? 's' : ''}`}
           icon={Trophy}
+          color="#F97316"
+          href="/competitions"
         />
-        <StatCard label="Inscripciones" value={d.totalRegistrations} icon={ClipboardList} />
-        <StatCard label="Atletas"       value={d.totalAthletes}      icon={Users} />
-        <StatCard label="Gimnasios"     value={d.totalGyms}          icon={Building2} />
+        <StatCard
+          label="Inscripciones"
+          value={d.totalRegistrations}
+          icon={ClipboardList}
+          color="#3B82F6"
+          href="/competitions"
+        />
+        <StatCard
+          label="Atletas"
+          value={d.totalAthletes}
+          icon={Users}
+          color="#22C55E"
+          href="/athletes"
+        />
+        <StatCard
+          label="Gimnasios"
+          value={d.totalGyms}
+          icon={Building2}
+          color="#8B5CF6"
+          href="/gyms"
+        />
       </div>
 
-      {/* ── Main content ─────────────────────────────────────────────────────── */}
+      {/* ── Main content ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
         {/* Left: Active + Upcoming */}
         <div className="lg:col-span-2 space-y-6">
 
-          {/* Active competitions with sheet breakdown */}
           <section className="space-y-3">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
               Competencias activas ({d.activeComps.length})
@@ -283,7 +287,6 @@ export default function DashboardPage() {
             )}
           </section>
 
-          {/* Upcoming competitions */}
           {d.upcomingComps.length > 0 && (
             <section className="space-y-3">
               <div className="flex items-center gap-2">
@@ -292,9 +295,7 @@ export default function DashboardPage() {
                   Próximas competencias ({d.upcomingComps.length})
                 </h2>
               </div>
-              {d.upcomingComps.map(comp => (
-                <UpcomingCard key={comp.id} comp={comp} />
-              ))}
+              {d.upcomingComps.map(comp => <UpcomingCard key={comp.id} comp={comp} />)}
             </section>
           )}
         </div>
