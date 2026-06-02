@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Trophy, Medal, Award } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { PageSpinner } from '@/components/ui/spinner';
+import { PrintButton } from '@/components/print/PrintButton';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { REGISTRATION_STATUS_LABELS, type DivisionRankings, type RankingEntry } from '@/types/competitions';
 
@@ -80,10 +81,10 @@ export default function DivisionRankingsPage() {
   return (
     <div className="min-h-screen bg-zinc-50">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-zinc-200 px-4 py-3 flex items-center gap-3">
+      <div className="sticky top-0 z-10 bg-white border-b border-zinc-200 px-4 py-3 flex items-center gap-3 print:static print:border-b-2 print:border-zinc-900">
         <button
           onClick={() => router.back()}
-          className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
+          className="print:hidden p-1 rounded-md text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -93,9 +94,12 @@ export default function DivisionRankingsPage() {
             Ranking — {data.division_name}
           </h1>
         </div>
-        <span className="ml-auto text-xs text-zinc-400 tabular-nums">
-          {scored.length} calificado{scored.length !== 1 ? 's' : ''}
-        </span>
+        <div className="ml-auto flex items-center gap-3">
+          <span className="text-xs text-zinc-400 tabular-nums">
+            {scored.length} calificado{scored.length !== 1 ? 's' : ''}
+          </span>
+          <PrintButton />
+        </div>
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">

@@ -28,11 +28,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   return (
     <BrandingProvider>
-      <div className="flex h-screen overflow-hidden">
-        <Sidebar />
+      <div className="dashboard-shell flex h-screen overflow-hidden">
+        <div className="print:hidden"><Sidebar /></div>
         <div className="flex flex-1 flex-col overflow-hidden">
-          <BrandingBar />
-          <main className="flex flex-1 flex-col overflow-y-auto bg-zinc-50">
+          <div className="print:hidden"><BrandingBar /></div>
+          <main className="dashboard-main flex flex-1 flex-col overflow-y-auto bg-zinc-50">
             {children}
           </main>
         </div>

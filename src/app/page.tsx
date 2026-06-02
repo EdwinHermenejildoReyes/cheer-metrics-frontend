@@ -18,12 +18,17 @@ function Navbar() {
           </div>
           <span className="text-base font-semibold text-white">Cheer Metrics</span>
         </div>
-        <Link
-          href="/login"
-          className="rounded-lg bg-orange-500 hover:bg-orange-600 transition-colors px-4 py-2 text-sm font-semibold text-white"
-        >
-          Iniciar sesión
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/schedule" className="text-sm font-medium text-zinc-300 hover:text-white transition-colors">
+            Calendario
+          </Link>
+          <Link
+            href="/login"
+            className="rounded-lg bg-orange-500 hover:bg-orange-600 transition-colors px-4 py-2 text-sm font-semibold text-white"
+          >
+            Iniciar sesión
+          </Link>
+        </div>
       </div>
     </header>
   );
@@ -275,6 +280,7 @@ function Footer() {
           <span className="text-sm font-semibold text-white">Cheer Metrics</span>
         </div>
         <div className="flex items-center gap-6 text-sm text-zinc-500">
+          <Link href="/schedule" className="hover:text-white transition-colors">Calendario</Link>
           <Link href="/login"    className="hover:text-white transition-colors">Iniciar sesión</Link>
           <Link href="/register" className="hover:text-white transition-colors">Registrarse</Link>
         </div>

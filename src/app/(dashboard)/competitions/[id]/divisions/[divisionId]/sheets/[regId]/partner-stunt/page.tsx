@@ -6,6 +6,8 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
+import { PrintButton } from '@/components/print/PrintButton';
+import { ScoreSheetPrintView } from '@/components/print/ScoreSheetPrintView';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
 import { toastApiError } from '@/utils/apiErrors';
@@ -306,21 +308,30 @@ export default function PartnerStuntSheetPage() {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="text-right">
+          <div className="text-right print:hidden">
             <p className="text-[10px] text-zinc-400 uppercase tracking-wide">Total</p>
             <p className="text-2xl font-bold tabular-nums text-zinc-900">
               {fmt(total)}
               <span className="text-sm font-normal text-zinc-400 ml-1">/ {maxTotal}</span>
             </p>
           </div>
-          <Button onClick={handleSave} loading={saving}>
+          <PrintButton />
+          <Button onClick={handleSave} loading={saving} className="print:hidden">
             <Save className="h-4 w-4" />
             Guardar
           </Button>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-6 py-8 flex flex-col gap-6">
+      {existingSheet && (
+        <ScoreSheetPrintView
+          sheet={existingSheet}
+          teamName={teamName || `Inscripción #${registrationId}`}
+          sheetTypeLabel="Partner Stunt"
+        />
+      )}
+
+      <div className="print:hidden max-w-2xl mx-auto px-6 py-8 flex flex-col gap-6">
 
         {/* ── Overview bar ─────────────────────────────────────────────── */}
         <div className="rounded-xl bg-white border border-zinc-200 p-4 flex items-center gap-4">

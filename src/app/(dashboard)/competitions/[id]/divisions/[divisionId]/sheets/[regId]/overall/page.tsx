@@ -6,6 +6,8 @@ import { ArrowLeft, Save, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
+import { PrintButton } from '@/components/print/PrintButton';
+import { ScoreSheetPrintView } from '@/components/print/ScoreSheetPrintView';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
 import { toastApiError } from '@/utils/apiErrors';
@@ -224,18 +226,27 @@ export default function OverallSheetPage() {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="text-right">
+          <div className="text-right print:hidden">
             <p className="text-[10px] text-zinc-400 uppercase tracking-wide">Total planilla</p>
             <p className="text-2xl font-bold tabular-nums text-zinc-900">{fmt(sheetTotal)}</p>
           </div>
-          <Button onClick={handleSave} loading={saving}>
+          <PrintButton />
+          <Button onClick={handleSave} loading={saving} className="print:hidden">
             <Save className="h-4 w-4" />
             Guardar
           </Button>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col gap-10">
+      {existingSheet && (
+        <ScoreSheetPrintView
+          sheet={existingSheet}
+          teamName={teamName || `Inscripción #${registrationId}`}
+          sheetTypeLabel="Overall — General"
+        />
+      )}
+
+      <div className="print:hidden max-w-6xl mx-auto px-6 py-8 flex flex-col gap-10">
 
         {/* ── DOS COLUMNAS: Formaciones | Baile ────────────────────────── */}
         <div className="grid grid-cols-2 gap-5 items-start">

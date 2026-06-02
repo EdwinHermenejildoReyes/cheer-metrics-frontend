@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { PrintButton } from '@/components/print/PrintButton';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -151,12 +152,15 @@ export default function CompetitionDetailPage() {
             {competition.notes && <p className="text-sm text-zinc-400 mt-1">{competition.notes}</p>}
           </div>
         </div>
-        {!isJudge && (
-          <Button variant="secondary" size="sm" onClick={() => setCompModalOpen(true)}>
-            <Pencil className="h-3.5 w-3.5" />
-            Editar
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <PrintButton />
+          {!isJudge && (
+            <Button variant="secondary" size="sm" onClick={() => setCompModalOpen(true)}>
+              <Pencil className="h-3.5 w-3.5" />
+              Editar
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Divisions */}
@@ -226,7 +230,7 @@ export default function CompetitionDetailPage() {
 
       {/* ── Panel de jueces (solo admin) ───────────────────────────────── */}
       {!isJudge && (
-        <div className="flex flex-col gap-3">
+        <div className="print:hidden flex flex-col gap-3">
           <button
             type="button"
             onClick={() => setJudgesOpen((v) => !v)}
