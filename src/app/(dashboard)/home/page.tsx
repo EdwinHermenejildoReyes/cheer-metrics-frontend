@@ -25,10 +25,10 @@ function fmtDate(dateStr: string, opts?: Intl.DateTimeFormatOptions) {
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('es-EC', opts ?? { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-function statusVariant(status: string): 'success' | 'warning' | 'secondary' {
+function statusVariant(status: string): 'success' | 'warning' | 'default' {
   if (status === 'confirmed') return 'success';
   if (status === 'pending')   return 'warning';
-  return 'secondary';
+  return 'default';
 }
 
 // ── Stat card (parapente-fenix style) ─────────────────────────────────────────

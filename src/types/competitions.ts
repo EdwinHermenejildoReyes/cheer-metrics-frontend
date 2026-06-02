@@ -220,6 +220,13 @@ export interface DivisionRankings {
   entries: RankingEntry[];
 }
 
+export interface HeroImage {
+  id: number;
+  image: string;
+  order: number;
+  created_at: string;
+}
+
 export interface PaginatedResponse<T> {
   count: number;
   next: string | null;

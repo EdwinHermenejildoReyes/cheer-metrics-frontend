@@ -4,6 +4,7 @@ import {
   BarChart3, Shield, CheckCircle, ChevronRight,
   Star, Zap,
 } from 'lucide-react';
+import { HeroCarousel } from '@/components/landing/HeroCarousel';
 
 // ── Navbar ────────────────────────────────────────────────────────────────────
 
@@ -33,11 +34,10 @@ function Navbar() {
 function Hero() {
   return (
     <section className="relative min-h-screen flex items-center bg-zinc-950 overflow-hidden">
-      {/* Decorative blobs */}
-      <div className="pointer-events-none absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-orange-500/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 -right-20 w-[500px] h-[500px] rounded-full bg-orange-600/10 blur-3xl" />
+      {/* Background carousel */}
+      <HeroCarousel />
 
-      <div className="relative max-w-6xl mx-auto px-6 pt-24 pb-20">
+      <div className="relative z-20 max-w-6xl mx-auto px-6 pt-24 pb-20">
         <div className="max-w-3xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-1.5 text-xs font-semibold text-orange-400 mb-8">
             <Star className="w-3 h-3" />

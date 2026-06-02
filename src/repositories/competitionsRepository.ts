@@ -4,6 +4,7 @@ import type {
   Division,
   DivisionRankings,
   Gym,
+  HeroImage,
   JudgeAssignment,
   Organization,
   Team,
@@ -127,6 +128,21 @@ class CompetitionsRepository {
 
   deleteJudgeAssignment = (id: number) =>
     api.delete(`/judge-assignments/${id}/`);
+
+  // Hero images (public list, admin write)
+  listHeroImages = () =>
+    api.get<PaginatedResponse<HeroImage>>('/hero-images/', { params: { page_size: '50' } });
+
+  createHeroImage = (data: FormData) =>
+    api.post<HeroImage>('/hero-images/', data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
+  updateHeroImage = (id: number, data: Partial<Pick<HeroImage, 'order'>>) =>
+    api.patch<HeroImage>(`/hero-images/${id}/`, data);
+
+  deleteHeroImage = (id: number) =>
+    api.delete(`/hero-images/${id}/`);
 }
 
 export default new CompetitionsRepository();
