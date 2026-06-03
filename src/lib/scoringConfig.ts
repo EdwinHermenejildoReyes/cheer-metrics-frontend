@@ -309,7 +309,7 @@ interface ScoringConfig {
 }
 
 const CONFIGS: Record<ScoringSystem, ScoringConfig> = {
-  elite_l1:      { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
+  elite_l1:      { building: { ...ELITE_BUILDING, hasTosses: false }, tumbling: ELITE_TUMBLING },
   elite_l2_7:    { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
   elite_nt:      { building: ELITE_BUILDING,        tumbling: { ...ELITE_TUMBLING, hasStanding: false, hasRunning: false } },
   prep:          { building: PREP_BUILDING,         tumbling: PREP_TUMBLING },

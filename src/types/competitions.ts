@@ -358,7 +358,7 @@ export const SCORING_SYSTEM_FIELDS: Record<ScoringSystem, ScoreFieldKey[]> = {
   novice_plus:   ['stunts_execution', 'pyramids_execution', 'standing_execution', 'running_execution', 'jumps_execution', ..._OVERALL, ..._CROSS],
   prep:          [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   escolar:       [..._BUILDING_BASE, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
-  elite_l1:      [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
+  elite_l1:      [..._BUILDING_BASE, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   elite_l2_7:    [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   elite_nt:      [..._BUILDING_BASE, ..._TOSSES, ..._JUMPS, ..._OVERALL, ..._CROSS],
   partner_stunt:   _PARTNER,
