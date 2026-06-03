@@ -313,6 +313,7 @@ const CONFIGS: Record<ScoringSystem, ScoringConfig> = {
   elite_l2_7:    { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
   elite_nt:      { building: ELITE_BUILDING,        tumbling: { ...ELITE_TUMBLING, hasStanding: false, hasRunning: false } },
   prep:          { building: PREP_BUILDING,         tumbling: PREP_TUMBLING },
+  escolar:       { building: PREP_BUILDING,         tumbling: PREP_TUMBLING },
   tiny_novice:   { building: TINY_NOVICE_BUILDING,  tumbling: MINI_NOVICE_TUMBLING },
   mini_novice:   { building: MINI_NOVICE_BUILDING,  tumbling: MINI_NOVICE_TUMBLING },
   novice_plus:   { building: NOVICE_PLUS_BUILDING,  tumbling: NOVICE_PLUS_TUMBLING },

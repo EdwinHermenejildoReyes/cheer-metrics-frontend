@@ -25,7 +25,7 @@ function suggestScoringSystem(skillLevel: string, ageGroup: string, category: st
   const map: Record<string, ScoringSystem> = {
     novice_plus: 'novice_plus',
     prep:        'prep',
-    escolar:     'prep',
+    escolar:     'escolar',
     L1:          'elite_l1',
     L2:          'elite_l2_7',
     L3:          'elite_l2_7',

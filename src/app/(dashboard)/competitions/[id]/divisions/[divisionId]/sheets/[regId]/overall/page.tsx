@@ -12,16 +12,20 @@ import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
 import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
-import type { ScoreSheet } from '@/types/competitions';
+import type { ScoreSheet, ScoringSystem } from '@/types/competitions';
 
 // ── Formations scale (2.0 → 1.0 in steps of −0.1) ───────────────────────────
 const FORMATIONS_VALUES = [2.0, 1.9, 1.8, 1.7, 1.6, 1.5, 1.4, 1.3, 1.2, 1.1, 1.0];
 
 // ── Dance levels ──────────────────────────────────────────────────────────────
-const DANCE_LEVELS = [
+const DANCE_LEVELS_FULL = [
   { label: 'Reducido',  sublabel: 'Bajo el Promedio',   value: 0.5 },
   { label: 'Moderado',  sublabel: 'Promedio',            value: 1.0 },
   { label: 'Elevado',   sublabel: 'Sobre el Promedio',   value: 1.5 },
+];
+const DANCE_LEVELS_ESCOLAR = [
+  { label: 'Reducido',  sublabel: 'Bajo el Promedio',   value: 0.5 },
+  { label: 'Elevado',   sublabel: 'Promedio / Alto',     value: 1.0 },
 ];
 
 const DANCE_DIFF_CRITERIA = [
@@ -38,10 +42,11 @@ function fmt(n: number) { return n.toFixed(2); }
 
 // ── Dance level selector ──────────────────────────────────────────────────────
 function DanceLevelSelector({
-  label, criteria, value, onChange,
+  label, criteria, levels, value, onChange,
 }: {
   label: string;
   criteria: string[];
+  levels: { label: string; sublabel: string; value: number }[];
   value: number;
   onChange: (v: number) => void;
 }) {
@@ -55,8 +60,8 @@ function DanceLevelSelector({
           ))}
         </div>
       </div>
-      <div className="grid grid-cols-3 divide-x divide-zinc-200">
-        {DANCE_LEVELS.map(({ label: lbl, sublabel, value: v }) => {
+      <div className={`grid divide-x divide-zinc-200 ${levels.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+        {levels.map(({ label: lbl, sublabel, value: v }) => {
           const active = value === v;
           return (
             <button
@@ -104,10 +109,11 @@ export default function OverallSheetPage() {
     }
   }, [isJudge, competitionId, isCompetitionActive, router]);
 
-  const [teamName,      setTeamName]      = useState<string>('');
-  const [existingSheet, setExistingSheet] = useState<ScoreSheet | null>(null);
-  const [loading,       setLoading]       = useState(true);
-  const [saving,        setSaving]        = useState(false);
+  const [teamName,       setTeamName]       = useState<string>('');
+  const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
+  const [scoringSystem,  setScoringSystem]  = useState<ScoringSystem | ''>('');
+  const [loading,        setLoading]        = useState(true);
+  const [saving,         setSaving]         = useState(false);
 
   // ── Form state ────────────────────────────────────────────────────────────
   const [formationsScore,    setFormationsScore]    = useState<number>(2.0);
@@ -119,6 +125,8 @@ export default function OverallSheetPage() {
   const [danceNotes,         setDanceNotes]         = useState('');
 
   // ── Computed ──────────────────────────────────────────────────────────────
+  const isEscolar       = scoringSystem === 'escolar';
+  const danceLevels     = isEscolar ? DANCE_LEVELS_ESCOLAR : DANCE_LEVELS_FULL;
   const overallSubtotal = parseFloat((formationsScore + danceDifficulty + danceExecution).toFixed(2));
   const sheetTotal      = parseFloat((overallSubtotal + creativityOverall + showmanshipOverall).toFixed(2));
   const errorsCount     = Math.round((2.0 - formationsScore) * 10);
@@ -126,10 +134,14 @@ export default function OverallSheetPage() {
   // ── Load ──────────────────────────────────────────────────────────────────
   const load = useCallback(async () => {
     try {
-      const [sheetRes, regRes] = await Promise.all([
+      const [sheetRes, regRes, divRes] = await Promise.all([
         competitionsRepository.listScoreSheets({ registration: String(registrationId) }),
         competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' }),
+        competitionsRepository.getDivision(divId),
       ]);
+
+      const div = divRes.data;
+      setScoringSystem((div.scoring_system || div.suggested_scoring_system) as ScoringSystem);
 
       const reg = regRes.data.results.find((r) => r.id === registrationId);
       if (reg) setTeamName(reg.team_name);
@@ -144,11 +156,11 @@ export default function OverallSheetPage() {
         }
         if (sheet.dance_difficulty) {
           const v = parseFloat(sheet.dance_difficulty);
-          setDanceDifficulty(DANCE_LEVELS.find((l) => l.value === v) ? v : 0);
+          setDanceDifficulty(DANCE_LEVELS_FULL.find((l) => l.value === v) ? v : 0);
         }
         if (sheet.dance_execution) {
           const v = parseFloat(sheet.dance_execution);
-          setDanceExecution(DANCE_LEVELS.find((l) => l.value === v) ? v : 0);
+          setDanceExecution(DANCE_LEVELS_FULL.find((l) => l.value === v) ? v : 0);
         }
         if (sheet.creativity_overall) {
           setCreativityOverall(Math.min(2.0, parseFloat(sheet.creativity_overall)));
@@ -317,10 +329,10 @@ export default function OverallSheetPage() {
           <section className="flex flex-col gap-3">
             <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Baile</h2>
 
-            <DanceLevelSelector label="Dificultad de Baile" criteria={DANCE_DIFF_CRITERIA} value={danceDifficulty} onChange={setDanceDifficulty} />
+            <DanceLevelSelector label="Dificultad de Baile" criteria={DANCE_DIFF_CRITERIA} levels={danceLevels} value={danceDifficulty} onChange={setDanceDifficulty} />
             {danceDifficulty === 0 && <p className="text-xs text-amber-600 text-center">— Selecciona un nivel de dificultad —</p>}
 
-            <DanceLevelSelector label="Ejecución de Baile" criteria={DANCE_EXEC_CRITERIA} value={danceExecution} onChange={setDanceExecution} />
+            <DanceLevelSelector label="Ejecución de Baile" criteria={DANCE_EXEC_CRITERIA} levels={danceLevels} value={danceExecution} onChange={setDanceExecution} />
             {danceExecution === 0 && <p className="text-xs text-amber-600 text-center">— Selecciona un nivel de ejecución —</p>}
 
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">

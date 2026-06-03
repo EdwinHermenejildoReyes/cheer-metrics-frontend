@@ -38,7 +38,7 @@ export type DeductionType =
   | 'ad' | 'div';
 
 export type ScoringSystem =
-  | 'tiny_novice' | 'mini_novice' | 'novice_plus' | 'prep'
+  | 'tiny_novice' | 'mini_novice' | 'novice_plus' | 'prep' | 'escolar'
   | 'elite_l1' | 'elite_l2_7' | 'elite_nt' | 'partner_stunt' | 'iasf_l6_7'
   | 'iasf_world_l6_7';
 
@@ -317,7 +317,8 @@ export const SCORING_SYSTEM_LABELS: Record<ScoringSystem, string> = {
   tiny_novice:     'Tiny & All Star Novice',
   mini_novice:     'Mini Novice',
   novice_plus:     'Novice Plus',
-  prep:            'Prep / Escolar',
+  prep:            'Prep',
+  escolar:         'Escolar',
   elite_l1:        'Elite Nivel 1',
   elite_l2_7:      'Elite Nivel 2–7',
   elite_nt:        'Elite Non-Tumbling',
@@ -352,6 +353,7 @@ export const SCORING_SYSTEM_FIELDS: Record<ScoringSystem, ScoreFieldKey[]> = {
   mini_novice:   [..._BUILDING_BASE, ..._TUMBLING_BASE, 'standing_drivers', ..._JUMPS, ..._OVERALL, ..._CROSS],
   novice_plus:   [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   prep:          [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
+  escolar:       [..._BUILDING_BASE, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   elite_l1:      [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   elite_l2_7:    [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   elite_nt:      [..._BUILDING_BASE, ..._TOSSES, ..._JUMPS, ..._OVERALL, ..._CROSS],
