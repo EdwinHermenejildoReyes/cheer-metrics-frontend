@@ -319,6 +319,10 @@ const CONFIGS: Record<ScoringSystem, ScoringConfig> = {
   novice_plus:   { building: NOVICE_PLUS_BUILDING,  tumbling: NOVICE_PLUS_TUMBLING },
   // IASF L6-L7: same UCA scoring structure as Elite for our purposes
   iasf_l6_7:      { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
+  // International Elite: dance limited to 1.0; L1 has no tosses; NT has no tumbling
+  intl_l1:         { building: { ...ELITE_BUILDING, hasTosses: false }, tumbling: ELITE_TUMBLING },
+  intl_l2_7:       { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
+  intl_nt:         { building: ELITE_BUILDING,        tumbling: { ...ELITE_TUMBLING, hasStanding: false, hasRunning: false } },
   // IASF World has dedicated slider-based pages; use elite as fallback for modal
   iasf_world_l6_7: { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
   // Partner stunt has a completely different page, use elite as safe fallback

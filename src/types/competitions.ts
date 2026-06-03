@@ -40,7 +40,8 @@ export type DeductionType =
 export type ScoringSystem =
   | 'tiny_novice' | 'mini_novice' | 'novice_plus' | 'prep' | 'escolar'
   | 'elite_l1' | 'elite_l2_7' | 'elite_nt' | 'partner_stunt' | 'iasf_l6_7'
-  | 'iasf_world_l6_7';
+  | 'iasf_world_l6_7'
+  | 'intl_l1' | 'intl_l2_7' | 'intl_nt';
 
 // Keys of all sub-score fields on ScoreSheet
 export type ScoreFieldKey =
@@ -325,6 +326,9 @@ export const SCORING_SYSTEM_LABELS: Record<ScoringSystem, string> = {
   partner_stunt:   'Partner Stunt',
   iasf_l6_7:       'IASF Nivel 6–7',
   iasf_world_l6_7: 'IASF World L6-L7',
+  intl_l1:         'Internacional Nivel 1',
+  intl_l2_7:       'Internacional Nivel 2–7',
+  intl_nt:         'Internacional Non-Tumbling',
 };
 
 // Active score fields per scoring system (mirrors backend SCORING_SYSTEM_CONFIG)
@@ -359,6 +363,9 @@ export const SCORING_SYSTEM_FIELDS: Record<ScoringSystem, ScoreFieldKey[]> = {
   elite_nt:      [..._BUILDING_BASE, ..._TOSSES, ..._JUMPS, ..._OVERALL, ..._CROSS],
   partner_stunt:   _PARTNER,
   iasf_l6_7:       [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
+  intl_l1:         [..._BUILDING_BASE, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
+  intl_l2_7:       [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
+  intl_nt:         [..._BUILDING_BASE, ..._TOSSES, ..._JUMPS, ..._OVERALL, ..._CROSS],
   iasf_world_l6_7: [
     'stunts_difficulty', 'stunts_execution',
     'pyramids_difficulty', 'pyramids_execution',
