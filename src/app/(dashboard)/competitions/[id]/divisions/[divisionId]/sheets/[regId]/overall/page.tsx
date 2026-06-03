@@ -125,7 +125,7 @@ export default function OverallSheetPage() {
   const [danceNotes,         setDanceNotes]         = useState('');
 
   // ── Computed ──────────────────────────────────────────────────────────────
-  const hasDanceLimited = scoringSystem === 'prep' || scoringSystem === 'escolar' || scoringSystem === 'intl_l1' || scoringSystem === 'intl_l2_7' || scoringSystem === 'intl_nt';
+  const hasDanceLimited = scoringSystem === 'novice_plus' || scoringSystem === 'prep' || scoringSystem === 'escolar' || scoringSystem === 'intl_l1' || scoringSystem === 'intl_l2_7' || scoringSystem === 'intl_nt';
   const danceLevels     = hasDanceLimited ? DANCE_LEVELS_ESCOLAR : DANCE_LEVELS_FULL;
   const overallSubtotal = parseFloat((formationsScore + danceDifficulty + danceExecution).toFixed(2));
   const sheetTotal      = parseFloat((overallSubtotal + creativityOverall + showmanshipOverall).toFixed(2));
