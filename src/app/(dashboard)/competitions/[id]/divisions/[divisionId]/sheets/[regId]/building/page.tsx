@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
 import { PrintButton } from '@/components/print/PrintButton';
-import { ScoreSheetPrintView } from '@/components/print/ScoreSheetPrintView';
+import { BuildingSheetPrintView } from '@/components/print/BuildingSheetPrintView';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { getScoringConfig, DEFAULT_BUILDING_CONFIG } from '@/lib/scoringConfig';
 import { useJudge } from '@/hooks/useJudge';
@@ -15,6 +15,7 @@ import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
 import type { BuildingConfig } from '@/lib/scoringConfig';
 import type { ScoreSheet } from '@/types/competitions';
+import type { BuildingPrintData } from '@/components/print/BuildingSheetPrintView';
 
 // ── Execution categories (same for all scoring systems) ──────────────────────
 const EXEC_CATS      = ['Volante', 'Base/Spotter', 'Transición', 'Sincronización'];
@@ -273,6 +274,11 @@ export default function BuildingSheetPage() {
                 setStuntsSkills([0, 0, 0, 0, 0].map((_, i) => s.stuntsSkills[i] ?? 0));
               }
               if (s.stuntsPartMax !== undefined && cfg.stuntsPartMaxOpts.some(o => o.value === s.stuntsPartMax)) setStuntsPartMax(s.stuntsPartMax);
+              if (Array.isArray(s.stuntsExecDeds))   setStuntsExecDeds(s.stuntsExecDeds);
+              if (Array.isArray(s.pyramidsExecDeds))  setPyramidsExecDeds(s.pyramidsExecDeds);
+              if (Array.isArray(s.tossesExecDeds))    setTossesExecDeds(s.tossesExecDeds);
+              if (s.pyramidsRangeIdx !== undefined)   setPyramidsRangeIdx(s.pyramidsRangeIdx);
+              if (s.pyramidsFine !== undefined)        setPyramidsFine(s.pyramidsFine);
             } else if (sheet.stunts_drivers) {
               // Old save format without _scores: reconstruct stuntsPartMax from stunts_drivers
               // (skills were always 0 in old saves, so stunts_drivers == stuntsPartMax)
@@ -313,7 +319,11 @@ export default function BuildingSheetPage() {
           stunts: stuntsNotes,
           pyramids: pyramidsNotes,
           tosses: tossesNotes,
-          _scores: { stuntsRango, stuntsSkills, stuntsPartMax },
+          _scores: {
+            stuntsRango, stuntsSkills, stuntsPartMax,
+            stuntsExecDeds, pyramidsExecDeds, tossesExecDeds,
+            pyramidsRangeIdx, pyramidsFine,
+          },
         }),
       };
 
@@ -371,12 +381,38 @@ export default function BuildingSheetPage() {
       </div>
 
       {/* Print-only view (hidden in browser, visible when printing) */}
-      {existingSheet && (
-        <ScoreSheetPrintView
-          sheet={existingSheet}
+      {!loading && (
+        <BuildingSheetPrintView
           teamName={teamName || `Inscripción #${registrationId}`}
-          sheetTypeLabel="Building — Elevaciones"
+          divisionName={existingSheet?.division_name}
           organization={organization}
+          bCfg={bCfg}
+          stuntsRango={stuntsRango}
+          stuntsSkills={stuntsSkills}
+          stuntsPartMax={stuntsPartMax}
+          stuntsExecDeds={stuntsExecDeds}
+          stuntsNotes={stuntsNotes}
+          pyramidsRangeIdx={pyramidsRangeIdx}
+          pyramidsFine={pyramidsFine}
+          pyramidsExecDeds={pyramidsExecDeds}
+          pyramidsDrivers={pyramidsDrivers}
+          pyramidsNotes={pyramidsNotes}
+          tossesDiff={tossesDiff}
+          tossesExecDeds={tossesExecDeds}
+          tossesNotes={tossesNotes}
+          creativityBuilding={creativityBuilding}
+          showmanshipBuilding={showmanshipBuilding}
+          stuntsSkillsTotal={stuntsSkillsTotal}
+          stuntsDriversTotal={stuntsDriversTotal}
+          stuntsExecTotal={stuntsExecTotal}
+          stuntsSectionTotal={stuntsSectionTotal}
+          pyramidsDiff={pyramidsDiff}
+          pyramidsExecTotal={pyramidsExecTotal}
+          pyramidsSectionTotal={pyramidsSectionTotal}
+          tossesExecTotal={tossesExecTotal}
+          tossesSectionTotal={tossesSectionTotal}
+          buildingTotal={buildingTotal}
+          sheetTotal={sheetTotal}
         />
       )}
 

@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
 import { PrintButton } from '@/components/print/PrintButton';
-import { ScoreSheetPrintView } from '@/components/print/ScoreSheetPrintView';
+import { TumblingSheetPrintView } from '@/components/print/TumblingSheetPrintView';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { getScoringConfig, DEFAULT_TUMBLING_CONFIG } from '@/lib/scoringConfig';
 import { useJudge } from '@/hooks/useJudge';
@@ -15,6 +15,7 @@ import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
 import type { TumblingConfig } from '@/lib/scoringConfig';
 import type { ScoreSheet } from '@/types/competitions';
+import type { TumblingPrintData } from '@/components/print/TumblingSheetPrintView';
 
 // ── Execution categories (same for all scoring systems) ──────────────────────
 const STANDING_EXEC_CATS = ['Aprox.', 'Con. Corporal', 'Aterrizajes', 'Sinc'];
@@ -347,6 +348,12 @@ export default function TumblingSheetPage() {
             setStandingNotes(p.standing ?? '');
             setRunningNotes(p.running ?? '');
             setJumpsNotes(p.jumps ?? '');
+            if (p._scores) {
+              const s = p._scores;
+              if (Array.isArray(s.standingExecDeds)) setStandingExecDeds(s.standingExecDeds);
+              if (Array.isArray(s.runningExecDeds))  setRunningExecDeds(s.runningExecDeds);
+              if (Array.isArray(s.jumpsExecDeds))    setJumpsExecDeds(s.jumpsExecDeds);
+            }
           } catch {
             setStandingNotes(sheet.notes);
           }
@@ -374,7 +381,10 @@ export default function TumblingSheetPage() {
         jumps_execution:      String(tCfg.hasJumps    ? jumpsExecTotal     : 0),
         creativity_tumbling:  String(tCfg.hasCreativity ? creativityTumbling : 0),
         showmanship_tumbling: String(showmanshipTumbling),
-        notes: JSON.stringify({ standing: standingNotes, running: runningNotes, jumps: jumpsNotes }),
+        notes: JSON.stringify({
+          standing: standingNotes, running: runningNotes, jumps: jumpsNotes,
+          _scores: { standingExecDeds, runningExecDeds, jumpsExecDeds },
+        }),
       };
 
       let saved: ScoreSheet;
@@ -431,12 +441,38 @@ export default function TumblingSheetPage() {
         </div>
       </div>
 
-      {existingSheet && (
-        <ScoreSheetPrintView
-          sheet={existingSheet}
+      {!loading && (
+        <TumblingSheetPrintView
           teamName={teamName || `Inscripción #${registrationId}`}
-          sheetTypeLabel="Tumbling — Gimnasia"
+          divisionName={existingSheet?.division_name}
           organization={organization}
+          tCfg={tCfg}
+          standingRango={standingRango}
+          standingHabilidad={standingHabilidad}
+          standingExecDeds={standingExecDeds}
+          standingNotes={standingNotes}
+          runningRango={runningRango}
+          runningHabilidad={runningHabilidad}
+          runningExecDeds={runningExecDeds}
+          runningNotes={runningNotes}
+          jumpsDiff={jumpsDiff}
+          jumpsExecDeds={jumpsExecDeds}
+          jumpsNotes={jumpsNotes}
+          creativityTumbling={creativityTumbling}
+          showmanshipTumbling={showmanshipTumbling}
+          standingDiffEff={standingDiffEff}
+          standingHabEff={standingHabEff}
+          standingExecTotal={standingExecTotal}
+          standingTotal={standingTotal}
+          runningDiffEff={runningDiffEff}
+          runningHabEff={runningHabEff}
+          runningExecTotal={runningExecTotal}
+          runningTotal={runningTotal}
+          jumpsDiffEff={jumpsDiffEff}
+          jumpsExecTotal={jumpsExecTotal}
+          jumpsTotal={jumpsTotal}
+          tumblingSubtotal={tumblingSubtotal}
+          sheetTotal={sheetTotal}
         />
       )}
 
