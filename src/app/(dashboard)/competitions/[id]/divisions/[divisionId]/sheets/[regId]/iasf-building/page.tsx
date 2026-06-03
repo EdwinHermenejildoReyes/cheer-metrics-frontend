@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
 import { PrintButton } from '@/components/print/PrintButton';
-import { ScoreSheetPrintView } from '@/components/print/ScoreSheetPrintView';
+import { IasfSheetPrintView } from '@/components/print/IasfSheetPrintView';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
 import { useBranding } from '@/contexts/BrandingContext';
@@ -311,10 +311,22 @@ export default function IasfBuildingSheetPage() {
         </div>
       </div>
 
-      {existingSheet && (
-        <ScoreSheetPrintView sheet={existingSheet} teamName={teamName || `Inscripción #${registrationId}`}
-          sheetTypeLabel="IASF World — Elevaciones" organization={organization} />
-      )}
+      <IasfSheetPrintView
+        data={{
+          sheetTypeLabel:   'Elevaciones',
+          teamName:         teamName || `Inscripción #${registrationId}`,
+          organization:     organization ?? undefined,
+          categories:       CATEGORIES,
+          maxTotal:         MAX_TOTAL,
+          scores,
+          notes,
+          total,
+          rawScore:         existingSheet ? parseFloat(existingSheet.raw_score)        : undefined,
+          totalDeductions:  existingSheet ? parseFloat(existingSheet.total_deductions) : undefined,
+          finalScore:       existingSheet ? parseFloat(existingSheet.final_score)      : undefined,
+          percentage:       existingSheet?.percentage,
+        }}
+      />
 
       <div className="print:hidden max-w-2xl mx-auto px-6 py-8 flex flex-col gap-6">
         <div className="rounded-xl bg-white border border-zinc-200 p-4 flex items-center gap-4">
