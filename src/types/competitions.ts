@@ -353,8 +353,8 @@ const _PARTNER: ScoreFieldKey[] = [
 ];
 
 export const SCORING_SYSTEM_FIELDS: Record<ScoringSystem, ScoreFieldKey[]> = {
-  tiny_novice:   [..._BUILDING_BASE, ..._TUMBLING_BASE, ..._JUMPS, ..._OVERALL, ..._CROSS],
-  mini_novice:   [..._BUILDING_BASE, ..._TUMBLING_BASE, 'standing_drivers', ..._JUMPS, ..._OVERALL, ..._CROSS],
+  tiny_novice:   ['jumps_execution', ..._OVERALL, ..._CROSS],
+  mini_novice:   ['stunts_execution', 'pyramids_execution', 'jumps_execution', ..._OVERALL, ..._CROSS],
   novice_plus:   ['stunts_execution', 'pyramids_execution', 'standing_execution', 'running_execution', 'jumps_execution', ..._OVERALL, ..._CROSS],
   prep:          [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   escolar:       [..._BUILDING_BASE, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
