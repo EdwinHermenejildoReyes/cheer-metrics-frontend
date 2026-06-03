@@ -20,10 +20,14 @@ export interface BuildingConfig {
   pyramidRango:         PyramidRangoOpt[];
   pyramidFineSteps:     number[];
   pyramidsExecMax:      number;
+  pyramidDriversOpts:   RangoOpt[];  // non-empty only for escolar_ab
   // Tosses
   hasTosses:            boolean;
   tossDiffOpts:         RangoOpt[];
   tossesExecMax:        number;
+  // Cross-sheet
+  hasCreativity:        boolean;   // false for escolar_ab (cheer only)
+  showmanshipMax:       number;    // 2.0 standard, 5.0 for escolar_ab
 }
 
 // ── Tumbling config ───────────────────────────────────────────────────────────
@@ -45,6 +49,11 @@ export interface TumblingConfig {
   jumpsHasDiff:         boolean;
   jumpsDiffOpts:        RangoOpt[];
   jumpsExecMax:         number;
+  // escolar_ab: standing section represents combined Standing+Running
+  isCombinedSR:         boolean;
+  // Cross-sheet
+  hasCreativity:        boolean;
+  showmanshipMax:       number;
 }
 
 // ── Shared option sets ────────────────────────────────────────────────────────
@@ -153,82 +162,150 @@ const PREP_JUMPS: RangoOpt[] = [
   { value: 2.0, label: 'MÁX: 2 Saltos (sincronizados)' },
 ];
 
+// ── Escolar AB (Adventure Brands) option sets ─────────────────────────────────
+
+const ESCOLAR_AB_STUNT_RANGO: RangoOpt[] = [
+  { value: 2.0, label: 'No cumple con 2.5' },
+  { value: 2.5, label: '4 Hab Dif por Gran Parte (Acumulativas)' },
+  { value: 3.0, label: '2 Hab Dif Simultáneas por Gran Parte' },
+  { value: 3.5, label: '3 Hab Dif Simultáneas por Gran Parte' },
+  { value: 3.7, label: '4+ Hab Dif Simultáneas por Gran Parte' },
+];
+
+// Binary drivers: met the level or not (0 or 0.3)
+const ESCOLAR_AB_DRIVERS: RangoOpt[] = [
+  { value: 0.0, label: 'No Cumple' },
+  { value: 0.3, label: 'Del Nivel' },
+];
+
+const ESCOLAR_AB_PYRAMID_RANGO: PyramidRangoOpt[] = [
+  { low: 2.0, high: 2.5, label: 'Inferior: No cumple con el Rango Bajo' },
+  { low: 2.5, high: 3.0, label: 'Bajo: 2 Hab Dif + 2 Estructuras' },
+  { low: 3.0, high: 3.5, label: 'Medio: 3 Hab Dif + 2 Estructuras x Gran Parte' },
+];
+
+// Combined Standing/Running rango (max diff 3.7, uses standing_* fields)
+const ESCOLAR_AB_SR_RANGO: RangoOpt[] = [
+  { value: 1.5, label: 'No cumple con 2.0' },
+  { value: 2.0, label: 'MAYORÍA: pase del nivel (estático)' },
+  { value: 2.5, label: 'GRAN PARTE: pase del nivel (estático)' },
+  { value: 3.0, label: 'MAYORÍA: pases del nivel (estático + carrera)' },
+  { value: 3.5, label: 'GRAN PARTE: pases del nivel (estático + carrera)' },
+  { value: 3.7, label: 'MÁX: avanzado — estático + carrera (sincronizados)' },
+];
+
+const ESCOLAR_AB_JUMPS_DIFF: RangoOpt[] = [
+  { value: 0.5, label: 'No cumple con 1.0' },
+  { value: 1.0, label: 'GRAN PARTE: salto avanzado del nivel' },
+];
+
 // ── Building configs ──────────────────────────────────────────────────────────
 
 const ELITE_BUILDING: BuildingConfig = {
-  hasStunts:        true,
-  stuntsHasDiff:    true,
-  stuntsRango:      ELITE_STUNT_RANGO,
-  stuntsSkillCount: 5,
-  stuntsSkillGrades: ELITE_SKILL_GRADES,
-  stuntsPartMaxOpts: ELITE_PART_MAX,
-  stuntsExecMax:    4.0,
-  hasPyramids:      true,
-  pyramidsHasDiff:  true,
-  pyramidRango:     ELITE_PYRAMID_RANGO,
-  pyramidFineSteps: PYRAMID_FINE_STEPS,
-  pyramidsExecMax:  4.0,
-  hasTosses:        true,
-  tossDiffOpts:     ELITE_TOSS_DIFF,
-  tossesExecMax:    2.0,
+  hasStunts:          true,
+  stuntsHasDiff:      true,
+  stuntsRango:        ELITE_STUNT_RANGO,
+  stuntsSkillCount:   5,
+  stuntsSkillGrades:  ELITE_SKILL_GRADES,
+  stuntsPartMaxOpts:  ELITE_PART_MAX,
+  stuntsExecMax:      4.0,
+  hasPyramids:        true,
+  pyramidsHasDiff:    true,
+  pyramidRango:       ELITE_PYRAMID_RANGO,
+  pyramidFineSteps:   PYRAMID_FINE_STEPS,
+  pyramidsExecMax:    4.0,
+  pyramidDriversOpts: [],
+  hasTosses:          true,
+  tossDiffOpts:       ELITE_TOSS_DIFF,
+  tossesExecMax:      2.0,
+  hasCreativity:      true,
+  showmanshipMax:     2.0,
 };
 
 const PREP_BUILDING: BuildingConfig = {
-  hasStunts:        true,
-  stuntsHasDiff:    true,
-  stuntsRango:      PREP_STUNT_RANGO,
-  stuntsSkillCount: 3,
-  stuntsSkillGrades: PREP_SKILL_GRADES,
-  stuntsPartMaxOpts: PREP_PART_MAX,
-  stuntsExecMax:    4.0,
-  hasPyramids:      true,
-  pyramidsHasDiff:  true,
-  pyramidRango:     PREP_PYRAMID_RANGO,
-  pyramidFineSteps: PYRAMID_FINE_STEPS,
-  pyramidsExecMax:  4.0,
-  hasTosses:        false,
-  tossDiffOpts:     [],
-  tossesExecMax:    2.0,
+  hasStunts:          true,
+  stuntsHasDiff:      true,
+  stuntsRango:        PREP_STUNT_RANGO,
+  stuntsSkillCount:   3,
+  stuntsSkillGrades:  PREP_SKILL_GRADES,
+  stuntsPartMaxOpts:  PREP_PART_MAX,
+  stuntsExecMax:      4.0,
+  hasPyramids:        true,
+  pyramidsHasDiff:    true,
+  pyramidRango:       PREP_PYRAMID_RANGO,
+  pyramidFineSteps:   PYRAMID_FINE_STEPS,
+  pyramidsExecMax:    4.0,
+  pyramidDriversOpts: [],
+  hasTosses:          false,
+  tossDiffOpts:       [],
+  tossesExecMax:      2.0,
+  hasCreativity:      true,
+  showmanshipMax:     2.0,
 };
 
 const MINI_NOVICE_BUILDING: BuildingConfig = {
-  hasStunts:        true,
-  stuntsHasDiff:    false,
-  stuntsRango:      [],
-  stuntsSkillCount: 0,
-  stuntsSkillGrades: [],
-  stuntsPartMaxOpts: [],
-  stuntsExecMax:    4.0,
-  hasPyramids:      true,
-  pyramidsHasDiff:  false,
-  pyramidRango:     [],
-  pyramidFineSteps: [],
-  pyramidsExecMax:  4.0,
-  hasTosses:        false,
-  tossDiffOpts:     [],
-  tossesExecMax:    2.0,
+  hasStunts:          true,
+  stuntsHasDiff:      false,
+  stuntsRango:        [],
+  stuntsSkillCount:   0,
+  stuntsSkillGrades:  [],
+  stuntsPartMaxOpts:  [],
+  stuntsExecMax:      4.0,
+  hasPyramids:        true,
+  pyramidsHasDiff:    false,
+  pyramidRango:       [],
+  pyramidFineSteps:   [],
+  pyramidsExecMax:    4.0,
+  pyramidDriversOpts: [],
+  hasTosses:          false,
+  tossDiffOpts:       [],
+  tossesExecMax:      2.0,
+  hasCreativity:      true,
+  showmanshipMax:     2.0,
 };
 
 const TINY_NOVICE_BUILDING: BuildingConfig = {
-  hasStunts:        false,
-  stuntsHasDiff:    false,
-  stuntsRango:      [],
-  stuntsSkillCount: 0,
-  stuntsSkillGrades: [],
-  stuntsPartMaxOpts: [],
-  stuntsExecMax:    4.0,
-  hasPyramids:      false,
-  pyramidsHasDiff:  false,
-  pyramidRango:     [],
-  pyramidFineSteps: [],
-  pyramidsExecMax:  4.0,
-  hasTosses:        false,
-  tossDiffOpts:     [],
-  tossesExecMax:    2.0,
+  hasStunts:          false,
+  stuntsHasDiff:      false,
+  stuntsRango:        [],
+  stuntsSkillCount:   0,
+  stuntsSkillGrades:  [],
+  stuntsPartMaxOpts:  [],
+  stuntsExecMax:      4.0,
+  hasPyramids:        false,
+  pyramidsHasDiff:    false,
+  pyramidRango:       [],
+  pyramidFineSteps:   [],
+  pyramidsExecMax:    4.0,
+  pyramidDriversOpts: [],
+  hasTosses:          false,
+  tossDiffOpts:       [],
+  tossesExecMax:      2.0,
+  hasCreativity:      true,
+  showmanshipMax:     2.0,
 };
 
-const NOVICE_PLUS_BUILDING: BuildingConfig = {
-  ...MINI_NOVICE_BUILDING,
+const NOVICE_PLUS_BUILDING: BuildingConfig = { ...MINI_NOVICE_BUILDING };
+
+const ESCOLAR_AB_BUILDING: BuildingConfig = {
+  hasStunts:          true,
+  stuntsHasDiff:      true,
+  stuntsRango:        ESCOLAR_AB_STUNT_RANGO,
+  stuntsSkillCount:   0,
+  stuntsSkillGrades:  [],
+  stuntsPartMaxOpts:  ESCOLAR_AB_DRIVERS,
+  stuntsExecMax:      4.0,
+  hasPyramids:        true,
+  pyramidsHasDiff:    true,
+  pyramidRango:       ESCOLAR_AB_PYRAMID_RANGO,
+  pyramidFineSteps:   PYRAMID_FINE_STEPS,
+  pyramidsExecMax:    4.0,
+  pyramidDriversOpts: ESCOLAR_AB_DRIVERS,
+  hasTosses:          false,
+  tossDiffOpts:       [],
+  tossesExecMax:      2.0,
+  hasCreativity:      false,
+  showmanshipMax:     5.0,
 };
 
 // ── Tumbling configs ──────────────────────────────────────────────────────────
@@ -248,6 +325,9 @@ const ELITE_TUMBLING: TumblingConfig = {
   jumpsHasDiff:     true,
   jumpsDiffOpts:    ELITE_JUMPS,
   jumpsExecMax:     2.0,
+  isCombinedSR:     false,
+  hasCreativity:    true,
+  showmanshipMax:   2.0,
 };
 
 const PREP_TUMBLING: TumblingConfig = {
@@ -265,6 +345,9 @@ const PREP_TUMBLING: TumblingConfig = {
   jumpsHasDiff:     true,
   jumpsDiffOpts:    PREP_JUMPS,
   jumpsExecMax:     2.0,
+  isCombinedSR:     false,
+  hasCreativity:    true,
+  showmanshipMax:   2.0,
 };
 
 const MINI_NOVICE_TUMBLING: TumblingConfig = {
@@ -282,6 +365,9 @@ const MINI_NOVICE_TUMBLING: TumblingConfig = {
   jumpsHasDiff:     false,
   jumpsDiffOpts:    [],
   jumpsExecMax:     2.0,
+  isCombinedSR:     false,
+  hasCreativity:    true,
+  showmanshipMax:   2.0,
 };
 
 const NOVICE_PLUS_TUMBLING: TumblingConfig = {
@@ -299,6 +385,30 @@ const NOVICE_PLUS_TUMBLING: TumblingConfig = {
   jumpsHasDiff:     false,
   jumpsDiffOpts:    [],
   jumpsExecMax:     2.0,
+  isCombinedSR:     false,
+  hasCreativity:    true,
+  showmanshipMax:   2.0,
+};
+
+// Combined Standing/Running — uses standing_* fields only; running section hidden
+const ESCOLAR_AB_TUMBLING: TumblingConfig = {
+  hasStanding:      true,
+  standingHasDiff:  true,
+  standingRango:    ESCOLAR_AB_SR_RANGO,
+  standingHabilidad: ESCOLAR_AB_DRIVERS,   // binary 0 or 0.3 → standing_drivers
+  standingExecMax:  4.0,
+  hasRunning:       false,
+  runningHasDiff:   false,
+  runningRango:     [],
+  runningHabilidad: [],
+  runningExecMax:   4.0,
+  hasJumps:         true,
+  jumpsHasDiff:     true,
+  jumpsDiffOpts:    ESCOLAR_AB_JUMPS_DIFF,
+  jumpsExecMax:     2.0,
+  isCombinedSR:     true,
+  hasCreativity:    false,
+  showmanshipMax:   5.0,
 };
 
 // ── Config map ────────────────────────────────────────────────────────────────
@@ -314,6 +424,7 @@ const CONFIGS: Record<ScoringSystem, ScoringConfig> = {
   elite_nt:      { building: ELITE_BUILDING,        tumbling: { ...ELITE_TUMBLING, hasStanding: false, hasRunning: false } },
   prep:          { building: PREP_BUILDING,         tumbling: PREP_TUMBLING },
   escolar:       { building: PREP_BUILDING,         tumbling: PREP_TUMBLING },
+  escolar_ab:    { building: ESCOLAR_AB_BUILDING,   tumbling: ESCOLAR_AB_TUMBLING },
   tiny_novice:   { building: TINY_NOVICE_BUILDING,  tumbling: MINI_NOVICE_TUMBLING },
   mini_novice:   { building: MINI_NOVICE_BUILDING,  tumbling: MINI_NOVICE_TUMBLING },
   novice_plus:   { building: NOVICE_PLUS_BUILDING,  tumbling: NOVICE_PLUS_TUMBLING },

@@ -339,7 +339,7 @@ export default function TumblingSheetPage() {
           setCreativityTumbling(Math.min(2.0, parseFloat(sheet.creativity_tumbling)));
         }
         if (sheet.showmanship_tumbling) {
-          setShowmanshipTumbling(Math.min(2.0, parseFloat(sheet.showmanship_tumbling)));
+          setShowmanshipTumbling(Math.min(tcfg.showmanshipMax, parseFloat(sheet.showmanship_tumbling)));
         }
         if (sheet.notes) {
           try {
@@ -372,7 +372,7 @@ export default function TumblingSheetPage() {
         running_execution:    String(runningExecTotal),
         jumps_difficulty:     String(jumpsDiffEff),
         jumps_execution:      String(jumpsExecTotal),
-        creativity_tumbling:  String(creativityTumbling),
+        creativity_tumbling:  String(tCfg.hasCreativity ? creativityTumbling : 0),
         showmanship_tumbling: String(showmanshipTumbling),
         notes: JSON.stringify({ standing: standingNotes, running: runningNotes, jumps: jumpsNotes }),
       };
@@ -445,7 +445,9 @@ export default function TumblingSheetPage() {
         {/* ── GIMNASIA ESTÁTICA ────────────────────────────────────────── */}
         {tCfg.hasStanding && (
           <section className="flex flex-col gap-3">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Gimnasia Estática (Standing)</h2>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+              {tCfg.isCombinedSR ? 'Gimnasia — Estática / Con Carrera (Combinadas)' : 'Gimnasia Estática (Standing)'}
+            </h2>
             <div className="grid grid-cols-2 gap-5 items-start">
               {tCfg.standingHasDiff ? (
                 <TumblingDiffCard
@@ -624,49 +626,55 @@ export default function TumblingSheetPage() {
         {/* ── CREATIVITY + SHOWMANSHIP ─────────────────────────────────── */}
         <section className="flex flex-col gap-4">
           <div>
-            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Creatividad & Showmanship</h2>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+              {tCfg.hasCreativity ? 'Creatividad & Showmanship' : 'Cheer / Animación'}
+            </h2>
             <p className="text-xs text-zinc-400 mt-0.5">Puntuado por este juez — se promedia con los otros dos jueces</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {/* Creativity */}
-            <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Creatividad</span>
-                <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(creativityTumbling)}</span>
-              </div>
-              <div className="p-4 flex flex-col gap-2">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="range"
-                    min="0"
-                    max="2.0"
-                    step="0.1"
-                    value={creativityTumbling}
-                    onChange={(e) => setCreativityTumbling(parseFloat(e.target.value))}
-                    className="flex-1 accent-zinc-900"
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    max="2.0"
-                    step="0.1"
-                    value={creativityTumbling}
-                    onChange={(e) => {
-                      const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
-                      setCreativityTumbling(parseFloat(v.toFixed(2)));
-                    }}
-                    className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                  />
+          <div className={`grid gap-4 ${tCfg.hasCreativity ? 'grid-cols-2' : 'grid-cols-1 max-w-md'}`}>
+            {/* Creativity (hidden for escolar_ab) */}
+            {tCfg.hasCreativity && (
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Creatividad</span>
+                  <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(creativityTumbling)}</span>
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-snug">Creatividad, Innovación y/o visual durante toda la rutina</p>
+                <div className="p-4 flex flex-col gap-2">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="0"
+                      max="2.0"
+                      step="0.1"
+                      value={creativityTumbling}
+                      onChange={(e) => setCreativityTumbling(parseFloat(e.target.value))}
+                      className="flex-1 accent-zinc-900"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      max="2.0"
+                      step="0.1"
+                      value={creativityTumbling}
+                      onChange={(e) => {
+                        const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
+                        setCreativityTumbling(parseFloat(v.toFixed(2)));
+                      }}
+                      className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                    />
+                  </div>
+                  <p className="text-[11px] text-zinc-400 leading-snug">Creatividad, Innovación y/o visual durante toda la rutina</p>
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Showmanship */}
+            {/* Showmanship / Cheer-Animación */}
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
               <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Showmanship</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                  {tCfg.hasCreativity ? 'Showmanship' : 'Cheer / Animación'}
+                </span>
                 <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(showmanshipTumbling)}</span>
               </div>
               <div className="p-4 flex flex-col gap-2">
@@ -674,7 +682,7 @@ export default function TumblingSheetPage() {
                   <input
                     type="range"
                     min="0"
-                    max="2.0"
+                    max={tCfg.showmanshipMax}
                     step="0.1"
                     value={showmanshipTumbling}
                     onChange={(e) => setShowmanshipTumbling(parseFloat(e.target.value))}
@@ -683,17 +691,21 @@ export default function TumblingSheetPage() {
                   <input
                     type="number"
                     min="0"
-                    max="2.0"
+                    max={tCfg.showmanshipMax}
                     step="0.1"
                     value={showmanshipTumbling}
                     onChange={(e) => {
-                      const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
+                      const v = Math.min(tCfg.showmanshipMax, Math.max(0, parseFloat(e.target.value) || 0));
                       setShowmanshipTumbling(parseFloat(v.toFixed(2)));
                     }}
                     className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
                   />
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-snug">Confianza, Limpieza y Conexión durante la rutina (Habilidades de Gimnasia)</p>
+                <p className="text-[11px] text-zinc-400 leading-snug">
+                  {tCfg.hasCreativity
+                    ? 'Confianza, Limpieza y Conexión durante la rutina (Habilidades de Gimnasia)'
+                    : 'Cheer / Animación — máx 5.0 (se promedia con los otros dos jueces)'}
+                </p>
               </div>
             </div>
           </div>
@@ -704,7 +716,9 @@ export default function TumblingSheetPage() {
           <div>
             <p className="text-xs uppercase tracking-wide opacity-60 font-medium">Total Planilla Tumbling</p>
             <p className="text-xs opacity-40 mt-0.5">
-              Gimnasia + Creatividad ({fmt(creativityTumbling)}) + Showmanship ({fmt(showmanshipTumbling)})
+              {tCfg.hasCreativity
+                ? `Gimnasia + Creatividad (${fmt(creativityTumbling)}) + Showmanship (${fmt(showmanshipTumbling)})`
+                : `Gimnasia + Cheer/Animación (${fmt(showmanshipTumbling)})`}
             </p>
           </div>
           <span className="text-4xl font-bold tabular-nums">{fmt(sheetTotal)}</span>
@@ -769,12 +783,16 @@ export default function TumblingSheetPage() {
                 <td className="px-4 py-2.5 font-semibold" style={{ color: 'var(--brand-primary)' }}>Subtotal Gimnasia</td>
                 <td className="px-4 py-2.5 text-right font-bold tabular-nums" style={{ color: 'var(--brand-primary)' }}>{fmt(tumblingSubtotal)}</td>
               </tr>
+              {tCfg.hasCreativity && (
+                <tr>
+                  <td className="px-4 py-2.5 text-zinc-600">Creatividad (este juez)</td>
+                  <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(creativityTumbling)}</td>
+                </tr>
+              )}
               <tr>
-                <td className="px-4 py-2.5 text-zinc-600">Creatividad (este juez)</td>
-                <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(creativityTumbling)}</td>
-              </tr>
-              <tr>
-                <td className="px-4 py-2.5 text-zinc-600">Showmanship (este juez)</td>
+                <td className="px-4 py-2.5 text-zinc-600">
+                  {tCfg.hasCreativity ? 'Showmanship (este juez)' : 'Cheer / Animación (este juez)'}
+                </td>
                 <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(showmanshipTumbling)}</td>
               </tr>
               <tr style={{ backgroundColor: 'var(--brand-primary)' }}>

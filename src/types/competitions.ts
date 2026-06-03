@@ -38,7 +38,7 @@ export type DeductionType =
   | 'ad' | 'div';
 
 export type ScoringSystem =
-  | 'tiny_novice' | 'mini_novice' | 'novice_plus' | 'prep' | 'escolar'
+  | 'tiny_novice' | 'mini_novice' | 'novice_plus' | 'prep' | 'escolar' | 'escolar_ab'
   | 'elite_l1' | 'elite_l2_7' | 'elite_nt' | 'partner_stunt' | 'iasf_l6_7'
   | 'iasf_world_l6_7'
   | 'intl_l1' | 'intl_l2_7' | 'intl_nt';
@@ -46,7 +46,7 @@ export type ScoringSystem =
 // Keys of all sub-score fields on ScoreSheet
 export type ScoreFieldKey =
   | 'stunts_difficulty' | 'stunts_execution' | 'stunts_drivers'
-  | 'pyramids_difficulty' | 'pyramids_execution'
+  | 'pyramids_difficulty' | 'pyramids_execution' | 'pyramids_drivers'
   | 'tosses_difficulty' | 'tosses_execution'
   | 'standing_difficulty' | 'standing_execution' | 'standing_drivers'
   | 'running_difficulty' | 'running_execution' | 'running_drivers'
@@ -154,6 +154,7 @@ export interface ScoreSheet {
   stunts_drivers:       string | null;
   pyramids_difficulty:  string | null;
   pyramids_execution:   string | null;
+  pyramids_drivers:     string | null;
   tosses_difficulty:    string | null;
   tosses_execution:     string | null;
   // Sheet B – Tumbling
@@ -320,6 +321,7 @@ export const SCORING_SYSTEM_LABELS: Record<ScoringSystem, string> = {
   novice_plus:     'Novice Plus',
   prep:            'Prep',
   escolar:         'Escolar',
+  escolar_ab:      'Escolar (Adventure Brands)',
   elite_l1:        'Elite Nivel 1',
   elite_l2_7:      'Elite Nivel 2–7',
   elite_nt:        'Elite Non-Tumbling',
@@ -335,6 +337,10 @@ export const SCORING_SYSTEM_LABELS: Record<ScoringSystem, string> = {
 const _BUILDING_BASE: ScoreFieldKey[] = [
   'stunts_difficulty', 'stunts_execution', 'stunts_drivers',
   'pyramids_difficulty', 'pyramids_execution',
+];
+const _BUILDING_BASE_AB: ScoreFieldKey[] = [
+  'stunts_difficulty', 'stunts_execution', 'stunts_drivers',
+  'pyramids_difficulty', 'pyramids_execution', 'pyramids_drivers',
 ];
 const _TOSSES: ScoreFieldKey[]       = ['tosses_difficulty', 'tosses_execution'];
 const _TUMBLING_BASE: ScoreFieldKey[] = ['standing_difficulty', 'standing_execution'];
@@ -358,6 +364,12 @@ export const SCORING_SYSTEM_FIELDS: Record<ScoringSystem, ScoreFieldKey[]> = {
   novice_plus:   ['stunts_execution', 'pyramids_execution', 'standing_execution', 'running_execution', 'jumps_execution', ..._OVERALL, ..._CROSS],
   prep:          [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   escolar:       [..._BUILDING_BASE, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
+  escolar_ab:    [
+    ..._BUILDING_BASE_AB,
+    'standing_difficulty', 'standing_execution', 'standing_drivers',
+    ..._JUMPS, ..._OVERALL,
+    'showmanship_building', 'showmanship_tumbling', 'showmanship_overall',
+  ],
   elite_l1:      [..._BUILDING_BASE, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   elite_l2_7:    [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   elite_nt:      [..._BUILDING_BASE, ..._TOSSES, ..._JUMPS, ..._OVERALL, ..._CROSS],
@@ -387,6 +399,7 @@ export const FIELD_MAXIMA: Record<ScoreFieldKey, number> = {
   stunts_drivers:       0.5,
   pyramids_difficulty:  5.5,
   pyramids_execution:   4,
+  pyramids_drivers:     0.3,
   tosses_difficulty:    2,
   tosses_execution:     2,
   standing_difficulty:  2,

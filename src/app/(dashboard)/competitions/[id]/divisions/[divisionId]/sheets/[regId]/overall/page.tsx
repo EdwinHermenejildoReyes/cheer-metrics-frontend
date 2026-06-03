@@ -27,6 +27,17 @@ const DANCE_LEVELS_ESCOLAR = [
   { label: 'Reducido',  sublabel: 'Bajo el Promedio',   value: 0.5 },
   { label: 'Elevado',   sublabel: 'Promedio / Alto',     value: 1.0 },
 ];
+// Escolar AB: diff max=1.0, exec max=2.0 (separate level sets per field)
+const DANCE_DIFF_LEVELS_AB = [
+  { label: 'Reducido',  sublabel: 'Bajo el Promedio',   value: 0.5 },
+  { label: 'Elevado',   sublabel: 'Promedio / Alto',     value: 1.0 },
+];
+const DANCE_EXEC_LEVELS_AB = [
+  { label: 'Reducido',  sublabel: 'Bajo el Promedio',   value: 0.5 },
+  { label: 'Moderado',  sublabel: 'Promedio',            value: 1.0 },
+  { label: 'Elevado',   sublabel: 'Sobre el Promedio',   value: 1.5 },
+  { label: 'Superior',  sublabel: 'Nivel Alto',          value: 2.0 },
+];
 
 const DANCE_DIFF_CRITERIA = [
   'Elementos Visuales', 'Trabajo de Pies', 'Trabajo en Parejas',
@@ -125,10 +136,13 @@ export default function OverallSheetPage() {
   const [danceNotes,         setDanceNotes]         = useState('');
 
   // ── Computed ──────────────────────────────────────────────────────────────
-  const hasDanceLimited = scoringSystem === 'tiny_novice' || scoringSystem === 'mini_novice' || scoringSystem === 'novice_plus' || scoringSystem === 'prep' || scoringSystem === 'escolar' || scoringSystem === 'elite_l1' || scoringSystem === 'intl_l1' || scoringSystem === 'intl_l2_7' || scoringSystem === 'intl_nt';
-  const danceLevels     = hasDanceLimited ? DANCE_LEVELS_ESCOLAR : DANCE_LEVELS_FULL;
+  const isEscolarAB     = scoringSystem === 'escolar_ab';
+  const hasDanceLimited = !isEscolarAB && (scoringSystem === 'tiny_novice' || scoringSystem === 'mini_novice' || scoringSystem === 'novice_plus' || scoringSystem === 'prep' || scoringSystem === 'escolar' || scoringSystem === 'elite_l1' || scoringSystem === 'intl_l1' || scoringSystem === 'intl_l2_7' || scoringSystem === 'intl_nt');
+  const danceDiffLevels = isEscolarAB ? DANCE_DIFF_LEVELS_AB : (hasDanceLimited ? DANCE_LEVELS_ESCOLAR : DANCE_LEVELS_FULL);
+  const danceExecLevels = isEscolarAB ? DANCE_EXEC_LEVELS_AB : (hasDanceLimited ? DANCE_LEVELS_ESCOLAR : DANCE_LEVELS_FULL);
+  const showmanshipMax  = isEscolarAB ? 5.0 : 2.0;
   const overallSubtotal = parseFloat((formationsScore + danceDifficulty + danceExecution).toFixed(2));
-  const sheetTotal      = parseFloat((overallSubtotal + creativityOverall + showmanshipOverall).toFixed(2));
+  const sheetTotal      = parseFloat((overallSubtotal + (isEscolarAB ? 0 : creativityOverall) + showmanshipOverall).toFixed(2));
   const errorsCount     = Math.round((2.0 - formationsScore) * 10);
 
   // ── Load ──────────────────────────────────────────────────────────────────
@@ -156,17 +170,21 @@ export default function OverallSheetPage() {
         }
         if (sheet.dance_difficulty) {
           const v = parseFloat(sheet.dance_difficulty);
-          setDanceDifficulty(DANCE_LEVELS_FULL.find((l) => l.value === v) ? v : 0);
+          const allDiffLevels = [...DANCE_LEVELS_FULL, ...DANCE_DIFF_LEVELS_AB];
+          setDanceDifficulty(allDiffLevels.find((l) => l.value === v) ? v : 0);
         }
         if (sheet.dance_execution) {
           const v = parseFloat(sheet.dance_execution);
-          setDanceExecution(DANCE_LEVELS_FULL.find((l) => l.value === v) ? v : 0);
+          const allExecLevels = [...DANCE_LEVELS_FULL, ...DANCE_EXEC_LEVELS_AB];
+          setDanceExecution(allExecLevels.find((l) => l.value === v) ? v : 0);
         }
         if (sheet.creativity_overall) {
           setCreativityOverall(Math.min(2.0, parseFloat(sheet.creativity_overall)));
         }
         if (sheet.showmanship_overall) {
-          setShowmanshipOverall(Math.min(2.0, parseFloat(sheet.showmanship_overall)));
+          const sys = (div.scoring_system || div.suggested_scoring_system) as string;
+          const sMax = sys === 'escolar_ab' ? 5.0 : 2.0;
+          setShowmanshipOverall(Math.min(sMax, parseFloat(sheet.showmanship_overall)));
         }
         if (sheet.notes) {
           try {
@@ -193,7 +211,7 @@ export default function OverallSheetPage() {
         formations_score:    String(formationsScore),
         dance_difficulty:    String(danceDifficulty),
         dance_execution:     String(danceExecution),
-        creativity_overall:  String(creativityOverall),
+        creativity_overall:  String(isEscolarAB ? 0 : creativityOverall),
         showmanship_overall: String(showmanshipOverall),
         notes: JSON.stringify({ formations: formationsNotes, dance: danceNotes }),
       };
@@ -329,10 +347,10 @@ export default function OverallSheetPage() {
           <section className="flex flex-col gap-3">
             <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Baile</h2>
 
-            <DanceLevelSelector label="Dificultad de Baile" criteria={DANCE_DIFF_CRITERIA} levels={danceLevels} value={danceDifficulty} onChange={setDanceDifficulty} />
+            <DanceLevelSelector label="Dificultad de Baile" criteria={DANCE_DIFF_CRITERIA} levels={danceDiffLevels} value={danceDifficulty} onChange={setDanceDifficulty} />
             {danceDifficulty === 0 && <p className="text-xs text-amber-600 text-center">— Selecciona un nivel de dificultad —</p>}
 
-            <DanceLevelSelector label="Ejecución de Baile" criteria={DANCE_EXEC_CRITERIA} levels={danceLevels} value={danceExecution} onChange={setDanceExecution} />
+            <DanceLevelSelector label="Ejecución de Baile" criteria={DANCE_EXEC_CRITERIA} levels={danceExecLevels} value={danceExecution} onChange={setDanceExecution} />
             {danceExecution === 0 && <p className="text-xs text-amber-600 text-center">— Selecciona un nivel de ejecución —</p>}
 
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
@@ -362,47 +380,55 @@ export default function OverallSheetPage() {
         {/* ── CREATIVITY + SHOWMANSHIP ─────────────────────────────────── */}
         <section className="flex flex-col gap-4">
           <div>
-            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Creatividad & Showmanship</h2>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+              {isEscolarAB ? 'Cheer / Animación' : 'Creatividad & Showmanship'}
+            </h2>
             <p className="text-xs text-zinc-400 mt-0.5">Puntuado por este juez — se promedia con los otros dos jueces</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Creatividad</span>
-                <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(creativityOverall)}</span>
-              </div>
-              <div className="p-4 flex flex-col gap-2">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="range"
-                    min="0"
-                    max="2.0"
-                    step="0.1"
-                    value={creativityOverall}
-                    onChange={(e) => setCreativityOverall(parseFloat(e.target.value))}
-                    className="flex-1 accent-zinc-900"
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    max="2.0"
-                    step="0.1"
-                    value={creativityOverall}
-                    onChange={(e) => {
-                      const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
-                      setCreativityOverall(parseFloat(v.toFixed(2)));
-                    }}
-                    className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                  />
+          <div className={`grid gap-4 ${isEscolarAB ? 'grid-cols-1 max-w-md' : 'grid-cols-2'}`}>
+            {/* Creativity (hidden for escolar_ab) */}
+            {!isEscolarAB && (
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Creatividad</span>
+                  <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(creativityOverall)}</span>
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-snug">Creatividad, Innovación y/o visual durante toda la rutina</p>
+                <div className="p-4 flex flex-col gap-2">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="0"
+                      max="2.0"
+                      step="0.1"
+                      value={creativityOverall}
+                      onChange={(e) => setCreativityOverall(parseFloat(e.target.value))}
+                      className="flex-1 accent-zinc-900"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      max="2.0"
+                      step="0.1"
+                      value={creativityOverall}
+                      onChange={(e) => {
+                        const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
+                        setCreativityOverall(parseFloat(v.toFixed(2)));
+                      }}
+                      className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                    />
+                  </div>
+                  <p className="text-[11px] text-zinc-400 leading-snug">Creatividad, Innovación y/o visual durante toda la rutina</p>
+                </div>
               </div>
-            </div>
+            )}
 
+            {/* Showmanship / Cheer-Animación */}
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
               <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Showmanship</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                  {isEscolarAB ? 'Cheer / Animación' : 'Showmanship'}
+                </span>
                 <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(showmanshipOverall)}</span>
               </div>
               <div className="p-4 flex flex-col gap-2">
@@ -410,7 +436,7 @@ export default function OverallSheetPage() {
                   <input
                     type="range"
                     min="0"
-                    max="2.0"
+                    max={showmanshipMax}
                     step="0.1"
                     value={showmanshipOverall}
                     onChange={(e) => setShowmanshipOverall(parseFloat(e.target.value))}
@@ -419,17 +445,21 @@ export default function OverallSheetPage() {
                   <input
                     type="number"
                     min="0"
-                    max="2.0"
+                    max={showmanshipMax}
                     step="0.1"
                     value={showmanshipOverall}
                     onChange={(e) => {
-                      const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
+                      const v = Math.min(showmanshipMax, Math.max(0, parseFloat(e.target.value) || 0));
                       setShowmanshipOverall(parseFloat(v.toFixed(2)));
                     }}
                     className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
                   />
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-snug">Confianza, Limpieza y Conexión durante la rutina (Habilidades de Construcción)</p>
+                <p className="text-[11px] text-zinc-400 leading-snug">
+                  {isEscolarAB
+                    ? 'Cheer / Animación — máx 5.0 (se promedia con los otros dos jueces)'
+                    : 'Confianza, Limpieza y Conexión durante la rutina (Habilidades de Construcción)'}
+                </p>
               </div>
             </div>
           </div>
@@ -440,7 +470,9 @@ export default function OverallSheetPage() {
           <div>
             <p className="text-xs uppercase tracking-wide opacity-60 font-medium">Total Planilla Overall</p>
             <p className="text-xs opacity-40 mt-0.5">
-              General + Creatividad ({fmt(creativityOverall)}) + Showmanship ({fmt(showmanshipOverall)})
+              {isEscolarAB
+                ? `General + Cheer/Animación (${fmt(showmanshipOverall)})`
+                : `General + Creatividad (${fmt(creativityOverall)}) + Showmanship (${fmt(showmanshipOverall)})`}
             </p>
           </div>
           <span className="text-4xl font-bold tabular-nums">{fmt(sheetTotal)}</span>
@@ -518,12 +550,16 @@ export default function OverallSheetPage() {
                 <td className="px-4 py-2.5 font-semibold" style={{ color: 'var(--brand-primary)' }}>Subtotal General</td>
                 <td className="px-4 py-2.5 text-right font-bold tabular-nums" style={{ color: 'var(--brand-primary)' }}>{fmt(overallSubtotal)}</td>
               </tr>
+              {!isEscolarAB && (
+                <tr>
+                  <td className="px-4 py-2.5 text-zinc-600">Creatividad (este juez)</td>
+                  <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(creativityOverall)}</td>
+                </tr>
+              )}
               <tr>
-                <td className="px-4 py-2.5 text-zinc-600">Creatividad (este juez)</td>
-                <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(creativityOverall)}</td>
-              </tr>
-              <tr>
-                <td className="px-4 py-2.5 text-zinc-600">Showmanship (este juez)</td>
+                <td className="px-4 py-2.5 text-zinc-600">
+                  {isEscolarAB ? 'Cheer / Animación (este juez)' : 'Showmanship (este juez)'}
+                </td>
                 <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(showmanshipOverall)}</td>
               </tr>
               <tr style={{ backgroundColor: 'var(--brand-primary)' }}>

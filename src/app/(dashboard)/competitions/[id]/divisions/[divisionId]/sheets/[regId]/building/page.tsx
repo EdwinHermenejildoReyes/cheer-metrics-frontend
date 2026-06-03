@@ -169,6 +169,7 @@ export default function BuildingSheetPage() {
   const [pyramidsRangeIdx,  setPyramidsRangeIdx]  = useState<number | null>(null);
   const [pyramidsFine,      setPyramidsFine]      = useState<number>(0.0);
   const [pyramidsExecDeds, setPyramidsExecDeds] = useState<ExecDeds>([...EMPTY_EXEC]);
+  const [pyramidsDrivers,   setPyramidsDrivers]   = useState<number>(0.0);
 
   // ── Tosses ────────────────────────────────────────────────────────────────
   const [tossesDiff,    setTossesDiff]    = useState<number>(0.0);
@@ -192,7 +193,7 @@ export default function BuildingSheetPage() {
     ? parseFloat((bCfg.pyramidRango[pyramidsRangeIdx].low + pyramidsFine).toFixed(1))
     : 0.0;
   const pyramidsExecTotal   = execScore(bCfg.pyramidsExecMax, pyramidsExecDeds);
-  const pyramidsSectionTotal = parseFloat((pyramidsDiff + pyramidsExecTotal).toFixed(2));
+  const pyramidsSectionTotal = parseFloat((pyramidsDiff + pyramidsExecTotal + pyramidsDrivers).toFixed(2));
 
   const tossesExecTotal   = execScore(bCfg.tossesExecMax, tossesExecDeds);
   const tossesSectionTotal = parseFloat((tossesDiff + tossesExecTotal).toFixed(2));
@@ -250,11 +251,15 @@ export default function BuildingSheetPage() {
           const v = parseFloat(sheet.tosses_difficulty);
           setTossesDiff(cfg.tossDiffOpts.some(o => o.value === v) ? v : 0.0);
         }
+        if (sheet.pyramids_drivers) {
+          const v = parseFloat(sheet.pyramids_drivers);
+          if (cfg.pyramidDriversOpts.some(o => o.value === v)) setPyramidsDrivers(v);
+        }
         if (sheet.creativity_building) {
           setCreativityBuilding(Math.min(2.0, parseFloat(sheet.creativity_building)));
         }
         if (sheet.showmanship_building) {
-          setShowmanshipBuilding(Math.min(2.0, parseFloat(sheet.showmanship_building)));
+          setShowmanshipBuilding(Math.min(cfg.showmanshipMax, parseFloat(sheet.showmanship_building)));
         }
         if (sheet.notes) {
           try {
@@ -292,9 +297,10 @@ export default function BuildingSheetPage() {
         stunts_drivers:       String(stuntsDriversTotal),
         pyramids_difficulty:  String(pyramidsDiff),
         pyramids_execution:   String(pyramidsExecTotal),
+        ...(bCfg.pyramidDriversOpts.length > 0 ? { pyramids_drivers: String(pyramidsDrivers) } : {}),
         tosses_difficulty:    String(tossesDiff),
         tosses_execution:     String(tossesExecTotal),
-        creativity_building:  String(creativityBuilding),
+        creativity_building:  String(bCfg.hasCreativity ? creativityBuilding : 0),
         showmanship_building: String(showmanshipBuilding),
         notes: JSON.stringify({
           stunts: stuntsNotes,
@@ -605,14 +611,48 @@ export default function BuildingSheetPage() {
                 </div>
               )}
 
-              {/* RIGHT: Execution + Total + Comments */}
+              {/* RIGHT: Execution + Drivers + Total + Comments */}
               <div className="flex flex-col gap-4">
                 <ExecSection label="Pirámides" max={bCfg.pyramidsExecMax} deds={pyramidsExecDeds} onChange={setPyramidsExecDeds} />
+
+                {/* Pyramid drivers (escolar_ab only) */}
+                {bCfg.pyramidDriversOpts.length > 0 && (
+                  <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+                    <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Drivers — Pirámides</span>
+                    </div>
+                    <div className="p-3 flex flex-col gap-1.5">
+                      {bCfg.pyramidDriversOpts.map(({ value, label }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => setPyramidsDrivers(value)}
+                          className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
+                            pyramidsDrivers === value
+                              ? 'border-transparent'
+                              : 'bg-white text-zinc-700 border-zinc-300 hover:border-violet-400 hover:text-violet-700'
+                          }`}
+                          style={pyramidsDrivers === value ? { backgroundColor: 'var(--brand-accent)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-accent)' } : undefined}
+                        >
+                          <span className="flex-1">{label}</span>
+                          <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${pyramidsDrivers === value ? 'text-white/80' : 'text-zinc-400'}`}>
+                            {value.toFixed(1)}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <SectionTotal
                   label="Total Pirámides"
                   breakdown={
                     bCfg.pyramidsHasDiff
-                      ? [{ key: 'Dif', value: pyramidsDiff }, { key: 'Ejec', value: pyramidsExecTotal }]
+                      ? [
+                          { key: 'Dif', value: pyramidsDiff },
+                          { key: 'Ejec', value: pyramidsExecTotal },
+                          ...(bCfg.pyramidDriversOpts.length > 0 ? [{ key: 'Drivers', value: pyramidsDrivers }] : []),
+                        ]
                       : [{ key: 'Ejec', value: pyramidsExecTotal }]
                   }
                   total={pyramidsSectionTotal}
@@ -711,49 +751,55 @@ export default function BuildingSheetPage() {
         {/* ── CREATIVITY + SHOWMANSHIP ─────────────────────────────────── */}
         <section className="flex flex-col gap-4">
           <div>
-            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Creatividad & Showmanship</h2>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+              {bCfg.hasCreativity ? 'Creatividad & Showmanship' : 'Cheer / Animación'}
+            </h2>
             <p className="text-xs text-zinc-400 mt-0.5">Puntuado por este juez — se promedia con los otros dos jueces</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {/* Creativity */}
-            <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Creatividad</span>
-                <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(creativityBuilding)}</span>
-              </div>
-              <div className="p-4 flex flex-col gap-2">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="range"
-                    min="0"
-                    max="2.0"
-                    step="0.1"
-                    value={creativityBuilding}
-                    onChange={(e) => setCreativityBuilding(parseFloat(e.target.value))}
-                    className="flex-1 accent-zinc-900"
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    max="2.0"
-                    step="0.1"
-                    value={creativityBuilding}
-                    onChange={(e) => {
-                      const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
-                      setCreativityBuilding(parseFloat(v.toFixed(2)));
-                    }}
-                    className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                  />
+          <div className={`grid gap-4 ${bCfg.hasCreativity ? 'grid-cols-2' : 'grid-cols-1 max-w-md'}`}>
+            {/* Creativity (hidden for escolar_ab) */}
+            {bCfg.hasCreativity && (
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Creatividad</span>
+                  <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(creativityBuilding)}</span>
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-snug">Creatividad, Innovación y/o visual durante formaciones, transiciones y construcciones</p>
+                <div className="p-4 flex flex-col gap-2">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="0"
+                      max="2.0"
+                      step="0.1"
+                      value={creativityBuilding}
+                      onChange={(e) => setCreativityBuilding(parseFloat(e.target.value))}
+                      className="flex-1 accent-zinc-900"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      max="2.0"
+                      step="0.1"
+                      value={creativityBuilding}
+                      onChange={(e) => {
+                        const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
+                        setCreativityBuilding(parseFloat(v.toFixed(2)));
+                      }}
+                      className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                    />
+                  </div>
+                  <p className="text-[11px] text-zinc-400 leading-snug">Creatividad, Innovación y/o visual durante formaciones, transiciones y construcciones</p>
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Showmanship */}
+            {/* Showmanship / Cheer-Animación */}
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
               <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Showmanship</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                  {bCfg.hasCreativity ? 'Showmanship' : 'Cheer / Animación'}
+                </span>
                 <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(showmanshipBuilding)}</span>
               </div>
               <div className="p-4 flex flex-col gap-2">
@@ -761,7 +807,7 @@ export default function BuildingSheetPage() {
                   <input
                     type="range"
                     min="0"
-                    max="2.0"
+                    max={bCfg.showmanshipMax}
                     step="0.1"
                     value={showmanshipBuilding}
                     onChange={(e) => setShowmanshipBuilding(parseFloat(e.target.value))}
@@ -770,17 +816,21 @@ export default function BuildingSheetPage() {
                   <input
                     type="number"
                     min="0"
-                    max="2.0"
+                    max={bCfg.showmanshipMax}
                     step="0.1"
                     value={showmanshipBuilding}
                     onChange={(e) => {
-                      const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
+                      const v = Math.min(bCfg.showmanshipMax, Math.max(0, parseFloat(e.target.value) || 0));
                       setShowmanshipBuilding(parseFloat(v.toFixed(2)));
                     }}
                     className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
                   />
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-snug">Ritmo, Confianza y Conexión durante la rutina</p>
+                <p className="text-[11px] text-zinc-400 leading-snug">
+                  {bCfg.hasCreativity
+                    ? 'Ritmo, Confianza y Conexión durante la rutina'
+                    : 'Cheer / Animación — máx 5.0 (se promedia con los otros dos jueces)'}
+                </p>
               </div>
             </div>
           </div>
@@ -791,7 +841,9 @@ export default function BuildingSheetPage() {
           <div>
             <p className="text-xs uppercase tracking-wide opacity-60 font-medium">Total Planilla Building</p>
             <p className="text-xs opacity-40 mt-0.5">
-              Elevaciones + Creatividad ({fmt(creativityBuilding)}) + Showmanship ({fmt(showmanshipBuilding)})
+              {bCfg.hasCreativity
+                ? `Elevaciones + Creatividad (${fmt(creativityBuilding)}) + Showmanship (${fmt(showmanshipBuilding)})`
+                : `Elevaciones + Cheer/Animación (${fmt(showmanshipBuilding)})`}
             </p>
           </div>
           <span className="text-4xl font-bold tabular-nums">{fmt(sheetTotal)}</span>
@@ -834,6 +886,12 @@ export default function BuildingSheetPage() {
                   <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(pyramidsExecTotal)}</td>
                 </tr>
               )}
+              {bCfg.hasPyramids && bCfg.pyramidDriversOpts.length > 0 && (
+                <tr>
+                  <td className="px-4 py-2.5 text-zinc-600">Pirámides — Drivers</td>
+                  <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(pyramidsDrivers)}</td>
+                </tr>
+              )}
               {bCfg.hasTosses && (
                 <>
                   <tr>
@@ -850,12 +908,16 @@ export default function BuildingSheetPage() {
                 <td className="px-4 py-2.5 font-semibold" style={{ color: 'var(--brand-primary)' }}>Subtotal Elevaciones</td>
                 <td className="px-4 py-2.5 text-right font-bold tabular-nums" style={{ color: 'var(--brand-primary)' }}>{fmt(buildingTotal)}</td>
               </tr>
+              {bCfg.hasCreativity && (
+                <tr>
+                  <td className="px-4 py-2.5 text-zinc-600">Creatividad (este juez)</td>
+                  <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(creativityBuilding)}</td>
+                </tr>
+              )}
               <tr>
-                <td className="px-4 py-2.5 text-zinc-600">Creatividad (este juez)</td>
-                <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(creativityBuilding)}</td>
-              </tr>
-              <tr>
-                <td className="px-4 py-2.5 text-zinc-600">Showmanship (este juez)</td>
+                <td className="px-4 py-2.5 text-zinc-600">
+                  {bCfg.hasCreativity ? 'Showmanship (este juez)' : 'Cheer / Animación (este juez)'}
+                </td>
                 <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(showmanshipBuilding)}</td>
               </tr>
               <tr style={{ backgroundColor: 'var(--brand-primary)' }}>
