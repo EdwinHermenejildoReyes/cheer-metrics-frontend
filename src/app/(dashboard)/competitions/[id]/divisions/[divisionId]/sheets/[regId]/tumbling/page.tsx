@@ -364,14 +364,14 @@ export default function TumblingSheetPage() {
     setSaving(true);
     try {
       const payload: Partial<ScoreSheet> = {
-        standing_difficulty:  String(standingDiffEff),
-        standing_drivers:     String(standingHabEff),
-        standing_execution:   String(standingExecTotal),
-        running_difficulty:   String(runningDiffEff),
-        running_drivers:      String(runningHabEff),
-        running_execution:    String(runningExecTotal),
-        jumps_difficulty:     String(jumpsDiffEff),
-        jumps_execution:      String(jumpsExecTotal),
+        standing_difficulty:  String(tCfg.hasStanding ? standingDiffEff    : 0),
+        standing_drivers:     String(tCfg.hasStanding ? standingHabEff     : 0),
+        standing_execution:   String(tCfg.hasStanding ? standingExecTotal  : 0),
+        running_difficulty:   String(tCfg.hasRunning  ? runningDiffEff     : 0),
+        running_drivers:      String(tCfg.hasRunning  ? runningHabEff      : 0),
+        running_execution:    String(tCfg.hasRunning  ? runningExecTotal   : 0),
+        jumps_difficulty:     String(tCfg.hasJumps    ? jumpsDiffEff       : 0),
+        jumps_execution:      String(tCfg.hasJumps    ? jumpsExecTotal     : 0),
         creativity_tumbling:  String(tCfg.hasCreativity ? creativityTumbling : 0),
         showmanship_tumbling: String(showmanshipTumbling),
         notes: JSON.stringify({ standing: standingNotes, running: runningNotes, jumps: jumpsNotes }),

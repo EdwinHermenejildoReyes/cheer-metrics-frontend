@@ -196,7 +196,9 @@ export default function BuildingSheetPage() {
   const pyramidsSectionTotal = parseFloat((pyramidsDiff + pyramidsExecTotal + pyramidsDrivers).toFixed(2));
 
   const tossesExecTotal   = execScore(bCfg.tossesExecMax, tossesExecDeds);
-  const tossesSectionTotal = parseFloat((tossesDiff + tossesExecTotal).toFixed(2));
+  const tossesSectionTotal = bCfg.hasTosses
+    ? parseFloat((tossesDiff + tossesExecTotal).toFixed(2))
+    : 0.0;
 
   const buildingTotal = parseFloat((stuntsSectionTotal + pyramidsSectionTotal + tossesSectionTotal).toFixed(2));
   const sheetTotal    = parseFloat((buildingTotal + creativityBuilding + showmanshipBuilding).toFixed(2));
@@ -271,6 +273,11 @@ export default function BuildingSheetPage() {
                 setStuntsSkills([0, 0, 0, 0, 0].map((_, i) => s.stuntsSkills[i] ?? 0));
               }
               if (s.stuntsPartMax !== undefined && cfg.stuntsPartMaxOpts.some(o => o.value === s.stuntsPartMax)) setStuntsPartMax(s.stuntsPartMax);
+            } else if (sheet.stunts_drivers) {
+              // Old save format without _scores: reconstruct stuntsPartMax from stunts_drivers
+              // (skills were always 0 in old saves, so stunts_drivers == stuntsPartMax)
+              const v = parseFloat(sheet.stunts_drivers);
+              if (cfg.stuntsPartMaxOpts.some(o => o.value === v)) setStuntsPartMax(v);
             }
             setStuntsNotes(parsed.stunts ?? '');
             setPyramidsNotes(parsed.pyramids ?? '');
@@ -298,8 +305,8 @@ export default function BuildingSheetPage() {
         pyramids_difficulty:  String(pyramidsDiff),
         pyramids_execution:   String(pyramidsExecTotal),
         ...(bCfg.pyramidDriversOpts.length > 0 ? { pyramids_drivers: String(pyramidsDrivers) } : {}),
-        tosses_difficulty:    String(tossesDiff),
-        tosses_execution:     String(tossesExecTotal),
+        tosses_difficulty:    String(bCfg.hasTosses ? tossesDiff : 0),
+        tosses_execution:     String(bCfg.hasTosses ? tossesExecTotal : 0),
         creativity_building:  String(bCfg.hasCreativity ? creativityBuilding : 0),
         showmanship_building: String(showmanshipBuilding),
         notes: JSON.stringify({
