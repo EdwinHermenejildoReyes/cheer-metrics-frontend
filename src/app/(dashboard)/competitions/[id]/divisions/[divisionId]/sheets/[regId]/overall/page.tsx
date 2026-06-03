@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
 import { PrintButton } from '@/components/print/PrintButton';
-import { ScoreSheetPrintView } from '@/components/print/ScoreSheetPrintView';
+import { OverallSheetPrintView } from '@/components/print/OverallSheetPrintView';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
 import { useBranding } from '@/contexts/BrandingContext';
@@ -270,12 +270,31 @@ export default function OverallSheetPage() {
         </div>
       </div>
 
-      {existingSheet && (
-        <ScoreSheetPrintView
-          sheet={existingSheet}
+      {!loading && (
+        <OverallSheetPrintView
           teamName={teamName || `Inscripción #${registrationId}`}
-          sheetTypeLabel="Overall — General"
+          divisionName={existingSheet?.division_name}
           organization={organization}
+          isEscolarAB={isEscolarAB}
+          danceDiffLevels={danceDiffLevels}
+          danceExecLevels={danceExecLevels}
+          showmanshipMax={showmanshipMax}
+          formationsScore={formationsScore}
+          danceDifficulty={danceDifficulty}
+          danceExecution={danceExecution}
+          creativityOverall={creativityOverall}
+          showmanshipOverall={showmanshipOverall}
+          formationsNotes={formationsNotes}
+          danceNotes={danceNotes}
+          errorsCount={errorsCount}
+          overallSubtotal={overallSubtotal}
+          sheetTotal={sheetTotal}
+          rawScore={existingSheet?.raw_score}
+          maxRaw={existingSheet?.max_raw}
+          scaledScore={existingSheet?.scaled_score}
+          totalDeductions={existingSheet?.total_deductions}
+          finalScore={existingSheet?.final_score}
+          percentage={existingSheet?.percentage}
         />
       )}
 
