@@ -7,6 +7,9 @@ import { toast } from 'sonner';
 import { PageSpinner } from '@/components/ui/spinner';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
+import { useBranding } from '@/contexts/BrandingContext';
+import { PrintButton } from '@/components/print/PrintButton';
+import { DeduccionesSheetPrintView } from '@/components/print/DeduccionesSheetPrintView';
 import {
   DEDUCTION_CODES,
   DEDUCTION_TYPE_LABELS,
@@ -97,6 +100,7 @@ export default function DeduccionesSheetPage() {
   const registrationId = Number(regId);
 
   const { isJudge, isCompetitionActive } = useJudge();
+  const { organization } = useBranding();
 
   useEffect(() => {
     if (isJudge && !isCompetitionActive(competitionId)) {
@@ -205,6 +209,7 @@ export default function DeduccionesSheetPage() {
         </div>
         {sheet && (
           <div className="flex items-center gap-5">
+            <PrintButton />
             <div className="text-right">
               <p className="text-[10px] text-zinc-400 uppercase tracking-wide">Descuentos</p>
               <p className={`text-xl font-bold tabular-nums ${totalDed > 0 ? 'text-red-600' : 'text-zinc-300'}`}>
@@ -443,6 +448,20 @@ export default function DeduccionesSheetPage() {
           </>
         )}
       </div>
+
+      {/* ── Print view ─────────────────────────────────────────────────────── */}
+      {sheet && (
+        <DeduccionesSheetPrintView
+          data={{
+            teamName,
+            organization: organization ?? undefined,
+            deductions,
+            totalDed,
+            scaledScore,
+            finalScore,
+          }}
+        />
+      )}
     </div>
   );
 }
