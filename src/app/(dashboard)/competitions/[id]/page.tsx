@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp, Upload } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp, Upload, TriangleAlert } from 'lucide-react';
 import { PrintButton } from '@/components/print/PrintButton';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { PageSpinner } from '@/components/ui/spinner';
 import { CompetitionModal } from '@/components/competitions/CompetitionModal';
 import { DivisionModal } from '@/components/competitions/DivisionModal';
-import competitionsRepository from '@/repositories/competitionsRepository';
+import competitionsRepository, { type RestConflict } from '@/repositories/competitionsRepository';
 import authRepository, { type SimpleUser } from '@/repositories/authRepository';
 import { useJudge } from '@/hooks/useJudge';
 import {
@@ -44,6 +44,11 @@ export default function CompetitionDetailPage() {
   const [newJudgeUserId, setNewJudgeUserId] = useState('');
   const [newJudgeSheet, setNewJudgeSheet] = useState<SheetType>('building');
   const [addingJudge, setAddingJudge] = useState(false);
+
+  const [conflictsOpen, setConflictsOpen] = useState(false);
+  const [conflicts, setConflicts] = useState<RestConflict[]>([]);
+  const [conflictsLoading, setConflictsLoading] = useState(false);
+
   const { isJudge, isCompetitionActive } = useJudge();
 
   useEffect(() => {
@@ -80,6 +85,20 @@ export default function CompetitionDetailPage() {
   useEffect(() => {
     if (judgesOpen) loadJudges();
   }, [judgesOpen, loadJudges]);
+
+  const loadConflicts = useCallback(async () => {
+    setConflictsLoading(true);
+    try {
+      const res = await competitionsRepository.getScheduleConflicts(competitionId);
+      setConflicts(res.data);
+    } finally {
+      setConflictsLoading(false);
+    }
+  }, [competitionId]);
+
+  useEffect(() => {
+    if (conflictsOpen) loadConflicts();
+  }, [conflictsOpen, loadConflicts]);
 
   const handleAddJudge = async () => {
     if (!newJudgeUserId) return;
@@ -237,6 +256,94 @@ export default function CompetitionDetailPage() {
           </div>
         )}
       </div>
+
+      {/* ── Panel de conflictos de descanso (solo admin) ───────────────── */}
+      {!isJudge && (
+        <div className="print:hidden flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => setConflictsOpen((v) => !v)}
+            className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-3.5 text-left hover:bg-zinc-50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <TriangleAlert className={`h-4 w-4 ${conflicts.length > 0 && conflictsOpen ? 'text-amber-500' : 'text-zinc-400'}`} />
+              <span className="text-sm font-semibold text-zinc-900">Conflictos de descanso</span>
+              {conflicts.length > 0 && (
+                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                  {conflicts.length}
+                </span>
+              )}
+            </div>
+            {conflictsOpen ? <ChevronUp className="h-4 w-4 text-zinc-400" /> : <ChevronDown className="h-4 w-4 text-zinc-400" />}
+          </button>
+
+          {conflictsOpen && (
+            <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+              {conflictsLoading ? (
+                <p className="px-5 py-4 text-sm text-zinc-400">Verificando conflictos…</p>
+              ) : conflicts.length === 0 ? (
+                <div className="flex items-center gap-2 px-5 py-4 text-sm text-zinc-500">
+                  <span className="text-green-500">✓</span>
+                  Todos los atletas tienen al menos 3 presentaciones de descanso entre apariciones.
+                </div>
+              ) : (
+                <>
+                  <div className="px-5 py-3 border-b border-zinc-100 bg-amber-50">
+                    <p className="text-xs text-amber-700">
+                      Los siguientes atletas no tienen suficiente descanso entre dos presentaciones consecutivas (mínimo 3 salidas).
+                    </p>
+                  </div>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-zinc-100 bg-zinc-50 text-left text-xs font-medium text-zinc-500">
+                        <th className="px-4 py-2.5">Atleta</th>
+                        <th className="px-4 py-2.5">1ª aparición</th>
+                        <th className="px-4 py-2.5">2ª aparición</th>
+                        <th className="px-4 py-2.5 text-center">Diferencia</th>
+                        <th className="px-4 py-2.5 text-center">Faltan</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-50">
+                      {conflicts.map((c, i) => (
+                        <tr key={i} className="hover:bg-amber-50/40">
+                          <td className="px-4 py-3 font-medium text-zinc-900">{c.athlete_name}</td>
+                          <td className="px-4 py-3 text-zinc-600 text-xs">
+                            <span className="font-mono font-semibold text-zinc-800">#{c.order_a}</span>
+                            {' '}{c.team_a}
+                            <span className="block text-zinc-400">{c.division_a}</span>
+                          </td>
+                          <td className="px-4 py-3 text-zinc-600 text-xs">
+                            <span className="font-mono font-semibold text-zinc-800">#{c.order_b}</span>
+                            {' '}{c.team_b}
+                            <span className="block text-zinc-400">{c.division_b}</span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+                              {c.gap}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center text-xs text-amber-600 font-medium">
+                            +{c.missing}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="px-5 py-3 border-t border-zinc-100 bg-zinc-50">
+                    <button
+                      type="button"
+                      onClick={loadConflicts}
+                      className="text-xs text-zinc-500 hover:text-zinc-700 underline"
+                    >
+                      Actualizar
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Panel de jueces (solo admin) ───────────────────────────────── */}
       {!isJudge && (

@@ -1,5 +1,18 @@
 import api from '@/services/api';
 
+export interface RestConflict {
+  athlete_id: number;
+  athlete_name: string;
+  team_a: string;
+  division_a: string;
+  order_a: number;
+  team_b: string;
+  division_b: string;
+  order_b: number;
+  gap: number;
+  missing: number;
+}
+
 export interface ImportRowError {
   row: number;
   field: string;
@@ -151,6 +164,12 @@ class CompetitionsRepository {
 
   deleteJudgeAssignment = (id: number) =>
     api.delete(`/judge-assignments/${id}/`);
+
+  // Schedule conflict check
+  getScheduleConflicts = (competitionId: number, minGap = 3) =>
+    api.get<RestConflict[]>(`/competitions/${competitionId}/schedule-conflicts/`, {
+      params: { min_gap: minGap },
+    });
 
   // Inscripción import
   importInscripcion = (competitionId: number, formData: FormData) =>
