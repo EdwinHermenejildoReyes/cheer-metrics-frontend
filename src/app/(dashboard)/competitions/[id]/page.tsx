@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp, Upload } from 'lucide-react';
 import { PrintButton } from '@/components/print/PrintButton';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -155,10 +155,20 @@ export default function CompetitionDetailPage() {
         <div className="flex items-center gap-2">
           <PrintButton />
           {!isJudge && (
-            <Button variant="secondary" size="sm" onClick={() => setCompModalOpen(true)}>
-              <Pencil className="h-3.5 w-3.5" />
-              Editar
-            </Button>
+            <>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => router.push(`/competitions/${competitionId}/import`)}
+              >
+                <Upload className="h-3.5 w-3.5" />
+                Importar inscripción
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => setCompModalOpen(true)}>
+                <Pencil className="h-3.5 w-3.5" />
+                Editar
+              </Button>
+            </>
           )}
         </div>
       </div>

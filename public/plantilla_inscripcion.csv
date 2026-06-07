@@ -1,0 +1,25 @@
+GIMNASIO:,[Nombre del Gimnasio o Club]
+FECHA_ENVIO:,[DD/MM/AAAA]
+#,─── INSTRUCCIONES ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#,Una fila por atleta · No modifique el orden ni el nombre de las columnas · Elimine estas filas de instrucciones antes de enviar
+#,
+#,CAMPO,VALORES VÁLIDOS
+#,genero,F (Femenino) · M (Masculino)
+#,grupo_etario,tiny · mini · youth · junior · senior · open
+#,nivel,L1 · L2 · L3 · L4 · L5 · L6 · L7 · Prep · Escolar · Novice · NovicePlus · Elite
+#,categoria,all_girl · coed · all_male · non_tumbling
+#,rol,flyer · base · backspot · spotter · tumbler
+#,fecha_nacimiento,formato DD/MM/AAAA  (ej: 15/03/2010)
+#,correo,correo del atleta o representante legal (opcional — para acceso a la plataforma)
+#,telefono_tutor,número de contacto del padre/madre/representante (para el día de competencia)
+#,foto,"nombre el archivo con la cédula del atleta (ej: 1712345678.jpg) y colóquelo en la carpeta fotos/"
+#,
+#,─── EJEMPLOS (eliminar antes de enviar) ─────────────────────────────────────────────────────────────────────────────────────────────────
+#,nombre,apellido,cedula,fecha_nacimiento,genero,nombre_equipo,grupo_etario,nivel,categoria,rol,correo,telefono_tutor,foto
+#,María,Pérez,1712345678,15/03/2010,F,Team Phoenix,senior,L5,all_girl,flyer,maria@gmail.com,0991234567,fotos/1712345678.jpg
+#,Carlos,Gómez,1798765432,20/07/2008,M,Team Phoenix,senior,L5,coed,base,,0987654321,fotos/1798765432.jpg
+#,
+#,─── ESTRUCTURA DE ENVÍO ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+#,Comprima y envíe: este archivo  +  la carpeta fotos/  con todas las fotos nombradas por cédula
+#,Nombre del archivo ZIP sugerido: [NombreGimnasio]_[AAAA-MM-DD].zip
+nombre,apellido,cedula,fecha_nacimiento,genero,nombre_equipo,grupo_etario,nivel,categoria,rol,correo,telefono_tutor,foto

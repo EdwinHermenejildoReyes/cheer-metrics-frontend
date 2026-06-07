@@ -14,7 +14,7 @@ import { useJudge } from '@/hooks/useJudge';
 import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
 import type { BuildingConfig } from '@/lib/scoringConfig';
-import type { ScoreSheet } from '@/types/competitions';
+import type { Division, DivisionCategory, ScoreSheet } from '@/types/competitions';
 import type { BuildingPrintData } from '@/components/print/BuildingSheetPrintView';
 
 // ── Execution categories (same for all scoring systems) ──────────────────────
@@ -156,6 +156,7 @@ export default function BuildingSheetPage() {
 
   const [teamName,      setTeamName]      = useState<string>('');
   const [existingSheet, setExistingSheet] = useState<ScoreSheet | null>(null);
+  const [division,      setDivision]      = useState<Division | null>(null);
   const [loading,       setLoading]       = useState(true);
   const [saving,        setSaving]        = useState(false);
   const [bCfg,          setBCfg]          = useState<BuildingConfig>(DEFAULT_BUILDING_CONFIG);
@@ -205,9 +206,14 @@ export default function BuildingSheetPage() {
   const sheetTotal    = parseFloat((buildingTotal + creativityBuilding + showmanshipBuilding).toFixed(2));
 
   // ── Derived from config ───────────────────────────────────────────────────
+  const category = division?.category as DivisionCategory | undefined;
+  const isCoed = category === 'coed';
+  const activeStuntsRango =
+    (category && bCfg.stuntsRangoByCategory?.[category]) ?? bCfg.stuntsRango;
+
   const stuntSkillLabels = Array.from(
     { length: bCfg.stuntsSkillCount },
-    (_, i) => i === 4 ? 'Habilidad #5 / Coed' : `Habilidad #${i + 1}`
+    (_, i) => i === 4 && isCoed ? 'Habilidad #5 / Coed' : `Habilidad #${i + 1}`
   );
 
   // ── Load ──────────────────────────────────────────────────────────────────
@@ -225,6 +231,7 @@ export default function BuildingSheetPage() {
       const sysConfig = getScoringConfig(divRes.data);
       const cfg = sysConfig.building;
       setBCfg(cfg);
+      setDivision(divRes.data);
 
       // Set config-based defaults
       if (cfg.stuntsHasDiff && cfg.stuntsRango.length > 0) {
@@ -447,7 +454,7 @@ export default function BuildingSheetPage() {
                     <div>
                       <p className="text-xs font-medium text-zinc-500 mb-2">Rango Base de Complejidad</p>
                       <div className="flex flex-col gap-1.5">
-                        {bCfg.stuntsRango.map(({ value, label }) => (
+                        {activeStuntsRango.map(({ value, label }) => (
                           <button
                             key={value}
                             type="button"

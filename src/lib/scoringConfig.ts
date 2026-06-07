@@ -1,7 +1,7 @@
-import type { ScoringSystem, Division } from '@/types/competitions';
+import type { ScoringSystem, Division, DivisionCategory } from '@/types/competitions';
 
 // ── Primitive option types ────────────────────────────────────────────────────
-export interface RangoOpt  { value: number; label: string }
+export interface RangoOpt  { value: number; label: string; note?: string }
 export interface PyramidRangoOpt { low: number; high: number; label: string }
 
 // ── Building config ───────────────────────────────────────────────────────────
@@ -9,7 +9,8 @@ export interface BuildingConfig {
   // Stunts
   hasStunts:            boolean;   // false → Tiny Novice (N/A)
   stuntsHasDiff:        boolean;   // false → Novice / Novice Plus (exec-only)
-  stuntsRango:          RangoOpt[];
+  stuntsRango:              RangoOpt[];
+  stuntsRangoByCategory?:   Partial<Record<DivisionCategory, RangoOpt[]>>;
   stuntsSkillCount:     number;    // 5 for Elite, 3 for Prep
   stuntsSkillGrades:    RangoOpt[];
   stuntsPartMaxOpts:    RangoOpt[];
@@ -60,12 +61,38 @@ export interface TumblingConfig {
 
 const ELITE_STUNT_RANGO: RangoOpt[] = [
   { value: 3.5, label: 'No cumple con 4.0' },
-  { value: 4.0, label: '4 Hab Dif por Gran Parte (Acumulativas)' },
-  { value: 4.5, label: '2 Hab Dif Simultáneas por Gran Parte' },
-  { value: 5.0, label: '3 Hab Dif Simultáneas por Gran Parte' },
-  { value: 5.5, label: '4 Hab Dif Simultáneas por Gran Parte' },
-  { value: 6.0, label: '5 Hab Dif Simultáneas por Gran Parte' },
+  { value: 4.0, label: '4 Acumulativas' },
+  { value: 4.5, label: '2 Habilidades Diferentes' },
+  { value: 5.0, label: '3 Habilidades Diferentes' },
+  { value: 5.5, label: '4 Habilidades Diferentes' },
+  { value: 6.0, label: '5 Habilidades Diferentes' },
 ];
+
+// All Girl: el 6.0 requiere además al menos 1 habilidad de ≥Nivel 3
+const ELITE_STUNT_RANGO_ALL_GIRL: RangoOpt[] = [
+  { value: 3.5, label: 'No cumple con 4.0' },
+  { value: 4.0, label: '4 Acumulativas' },
+  { value: 4.5, label: '2 Habilidades Diferentes' },
+  { value: 5.0, label: '3 Habilidades Diferentes' },
+  { value: 5.5, label: '4 Habilidades Diferentes' },
+  { value: 6.0, label: '5 Hab Dif / 1 Hab ≥Niv 3' },
+];
+
+// All Male: tabla general, sin requisito adicional en 6.0
+const ELITE_STUNT_RANGO_ALL_MALE: RangoOpt[] = ELITE_STUNT_RANGO;
+
+// Coed: el 6.0 requiere además al menos 1 habilidad Coed simultánea
+const ELITE_STUNT_RANGO_COED: RangoOpt[] = [
+  { value: 3.5, label: 'No cumple con 4.0' },
+  { value: 4.0, label: '4 Acumulativas' },
+  { value: 4.5, label: '2 Habilidades Diferentes' },
+  { value: 5.0, label: '3 Habilidades Diferentes' },
+  { value: 5.5, label: '4 Habilidades Diferentes' },
+  { value: 6.0, label: '5 Hab Dif / 1 Hab Coed' },
+];
+
+// Non-Tumbling: tabla general, sin requisito adicional en 6.0
+const ELITE_STUNT_RANGO_NON_TUMBLING: RangoOpt[] = ELITE_STUNT_RANGO;
 
 const ELITE_SKILL_GRADES: RangoOpt[] = [
   { value: 0.00, label: 'No Cumple' },
@@ -205,6 +232,12 @@ const ELITE_BUILDING: BuildingConfig = {
   hasStunts:          true,
   stuntsHasDiff:      true,
   stuntsRango:        ELITE_STUNT_RANGO,
+  stuntsRangoByCategory: {
+    all_girl:     ELITE_STUNT_RANGO_ALL_GIRL,
+    all_male:     ELITE_STUNT_RANGO_ALL_MALE,
+    coed:         ELITE_STUNT_RANGO_COED,
+    non_tumbling: ELITE_STUNT_RANGO_NON_TUMBLING,
+  },
   stuntsSkillCount:   5,
   stuntsSkillGrades:  ELITE_SKILL_GRADES,
   stuntsPartMaxOpts:  ELITE_PART_MAX,

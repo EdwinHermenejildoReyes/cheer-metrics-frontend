@@ -1,4 +1,27 @@
 import api from '@/services/api';
+
+export interface ImportRowError {
+  row: number;
+  field: string;
+  value: string;
+  message: string;
+}
+
+export interface ImportInscripcionResult {
+  gym_name: string;
+  sent_date: string;
+  athletes_created: number;
+  athletes_updated: number;
+  memberships_created: number;
+  registrations_created: number;
+  photos_matched: number;
+  rows_ok: number;
+  rows_skipped: number;
+  aborted: boolean;
+  abort_reason: string;
+  errors: ImportRowError[];
+}
+
 import type {
   Competition,
   Division,
@@ -128,6 +151,12 @@ class CompetitionsRepository {
 
   deleteJudgeAssignment = (id: number) =>
     api.delete(`/judge-assignments/${id}/`);
+
+  // Inscripción import
+  importInscripcion = (competitionId: number, formData: FormData) =>
+    api.post<ImportInscripcionResult>(`/competitions/${competitionId}/import-inscripcion/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
 
   // Hero images (public list, admin write)
   listHeroImages = () =>
