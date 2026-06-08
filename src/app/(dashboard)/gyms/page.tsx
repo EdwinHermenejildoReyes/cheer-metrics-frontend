@@ -11,7 +11,7 @@ import competitionsRepository from '@/repositories/competitionsRepository';
 import athletesRepository from '@/repositories/athletesRepository';
 import type { Gym, Team } from '@/types/competitions';
 import type { Athlete, Gender } from '@/types/athletes';
-import { GENDER_LABELS, AGE_GROUP_LABELS_SHORT } from '@/types/athletes';
+import { GENDER_LABELS } from '@/types/athletes';
 
 const GENDER_VARIANT: Record<Gender, 'info' | 'violet' | 'default'> = {
   F: 'violet',
@@ -223,7 +223,6 @@ export default function GymsPage() {
                                         <th className="px-5 py-2.5">Cédula</th>
                                         <th className="px-5 py-2.5">Género</th>
                                         <th className="px-5 py-2.5">Edad</th>
-                                        <th className="px-5 py-2.5">Divisiones elegibles</th>
                                         <th className="px-5 py-2.5">Rol</th>
                                       </tr>
                                     </thead>
@@ -248,18 +247,6 @@ export default function GymsPage() {
                                             </td>
                                             <td className="px-5 py-3 font-semibold text-zinc-900">
                                               {athlete.age} años
-                                            </td>
-                                            <td className="px-5 py-3">
-                                              <div className="flex flex-wrap gap-1">
-                                                {athlete.eligible_age_groups.length > 0
-                                                  ? athlete.eligible_age_groups.map(g => (
-                                                      <Badge key={g} variant="default" className="text-[10px]">
-                                                        {AGE_GROUP_LABELS_SHORT[g]}
-                                                      </Badge>
-                                                    ))
-                                                  : <span className="text-xs text-zinc-400">—</span>
-                                                }
-                                              </div>
                                             </td>
                                             <td className="px-5 py-3 text-xs text-zinc-500">
                                               {membership?.role_display ?? '—'}
