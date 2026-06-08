@@ -32,7 +32,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <div className="print:hidden"><Sidebar /></div>
         <div className="flex flex-1 flex-col overflow-hidden">
           <div className="print:hidden"><BrandingBar /></div>
-          <main className="dashboard-main flex flex-1 flex-col overflow-y-auto bg-zinc-50">
+          <main className="dashboard-main flex flex-1 flex-col overflow-y-auto bg-plt-surface">
             {children}
           </main>
         </div>

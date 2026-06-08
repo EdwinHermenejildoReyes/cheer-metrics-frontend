@@ -1,12 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #1e1b4b;
-  --brand-primary: #6d28d9;
-  --brand-primary-text: #ffffff;
-  --brand-secondary: #4c1d95;
-  --brand-accent: #f59e0b;
+  /* ── Platform palette ─────────────────────────────────────────────────────
+     These are the CSS defaults. PlatformSettingsProvider overrides them at
+     runtime via element.style.setProperty, which takes precedence over :root.
+  ── */
+  --plt-primary:    #6d28d9;
+  --plt-primary-fg: #ffffff;
+  --plt-accent:     #f59e0b;
+  --plt-bg:         #ffffff;
+  --plt-surface:    #f4f4f5;
+  --plt-border:     #e4e4e7;
+  --plt-text:       #1e1b4b;
+  --plt-muted:      #71717a;
+
+  /* Legacy aliases — BrandingContext org override sets these inline */
+  --background:         var(--plt-bg);
+  --foreground:         var(--plt-text);
+  --brand-primary:      var(--plt-primary);
+  --brand-primary-text: var(--plt-primary-fg);
+  --brand-secondary:    #4c1d95;
+  --brand-accent:       var(--plt-accent);
 }
 
 @theme inline {
@@ -14,18 +28,21 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Semantic platform utilities — bg-plt-primary, text-plt-muted, etc. */
+  --color-plt-primary:    var(--plt-primary);
+  --color-plt-primary-fg: var(--plt-primary-fg);
+  --color-plt-accent:     var(--plt-accent);
+  --color-plt-bg:         var(--plt-bg);
+  --color-plt-surface:    var(--plt-surface);
+  --color-plt-border:     var(--plt-border);
+  --color-plt-text:       var(--plt-text);
+  --color-plt-muted:      var(--plt-muted);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--plt-bg);
+  color: var(--plt-text);
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -39,7 +56,6 @@ body {
     color: black !important;
   }
 
-  /* Unlock the fixed-height flex shell */
   .dashboard-shell {
     height: auto !important;
     overflow: visible !important;
@@ -50,10 +66,8 @@ body {
     height: auto !important;
   }
 
-  /* Hide interactive chrome */
   .print\:hidden { display: none !important; }
 
-  /* Force white backgrounds and remove shadows */
   * {
     box-shadow: none !important;
     -webkit-print-color-adjust: exact;
