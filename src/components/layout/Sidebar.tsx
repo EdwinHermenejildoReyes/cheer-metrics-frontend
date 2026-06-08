@@ -60,8 +60,11 @@ export function Sidebar() {
       <nav className="flex flex-1 flex-col gap-1 p-3">
         {nav.map(({ href, label, icon: Icon }) => {
           const active = href === '/home' ? pathname === '/home' : pathname === href || pathname.startsWith(href + '/');
-          const activeStyle = active && organization
-            ? { backgroundColor: organization.primary_color, color: organization.text_on_primary }
+          const activeStyle = active
+            ? {
+                backgroundColor: organization?.primary_color ?? 'var(--brand-primary)',
+                color: organization?.text_on_primary ?? 'var(--brand-primary-text)',
+              }
             : undefined;
           return (
             <Link
@@ -70,11 +73,7 @@ export function Sidebar() {
               style={activeStyle}
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                active && !organization
-                  ? 'bg-zinc-900 text-white'
-                  : !active
-                  ? 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
-                  : '',
+                !active ? 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900' : '',
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />

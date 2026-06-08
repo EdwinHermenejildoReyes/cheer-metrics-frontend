@@ -2,11 +2,11 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
-  --brand-primary: #18181b;
+  --foreground: #1e1b4b;
+  --brand-primary: #6d28d9;
   --brand-primary-text: #ffffff;
-  --brand-secondary: #27272a;
-  --brand-accent: #7c3aed;
+  --brand-secondary: #4c1d95;
+  --brand-accent: #f59e0b;
 }
 
 @theme inline {

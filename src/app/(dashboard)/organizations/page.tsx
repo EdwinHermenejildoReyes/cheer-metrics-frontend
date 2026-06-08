@@ -63,9 +63,9 @@ interface OrgForm {
 
 const DEFAULT_FORM: OrgForm = {
   name: '',
-  primary_color: '#1a1a2e',
-  secondary_color: '#ffffff',
-  accent_color: '#e94560',
+  primary_color: '#6d28d9',
+  secondary_color: '#4c1d95',
+  accent_color: '#f59e0b',
   text_on_primary: '#ffffff',
   logoFile: null,
   logoPreview: null,
