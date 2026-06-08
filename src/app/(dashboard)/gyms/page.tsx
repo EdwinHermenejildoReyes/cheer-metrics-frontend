@@ -1,16 +1,23 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Pencil, Building2, ChevronDown, ChevronRight, User } from 'lucide-react';
+import { Plus, Pencil, Building2, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { PageSpinner } from '@/components/ui/spinner';
 import { GymModal } from '@/components/competitions/GymModal';
 import { TeamModal } from '@/components/competitions/TeamModal';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import athletesRepository from '@/repositories/athletesRepository';
 import type { Gym, Team } from '@/types/competitions';
-import type { Athlete } from '@/types/athletes';
-import { GENDER_LABELS } from '@/types/athletes';
+import type { Athlete, Gender } from '@/types/athletes';
+import { GENDER_LABELS, AGE_GROUP_LABELS_SHORT } from '@/types/athletes';
+
+const GENDER_VARIANT: Record<Gender, 'info' | 'violet' | 'default'> = {
+  F: 'violet',
+  M: 'info',
+  O: 'default',
+};
 
 export default function GymsPage() {
   const [gyms, setGyms] = useState<Gym[]>([]);
@@ -203,44 +210,67 @@ export default function GymsPage() {
 
                             {/* Athletes */}
                             {isTeamExpanded && (
-                              <div className="divide-y divide-zinc-100">
-                                {isLoadingAthletes ? (
-                                  <div className="py-3 pl-14 text-xs text-zinc-400">Cargando atletas…</div>
-                                ) : teamAthletes.length === 0 ? (
-                                  <div className="py-3 pl-14 text-xs text-zinc-400">Sin atletas en este equipo.</div>
-                                ) : (
-                                  teamAthletes.map(athlete => {
-                                    const membership = athlete.memberships.find(m => m.team === team.id);
-                                    return (
-                                      <div key={athlete.id} className="flex items-center gap-3 py-2 pl-14 pr-5 bg-white hover:bg-zinc-50">
-                                        {athlete.photo ? (
-                                          <img
-                                            src={athlete.photo}
-                                            alt={athlete.full_name}
-                                            className="h-7 w-7 rounded-full object-cover shrink-0"
-                                          />
-                                        ) : (
-                                          <div className="h-7 w-7 rounded-full bg-zinc-100 flex items-center justify-center shrink-0">
-                                            <User className="h-3.5 w-3.5 text-zinc-400" />
-                                          </div>
-                                        )}
-                                        <div className="flex-1 min-w-0">
-                                          <p className="text-sm text-zinc-800">{athlete.full_name}</p>
-                                          <p className="text-xs text-zinc-400">
-                                            {membership?.role_display}
-                                            {membership && ' · '}
-                                            {GENDER_LABELS[athlete.gender]}
-                                          </p>
-                                        </div>
-                                        <div className="text-right shrink-0">
-                                          <p className="text-xs text-zinc-400">{athlete.birth_date} · {athlete.age} años</p>
-                                          <p className="text-xs text-zinc-400 font-mono">{athlete.document_id}</p>
-                                        </div>
-                                      </div>
-                                    );
-                                  })
-                                )}
-                              </div>
+                              isLoadingAthletes ? (
+                                <div className="py-3 pl-14 text-xs text-zinc-400">Cargando atletas…</div>
+                              ) : teamAthletes.length === 0 ? (
+                                <div className="py-3 pl-14 text-xs text-zinc-400">Sin atletas en este equipo.</div>
+                              ) : (
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-sm">
+                                    <thead>
+                                      <tr className="border-b border-zinc-100 bg-zinc-50 text-left text-xs font-medium uppercase tracking-wide text-zinc-400">
+                                        <th className="pl-14 pr-5 py-2.5">Atleta</th>
+                                        <th className="px-5 py-2.5">Cédula</th>
+                                        <th className="px-5 py-2.5">Género</th>
+                                        <th className="px-5 py-2.5">Edad</th>
+                                        <th className="px-5 py-2.5">Divisiones elegibles</th>
+                                        <th className="px-5 py-2.5">Rol</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-zinc-100">
+                                      {teamAthletes.map(athlete => {
+                                        const membership = athlete.memberships.find(m => m.team === team.id);
+                                        return (
+                                          <tr key={athlete.id} className="bg-white hover:bg-zinc-50 transition-colors">
+                                            <td className="pl-14 pr-5 py-3">
+                                              <p className="font-medium text-zinc-900">{athlete.full_name}</p>
+                                              <p className="text-xs text-zinc-400">
+                                                {new Date(athlete.birth_date + 'T00:00:00').toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                              </p>
+                                            </td>
+                                            <td className="px-5 py-3 font-mono text-xs text-zinc-600">
+                                              {athlete.document_id || '—'}
+                                            </td>
+                                            <td className="px-5 py-3">
+                                              <Badge variant={GENDER_VARIANT[athlete.gender]}>
+                                                {GENDER_LABELS[athlete.gender]}
+                                              </Badge>
+                                            </td>
+                                            <td className="px-5 py-3 font-semibold text-zinc-900">
+                                              {athlete.age} años
+                                            </td>
+                                            <td className="px-5 py-3">
+                                              <div className="flex flex-wrap gap-1">
+                                                {athlete.eligible_age_groups.length > 0
+                                                  ? athlete.eligible_age_groups.map(g => (
+                                                      <Badge key={g} variant="default" className="text-[10px]">
+                                                        {AGE_GROUP_LABELS_SHORT[g]}
+                                                      </Badge>
+                                                    ))
+                                                  : <span className="text-xs text-zinc-400">—</span>
+                                                }
+                                              </div>
+                                            </td>
+                                            <td className="px-5 py-3 text-xs text-zinc-500">
+                                              {membership?.role_display ?? '—'}
+                                            </td>
+                                          </tr>
+                                        );
+                                      })}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )
                             )}
                           </div>
                         );
