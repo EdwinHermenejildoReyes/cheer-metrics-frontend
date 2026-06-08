@@ -1,25 +1,39 @@
-GIMNASIO:,[Nombre del Gimnasio o Club]
-FECHA_ENVIO:,[DD/MM/AAAA]
-#,─── INSTRUCCIONES ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-#,Una fila por atleta · No modifique el orden ni el nombre de las columnas · Elimine estas filas de instrucciones antes de enviar
-#,
-#,CAMPO,VALORES VÁLIDOS
-#,genero,F (Femenino) · M (Masculino)
-#,grupo_etario,tiny · mini · youth · junior · senior · open
-#,nivel,L1 · L2 · L3 · L4 · L5 · L6 · L7 · Prep · Escolar · Novice · NovicePlus · Elite
-#,categoria,all_girl · coed · all_male · non_tumbling
-#,rol,flyer · base · backspot · spotter · tumbler
-#,fecha_nacimiento,formato DD/MM/AAAA  (ej: 15/03/2010)
-#,correo,correo del atleta o representante legal (opcional — para acceso a la plataforma)
-#,telefono_tutor,número de contacto del padre/madre/representante (para el día de competencia)
-#,foto,"nombre el archivo con la cédula del atleta (ej: 1712345678.jpg) y colóquelo en la carpeta fotos/"
-#,
-#,─── EJEMPLOS (eliminar antes de enviar) ─────────────────────────────────────────────────────────────────────────────────────────────────
-#,nombre,apellido,cedula,fecha_nacimiento,genero,nombre_equipo,grupo_etario,nivel,categoria,rol,correo,telefono_tutor,foto
-#,María,Pérez,1712345678,15/03/2010,F,Team Phoenix,senior,L5,all_girl,flyer,maria@gmail.com,0991234567,fotos/1712345678.jpg
-#,Carlos,Gómez,1798765432,20/07/2008,M,Team Phoenix,senior,L5,coed,base,,0987654321,fotos/1798765432.jpg
-#,
-#,─── ESTRUCTURA DE ENVÍO ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-#,Comprima y envíe: este archivo  +  la carpeta fotos/  con todas las fotos nombradas por cédula
-#,Nombre del archivo ZIP sugerido: [NombreGimnasio]_[AAAA-MM-DD].zip
-nombre,apellido,cedula,fecha_nacimiento,genero,nombre_equipo,grupo_etario,nivel,categoria,rol,correo,telefono_tutor,foto
+GIMNASIO:,Gimnasio Demo EC
+FECHA_ENVIO:,2026-06-07
+# ─────────────────────────────────────────────────────────────────────────────
+# INSTRUCCIONES
+# - No modifiques los encabezados de las columnas.
+# - Las líneas que empiezan con '#' son ignoradas.
+# - fecha_nacimiento: DD/MM/AAAA
+# - genero: F  o  M
+# - grupo_etario: tiny | mini | youth | junior | senior | open
+# - nivel: L1 | L2 | L3 | L4 | L5 | L6 | L7 | Prep | Escolar | Novice | NovicePlus | Elite
+# - categoria: all_girl | coed | all_male | non_tumbling
+# - rol: flyer | base | backspot | spotter | tumbler
+# - La división (grupo_etario + nivel + categoria) debe existir en la competencia.
+# ─────────────────────────────────────────────────────────────────────────────
+nombre,apellido,cedula,fecha_nacimiento,genero,nombre_equipo,grupo_etario,nivel,categoria,rol
+# ── Equipo 1: Senior L2 All Girl ─────────────────────────────────────────────
+Valentina,Torres,1712345001,15/03/2007,F,Demo Elite AG,senior,L2,all_girl,flyer
+Camila,Rodriguez,1712345002,22/07/2006,F,Demo Elite AG,senior,L2,all_girl,flyer
+Daniela,Morales,1712345003,09/11/2007,F,Demo Elite AG,senior,L2,all_girl,base
+Fernanda,Jimenez,1712345004,30/04/2006,F,Demo Elite AG,senior,L2,all_girl,base
+Gabriela,Lopez,1712345005,18/09/2007,F,Demo Elite AG,senior,L2,all_girl,base
+Isabella,Vargas,1712345006,05/12/2006,F,Demo Elite AG,senior,L2,all_girl,backspot
+Sofia,Castillo,1712345007,14/06/2006,F,Demo Elite AG,senior,L2,all_girl,backspot
+Andrea,Diaz,1712345008,03/08/2007,F,Demo Elite AG,senior,L2,all_girl,tumbler
+Paola,Ruiz,1712345009,20/02/2006,F,Demo Elite AG,senior,L2,all_girl,tumbler
+Maria Jose,Pena,1712345010,27/01/2007,F,Demo Elite AG,senior,L2,all_girl,tumbler
+# ── Equipo 2: Junior L2 Coed ─────────────────────────────────────────────────
+Sebastian,Herrera,1712345011,11/05/2010,M,Demo Junior Coed,junior,L2,coed,base
+Mateo,Gonzalez,1712345012,29/09/2011,M,Demo Junior Coed,junior,L2,coed,base
+Diego,Flores,1712345013,07/03/2010,M,Demo Junior Coed,junior,L2,coed,backspot
+Emilio,Reyes,1712345014,16/12/2011,M,Demo Junior Coed,junior,L2,coed,tumbler
+Lucas,Mendoza,1712345015,25/06/2010,M,Demo Junior Coed,junior,L2,coed,spotter
+Lucia,Sanchez,1712345016,08/04/2011,F,Demo Junior Coed,junior,L2,coed,flyer
+Mariana,Ortiz,1712345017,19/10/2010,F,Demo Junior Coed,junior,L2,coed,flyer
+Valeria,Ramos,1712345018,02/07/2011,F,Demo Junior Coed,junior,L2,coed,base
+Natalia,Vega,1712345019,13/01/2010,F,Demo Junior Coed,junior,L2,coed,backspot
+Carolina,Suarez,1712345020,24/08/2011,F,Demo Junior Coed,junior,L2,coed,tumbler
+# ── Fila con error intencional (nivel invalido) ───────────────────────────────
+Juan,Error,9999999999,01/01/2005,M,Demo Error Team,senior,INVALIDO,all_girl,base

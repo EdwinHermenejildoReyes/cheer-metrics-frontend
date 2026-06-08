@@ -60,9 +60,15 @@ uv add <package>
 
 **Scoring config** — `apps.competitions.models` is the canonical source for scoring: `FIELD_MAXIMA` (max per field), `DEDUCTION_AMOUNTS` (unit penalty per type), and `SCORING_SYSTEM_CONFIG` (which fields are active for each `ScoringSystem`). `Division.suggest_scoring_system(skill_level, age_group, category)` maps a division's attributes to a `ScoringSystem` choice. The frontend mirrors this in `src/lib/scoringConfig.ts` — keep both in sync when changing scoring rules.
 
-**ScoreSheet computed properties** — `ScoreSheet` stores raw field values. All totals are computed properties: `building_total`, `tumbling_total`, `overall_total`, `avg_creativity`, `avg_showmanship`, `cross_sheet_total`, `raw_score`, `scaled_score`, `total_deductions`, `final_score`, `percentage`. Creativity and showmanship are averaged across all three judges, not summed — their effective max contribution to the total is 2.00 each regardless of how many judges scored them.
+**ScoreSheet computed properties** — `ScoreSheet` stores raw field values. All totals are computed properties: `building_total`, `tumbling_total`, `overall_total`, `avg_creativity`, `avg_showmanship`, `cross_sheet_total`, `raw_score`, `scaled_score`, `total_deductions`, `final_score`, `percentage`. Creativity and showmanship are averaged across all three judges, not summed — their effective max contribution to the total is 2.00 each regardless of how many judges scored them. The scoring formula is: `final_score = (raw_score + bonus) × multiplier − total_deductions`.
+
+**Competition.is_active** — Overrides `BaseModel.is_active` with custom deadline logic: active until `end_datetime` if set, otherwise until midnight UTC of the day after `date`. Do not rely on the inherited `is_active` field for competitions.
 
 **Deduction auto-save** — `Deduction.save()` automatically sets `unit_amount` and `total_amount` from `DEDUCTION_AMOUNTS[deduction_type]`. Never set these fields manually.
+
+**CSV registration import** — `apps/competitions/importer.py` parses a CSV (+ optional ZIP with photos) and upserts Gyms, Athletes, Teams, Registrations, and TeamMemberships in per-row atomic transactions. Triggered via the management command `python manage.py import_inscripcion <file>` or the frontend page at `/competitions/[id]/import`. Each error row is skipped and accumulated in the result; the import never aborts mid-file unless the competition is not found.
+
+**Scheduler / rest validator** — `apps/competitions/scheduler.py` checks that athletes competing in multiple teams have at least `MIN_REST_GAP = 3` performance slots between appearances. Returns `RestConflict` dataclass instances. The public `/schedule` page (outside the dashboard group) renders the running order and surfaces these conflicts.
 
 **Email (dev)** — Mailpit captures outbound email. UI at `http://localhost:8026`; SMTP on port `8025`.
 
@@ -101,7 +107,9 @@ npm test         # tests
 
 **Route groups** — `src/app/(dashboard)/` is the protected layout group for all authenticated pages. Public routes (`/login`, `/register`, `/pending`) live outside this group.
 
-**Score sheets** — Deep route: `/competitions/[id]/divisions/[divisionId]/sheets/[regId]/{building,tumbling,overall,partner-stunt,deducciones}`. Each sheet type is its own page but shares the scoring config from `src/lib/scoringConfig.ts`.
+**Score sheets** — Deep route: `/competitions/[id]/divisions/[divisionId]/sheets/[regId]/{building,tumbling,overall,partner-stunt,deducciones,rangos,iasf-building,iasf-tumbling,iasf-overall}`. Each sheet type is its own page but shares the scoring config from `src/lib/scoringConfig.ts`. Print views for each sheet type live in `src/components/print/`.
+
+**Public routes** — `/` (landing with `HeroCarousel`, `HeroImage` model) and `/schedule` (competition running order, public) live outside `(dashboard)/` and require no authentication.
 
 **Server vs. Client Components** — Prefer Server Components by default; use `"use client"` only when interactivity or browser APIs are required.
 
