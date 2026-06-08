@@ -15,10 +15,9 @@ export function useJudge() {
       .filter((a) => a.competition === competitionId)
       .map((a) => a.sheet_type);
 
-  const isCompetitionActive = (competitionId: number): boolean => {
-    const assignment = assignments.find((a) => a.competition === competitionId);
-    return assignment?.competition_is_active ?? false;
-  };
+  /** True when the judge has at least one assignment with an active access window. */
+  const isCompetitionActive = (competitionId: number): boolean =>
+    assignments.some((a) => a.competition === competitionId && a.is_access_active);
 
   const canViewSheet = (competitionId: number, sheetType: SheetType): boolean => {
     if (!isJudge) return true;
@@ -26,7 +25,7 @@ export function useJudge() {
       (a) =>
         a.competition === competitionId &&
         a.sheet_type === sheetType &&
-        a.competition_is_active,
+        a.is_access_active,
     );
   };
 

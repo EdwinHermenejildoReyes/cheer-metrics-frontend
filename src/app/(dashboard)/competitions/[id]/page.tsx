@@ -43,6 +43,8 @@ export default function CompetitionDetailPage() {
   const [users, setUsers] = useState<SimpleUser[]>([]);
   const [newJudgeUserId, setNewJudgeUserId] = useState('');
   const [newJudgeSheet, setNewJudgeSheet] = useState<SheetType>('building');
+  const [newJudgeFrom, setNewJudgeFrom] = useState('');
+  const [newJudgeUntil, setNewJudgeUntil] = useState('');
   const [addingJudge, setAddingJudge] = useState(false);
 
   const [conflictsOpen, setConflictsOpen] = useState(false);
@@ -102,15 +104,27 @@ export default function CompetitionDetailPage() {
 
   const handleAddJudge = async () => {
     if (!newJudgeUserId) return;
+    if (!newJudgeFrom || !newJudgeUntil) {
+      toast.error('Debes indicar la fecha/hora de inicio y fin de acceso.');
+      return;
+    }
+    if (newJudgeFrom >= newJudgeUntil) {
+      toast.error('La fecha de inicio debe ser anterior a la fecha de fin.');
+      return;
+    }
     setAddingJudge(true);
     try {
       await competitionsRepository.createJudgeAssignment({
         user: Number(newJudgeUserId),
         competition: competitionId,
         sheet_type: newJudgeSheet,
+        access_from: new Date(newJudgeFrom).toISOString(),
+        access_until: new Date(newJudgeUntil).toISOString(),
       });
       toast.success('Juez asignado');
       setNewJudgeUserId('');
+      setNewJudgeFrom('');
+      setNewJudgeUntil('');
       await loadJudges();
     } catch {
       toast.error('No se pudo asignar el juez (puede que ya esté asignado)');
@@ -368,8 +382,8 @@ export default function CompetitionDetailPage() {
           {judgesOpen && (
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
               {/* Add form */}
-              <div className="flex items-end gap-3 px-5 py-4 border-b border-zinc-100 bg-zinc-50">
-                <div className="flex-1">
+              <div className="grid grid-cols-2 gap-3 px-5 py-4 border-b border-zinc-100 bg-zinc-50 lg:flex lg:items-end">
+                <div className="col-span-2 lg:flex-1">
                   <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Usuario</label>
                   <select
                     value={newJudgeUserId}
@@ -384,7 +398,7 @@ export default function CompetitionDetailPage() {
                     ))}
                   </select>
                 </div>
-                <div className="w-48">
+                <div className="lg:w-44">
                   <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Planilla</label>
                   <select
                     value={newJudgeSheet}
@@ -396,10 +410,34 @@ export default function CompetitionDetailPage() {
                     ))}
                   </select>
                 </div>
-                <Button size="sm" onClick={handleAddJudge} disabled={!newJudgeUserId || addingJudge}>
-                  <Plus className="h-4 w-4" />
-                  Asignar
-                </Button>
+                <div>
+                  <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">
+                    Acceso desde <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={newJudgeFrom}
+                    onChange={(e) => setNewJudgeFrom(e.target.value)}
+                    className="h-9 rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">
+                    Acceso hasta <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={newJudgeUntil}
+                    onChange={(e) => setNewJudgeUntil(e.target.value)}
+                    className="h-9 rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  />
+                </div>
+                <div className="col-span-2 flex justify-end lg:col-span-1">
+                  <Button size="sm" onClick={handleAddJudge} disabled={!newJudgeUserId || !newJudgeFrom || !newJudgeUntil || addingJudge}>
+                    <Plus className="h-4 w-4" />
+                    Asignar
+                  </Button>
+                </div>
               </div>
 
               {/* List */}
@@ -409,9 +447,21 @@ export default function CompetitionDetailPage() {
                 <div className="divide-y divide-zinc-100">
                   {assignments.map((a) => (
                     <div key={a.id} className="flex items-center justify-between px-5 py-3">
-                      <div>
-                        <p className="text-sm font-medium text-zinc-900">{a.user_name}</p>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-zinc-900">{a.user_name}</p>
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${a.is_access_active ? 'bg-green-100 text-green-700' : 'bg-zinc-100 text-zinc-400'}`}>
+                            {a.is_access_active ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </div>
                         <p className="text-xs text-zinc-500">{SHEET_TYPE_LABELS[a.sheet_type]}</p>
+                        {(a.access_from || a.access_until) && (
+                          <p className="text-[11px] text-zinc-400 mt-0.5 font-mono">
+                            {a.access_from ? new Date(a.access_from).toLocaleString('es-EC') : '—'}
+                            {' → '}
+                            {a.access_until ? new Date(a.access_until).toLocaleString('es-EC') : '—'}
+                          </p>
+                        )}
                       </div>
                       <button
                         type="button"

@@ -20,6 +20,9 @@ export interface JudgeAssignment {
   competition_end_datetime: string | null;
   competition_is_active: boolean;
   sheet_type: SheetType;
+  access_from: string | null;
+  access_until: string | null;
+  is_access_active: boolean;
 }
 
 export type Regulation = 'UCA' | 'IASF' | 'ICU';
