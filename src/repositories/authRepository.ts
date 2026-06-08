@@ -12,6 +12,7 @@ interface SignUpBody {
   first_name?: string;
   last_name?: string;
   role?: string;
+  organization?: number | null;
 }
 
 interface ResetPasswordConfirmBody {

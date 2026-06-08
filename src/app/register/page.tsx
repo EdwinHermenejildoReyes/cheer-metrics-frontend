@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -13,6 +13,8 @@ import { setUser } from '@/store/auth/slices';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import authRepository from '@/repositories/authRepository';
+import competitionsRepository from '@/repositories/competitionsRepository';
+import type { Organization } from '@/types/competitions';
 
 const ROLES = [
   { value: 'judge',   label: 'Juez',    description: 'Califico planillas en competencias' },
@@ -22,12 +24,13 @@ const ROLES = [
 
 const schema = z
   .object({
-    first_name:  z.string().min(1, 'Requerido'),
-    last_name:   z.string().min(1, 'Requerido'),
-    email:       z.string().email('Correo inválido'),
-    role:        z.string().refine((v) => ['judge', 'athlete', 'coach'].includes(v), 'Selecciona un rol'),
-    password:    z.string().min(8, 'Mínimo 8 caracteres'),
-    re_password: z.string().min(1, 'Requerido'),
+    first_name:   z.string().min(1, 'Requerido'),
+    last_name:    z.string().min(1, 'Requerido'),
+    email:        z.string().email('Correo inválido'),
+    role:         z.string().refine((v) => ['judge', 'athlete', 'coach'].includes(v), 'Selecciona un rol'),
+    organization: z.coerce.number().nullable().optional(),
+    password:     z.string().min(8, 'Mínimo 8 caracteres'),
+    re_password:  z.string().min(1, 'Requerido'),
   })
   .refine((d) => d.password === d.re_password, {
     message: 'Las contraseñas no coinciden',
@@ -41,6 +44,7 @@ export default function RegisterPage() {
   const dispatch = useDispatch();
   const user = useSelector((s: RootState) => s.auth.user);
   const isAuthenticated = useSelector((s: RootState) => s.auth.isAuthenticated);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -50,6 +54,12 @@ export default function RegisterPage() {
       router.replace('/competitions');
     }
   }, [isAuthenticated, user, router]);
+
+  useEffect(() => {
+    competitionsRepository.listOrganizations({ page_size: '100' })
+      .then((res) => setOrganizations(res.data.results))
+      .catch(() => {});
+  }, []);
 
   const {
     register,
@@ -64,7 +74,11 @@ export default function RegisterPage() {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await authRepository.signUp(values);
+      const payload = {
+        ...values,
+        organization: values.organization || null,
+      };
+      await authRepository.signUp(payload);
     } catch (err: unknown) {
       const data = (err as { response?: { data?: Record<string, string[]> } })?.response?.data;
       if (!data) {
@@ -72,14 +86,14 @@ export default function RegisterPage() {
         return;
       }
 
-      // Map backend field errors to inline form errors
       const fieldMap: Record<string, keyof FormValues> = {
-        first_name: 'first_name',
-        last_name:  'last_name',
-        email:      'email',
-        password:   'password',
-        re_password: 're_password',
-        role:       'role',
+        first_name:   'first_name',
+        last_name:    'last_name',
+        email:        'email',
+        password:     'password',
+        re_password:  're_password',
+        role:         'role',
+        organization: 'organization',
       };
       let hasFieldError = false;
       for (const [key, field] of Object.entries(fieldMap)) {
@@ -96,7 +110,6 @@ export default function RegisterPage() {
       return;
     }
 
-    // Auto-login after registration
     try {
       await authRepository.login({ email: values.email, password: values.password });
       const meRes = await authRepository.me();
@@ -175,6 +188,28 @@ export default function RegisterPage() {
                 <p className="text-xs text-red-500">{errors.role.message}</p>
               )}
             </div>
+
+            {/* Organization picker */}
+            {organizations.length > 0 && (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="organization" className="text-sm font-medium text-zinc-700">
+                  Organización <span className="font-normal text-zinc-400">(opcional)</span>
+                </label>
+                <select
+                  id="organization"
+                  className="h-9 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  {...register('organization')}
+                >
+                  <option value="">Sin organización</option>
+                  {organizations.map((o) => (
+                    <option key={o.id} value={o.id}>{o.name}</option>
+                  ))}
+                </select>
+                {errors.organization && (
+                  <p className="text-xs text-red-500">{errors.organization.message as string}</p>
+                )}
+              </div>
+            )}
 
             <Input
               label="Contraseña"

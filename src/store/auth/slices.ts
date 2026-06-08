@@ -11,6 +11,8 @@ export interface AuthUser {
   role: string;
   avatar: string | null;
   judge_assignments: JudgeAssignment[];
+  organization: number | null;
+  organization_name: string | null;
 }
 
 interface AuthState {
