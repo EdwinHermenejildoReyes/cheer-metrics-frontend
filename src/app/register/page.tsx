@@ -37,7 +37,8 @@ const schema = z
     path: ['re_password'],
   });
 
-type FormValues = z.infer<typeof schema>;
+type FormInput  = z.input<typeof schema>;
+type FormValues = z.output<typeof schema>;
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -68,7 +69,7 @@ export default function RegisterPage() {
     setValue,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  } = useForm<FormInput, unknown, FormValues>({ resolver: zodResolver(schema) });
 
   const selectedRole = watch('role');
 
