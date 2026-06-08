@@ -27,6 +27,7 @@ export interface ImportInscripcionResult {
   athletes_updated: number;
   memberships_created: number;
   registrations_created: number;
+  divisions_created: number;
   photos_matched: number;
   rows_ok: number;
   rows_skipped: number;

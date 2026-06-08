@@ -142,12 +142,13 @@ function ResultsPanel({ result }: { result: ImportInscripcionResult }) {
 
       {/* Stats grid */}
       {!isAborted && (
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-7">
           {[
             { label: 'Atletas creados',     value: result.athletes_created },
             { label: 'Atletas actualizados',value: result.athletes_updated },
-            { label: 'Membresías',          value: result.memberships_created },
+            { label: 'Divisiones creadas',  value: result.divisions_created },
             { label: 'Inscripciones',       value: result.registrations_created },
+            { label: 'Membresías',          value: result.memberships_created },
             { label: 'Fotos asignadas',     value: result.photos_matched },
             { label: 'Filas procesadas',    value: result.rows_ok },
           ].map(({ label, value }) => (
