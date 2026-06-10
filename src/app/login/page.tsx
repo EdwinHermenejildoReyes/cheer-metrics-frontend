@@ -63,17 +63,30 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
-      <div className="w-full max-w-sm">
-        {/* Logo / brand */}
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-12">
+
+      {/* ── Mesh gradient background ───────────────────────────────────────── */}
+      <div className="absolute inset-0 bg-gradient-to-br from-violet-950 via-purple-900 to-indigo-950" />
+      {/* Colored blobs */}
+      <div className="pointer-events-none absolute -top-32 -right-32 h-[28rem] w-[28rem] rounded-full bg-violet-500  opacity-25 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -left-32 h-[28rem] w-[28rem] rounded-full bg-indigo-500  opacity-25 blur-3xl" />
+      <div className="pointer-events-none absolute top-1/2  left-1/2  h-72    w-72    -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400  opacity-15 blur-3xl" />
+      <div className="pointer-events-none absolute top-1/4  right-1/4 h-48    w-48    rounded-full bg-fuchsia-500 opacity-20 blur-2xl" />
+      <div className="pointer-events-none absolute bottom-1/4 left-1/3  h-40    w-40    rounded-full bg-cyan-400   opacity-15 blur-2xl" />
+
+      {/* ── Content ───────────────────────────────────────────────────────── */}
+      <div className="relative z-10 w-full max-w-sm">
+
+        {/* Brand */}
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Cheer Metrics</h1>
-          <p className="mt-1 text-sm text-zinc-500">Inicia sesión para continuar</p>
+          <h1 className="text-3xl font-bold tracking-tight text-white drop-shadow-lg">
+            Cheer Metrics
+          </h1>
+          <p className="mt-2 text-sm text-white/70">Inicia sesión para continuar</p>
         </div>
 
-        {/* Card */}
-        <div className="rounded-2xl border border-zinc-200 bg-white px-8 py-8 shadow-sm">
-
+        {/* Card — frosted glass */}
+        <div className="rounded-2xl border border-white/20 bg-white/95 backdrop-blur-md px-8 py-8 shadow-2xl shadow-black/40">
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
             <Input
               label="Correo electrónico"
@@ -100,9 +113,9 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="mt-4 text-center text-sm text-zinc-500">
+        <p className="mt-5 text-center text-sm text-white/70">
           ¿No tienes cuenta?{' '}
-          <Link href="/register" className="font-medium text-zinc-900 hover:underline">
+          <Link href="/register" className="font-semibold text-white hover:underline">
             Regístrate
           </Link>
         </p>
