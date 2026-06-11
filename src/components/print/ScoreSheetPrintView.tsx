@@ -37,7 +37,7 @@ const FIELD_LABELS: Record<string, string> = {
 const SECTION_GROUPS: { label: string; fields: (keyof typeof FIELD_LABELS)[] }[] = [
   {
     label: 'Building (Elevaciones)',
-    fields: ['stunts_difficulty', 'stunts_execution', 'stunts_drivers', 'pyramids_difficulty', 'pyramids_execution', 'tosses_difficulty', 'tosses_execution'],
+    fields: ['stunts_difficulty', 'stunts_drivers', 'pyramids_difficulty', 'tosses_difficulty'],
   },
   {
     label: 'Tumbling (Gimnasia)',

@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp, Upload, TriangleAlert } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList } from 'lucide-react';
 import { PrintButton } from '@/components/print/PrintButton';
+import { Modal } from '@/components/ui/modal';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -50,6 +51,8 @@ export default function CompetitionDetailPage() {
   const [conflictsOpen, setConflictsOpen] = useState(false);
   const [conflicts, setConflicts] = useState<RestConflict[]>([]);
   const [conflictsLoading, setConflictsLoading] = useState(false);
+  const [assigningOrders, setAssigningOrders] = useState(false);
+  const [itineraryModalOpen, setItineraryModalOpen] = useState(false);
 
   const { isJudge, isCompetitionActive } = useJudge();
 
@@ -87,6 +90,20 @@ export default function CompetitionDetailPage() {
   useEffect(() => {
     if (judgesOpen) loadJudges();
   }, [judgesOpen, loadJudges]);
+
+  const handleAutoAssignOrders = async () => {
+    setItineraryModalOpen(false);
+    setAssigningOrders(true);
+    try {
+      const res = await competitionsRepository.autoAssignOrders(competitionId);
+      toast.success(res.data.message);
+      await load();
+    } catch {
+      toast.error('No se pudo generar el itinerario.');
+    } finally {
+      setAssigningOrders(false);
+    }
+  };
 
   const loadConflicts = useCallback(async () => {
     setConflictsLoading(true);
@@ -189,6 +206,23 @@ export default function CompetitionDetailPage() {
           <PrintButton />
           {!isJudge && (
             <>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setItineraryModalOpen(true)}
+                disabled={assigningOrders}
+              >
+                <ListOrdered className="h-3.5 w-3.5" />
+                {assigningOrders ? 'Generando…' : 'Generar itinerario'}
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => router.push(`/competitions/${competitionId}/backstage`)}
+              >
+                <ClipboardList className="h-3.5 w-3.5" />
+                Backstage
+              </Button>
               <Button
                 variant="secondary"
                 size="sm"
@@ -478,6 +512,52 @@ export default function CompetitionDetailPage() {
           )}
         </div>
       )}
+
+      {/* ── Modal: confirmar generación de itinerario ───────────────────── */}
+      <Modal
+        open={itineraryModalOpen}
+        onClose={() => setItineraryModalOpen(false)}
+        title="Generar itinerario automático"
+        size="sm"
+      >
+        <p className="text-sm text-zinc-500 mb-5">
+          Se asignará el orden de presentación de todas las inscripciones activas siguiendo la progresión oficial de menor a mayor dificultad.
+        </p>
+
+        <div className="flex flex-col gap-1.5 mb-5">
+          {[
+            { label: 'Escolar',  detail: 'todas las categorías' },
+            { label: 'Prep',     detail: 'todas las categorías' },
+            { label: 'Tiny',     detail: 'Novice → Novice Plus → L1…' },
+            { label: 'Youth',    detail: 'All Girl / All Male → 1.0, 1.1, 2, 3' },
+            { label: 'Junior',   detail: 'All Girl / All Male → L1, L2, L3…' },
+            { label: 'Senior',   detail: 'All Girl / All Male → L1, L2, L3, L4' },
+            { label: 'Coed',     detail: 'todas las edades → L4, L5, L6, L7' },
+          ].map((row, i) => (
+            <div key={row.label} className="flex items-center gap-3">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-[10px] font-bold text-zinc-500">
+                {i + 1}
+              </span>
+              <span className="text-sm font-medium text-zinc-800 w-14">{row.label}</span>
+              <span className="text-xs text-zinc-400">{row.detail}</span>
+            </div>
+          ))}
+        </div>
+
+        <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2 mb-5">
+          Los órdenes de presentación existentes serán reemplazados.
+        </p>
+
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" size="sm" onClick={() => setItineraryModalOpen(false)}>
+            Cancelar
+          </Button>
+          <Button size="sm" onClick={handleAutoAssignOrders} loading={assigningOrders}>
+            <ListOrdered className="h-3.5 w-3.5" />
+            Generar itinerario
+          </Button>
+        </div>
+      </Modal>
 
       <CompetitionModal
         open={compModalOpen}

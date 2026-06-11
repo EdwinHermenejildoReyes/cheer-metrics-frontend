@@ -10,6 +10,7 @@ import { PrintButton } from '@/components/print/PrintButton';
 import { BuildingSheetPrintView } from '@/components/print/BuildingSheetPrintView';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { getScoringConfig, DEFAULT_BUILDING_CONFIG } from '@/lib/scoringConfig';
+import { getConstructionGroups } from '@/lib/constructionTable';
 import { useJudge } from '@/hooks/useJudge';
 import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
@@ -160,6 +161,7 @@ export default function BuildingSheetPage() {
   const [loading,       setLoading]       = useState(true);
   const [saving,        setSaving]        = useState(false);
   const [bCfg,          setBCfg]          = useState<BuildingConfig>(DEFAULT_BUILDING_CONFIG);
+  const [athleteCount,  setAthleteCount]  = useState<number | null>(null);
 
   // ── Stunts – difficulty ───────────────────────────────────────────────────
   const [stuntsRango,    setStuntsRango]    = useState<number>(0);
@@ -205,6 +207,18 @@ export default function BuildingSheetPage() {
   const buildingTotal = parseFloat((stuntsSectionTotal + pyramidsSectionTotal + tossesSectionTotal).toFixed(2));
   const sheetTotal    = parseFloat((buildingTotal + creativityBuilding + showmanshipBuilding).toFixed(2));
 
+  // ── Max values from config (for summary table) ────────────────────────────
+  const maxStuntsRango     = bCfg.stuntsRango.length > 0 ? Math.max(...bCfg.stuntsRango.map(r => r.value)) : 0;
+  const maxStuntsSkills    = bCfg.stuntsSkillCount > 0 && bCfg.stuntsSkillGrades.length > 0
+    ? bCfg.stuntsSkillCount * Math.max(...bCfg.stuntsSkillGrades.map(g => g.value)) : 0;
+  const maxStuntsPartMax   = bCfg.stuntsPartMaxOpts.length > 0 ? Math.max(...bCfg.stuntsPartMaxOpts.map(o => o.value)) : 0;
+  const maxStuntsDrivers   = parseFloat((maxStuntsSkills + maxStuntsPartMax).toFixed(2));
+  const maxPyramidsDiff    = bCfg.pyramidRango.length > 0
+    ? parseFloat((bCfg.pyramidRango[bCfg.pyramidRango.length - 1].high +
+        (bCfg.pyramidFineSteps.length > 0 ? Math.max(...bCfg.pyramidFineSteps) : 0)).toFixed(1)) : 0;
+  const maxPyramidsDrivers = bCfg.pyramidDriversOpts.length > 0 ? Math.max(...bCfg.pyramidDriversOpts.map(o => o.value)) : 0;
+  const maxTossesDiff      = bCfg.tossDiffOpts.length > 0 ? Math.max(...bCfg.tossDiffOpts.map(o => o.value)) : 0;
+
   // ── Derived from config ───────────────────────────────────────────────────
   const category = division?.category as DivisionCategory | undefined;
   const isCoed = category === 'coed';
@@ -226,7 +240,10 @@ export default function BuildingSheetPage() {
       ]);
 
       const reg = regRes.data.results.find((r) => r.id === registrationId);
-      if (reg) setTeamName(reg.team_name);
+      if (reg) {
+        setTeamName(reg.team_name);
+        setAthleteCount(reg.athlete_count ?? null);
+      }
 
       const sysConfig = getScoringConfig(divRes.data);
       const cfg = sysConfig.building;
@@ -424,6 +441,51 @@ export default function BuildingSheetPage() {
       )}
 
       <div className="print:hidden max-w-6xl mx-auto px-6 py-8 flex flex-col gap-10">
+
+        {/* ── Construction table banner ────────────────────────────────── */}
+        {(() => {
+          const groups = athleteCount && division
+            ? getConstructionGroups(athleteCount, division.category)
+            : null;
+          return (
+            <div className={`rounded-xl border px-5 py-4 flex items-center justify-between gap-4 ${
+              groups ? 'border-zinc-200 bg-white' : 'border-dashed border-zinc-300 bg-zinc-50'
+            }`}>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">
+                  Tabla de contenido en construcción
+                </p>
+                {groups ? (
+                  <p className="text-xs text-zinc-500">
+                    Basado en <span className="font-semibold text-zinc-800">{athleteCount} atletas</span> confirmados en backstage
+                  </p>
+                ) : (
+                  <p className="text-xs text-zinc-400">
+                    Sin conteo de atletas — ingresa el número en la página de <span className="font-medium">Backstage</span>
+                  </p>
+                )}
+              </div>
+              {groups ? (
+                <div className="flex items-center gap-6 shrink-0">
+                  <div className="text-center">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Elevaciones</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.stunts}</p>
+                  </div>
+                  <div className="text-center border-x border-zinc-200 px-6">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Pirámides</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.pyramids}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Lanzamientos</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.tosses}</p>
+                  </div>
+                </div>
+              ) : (
+                <span className="text-xs text-zinc-300 italic shrink-0">—</span>
+              )}
+            </div>
+          );
+        })()}
 
         {/* ── STUNTS ──────────────────────────────────────────────────── */}
         <section className="flex flex-col gap-3">
@@ -909,48 +971,72 @@ export default function BuildingSheetPage() {
               {bCfg.hasStunts && bCfg.stuntsHasDiff && (
                 <tr>
                   <td className="px-4 py-2.5 text-zinc-600">Stunts — Dificultad (Rango)</td>
-                  <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(stuntsRango)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                    <span className="font-semibold">{fmt(stuntsRango)}</span>
+                    <span className="text-zinc-400 font-normal"> / {fmt(maxStuntsRango)}</span>
+                  </td>
                 </tr>
               )}
               {bCfg.hasStunts && (
                 <tr>
                   <td className="px-4 py-2.5 text-zinc-600">Stunts — Ejecución</td>
-                  <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(stuntsExecTotal)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                    <span className="font-semibold">{fmt(stuntsExecTotal)}</span>
+                    <span className="text-zinc-400 font-normal"> / {fmt(bCfg.stuntsExecMax)}</span>
+                  </td>
                 </tr>
               )}
               {bCfg.hasStunts && bCfg.stuntsHasDiff && (
                 <tr>
                   <td className="px-4 py-2.5 text-zinc-600">Stunts — Drivers (Grado+PM)</td>
-                  <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(stuntsDriversTotal)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                    <span className="font-semibold">{fmt(stuntsDriversTotal)}</span>
+                    <span className="text-zinc-400 font-normal"> / {fmt(maxStuntsDrivers)}</span>
+                  </td>
                 </tr>
               )}
               {bCfg.hasPyramids && bCfg.pyramidsHasDiff && (
                 <tr>
                   <td className="px-4 py-2.5 text-zinc-600">Pirámides — Dificultad</td>
-                  <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(pyramidsDiff)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                    <span className="font-semibold">{fmt(pyramidsDiff)}</span>
+                    <span className="text-zinc-400 font-normal"> / {fmt(maxPyramidsDiff)}</span>
+                  </td>
                 </tr>
               )}
               {bCfg.hasPyramids && (
                 <tr>
                   <td className="px-4 py-2.5 text-zinc-600">Pirámides — Ejecución</td>
-                  <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(pyramidsExecTotal)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                    <span className="font-semibold">{fmt(pyramidsExecTotal)}</span>
+                    <span className="text-zinc-400 font-normal"> / {fmt(bCfg.pyramidsExecMax)}</span>
+                  </td>
                 </tr>
               )}
               {bCfg.hasPyramids && bCfg.pyramidDriversOpts.length > 0 && (
                 <tr>
                   <td className="px-4 py-2.5 text-zinc-600">Pirámides — Drivers</td>
-                  <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(pyramidsDrivers)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                    <span className="font-semibold">{fmt(pyramidsDrivers)}</span>
+                    <span className="text-zinc-400 font-normal"> / {fmt(maxPyramidsDrivers)}</span>
+                  </td>
                 </tr>
               )}
               {bCfg.hasTosses && (
                 <>
                   <tr>
                     <td className="px-4 py-2.5 text-zinc-600">Lanzamientos — Dificultad</td>
-                    <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(tossesDiff)}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                      <span className="font-semibold">{fmt(tossesDiff)}</span>
+                      <span className="text-zinc-400 font-normal"> / {fmt(maxTossesDiff)}</span>
+                    </td>
                   </tr>
                   <tr>
                     <td className="px-4 py-2.5 text-zinc-600">Lanzamientos — Ejecución</td>
-                    <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(tossesExecTotal)}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                      <span className="font-semibold">{fmt(tossesExecTotal)}</span>
+                      <span className="text-zinc-400 font-normal"> / {fmt(bCfg.tossesExecMax)}</span>
+                    </td>
                   </tr>
                 </>
               )}
@@ -961,14 +1047,20 @@ export default function BuildingSheetPage() {
               {bCfg.hasCreativity && (
                 <tr>
                   <td className="px-4 py-2.5 text-zinc-600">Creatividad (este juez)</td>
-                  <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(creativityBuilding)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                    <span className="font-semibold">{fmt(creativityBuilding)}</span>
+                    <span className="text-zinc-400 font-normal"> / 2.00</span>
+                  </td>
                 </tr>
               )}
               <tr>
                 <td className="px-4 py-2.5 text-zinc-600">
                   {bCfg.hasCreativity ? 'Showmanship (este juez)' : 'Cheer / Animación (este juez)'}
                 </td>
-                <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(showmanshipBuilding)}</td>
+                <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                  <span className="font-semibold">{fmt(showmanshipBuilding)}</span>
+                  <span className="text-zinc-400 font-normal"> / {fmt(bCfg.showmanshipMax)}</span>
+                </td>
               </tr>
               <tr style={{ backgroundColor: 'var(--brand-primary)' }}>
                 <td className="px-4 py-2.5 font-bold" style={{ color: 'var(--brand-primary-text)' }}>TOTAL</td>

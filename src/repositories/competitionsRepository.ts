@@ -1,5 +1,43 @@
 import api from '@/services/api';
 
+export interface PublicResultDeduction {
+  type: string;
+  count: number;
+  total: string;
+  routine_time: string;
+  hit_zero: boolean;
+  notes: string;
+}
+
+export interface PublicResult {
+  registration_id: number;
+  performance_order: number | null;
+  team_name: string;
+  gym_name: string;
+  division_name: string;
+  competition_name: string;
+  competition_date: string;
+  age_group: string;
+  skill_level: string;
+  category: string;
+  scoring_system: string | null;
+  organization: { name: string; logo: string | null; primary_color: string; text_on_primary: string } | null;
+  has_score: boolean;
+  building_total?: string;
+  tumbling_total?: string;
+  overall_total?: string;
+  partner_stunt_total?: string;
+  avg_creativity?: string;
+  avg_showmanship?: string;
+  raw_score?: string;
+  max_raw?: string;
+  total_deductions?: string;
+  final_score?: string;
+  percentage?: string;
+  deductions?: PublicResultDeduction[];
+  score_updated_at?: string;
+}
+
 export interface RestConflict {
   athlete_id: number;
   athlete_name: string;
@@ -171,6 +209,14 @@ class CompetitionsRepository {
     api.get<RestConflict[]>(`/competitions/${competitionId}/schedule-conflicts/`, {
       params: { min_gap: minGap },
     });
+
+  // Auto-assign performance orders by category/level
+  autoAssignOrders = (competitionId: number) =>
+    api.post<{ assigned: number; message: string }>(`/competitions/${competitionId}/auto-assign-orders/`);
+
+  // Public result (no auth) — for coach protest review link
+  getPublicResult = (registrationId: number) =>
+    api.get<PublicResult>(`/registrations/${registrationId}/public-result/`, { withCredentials: false });
 
   // Inscripción import
   importInscripcion = (competitionId: number, formData: FormData) =>

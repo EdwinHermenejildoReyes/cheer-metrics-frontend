@@ -556,13 +556,16 @@ export default function OverallSheetPage() {
           <table className="w-full">
             <tbody className="divide-y divide-zinc-100">
               {[
-                { label: 'Formaciones y Transiciones', value: formationsScore },
-                { label: 'Dificultad de Baile',        value: danceDifficulty },
-                { label: 'Ejecución de Baile',         value: danceExecution },
-              ].map(({ label, value }) => (
+                { label: 'Formaciones y Transiciones', value: formationsScore, max: 2.0 },
+                { label: 'Dificultad de Baile',        value: danceDifficulty, max: Math.max(...danceDiffLevels.map(l => l.value)) },
+                { label: 'Ejecución de Baile',         value: danceExecution,  max: Math.max(...danceExecLevels.map(l => l.value)) },
+              ].map(({ label, value, max }) => (
                 <tr key={label}>
                   <td className="px-4 py-2.5 text-zinc-600">{label}</td>
-                  <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(value)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                    <span className="font-semibold">{fmt(value)}</span>
+                    <span className="text-zinc-400 font-normal"> / {fmt(max)}</span>
+                  </td>
                 </tr>
               ))}
               <tr className="bg-zinc-50">
@@ -572,14 +575,20 @@ export default function OverallSheetPage() {
               {!isEscolarAB && (
                 <tr>
                   <td className="px-4 py-2.5 text-zinc-600">Creatividad (este juez)</td>
-                  <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(creativityOverall)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                    <span className="font-semibold">{fmt(creativityOverall)}</span>
+                    <span className="text-zinc-400 font-normal"> / 2.00</span>
+                  </td>
                 </tr>
               )}
               <tr>
                 <td className="px-4 py-2.5 text-zinc-600">
                   {isEscolarAB ? 'Cheer / Animación (este juez)' : 'Showmanship (este juez)'}
                 </td>
-                <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(showmanshipOverall)}</td>
+                <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                  <span className="font-semibold">{fmt(showmanshipOverall)}</span>
+                  <span className="text-zinc-400 font-normal"> / {fmt(showmanshipMax)}</span>
+                </td>
               </tr>
               <tr style={{ backgroundColor: 'var(--brand-primary)' }}>
                 <td className="px-4 py-2.5 font-bold" style={{ color: 'var(--brand-primary-text)' }}>TOTAL</td>

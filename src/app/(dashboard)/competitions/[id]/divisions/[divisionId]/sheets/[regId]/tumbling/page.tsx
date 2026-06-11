@@ -282,6 +282,13 @@ export default function TumblingSheetPage() {
   ).toFixed(2));
   const sheetTotal          = parseFloat((tumblingSubtotal + creativityTumbling + showmanshipTumbling).toFixed(2));
 
+  // ── Max values from config (for summary table) ────────────────────────────
+  const maxStandingRango  = tCfg.standingRango.length > 0 ? Math.max(...tCfg.standingRango.map(r => r.value)) : 0;
+  const maxStandingHab    = tCfg.standingHabilidad.length > 0 ? Math.max(...tCfg.standingHabilidad.map(r => r.value)) : 0;
+  const maxRunningRango   = tCfg.runningRango.length > 0 ? Math.max(...tCfg.runningRango.map(r => r.value)) : 0;
+  const maxRunningHab     = tCfg.runningHabilidad.length > 0 ? Math.max(...tCfg.runningHabilidad.map(r => r.value)) : 0;
+  const maxJumpsDiff      = tCfg.jumpsDiffOpts.length > 0 ? Math.max(...tCfg.jumpsDiffOpts.map(o => o.value)) : 0;
+
   // ── Load ─────────────────────────────────────────────────────────────────
   const load = useCallback(async () => {
     try {
@@ -771,48 +778,72 @@ export default function TumblingSheetPage() {
                 <>
                   <tr>
                     <td className="px-4 py-2.5 text-zinc-600">Estática — Rango Base</td>
-                    <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(standingDiffEff)}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                      <span className="font-semibold">{fmt(standingDiffEff)}</span>
+                      <span className="text-zinc-400 font-normal"> / {fmt(maxStandingRango)}</span>
+                    </td>
                   </tr>
                   <tr>
                     <td className="px-4 py-2.5 text-zinc-600">Estática — Habilidad</td>
-                    <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(standingHabEff)}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                      <span className="font-semibold">{fmt(standingHabEff)}</span>
+                      <span className="text-zinc-400 font-normal"> / {fmt(maxStandingHab)}</span>
+                    </td>
                   </tr>
                 </>
               )}
               {tCfg.hasStanding && (
                 <tr>
                   <td className="px-4 py-2.5 text-zinc-600">Estática — Ejecución</td>
-                  <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(standingExecTotal)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                    <span className="font-semibold">{fmt(standingExecTotal)}</span>
+                    <span className="text-zinc-400 font-normal"> / {fmt(tCfg.standingExecMax)}</span>
+                  </td>
                 </tr>
               )}
               {tCfg.hasRunning && tCfg.runningHasDiff && (
                 <>
                   <tr>
                     <td className="px-4 py-2.5 text-zinc-600">Con Carrera — Rango Base</td>
-                    <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(runningDiffEff)}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                      <span className="font-semibold">{fmt(runningDiffEff)}</span>
+                      <span className="text-zinc-400 font-normal"> / {fmt(maxRunningRango)}</span>
+                    </td>
                   </tr>
                   <tr>
                     <td className="px-4 py-2.5 text-zinc-600">Con Carrera — Habilidad</td>
-                    <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(runningHabEff)}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                      <span className="font-semibold">{fmt(runningHabEff)}</span>
+                      <span className="text-zinc-400 font-normal"> / {fmt(maxRunningHab)}</span>
+                    </td>
                   </tr>
                 </>
               )}
               {tCfg.hasRunning && (
                 <tr>
                   <td className="px-4 py-2.5 text-zinc-600">Con Carrera — Ejecución</td>
-                  <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(runningExecTotal)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                    <span className="font-semibold">{fmt(runningExecTotal)}</span>
+                    <span className="text-zinc-400 font-normal"> / {fmt(tCfg.runningExecMax)}</span>
+                  </td>
                 </tr>
               )}
               {tCfg.hasJumps && tCfg.jumpsHasDiff && (
                 <tr>
                   <td className="px-4 py-2.5 text-zinc-600">Saltos — Dificultad</td>
-                  <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(jumpsDiffEff)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                    <span className="font-semibold">{fmt(jumpsDiffEff)}</span>
+                    <span className="text-zinc-400 font-normal"> / {fmt(maxJumpsDiff)}</span>
+                  </td>
                 </tr>
               )}
               {tCfg.hasJumps && (
                 <tr>
                   <td className="px-4 py-2.5 text-zinc-600">Saltos — Ejecución</td>
-                  <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(jumpsExecTotal)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                    <span className="font-semibold">{fmt(jumpsExecTotal)}</span>
+                    <span className="text-zinc-400 font-normal"> / {fmt(tCfg.jumpsExecMax)}</span>
+                  </td>
                 </tr>
               )}
               <tr className="bg-zinc-50">
@@ -822,14 +853,20 @@ export default function TumblingSheetPage() {
               {tCfg.hasCreativity && (
                 <tr>
                   <td className="px-4 py-2.5 text-zinc-600">Creatividad (este juez)</td>
-                  <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(creativityTumbling)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                    <span className="font-semibold">{fmt(creativityTumbling)}</span>
+                    <span className="text-zinc-400 font-normal"> / 2.00</span>
+                  </td>
                 </tr>
               )}
               <tr>
                 <td className="px-4 py-2.5 text-zinc-600">
                   {tCfg.hasCreativity ? 'Showmanship (este juez)' : 'Cheer / Animación (este juez)'}
                 </td>
-                <td className="px-4 py-2.5 text-right font-medium tabular-nums text-zinc-900">{fmt(showmanshipTumbling)}</td>
+                <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                  <span className="font-semibold">{fmt(showmanshipTumbling)}</span>
+                  <span className="text-zinc-400 font-normal"> / {fmt(tCfg.showmanshipMax)}</span>
+                </td>
               </tr>
               <tr style={{ backgroundColor: 'var(--brand-primary)' }}>
                 <td className="px-4 py-2.5 font-bold" style={{ color: 'var(--brand-primary-text)' }}>TOTAL</td>

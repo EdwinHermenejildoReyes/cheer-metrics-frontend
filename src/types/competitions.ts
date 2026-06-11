@@ -128,6 +128,7 @@ export interface Registration {
   gym_name: string;
   status: RegistrationStatus;
   performance_order: number | null;
+  athlete_count: number | null;
   is_enable: boolean;
 }
 

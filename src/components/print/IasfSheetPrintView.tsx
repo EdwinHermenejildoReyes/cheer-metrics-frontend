@@ -45,9 +45,9 @@ export interface IasfSheetPrintData {
 
 function SectionBar({ label, primary }: { label: string; primary: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', borderBottom: `1.5px solid ${primary}`, paddingBottom: '3px', marginBottom: '5px', marginTop: '10px' }}>
-      <div style={{ width: '3px', height: '11px', borderRadius: '2px', backgroundColor: primary, flexShrink: 0 }} />
-      <p style={{ fontWeight: 700, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.07em', color: '#52525b', margin: 0 }}>{label}</p>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', borderBottom: `1.5px solid ${primary}20`, paddingBottom: '6px', marginBottom: '8px', marginTop: '10px' }}>
+      <div style={{ width: '4px', height: '16px', borderRadius: '3px', backgroundColor: primary, flexShrink: 0 }} />
+      <p style={{ fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#3f3f46', margin: 0 }}>{label}</p>
     </div>
   );
 }
@@ -119,6 +119,7 @@ export function IasfSheetPrintView({ data }: { data: IasfSheetPrintData }) {
       className="hidden print:block"
       style={{ fontFamily: 'system-ui, sans-serif', fontSize: '10px', color: '#18181b', padding: '20px 24px', maxWidth: '800px', margin: '0 auto' }}
     >
+      <style>{`@media print { @page { size: A4 portrait; margin: 8mm; } }`}</style>
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '14px', borderBottom: '2px solid #e4e4e7', paddingBottom: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

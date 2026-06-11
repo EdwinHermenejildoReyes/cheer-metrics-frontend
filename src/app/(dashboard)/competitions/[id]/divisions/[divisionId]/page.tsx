@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, ClipboardList, Activity, Layers, Users, Target, Flag } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, ClipboardList, Activity, Layers, Users, Target, Flag, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -290,6 +290,19 @@ export default function DivisionDetailPage() {
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/deducciones`)}
                         >
                           <Flag className="h-3.5 w-3.5 text-red-500" />
+                        </Button>
+                      )}
+                      {sheet && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Copiar enlace básico para coach"
+                          onClick={() => {
+                            const url = `${window.location.origin}/results/${reg.id}`;
+                            navigator.clipboard.writeText(url).then(() => toast.success('Enlace copiado'));
+                          }}
+                        >
+                          <Link2 className="h-3.5 w-3.5 text-zinc-400" />
                         </Button>
                       )}
                       {!isJudge && (
