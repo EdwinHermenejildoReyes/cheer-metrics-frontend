@@ -23,6 +23,7 @@ export interface PublicResult {
   scoring_system: string | null;
   organization: { name: string; logo: string | null; primary_color: string; text_on_primary: string } | null;
   has_score: boolean;
+  // Aggregated totals
   building_total?: string;
   tumbling_total?: string;
   overall_total?: string;
@@ -36,6 +37,41 @@ export interface PublicResult {
   percentage?: string;
   deductions?: PublicResultDeduction[];
   score_updated_at?: string;
+  // Sheet A — Elevaciones
+  stunts_difficulty?: string | null;
+  stunts_execution?: string | null;
+  stunts_drivers?: string | null;
+  pyramids_difficulty?: string | null;
+  pyramids_execution?: string | null;
+  pyramids_drivers?: string | null;
+  tosses_difficulty?: string | null;
+  tosses_execution?: string | null;
+  // Sheet B — Gimnasia
+  standing_difficulty?: string | null;
+  standing_execution?: string | null;
+  standing_drivers?: string | null;
+  running_difficulty?: string | null;
+  running_execution?: string | null;
+  running_drivers?: string | null;
+  jumps_difficulty?: string | null;
+  jumps_execution?: string | null;
+  // Sheet C — General
+  formations_score?: string | null;
+  dance_difficulty?: string | null;
+  dance_execution?: string | null;
+  // Cross-sheet per judge
+  creativity_building?: string | null;
+  creativity_tumbling?: string | null;
+  creativity_overall?: string | null;
+  showmanship_building?: string | null;
+  showmanship_tumbling?: string | null;
+  showmanship_overall?: string | null;
+  // Partner Stunt
+  pg_technique?: string | null;
+  pg_difficulty?: string | null;
+  pg_form_appearance?: string | null;
+  pg_transitions?: string | null;
+  pg_expressiveness?: string | null;
 }
 
 export interface RestConflict {
