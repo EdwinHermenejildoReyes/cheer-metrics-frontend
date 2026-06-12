@@ -444,16 +444,14 @@ export default function BuildingSheetPage() {
 
         {/* ── Construction table banner ────────────────────────────────── */}
         {(() => {
-          const groups = athleteCount && division
-            ? getConstructionGroups(athleteCount, division.category)
-            : null;
+          const groups = athleteCount ? getConstructionGroups(athleteCount) : null;
           return (
             <div className={`rounded-xl border px-5 py-4 flex items-center justify-between gap-4 ${
               groups ? 'border-zinc-200 bg-white' : 'border-dashed border-zinc-300 bg-zinc-50'
             }`}>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">
-                  Tabla de contenido en construcción
+                  Tabla de cantidad en construcción
                 </p>
                 {groups ? (
                   <p className="text-xs text-zinc-500">
@@ -461,23 +459,25 @@ export default function BuildingSheetPage() {
                   </p>
                 ) : (
                   <p className="text-xs text-zinc-400">
-                    Sin conteo de atletas — ingresa el número en la página de <span className="font-medium">Backstage</span>
+                    {athleteCount
+                      ? `${athleteCount} atletas — fuera del rango de tabla (10–30)`
+                      : 'Sin conteo de atletas — ingresa el número en la página de Backstage'}
                   </p>
                 )}
               </div>
               {groups ? (
                 <div className="flex items-center gap-6 shrink-0">
                   <div className="text-center">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Elevaciones</p>
-                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.stunts}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Mayoría</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.mayoria}</p>
                   </div>
                   <div className="text-center border-x border-zinc-200 px-6">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Pirámides</p>
-                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.pyramids}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Gran Parte</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.gran_parte}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Lanzamientos</p>
-                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.tosses}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Máx</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.max}</p>
                   </div>
                 </div>
               ) : (

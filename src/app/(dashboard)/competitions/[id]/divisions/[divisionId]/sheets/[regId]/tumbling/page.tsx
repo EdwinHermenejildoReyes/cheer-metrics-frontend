@@ -15,7 +15,7 @@ import { useJudge } from '@/hooks/useJudge';
 import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
 import type { TumblingConfig } from '@/lib/scoringConfig';
-import type { Division, ScoreSheet } from '@/types/competitions';
+import type { ScoreSheet } from '@/types/competitions';
 import type { TumblingPrintData } from '@/components/print/TumblingSheetPrintView';
 
 // ── Execution categories (same for all scoring systems) ──────────────────────
@@ -239,7 +239,6 @@ export default function TumblingSheetPage() {
   const [saving,        setSaving]        = useState(false);
   const [tCfg,          setTCfg]          = useState<TumblingConfig>(DEFAULT_TUMBLING_CONFIG);
   const [athleteCount,  setAthleteCount]  = useState<number | null>(null);
-  const [division,      setDivision]      = useState<Division | null>(null);
 
   // ── Standing difficulty ───────────────────────────────────────────────────
   const [standingRango,    setStandingRango]    = useState<number>(0);
@@ -307,7 +306,6 @@ export default function TumblingSheetPage() {
         setAthleteCount(reg.athlete_count ?? null);
       }
 
-      setDivision(divRes.data);
       const sysConfig = getScoringConfig(divRes.data);
       const tcfg = sysConfig.tumbling;
       setTCfg(tcfg);
@@ -494,16 +492,14 @@ export default function TumblingSheetPage() {
 
         {/* ── Gym construction table banner ────────────────────────────── */}
         {(() => {
-          const groups = athleteCount && division
-            ? getGymGroups(athleteCount, division.category)
-            : null;
+          const groups = athleteCount ? getGymGroups(athleteCount) : null;
           return (
             <div className={`rounded-xl border px-5 py-4 flex items-center justify-between gap-4 ${
               groups ? 'border-zinc-200 bg-white' : 'border-dashed border-zinc-300 bg-zinc-50'
             }`}>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">
-                  Tabla de contenido en gimnasia
+                  Tabla de cantidad en gimnasia/saltos
                 </p>
                 {groups ? (
                   <p className="text-xs text-zinc-500">
@@ -511,20 +507,22 @@ export default function TumblingSheetPage() {
                   </p>
                 ) : (
                   <p className="text-xs text-zinc-400">
-                    Sin conteo de atletas — ingresa el número en la página de <span className="font-medium">Backstage</span>
+                    {athleteCount
+                      ? `${athleteCount} atletas — fuera del rango de tabla (10–30)`
+                      : 'Sin conteo de atletas — ingresa el número en la página de Backstage'}
                   </p>
                 )}
               </div>
               {groups ? (
                 <div className="flex items-center gap-6 shrink-0">
                   <div className="text-center">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Estática</p>
-                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.standing}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Mayoría</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.mayoria}</p>
                     <p className="text-[9px] text-zinc-400">atletas</p>
                   </div>
                   <div className="text-center border-l border-zinc-200 pl-6">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Con Carrera</p>
-                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.running}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Gran Parte</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.gran_parte}</p>
                     <p className="text-[9px] text-zinc-400">atletas</p>
                   </div>
                 </div>
