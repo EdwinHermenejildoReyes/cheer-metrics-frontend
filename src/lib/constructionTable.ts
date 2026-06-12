@@ -1,16 +1,17 @@
 import type { DivisionCategory } from '@/types/competitions';
 
+// ── Building (Construcción) ───────────────────────────────────────────────────
+
 export interface ConstructionGroups {
   stunts:   number;
   pyramids: number;
   tosses:   number;
 }
 
-// Lookup tables from the UCA Ecuador 2025 scoring system sheets.
 // Each row: [minAthletes, stunts, pyramids, tosses]
-// Values match the "TABLA DE CONTENIDO EN CONSTRUCCIÓN" sheets.
+// Source: UCA Ecuador 2025 "TABLA DE CONTENIDO EN CONSTRUCCIÓN" sheets.
 
-const ALL_GIRL_TABLE: [number, number, number, number][] = [
+const ALL_GIRL_BUILDING: [number, number, number, number][] = [
   [5,  1, 1, 1],
   [10, 2, 1, 2],
   [15, 3, 2, 3],
@@ -18,7 +19,7 @@ const ALL_GIRL_TABLE: [number, number, number, number][] = [
   [25, 5, 3, 5],
 ];
 
-const COED_TABLE: [number, number, number, number][] = [
+const COED_BUILDING: [number, number, number, number][] = [
   [4,  1, 1, 1],
   [8,  2, 1, 2],
   [12, 3, 2, 3],
@@ -26,7 +27,7 @@ const COED_TABLE: [number, number, number, number][] = [
   [20, 5, 3, 5],
 ];
 
-function lookup(table: [number, number, number, number][], count: number): ConstructionGroups {
+function lookupBuilding(table: [number, number, number, number][], count: number): ConstructionGroups {
   let row = table[0];
   for (const r of table) {
     if (count >= r[0]) row = r;
@@ -39,12 +40,49 @@ export function getConstructionGroups(
   category: DivisionCategory,
 ): ConstructionGroups {
   if (athleteCount < 1) return { stunts: 0, pyramids: 0, tosses: 0 };
-  const table = category === 'coed' ? COED_TABLE : ALL_GIRL_TABLE;
-  return lookup(table, athleteCount);
+  const table = category === 'coed' ? COED_BUILDING : ALL_GIRL_BUILDING;
+  return lookupBuilding(table, athleteCount);
 }
 
-export const CONSTRUCTION_TABLE_LABELS = {
-  stunts:   'Grupos de Elevación',
-  pyramids: 'Pirámides',
-  tosses:   'Lanzamientos',
-} as const;
+// ── Gymnastics (Gimnasia) ─────────────────────────────────────────────────────
+
+export interface GymGroups {
+  standing: number;  // atletas evaluados en Estática
+  running:  number;  // atletas evaluados con Carrera
+}
+
+// Each row: [minAthletes, standing, running]
+// Source: UCA Ecuador 2025 "TABLA DE CONTENIDO EN GIMNASIA" sheets.
+
+const ALL_GIRL_GYM: [number, number, number][] = [
+  [5,  2, 2],
+  [10, 3, 3],
+  [15, 4, 4],
+  [20, 5, 5],
+  [25, 6, 6],
+];
+
+const COED_GYM: [number, number, number][] = [
+  [4,  2, 2],
+  [8,  3, 3],
+  [12, 4, 4],
+  [16, 5, 5],
+  [20, 6, 6],
+];
+
+function lookupGym(table: [number, number, number][], count: number): GymGroups {
+  let row = table[0];
+  for (const r of table) {
+    if (count >= r[0]) row = r;
+  }
+  return { standing: row[1], running: row[2] };
+}
+
+export function getGymGroups(
+  athleteCount: number,
+  category: DivisionCategory,
+): GymGroups {
+  if (athleteCount < 1) return { standing: 0, running: 0 };
+  const table = category === 'coed' ? COED_GYM : ALL_GIRL_GYM;
+  return lookupGym(table, athleteCount);
+}
