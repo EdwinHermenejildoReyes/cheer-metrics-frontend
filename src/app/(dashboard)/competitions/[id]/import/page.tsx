@@ -212,7 +212,7 @@ export default function ImportInscripcionPage() {
 
   const handleImport = async () => {
     if (!csvFile) {
-      toast.error('Selecciona el archivo CSV primero.');
+      toast.error('Selecciona el archivo de inscripción primero.');
       return;
     }
 
@@ -265,13 +265,13 @@ export default function ImportInscripcionPage() {
         <div>
           <p className="text-sm font-medium text-zinc-900">Plantilla de inscripción</p>
           <p className="text-xs text-zinc-500 mt-0.5">
-            Envía este archivo a los gimnasios para que completen la información de sus atletas.
+            Archivo Excel con listas desplegables para evitar errores de tipeo. Envíalo a los gimnasios.
           </p>
         </div>
-        <a href="/plantilla_inscripcion.csv" download>
+        <a href="/plantilla_inscripcion2026.xlsx" download>
           <Button variant="secondary" size="sm">
             <Download className="h-3.5 w-3.5" />
-            Descargar plantilla
+            Descargar plantilla (.xlsx)
           </Button>
         </a>
       </div>
@@ -280,15 +280,15 @@ export default function ImportInscripcionPage() {
       <div className="flex flex-col gap-4">
         <div>
           <p className="mb-2 text-sm font-medium text-zinc-700">
-            Planilla CSV <span className="text-red-500">*</span>
+            Planilla de inscripción <span className="text-red-500">*</span>
           </p>
           <DropZone
-            label="Archivo CSV de inscripción"
-            accept=".csv"
+            label="Archivo de inscripción (.xlsx o .csv)"
+            accept=".xlsx,.csv"
             file={csvFile}
             onChange={setCsvFile}
             icon={<FileText className="h-8 w-8" />}
-            hint="Formato: plantilla_inscripcion.csv"
+            hint="Formato: plantilla_inscripcion2026.xlsx"
           />
         </div>
 
@@ -312,10 +312,11 @@ export default function ImportInscripcionPage() {
       <div className="rounded-xl border border-zinc-200 bg-white px-5 py-4 text-sm text-zinc-600">
         <p className="font-medium text-zinc-800 mb-2">Antes de importar, verifica que:</p>
         <ul className="list-disc list-inside space-y-1 text-xs text-zinc-500">
-          <li>Las <strong>divisiones</strong> que aparecen en el CSV ya existen en esta competencia.</li>
-          <li>El campo <strong>nivel</strong> usa valores exactos: L1–L7, Prep, Escolar, Novice, NovicePlus, Elite.</li>
-          <li>El campo <strong>categoria</strong> usa: all_girl, coed, all_male, non_tumbling.</li>
-          <li>El campo <strong>grupo_etario</strong> usa: tiny, mini, youth, junior, senior, open.</li>
+          <li>Usa la plantilla <strong>.xlsx</strong> — tiene listas desplegables que evitan errores de tipeo.</li>
+          <li>El campo <strong>nivel</strong> acepta: L1–L7, prep, escolar, novice, novice_plus, elite, icc, star.</li>
+          <li>El campo <strong>categoria</strong> acepta: all_girl, coed, all_male, non_tumbling.</li>
+          <li>El campo <strong>grupo_etario</strong> acepta: tiny, mini, youth, junior, senior, open.</li>
+          <li>El campo <strong>genero</strong> acepta: F o M.</li>
           <li>Los atletas ya existentes se actualizarán por cédula; no se crearán duplicados.</li>
         </ul>
       </div>
