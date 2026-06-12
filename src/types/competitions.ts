@@ -25,7 +25,7 @@ export interface JudgeAssignment {
   is_access_active: boolean;
 }
 
-export type Regulation = 'UCA' | 'IASF' | 'ICU';
+export type Regulation = 'IASF' | 'ICU' | 'AMBAS';
 export type AgeGroup = 'tiny' | 'mini' | 'youth' | 'junior' | 'senior' | 'open';
 export type SkillLevel =
   | 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'L6' | 'L7'
@@ -245,7 +245,7 @@ export interface PaginatedResponse<T> {
 // ── Display labels ─────────────────────────────────────────────────────────────
 
 export const REGULATION_LABELS: Record<Regulation, string> = {
-  UCA: 'UCA', IASF: 'IASF', ICU: 'ICU',
+  IASF: 'IASF', ICU: 'ICU', AMBAS: 'AMBAS',
 };
 
 export const AGE_GROUP_LABELS: Record<AgeGroup, string> = {

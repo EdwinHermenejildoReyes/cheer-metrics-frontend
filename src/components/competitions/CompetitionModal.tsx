@@ -18,7 +18,7 @@ const schema = z.object({
   date: z.string().min(1, 'Requerido'),
   venue: z.string().min(2, 'Requerido'),
   city: z.string().min(2, 'Requerido'),
-  regulation: z.enum(['UCA', 'IASF', 'ICU']),
+  regulation: z.enum(['IASF', 'ICU', 'AMBAS']),
   notes: z.string().optional(),
   organization: z.string().optional(),
 });
@@ -33,9 +33,9 @@ interface Props {
 }
 
 const REGULATION_OPTIONS = [
-  { value: 'UCA', label: 'UCA' },
   { value: 'IASF', label: 'IASF' },
   { value: 'ICU', label: 'ICU' },
+  { value: 'AMBAS', label: 'AMBAS' },
 ];
 
 export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
@@ -46,7 +46,7 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
     resolver: zodResolver(schema),
     defaultValues: initial
       ? { ...initial, organization: initial.organization ? String(initial.organization) : '' }
-      : { regulation: 'UCA' },
+      : { regulation: 'IASF' },
   });
 
   useEffect(() => {
@@ -60,7 +60,7 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
       reset(
         initial
           ? { ...initial, organization: initial.organization ? String(initial.organization) : '' }
-          : { regulation: 'UCA', name: '', date: '', venue: '', city: '', notes: '', organization: '' },
+          : { regulation: 'IASF', name: '', date: '', venue: '', city: '', notes: '', organization: '' },
       );
     }
   }, [open, initial, reset]);
