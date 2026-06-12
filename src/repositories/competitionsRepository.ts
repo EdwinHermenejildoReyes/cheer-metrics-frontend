@@ -72,6 +72,8 @@ export interface PublicResult {
   pg_form_appearance?: string | null;
   pg_transitions?: string | null;
   pg_expressiveness?: string | null;
+  // Comentarios del juez (JSON serializado con claves por sección)
+  notes?: string | null;
 }
 
 export interface RestConflict {

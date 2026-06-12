@@ -108,6 +108,18 @@ function SheetCard({
   );
 }
 
+function NoteBlock({ label, text }: { label: string; text: string | null | undefined }) {
+  if (!text || text.trim() === '') return null;
+  return (
+    <tr>
+      <td colSpan={2} className="px-2 py-3 bg-zinc-50/80">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">{label}</p>
+        <p className="text-sm text-zinc-600 leading-relaxed whitespace-pre-line">{text}</p>
+      </td>
+    </tr>
+  );
+}
+
 function CrossRow({ label, value }: { label: string; value: string | null | undefined }) {
   if (!value || parseFloat(value) === 0) return null;
   return (
@@ -180,6 +192,17 @@ export default function PublicResultPage() {
   const hasScore      = data.has_score;
   const totalDed      = n(data.total_deductions);
   const hasDeductions = totalDed > 0;
+
+  // Parse notes JSON — may contain keys: stunts/pyramids/tosses (building),
+  // standing/running/jumps (tumbling), formations/dance (overall), or be plain text (partner stunt)
+  let parsedNotes: Record<string, string> = {};
+  if (data.notes) {
+    try {
+      parsedNotes = JSON.parse(data.notes);
+    } catch {
+      parsedNotes = { _plain: data.notes };
+    }
+  }
 
   const hasBuilding    = hasAny(data.stunts_difficulty, data.stunts_execution, data.stunts_drivers,
                                 data.pyramids_difficulty, data.pyramids_execution, data.tosses_difficulty);
@@ -303,6 +326,9 @@ export default function PublicResultPage() {
                 <CrossRow label="Showmanship / Animación (Juez Building)" value={data.showmanship_building} />
                 <SectionTotal label="Total Elevaciones" value={fmtAlways(data.building_total)}
                   primary={primary} primaryText={primaryText} />
+                <NoteBlock label="Comentarios — Elevaciones" text={parsedNotes.stunts} />
+                <NoteBlock label="Comentarios — Pirámides" text={parsedNotes.pyramids} />
+                <NoteBlock label="Comentarios — Lanzamientos" text={parsedNotes.tosses} />
               </SheetCard>
             )}
 
@@ -337,6 +363,9 @@ export default function PublicResultPage() {
                 <CrossRow label="Showmanship / Animación (Juez Tumbling)" value={data.showmanship_tumbling} />
                 <SectionTotal label="Total Gimnasia" value={fmtAlways(data.tumbling_total)}
                   primary={primary} primaryText={primaryText} />
+                <NoteBlock label="Comentarios — Estática" text={parsedNotes.standing} />
+                <NoteBlock label="Comentarios — Con Carrera" text={parsedNotes.running} />
+                <NoteBlock label="Comentarios — Saltos" text={parsedNotes.jumps} />
               </SheetCard>
             )}
 
@@ -356,6 +385,8 @@ export default function PublicResultPage() {
                 <CrossRow label="Showmanship / Animación (Juez Overall)" value={data.showmanship_overall} />
                 <SectionTotal label="Total General" value={fmtAlways(data.overall_total)}
                   primary={primary} primaryText={primaryText} />
+                <NoteBlock label="Comentarios — Formaciones" text={parsedNotes.formations} />
+                <NoteBlock label="Comentarios — Baile" text={parsedNotes.dance} />
               </SheetCard>
             )}
 
@@ -369,6 +400,7 @@ export default function PublicResultPage() {
                 {n(data.pg_expressiveness) !== 0 && <Row label="Expresividad" value={fmt(data.pg_expressiveness)} />}
                 <SectionTotal label="Total Partner Stunt" value={fmtAlways(data.partner_stunt_total)}
                   primary={primary} primaryText={primaryText} />
+                <NoteBlock label="Comentarios del juez" text={parsedNotes._plain ?? (data.notes && !data.notes.startsWith('{') ? data.notes : null)} />
               </SheetCard>
             )}
 
