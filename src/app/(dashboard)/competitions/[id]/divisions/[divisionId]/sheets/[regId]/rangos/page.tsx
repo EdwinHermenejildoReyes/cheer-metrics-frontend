@@ -43,8 +43,8 @@ export default function RangosSheetPage() {
 
   // ── Stunts difficulty ─────────────────────────────────────────────────────
   const [stuntsRango,   setStuntsRango]   = useState<number>(0);
-  const [stuntsSkills,  setStuntsSkills]  = useState<number[]>([0, 0, 0, 0, 0]);
-  const [stuntsPartMax, setStuntsPartMax] = useState<number>(0.0);
+  const [stuntsSkills,  setStuntsSkills]  = useState<(number | null)[]>([null, null, null, null, null]);
+  const [stuntsPartMax, setStuntsPartMax] = useState<number | null>(null);
 
   // ── Pyramids difficulty ───────────────────────────────────────────────────
   const [pyramidsRangeIdx, setPyramidsRangeIdx] = useState<number | null>(null);
@@ -69,8 +69,8 @@ export default function RangosSheetPage() {
   const [gimnasiaNotes,       setGimnasiaNotes]       = useState('');
 
   // ── Computed ──────────────────────────────────────────────────────────────
-  const stuntsSkillsTotal  = parseFloat(stuntsSkills.reduce((s, v) => s + v, 0).toFixed(2));
-  const stuntsDriversTotal = parseFloat((stuntsSkillsTotal + stuntsPartMax).toFixed(2));
+  const stuntsSkillsTotal  = parseFloat(stuntsSkills.reduce<number>((s, v) => s + (v ?? 0), 0).toFixed(2));
+  const stuntsDriversTotal = parseFloat((stuntsSkillsTotal + (stuntsPartMax ?? 0)).toFixed(2));
   const pyramidsDiff = pyramidsRangeIdx !== null
     ? parseFloat((bCfg.pyramidRango[pyramidsRangeIdx].low + pyramidsFine).toFixed(2))
     : 0.0;
@@ -187,9 +187,9 @@ export default function RangosSheetPage() {
               const s = p._scores;
               if (s.stuntsRango !== undefined && bcfg.stuntsRango.some(r => r.value === s.stuntsRango)) setStuntsRango(s.stuntsRango);
               if (Array.isArray(s.stuntsSkills)) {
-                setStuntsSkills([0, 0, 0, 0, 0].map((_, i) => s.stuntsSkills[i] ?? 0));
+                setStuntsSkills(Array(5).fill(null).map((_, i) => s.stuntsSkills[i] ?? null));
               }
-              if (s.stuntsPartMax !== undefined && bcfg.stuntsPartMaxOpts.some(o => o.value === s.stuntsPartMax)) setStuntsPartMax(s.stuntsPartMax);
+              if (s.stuntsPartMax !== undefined && s.stuntsPartMax !== null && bcfg.stuntsPartMaxOpts.some(o => o.value === s.stuntsPartMax)) setStuntsPartMax(s.stuntsPartMax);
             }
             setConstruccionesNotes(p.construcciones ?? '');
             setGimnasiaNotes(p.gimnasia ?? '');
@@ -344,11 +344,11 @@ export default function RangosSheetPage() {
                                     setStuntsSkills(next);
                                   }}
                                   className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors border ${
-                                    stuntsSkills[i] === value
+                                    stuntsSkills[i] !== null && stuntsSkills[i] === value
                                       ? 'border-transparent'
                                       : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-600'
                                   }`}
-                                  style={stuntsSkills[i] === value ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
+                                  style={stuntsSkills[i] !== null && stuntsSkills[i] === value ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
                                 >
                                   {label}
                                   {value > 0 && <span className="ml-1 opacity-70">+{value.toFixed(2)}</span>}
@@ -382,14 +382,14 @@ export default function RangosSheetPage() {
                               type="button"
                               onClick={() => setStuntsPartMax(value)}
                               className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
-                                stuntsPartMax === value
+                                stuntsPartMax !== null && stuntsPartMax === value
                                   ? 'border-transparent'
                                   : 'bg-white text-zinc-700 border-zinc-300 hover:border-violet-400 hover:text-violet-700'
                               }`}
-                              style={stuntsPartMax === value ? { backgroundColor: 'var(--brand-accent)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-accent)' } : undefined}
+                              style={stuntsPartMax !== null && stuntsPartMax === value ? { backgroundColor: 'var(--brand-accent)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-accent)' } : undefined}
                             >
                               <span className="flex-1">{label}</span>
-                              <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${stuntsPartMax === value ? 'text-white/80' : 'text-zinc-400'}`}>
+                              <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${stuntsPartMax !== null && stuntsPartMax === value ? 'text-white/80' : 'text-zinc-400'}`}>
                                 {value.toFixed(1)}
                               </span>
                             </button>

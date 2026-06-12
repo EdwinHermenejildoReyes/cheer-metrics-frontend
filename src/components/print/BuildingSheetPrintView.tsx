@@ -18,14 +18,14 @@ function SectionBar({ label, primary }: { label: string; primary: string }) {
 
 function RadioOpts({ opts, selected, primary, primaryText }: {
   opts: { value: number; label: string }[];
-  selected: number;
+  selected: number | null;
   primary: string;
   primaryText: string;
 }) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px' }}>
       {opts.map(o => {
-        const active = o.value === selected;
+        const active = selected !== null && o.value === selected;
         return (
           <div key={o.value} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '2px 7px', borderRadius: '4px', backgroundColor: active ? primary : '#f4f4f5', border: `1px solid ${active ? primary : '#e4e4e7'}`, opacity: active ? 1 : 0.55 }}>
             <span style={{ fontSize: '8.5px', color: active ? primaryText : '#52525b', maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.label}</span>
@@ -97,8 +97,8 @@ export interface BuildingPrintData {
   organization?: Organization | null;
   bCfg: BuildingConfig;
   stuntsRango: number;
-  stuntsSkills: number[];
-  stuntsPartMax: number;
+  stuntsSkills: (number | null)[];
+  stuntsPartMax: number | null;
   stuntsExecDeds: ExecDeds;
   stuntsNotes: string;
   pyramidsRangeIdx: number | null;
@@ -202,7 +202,7 @@ export function BuildingSheetPrintView(p: BuildingPrintData) {
                               <td style={{ padding: '2px 3px' }}>
                                 <div style={{ display: 'flex', gap: '3px' }}>
                                   {p.bCfg.stuntsSkillGrades.map(g => {
-                                    const sel = p.stuntsSkills[i] === g.value;
+                                    const sel = p.stuntsSkills[i] !== null && p.stuntsSkills[i] === g.value;
                                     return (
                                       <span key={g.value} style={{ padding: '1px 5px', borderRadius: '3px', backgroundColor: sel ? primary : '#f4f4f5', color: sel ? primaryText : '#71717a', fontWeight: sel ? 700 : 400, fontSize: '8px' }}>
                                         {g.label}
