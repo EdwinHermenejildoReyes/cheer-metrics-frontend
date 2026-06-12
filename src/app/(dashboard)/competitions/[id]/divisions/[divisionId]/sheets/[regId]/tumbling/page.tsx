@@ -15,7 +15,8 @@ import { useJudge } from '@/hooks/useJudge';
 import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
 import type { TumblingConfig } from '@/lib/scoringConfig';
-import type { ScoreSheet } from '@/types/competitions';
+import type { ScoreSheet, UnpaidAthlete } from '@/types/competitions';
+import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 import type { TumblingPrintData } from '@/components/print/TumblingSheetPrintView';
 
 // ── Execution categories (same for all scoring systems) ──────────────────────
@@ -233,12 +234,14 @@ export default function TumblingSheetPage() {
     }
   }, [isJudge, competitionId, isCompetitionActive, router]);
 
-  const [teamName,      setTeamName]      = useState<string>('');
-  const [existingSheet, setExistingSheet] = useState<ScoreSheet | null>(null);
-  const [loading,       setLoading]       = useState(true);
-  const [saving,        setSaving]        = useState(false);
-  const [tCfg,          setTCfg]          = useState<TumblingConfig>(DEFAULT_TUMBLING_CONFIG);
-  const [athleteCount,  setAthleteCount]  = useState<number | null>(null);
+  const [teamName,       setTeamName]       = useState<string>('');
+  const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
+  const [loading,        setLoading]        = useState(true);
+  const [saving,         setSaving]         = useState(false);
+  const [tCfg,           setTCfg]           = useState<TumblingConfig>(DEFAULT_TUMBLING_CONFIG);
+  const [athleteCount,   setAthleteCount]   = useState<number | null>(null);
+  const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
+  const [requirePayment, setRequirePayment] = useState(false);
 
   // ── Standing difficulty ───────────────────────────────────────────────────
   const [standingRango,    setStandingRango]    = useState<number>(0);
@@ -304,6 +307,8 @@ export default function TumblingSheetPage() {
       if (reg) {
         setTeamName(reg.team_name);
         setAthleteCount(reg.athlete_count ?? null);
+        setUnpaidAthletes(reg.unpaid_athletes);
+        setRequirePayment(reg.competition_require_payment);
       }
 
       const sysConfig = getScoringConfig(divRes.data);
@@ -446,12 +451,13 @@ export default function TumblingSheetPage() {
             <p className="text-2xl font-bold tabular-nums text-zinc-900">{fmt(sheetTotal)}</p>
           </div>
           <PrintButton />
-          <Button onClick={handleSave} loading={saving} className="print:hidden">
+          <Button onClick={handleSave} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
             <Save className="h-4 w-4" />
             Guardar
           </Button>
         </div>
       </div>
+      <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
 
       {!loading && (
         <TumblingSheetPrintView

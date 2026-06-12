@@ -17,7 +17,9 @@ import {
   type DeductionType,
   type Deduction,
   type ScoreSheet,
+  type UnpaidAthlete,
 } from '@/types/competitions';
+import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -118,9 +120,11 @@ export default function DeduccionesSheetPage() {
     }
   }, [isJudge, competitionId, isCompetitionActive, router]);
 
-  const [teamName,  setTeamName]  = useState('');
-  const [sheet,     setSheet]     = useState<ScoreSheet | null>(null);
-  const [loading,   setLoading]   = useState(true);
+  const [teamName,       setTeamName]       = useState('');
+  const [sheet,          setSheet]          = useState<ScoreSheet | null>(null);
+  const [loading,        setLoading]        = useState(true);
+  const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
+  const [requirePayment, setRequirePayment] = useState(false);
   const [deleting,  setDeleting]  = useState<number | null>(null);
   const [saving,    setSaving]    = useState(false);
 
@@ -137,7 +141,11 @@ export default function DeduccionesSheetPage() {
         competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' }),
       ]);
       const reg = regRes.data.results.find(r => r.id === registrationId);
-      if (reg) setTeamName(reg.team_name);
+      if (reg) {
+        setTeamName(reg.team_name);
+        setUnpaidAthletes(reg.unpaid_athletes);
+        setRequirePayment(reg.competition_require_payment);
+      }
       if (sheetRes.data.results.length > 0) {
         const s = sheetRes.data.results[0];
         setSheet(s);
@@ -252,6 +260,7 @@ export default function DeduccionesSheetPage() {
           </div>
         )}
       </div>
+      <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
 
       <div className="max-w-6xl mx-auto px-4 py-6 print:hidden">
 

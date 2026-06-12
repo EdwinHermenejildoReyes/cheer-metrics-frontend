@@ -12,7 +12,8 @@ import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
 import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
-import type { ScoreSheet, ScoringSystem } from '@/types/competitions';
+import type { ScoreSheet, ScoringSystem, UnpaidAthlete } from '@/types/competitions';
+import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 
 // ── Formations scale (2.0 → 1.0 in steps of −0.1) ───────────────────────────
 const FORMATIONS_VALUES = [2.0, 1.9, 1.8, 1.7, 1.6, 1.5, 1.4, 1.3, 1.2, 1.1, 1.0];
@@ -125,6 +126,8 @@ export default function OverallSheetPage() {
   const [scoringSystem,  setScoringSystem]  = useState<ScoringSystem | ''>('');
   const [loading,        setLoading]        = useState(true);
   const [saving,         setSaving]         = useState(false);
+  const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
+  const [requirePayment, setRequirePayment] = useState(false);
 
   // ── Form state ────────────────────────────────────────────────────────────
   const [formationsScore,    setFormationsScore]    = useState<number>(2.0);
@@ -158,7 +161,11 @@ export default function OverallSheetPage() {
       setScoringSystem((div.scoring_system || div.suggested_scoring_system) as ScoringSystem);
 
       const reg = regRes.data.results.find((r) => r.id === registrationId);
-      if (reg) setTeamName(reg.team_name);
+      if (reg) {
+        setTeamName(reg.team_name);
+        setUnpaidAthletes(reg.unpaid_athletes);
+        setRequirePayment(reg.competition_require_payment);
+      }
 
       if (sheetRes.data.results.length > 0) {
         const sheet = sheetRes.data.results[0];
@@ -263,12 +270,13 @@ export default function OverallSheetPage() {
             <p className="text-2xl font-bold tabular-nums text-zinc-900">{fmt(sheetTotal)}</p>
           </div>
           <PrintButton />
-          <Button onClick={handleSave} loading={saving} className="print:hidden">
+          <Button onClick={handleSave} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
             <Save className="h-4 w-4" />
             Guardar
           </Button>
         </div>
       </div>
+      <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
 
       {!loading && (
         <OverallSheetPrintView

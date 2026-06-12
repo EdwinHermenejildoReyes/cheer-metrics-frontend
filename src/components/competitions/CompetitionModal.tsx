@@ -21,6 +21,7 @@ const schema = z.object({
   regulation: z.enum(['IASF', 'ICU', 'AMBAS']),
   notes: z.string().optional(),
   organization: z.string().optional(),
+  require_payment: z.boolean().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -110,6 +111,12 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
           {...register('organization')}
         />
         <Textarea label="Notas" id="notes" placeholder="Información adicional..." {...register('notes')} />
+        <label className="flex items-center gap-3 cursor-pointer select-none">
+          <input type="checkbox" className="h-4 w-4 rounded" {...register('require_payment')} />
+          <span className="text-sm font-medium text-zinc-700">
+            Bloquear planilla si el atleta tiene pago pendiente
+          </span>
+        </label>
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="secondary" onClick={onClose}>Cancelar</Button>
           <Button type="submit" loading={isSubmitting}>{isEdit ? 'Guardar cambios' : 'Crear'}</Button>

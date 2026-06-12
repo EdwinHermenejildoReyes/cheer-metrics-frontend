@@ -86,6 +86,7 @@ export interface Competition {
   is_active: boolean;
   team_fee: string;
   multi_team_discount: string;
+  require_payment: boolean;
 }
 
 export interface Division {
@@ -121,6 +122,13 @@ export interface Team {
   is_enable: boolean;
 }
 
+export interface UnpaidAthlete {
+  athlete_id: number;
+  athlete_name: string;
+  payment_status: 'partial' | 'pending';
+  balance_due: string;
+}
+
 export interface Registration {
   id: number;
   division: number;
@@ -133,6 +141,8 @@ export interface Registration {
   performance_order: number | null;
   athlete_count: number | null;
   is_enable: boolean;
+  competition_require_payment: boolean;
+  unpaid_athletes: UnpaidAthlete[];
 }
 
 export interface Deduction {

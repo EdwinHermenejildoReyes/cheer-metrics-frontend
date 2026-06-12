@@ -15,7 +15,8 @@ import { useJudge } from '@/hooks/useJudge';
 import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
 import type { BuildingConfig } from '@/lib/scoringConfig';
-import type { Division, DivisionCategory, ScoreSheet } from '@/types/competitions';
+import type { Division, DivisionCategory, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
+import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 import type { BuildingPrintData } from '@/components/print/BuildingSheetPrintView';
 
 // ── Execution categories (same for all scoring systems) ──────────────────────
@@ -162,6 +163,8 @@ export default function BuildingSheetPage() {
   const [saving,        setSaving]        = useState(false);
   const [bCfg,          setBCfg]          = useState<BuildingConfig>(DEFAULT_BUILDING_CONFIG);
   const [athleteCount,  setAthleteCount]  = useState<number | null>(null);
+  const [unpaidAthletes,  setUnpaidAthletes]  = useState<UnpaidAthlete[]>([]);
+  const [requirePayment,  setRequirePayment]  = useState(false);
 
   // ── Stunts – difficulty ───────────────────────────────────────────────────
   const [stuntsRango,    setStuntsRango]    = useState<number>(0);
@@ -243,6 +246,8 @@ export default function BuildingSheetPage() {
       if (reg) {
         setTeamName(reg.team_name);
         setAthleteCount(reg.athlete_count ?? null);
+        setUnpaidAthletes(reg.unpaid_athletes);
+        setRequirePayment(reg.competition_require_payment);
       }
 
       const sysConfig = getScoringConfig(divRes.data);
@@ -397,12 +402,13 @@ export default function BuildingSheetPage() {
             <p className="text-2xl font-bold tabular-nums text-zinc-900">{fmt(sheetTotal)}</p>
           </div>
           <PrintButton />
-          <Button onClick={handleSave} loading={saving} className="print:hidden">
+          <Button onClick={handleSave} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
             <Save className="h-4 w-4" />
             Guardar
           </Button>
         </div>
       </div>
+      <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
 
       {/* Print-only view (hidden in browser, visible when printing) */}
       {!loading && (

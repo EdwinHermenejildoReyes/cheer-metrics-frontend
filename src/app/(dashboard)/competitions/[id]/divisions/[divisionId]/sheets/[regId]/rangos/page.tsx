@@ -10,7 +10,8 @@ import competitionsRepository from '@/repositories/competitionsRepository';
 import { getScoringConfig, DEFAULT_BUILDING_CONFIG, DEFAULT_TUMBLING_CONFIG } from '@/lib/scoringConfig';
 import { useJudge } from '@/hooks/useJudge';
 import type { BuildingConfig, TumblingConfig } from '@/lib/scoringConfig';
-import type { ScoreSheet } from '@/types/competitions';
+import type { ScoreSheet, UnpaidAthlete } from '@/types/competitions';
+import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 
 function fmt(n: number) { return n.toFixed(2); }
 
@@ -31,12 +32,14 @@ export default function RangosSheetPage() {
     }
   }, [isJudge, competitionId, isCompetitionActive, router]);
 
-  const [teamName,      setTeamName]      = useState<string>('');
-  const [existingSheet, setExistingSheet] = useState<ScoreSheet | null>(null);
-  const [loading,       setLoading]       = useState(true);
-  const [saving,        setSaving]        = useState(false);
-  const [bCfg,          setBCfg]          = useState<BuildingConfig>(DEFAULT_BUILDING_CONFIG);
-  const [tCfg,          setTCfg]          = useState<TumblingConfig>(DEFAULT_TUMBLING_CONFIG);
+  const [teamName,       setTeamName]       = useState<string>('');
+  const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
+  const [loading,        setLoading]        = useState(true);
+  const [saving,         setSaving]         = useState(false);
+  const [bCfg,           setBCfg]           = useState<BuildingConfig>(DEFAULT_BUILDING_CONFIG);
+  const [tCfg,           setTCfg]           = useState<TumblingConfig>(DEFAULT_TUMBLING_CONFIG);
+  const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
+  const [requirePayment, setRequirePayment] = useState(false);
 
   // ── Stunts difficulty ─────────────────────────────────────────────────────
   const [stuntsRango,   setStuntsRango]   = useState<number>(0);
@@ -94,7 +97,11 @@ export default function RangosSheetPage() {
       ]);
 
       const reg = regRes.data.results.find((r) => r.id === registrationId);
-      if (reg) setTeamName(reg.team_name);
+      if (reg) {
+        setTeamName(reg.team_name);
+        setUnpaidAthletes(reg.unpaid_athletes);
+        setRequirePayment(reg.competition_require_payment);
+      }
 
       const sysConfig = getScoringConfig(divRes.data);
       const bcfg = sysConfig.building;
@@ -260,11 +267,12 @@ export default function RangosSheetPage() {
             </p>
           </div>
         </div>
-        <Button onClick={handleSave} loading={saving}>
+        <Button onClick={handleSave} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0}>
           <Save className="h-4 w-4" />
           Guardar
         </Button>
       </div>
+      <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
 
       <div className="max-w-6xl mx-auto px-6 py-8">
         <div className="grid grid-cols-2 gap-8 items-start">

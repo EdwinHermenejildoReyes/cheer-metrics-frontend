@@ -12,7 +12,8 @@ import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
 import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
-import type { ScoreSheet } from '@/types/competitions';
+import type { ScoreSheet, UnpaidAthlete } from '@/types/competitions';
+import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 
 // ── Per-category config (regulation: UCA National Experience 2025) ────────────
 
@@ -212,9 +213,11 @@ export default function PartnerStuntSheetPage() {
     }
   }, [isJudge, competitionId, isCompetitionActive, router]);
 
-  const [teamName,      setTeamName]      = useState<string>('');
-  const [existingSheet, setExistingSheet] = useState<ScoreSheet | null>(null);
-  const [loading,       setLoading]       = useState(true);
+  const [teamName,       setTeamName]       = useState<string>('');
+  const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
+  const [loading,        setLoading]        = useState(true);
+  const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
+  const [requirePayment, setRequirePayment] = useState(false);
   const [saving,        setSaving]        = useState(false);
 
   const [scores, setScores] = useState<Record<string, number>>({
@@ -242,7 +245,11 @@ export default function PartnerStuntSheetPage() {
       ]);
 
       const reg = regRes.data.results.find(r => r.id === registrationId);
-      if (reg) setTeamName(reg.team_name);
+      if (reg) {
+        setTeamName(reg.team_name);
+        setUnpaidAthletes(reg.unpaid_athletes);
+        setRequirePayment(reg.competition_require_payment);
+      }
 
       if (sheetRes.data.results.length > 0) {
         const sheet = sheetRes.data.results[0];
@@ -326,12 +333,13 @@ export default function PartnerStuntSheetPage() {
             </p>
           </div>
           <PrintButton />
-          <Button onClick={handleSave} loading={saving} className="print:hidden">
+          <Button onClick={handleSave} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
             <Save className="h-4 w-4" />
             Guardar
           </Button>
         </div>
       </div>
+      <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
 
       <PartnerStuntSheetPrintView
         data={{
