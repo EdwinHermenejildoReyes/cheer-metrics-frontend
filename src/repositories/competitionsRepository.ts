@@ -34,6 +34,7 @@ export interface PublicResult {
   max_raw?: string;
   total_deductions?: string;
   final_score?: string;
+  scaled_score?: string;
   percentage?: string;
   deductions?: PublicResultDeduction[];
   score_updated_at?: string;
