@@ -43,7 +43,7 @@ uv add <package>
 
 | App | Responsibility |
 |-----|---------------|
-| `apps.core` | Custom User model (email-based, no username), `UserRole` choices (judge/athlete/coach), `CookieJWTAuthentication` class, `BaseModel`, `EmailService` |
+| `apps.core` | Custom User model (email-based, no username), `UserRole` choices (judge/athlete/coach), `CookieJWTAuthentication` class, `BaseModel`, `EmailService`, `PlatformSettings` (singleton branding colors, `.load()` returns pk=1) |
 | `apps.api` | All DRF ViewSets, serializers, permission classes, and URL routers (single entry point for all endpoints) |
 | `apps.competitions` | Domain models: Organization, Competition, Division, Gym, Team, Registration, ScoreSheet, JudgeAssignment, Deduction; also contains all scoring constants (`FIELD_MAXIMA`, `DEDUCTION_AMOUNTS`, `SCORING_SYSTEM_CONFIG`) |
 | `apps.athletes` | Athlete model, TeamMembership, age calculation and eligible age-group logic |
@@ -56,7 +56,9 @@ uv add <package>
 
 **User approval flow** — After registration users have `is_approved=False` and are redirected to `/pending`. An admin must approve them via `POST /api/v1/users/<id>/approve/` before they can access the app.
 
-**API** — All endpoints are under `/api/v1/`. Djoser handles `/api/v1/auth/` (register, password reset). Custom views handle login, token refresh, logout (cookie management). Default DRF pagination: 25 items/page with `DjangoFilterBackend`.
+**API** — All endpoints are under `/api/v1/`. Djoser handles `/api/v1/auth/` (register, password reset). Custom views (not Djoser) handle `/api/v1/auth/login/`, `/api/v1/auth/token/refresh/`, and `/api/v1/auth/logout/` for cookie management. Default DRF pagination: 25 items/page with `DjangoFilterBackend`.
+
+**Permission classes** — `apps.api.permissions` defines `IsOwnerOrAdmin` (allows admins or the object's `created_by` user) and `IsActiveJudgeForCompetition`. Judge access is determined by `JudgeAssignment.access_from` / `access_until` timestamps when set; falls back to `Competition.is_active` when both are null. The canonical logic is `_is_judge_access_active()` in `apps/api/permissions.py`.
 
 **Scoring config** — `apps.competitions.models` is the canonical source for scoring: `FIELD_MAXIMA` (max per field), `DEDUCTION_AMOUNTS` (unit penalty per type), and `SCORING_SYSTEM_CONFIG` (which fields are active for each `ScoringSystem`). `Division.suggest_scoring_system(skill_level, age_group, category)` maps a division's attributes to a `ScoringSystem` choice. The frontend mirrors this in `src/lib/scoringConfig.ts` — keep both in sync when changing scoring rules.
 
@@ -66,7 +68,13 @@ uv add <package>
 
 **Deduction auto-save** — `Deduction.save()` automatically sets `unit_amount` and `total_amount` from `DEDUCTION_AMOUNTS[deduction_type]`. Never set these fields manually.
 
-**CSV registration import** — `apps/competitions/importer.py` parses a CSV (+ optional ZIP with photos) and upserts Gyms, Athletes, Teams, Registrations, and TeamMemberships in per-row atomic transactions. Triggered via the management command `python manage.py import_inscripcion <file>` or the frontend page at `/competitions/[id]/import`. Each error row is skipped and accumulated in the result; the import never aborts mid-file unless the competition is not found.
+**CSV registration import** — `apps/competitions/importer.py` parses a CSV or XLSX (+ optional ZIP with photos named by athlete CI/cédula) and upserts Gyms, Athletes, Teams, Registrations, and TeamMemberships in per-row atomic transactions. Full command syntax:
+
+```bash
+python manage.py import_inscripcion <file> --competition <id> [--fotos-zip <path>] [--dry-run]
+```
+
+Also triggerable from the frontend page at `/competitions/[id]/import`. Each error row is skipped and accumulated in the result; the import never aborts mid-file unless the competition is not found.
 
 **Scheduler / rest validator** — `apps/competitions/scheduler.py` checks that athletes competing in multiple teams have at least `MIN_REST_GAP = 3` performance slots between appearances. Returns `RestConflict` dataclass instances. The public `/schedule` page (outside the dashboard group) renders the running order and surfaces these conflicts.
 
@@ -80,7 +88,7 @@ uv add <package>
 
 ## Frontend (cheer-metrics-frontend)
 
-**Stack:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Redux Toolkit + Redux Saga, React Hook Form + Zod, Axios
+**Stack:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Redux Toolkit, React Hook Form + Zod, Axios
 
 Path alias: `@/*` → `src/*`
 
@@ -92,7 +100,13 @@ Path alias: `@/*` → `src/*`
 npm run dev      # dev server (port 3001 in Docker)
 npm run build    # production build
 npm run lint     # ESLint
-npm test         # tests
+```
+
+### Environment Variables
+
+```
+NEXT_PUBLIC_MAIN_API_URL=http://localhost:8006/api/v1/
+NEXT_PUBLIC_WEB_URL=http://localhost:3000/
 ```
 
 ### Key Patterns
@@ -101,7 +115,7 @@ npm test         # tests
 
 **Repository layer** — `src/repositories/` wraps all API calls (one file per domain). Add new API methods here, not directly in components.
 
-**State management** — Redux Toolkit + Redux Saga for async flows. Auth state lives in `src/store/auth/slices.ts`; sagas in `src/store/athletes.ts` and `src/store/competitions.ts`. Prefer repositories + local state for simple reads; use Redux for cross-cutting state (auth, complex competition flow).
+**State management** — Redux Toolkit for global state. Currently only auth state is implemented (`src/store/auth/slices.ts`). Prefer repositories + local state for simple reads; use Redux for cross-cutting state (auth, complex competition flow).
 
 **Branding** — `src/contexts/BrandingContext.tsx` provides organization colors and logo, consumed by layout components.
 
