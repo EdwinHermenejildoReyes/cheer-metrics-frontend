@@ -385,9 +385,10 @@ export default function PublicResultPage() {
           </div>
         ) : (
           <>
-            {/* ── Print-only: full planilla views ──────────────────────── */}
+            {/* ── Full planilla views — visible on screen AND print ─────── */}
             {hasBuilding && (
               <BuildingSheetPrintView
+                className="block"
                 teamName={data.team_name}
                 divisionName={data.division_name}
                 organization={orgForPrint}
@@ -423,6 +424,7 @@ export default function PublicResultPage() {
 
             {hasTumbling && (
               <TumblingSheetPrintView
+                className="block"
                 teamName={data.team_name}
                 divisionName={data.division_name}
                 organization={orgForPrint}
@@ -458,6 +460,7 @@ export default function PublicResultPage() {
 
             {hasOverall && (
               <OverallSheetPrintView
+                className="block"
                 teamName={data.team_name}
                 divisionName={data.division_name}
                 organization={orgForPrint}
@@ -486,6 +489,7 @@ export default function PublicResultPage() {
 
             {hasPartner && (
               <PartnerStuntSheetPrintView
+                className="block"
                 data={{
                   teamName: data.team_name,
                   divisionName: data.division_name,
@@ -501,8 +505,8 @@ export default function PublicResultPage() {
               />
             )}
 
-            {/* ── Screen-only summary view ──────────────────────────────── */}
-            <div className="result-gap flex flex-col gap-4 print:hidden">
+            {/* ── Summary view ─────────────────────────────────────────── */}
+            <div className="result-gap flex flex-col gap-4 mt-4">
 
               {/* ── Label ────────────────────────────────────────────────── */}
               <div className="flex items-center gap-2 text-zinc-500">

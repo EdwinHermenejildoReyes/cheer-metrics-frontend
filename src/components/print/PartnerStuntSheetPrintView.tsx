@@ -162,7 +162,7 @@ function CategoryCard({ cat, value, primary }: { cat: Category; value: number; p
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export function PartnerStuntSheetPrintView({ data }: { data: PartnerStuntPrintData }) {
+export function PartnerStuntSheetPrintView({ data, className }: { data: PartnerStuntPrintData; className?: string }) {
   const { teamName, divisionName, organization, scores, notes, total, rawScore, totalDeductions, finalScore, percentage } = data;
 
   const primary     = organization?.primary_color  ?? '#18181b';
@@ -175,7 +175,7 @@ export function PartnerStuntSheetPrintView({ data }: { data: PartnerStuntPrintDa
   const today = new Date().toLocaleDateString('es-EC', { day: '2-digit', month: 'long', year: 'numeric' });
 
   return (
-    <div className="hidden print:block" style={{ fontFamily: 'sans-serif', fontSize: '9.5px', color: '#18181b', lineHeight: 1.35 }}>
+    <div className={className ?? 'hidden print:block'} style={{ fontFamily: 'sans-serif', fontSize: '9.5px', color: '#18181b', lineHeight: 1.35 }}>
       <style>{`@media print { @page { size: A4 portrait; margin: 8mm; } }`}</style>
 
       {/* ── Header ──────────────────────────────────────────────────────── */}

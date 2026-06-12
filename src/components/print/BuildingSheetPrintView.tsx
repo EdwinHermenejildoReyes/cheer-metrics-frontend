@@ -91,6 +91,7 @@ function SubLabel({ text }: { text: string }) {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export interface BuildingPrintData {
+  className?: string;
   teamName: string;
   divisionName?: string;
   organization?: Organization | null;
@@ -146,7 +147,7 @@ export function BuildingSheetPrintView(p: BuildingPrintData) {
   const maxTossesDiff      = p.bCfg.tossDiffOpts.length > 0 ? Math.max(...p.bCfg.tossDiffOpts.map(o => o.value)) : 0;
 
   return (
-    <div className="hidden print:block" style={{ fontFamily: 'sans-serif', fontSize: '9.5px', color: '#18181b', lineHeight: 1.35 }}>
+    <div className={p.className ?? 'hidden print:block'} style={{ fontFamily: 'sans-serif', fontSize: '9.5px', color: '#18181b', lineHeight: 1.35 }}>
 
       {/* @page margins */}
       <style>{`@media print { @page { size: A4 portrait; margin: 8mm; } }`}</style>
