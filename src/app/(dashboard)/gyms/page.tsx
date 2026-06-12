@@ -9,9 +9,20 @@ import { GymModal } from '@/components/competitions/GymModal';
 import { TeamModal } from '@/components/competitions/TeamModal';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import athletesRepository from '@/repositories/athletesRepository';
-import type { Gym, Team } from '@/types/competitions';
+import type { AthleteInvoiceLine, Competition, Gym, Team } from '@/types/competitions';
 import type { Athlete, Gender } from '@/types/athletes';
 import { GENDER_LABELS } from '@/types/athletes';
+
+const PAY_BADGE: Record<string, string> = {
+  paid:    'bg-green-100 text-green-700',
+  partial: 'bg-yellow-100 text-yellow-700',
+  pending: 'bg-red-100 text-red-600',
+};
+const PAY_LABEL: Record<string, string> = {
+  paid:    'Pagado',
+  partial: 'Abono',
+  pending: 'Pendiente',
+};
 
 const GENDER_VARIANT: Record<Gender, 'info' | 'violet' | 'default'> = {
   F: 'violet',
@@ -33,16 +44,39 @@ export default function GymsPage() {
   const [editingTeam, setEditingTeam] = useState<Team | undefined>();
   const [teamGymId, setTeamGymId] = useState<number | null>(null);
 
+  // Payment status filter
+  const [competitions, setCompetitions] = useState<Competition[]>([]);
+  const [selectedComp, setSelectedComp] = useState('');
+  // athleteId → invoice line
+  const [paymentMap, setPaymentMap] = useState<Record<number, AthleteInvoiceLine>>({});
+
   const load = async () => {
     try {
-      const res = await competitionsRepository.listGyms({ page_size: '200' });
-      setGyms(res.data.results);
+      const [gymsRes, compRes] = await Promise.all([
+        competitionsRepository.listGyms({ page_size: '200' }),
+        competitionsRepository.listCompetitions({ page_size: '100' }),
+      ]);
+      setGyms(gymsRes.data.results);
+      setCompetitions(compRes.data.results);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    if (!selectedComp) { setPaymentMap({}); return; }
+    competitionsRepository.listGymInvoices({ competition: selectedComp, page_size: '200' }).then(res => {
+      const map: Record<number, AthleteInvoiceLine> = {};
+      for (const invoice of res.data.results) {
+        for (const line of invoice.athlete_lines) {
+          map[line.athlete] = line;
+        }
+      }
+      setPaymentMap(map);
+    });
+  }, [selectedComp]);
 
   const fetchGymAthletes = async (gymId: number) => {
     if (gymAthletes[gymId]) return;
@@ -116,10 +150,22 @@ export default function GymsPage() {
           <h1 className="text-2xl font-semibold text-zinc-900">Gimnasios</h1>
           <p className="text-sm text-zinc-500">{gyms.length} gimnasio{gyms.length !== 1 ? 's' : ''}</p>
         </div>
-        <Button onClick={() => { setEditingGym(undefined); setGymModalOpen(true); }}>
-          <Plus className="h-4 w-4" />
-          Nuevo gimnasio
-        </Button>
+        <div className="flex items-center gap-2">
+          <select
+            value={selectedComp}
+            onChange={e => setSelectedComp(e.target.value)}
+            className="border rounded-lg px-3 py-2 text-sm text-zinc-700"
+          >
+            <option value="">Estado de pago: todas</option>
+            {competitions.map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          <Button onClick={() => { setEditingGym(undefined); setGymModalOpen(true); }}>
+            <Plus className="h-4 w-4" />
+            Nuevo gimnasio
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -224,11 +270,14 @@ export default function GymsPage() {
                                         <th className="px-5 py-2.5">Género</th>
                                         <th className="px-5 py-2.5">Edad</th>
                                         <th className="px-5 py-2.5">Rol</th>
+                                        {selectedComp && <th className="px-5 py-2.5">Inscripción</th>}
                                       </tr>
                                     </thead>
                                     <tbody className="divide-y divide-zinc-100">
                                       {teamAthletes.map(athlete => {
                                         const membership = athlete.memberships.find(m => m.team === team.id);
+                                        const payLine = paymentMap[athlete.id];
+                                        const status  = payLine?.payment_status ?? 'pending';
                                         return (
                                           <tr key={athlete.id} className="bg-white hover:bg-zinc-50 transition-colors">
                                             <td className="pl-14 pr-5 py-3">
@@ -251,6 +300,24 @@ export default function GymsPage() {
                                             <td className="px-5 py-3 text-xs text-zinc-500">
                                               {membership?.role_display ?? '—'}
                                             </td>
+                                            {selectedComp && (
+                                              <td className="px-5 py-3">
+                                                {payLine ? (
+                                                  <div>
+                                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${PAY_BADGE[status]}`}>
+                                                      {PAY_LABEL[status]}
+                                                    </span>
+                                                    {status !== 'paid' && (
+                                                      <p className="text-xs text-zinc-400 mt-0.5">
+                                                        Saldo: ${parseFloat(payLine.balance_due).toFixed(2)}
+                                                      </p>
+                                                    )}
+                                                  </div>
+                                                ) : (
+                                                  <span className="text-xs text-zinc-300">Sin factura</span>
+                                                )}
+                                              </td>
+                                            )}
                                           </tr>
                                         );
                                       })}
