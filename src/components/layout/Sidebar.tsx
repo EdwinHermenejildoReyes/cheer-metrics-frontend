@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Trophy, Building2, Users, LogOut, Landmark, UserCog, User as UserIcon, ClipboardList, LayoutDashboard, ImageIcon, Settings } from 'lucide-react';
+import { Trophy, Building2, Users, LogOut, Landmark, UserCog, User as UserIcon, ClipboardList, LayoutDashboard, ImageIcon, Settings, Receipt } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
@@ -13,22 +13,23 @@ import { useBranding } from '@/contexts/BrandingContext';
 import { useJudge } from '@/hooks/useJudge';
 
 const ADMIN_NAV = [
-  { href: '/home',          label: 'Inicio',          icon: LayoutDashboard },
-  { href: '/competitions',  label: 'Competencias',    icon: Trophy },
-  { href: '/organizations', label: 'Organizaciones',  icon: Landmark },
-  { href: '/athletes',      label: 'Atletas',         icon: Users },
-  { href: '/gyms',          label: 'Gimnasios',       icon: Building2 },
-  { href: '/users',         label: 'Usuarios',        icon: UserCog },
-  { href: '/hero-images',   label: 'Carrusel',        icon: ImageIcon },
+  { href: '/home',          label: 'Inicio',         icon: LayoutDashboard },
+  { href: '/competitions',  label: 'Competencias',   icon: Trophy },
+  { href: '/billing',       label: 'Facturación',    icon: Receipt },
+  { href: '/athletes',      label: 'Atletas',        icon: Users },
+  { href: '/gyms',          label: 'Gimnasios',      icon: Building2 },
+  { href: '/organizations', label: 'Organizaciones', icon: Landmark },
+  { href: '/users',         label: 'Usuarios',       icon: UserCog },
 ];
 
 const SETTINGS_NAV = [
+  { href: '/hero-images',       label: 'Carrusel',        icon: ImageIcon },
   { href: '/settings/branding', label: 'Paleta de colores', icon: Settings },
 ];
 
 const JUDGE_NAV = [
   { href: '/assignments',  label: 'Mis asignaciones', icon: ClipboardList },
-  { href: '/competitions', label: 'Competencias',      icon: Trophy },
+  { href: '/competitions', label: 'Competencias',     icon: Trophy },
 ];
 
 const COMMON_NAV = [
@@ -42,7 +43,7 @@ export function Sidebar() {
   const user = useSelector((s: RootState) => s.auth.user);
   const { organization } = useBranding();
   const { isJudge, isAdmin } = useJudge();
-  const nav         = [...(isJudge ? JUDGE_NAV : ADMIN_NAV), ...COMMON_NAV];
+  const nav         = isJudge ? JUDGE_NAV : ADMIN_NAV;
   const settingsNav = isAdmin ? SETTINGS_NAV : [];
 
   const handleLogout = async () => {
