@@ -1,4 +1,5 @@
 import api from '@/services/api';
+import type { AthleteInvoiceLine, FanPackage, FanPackageLine, GymInvoice } from '@/types/competitions';
 
 export interface PublicResultDeduction {
   type: string;
@@ -277,6 +278,35 @@ class CompetitionsRepository {
 
   deleteHeroImage = (id: number) =>
     api.delete(`/hero-images/${id}/`);
+
+  // ── Billing ────────────────────────────────────────────────────────────────
+
+  listFanPackages = (competitionId: number) =>
+    api.get<{ results: FanPackage[] }>('/fan-packages/', { params: { competition: competitionId } });
+
+  createFanPackage = (data: Partial<FanPackage>) =>
+    api.post<FanPackage>('/fan-packages/', data);
+
+  listGymInvoices = (params: Record<string, string | number>) =>
+    api.get<{ results: GymInvoice[] }>('/gym-invoices/', { params });
+
+  getGymInvoice = (id: number) =>
+    api.get<GymInvoice>(`/gym-invoices/${id}/`);
+
+  generateGymInvoice = (competitionId: number, gymId: number) =>
+    api.post<GymInvoice>('/gym-invoices/generate/', { competition: competitionId, gym: gymId });
+
+  updateGymInvoice = (id: number, data: Partial<Pick<GymInvoice, 'paid' | 'paid_at'>>) =>
+    api.patch<GymInvoice>(`/gym-invoices/${id}/`, data);
+
+  payAthleteInvoiceLine = (id: number, amountPaid: string) =>
+    api.patch<AthleteInvoiceLine>(`/athlete-invoice-lines/${id}/pay/`, { amount_paid: amountPaid });
+
+  createFanPackageLine = (data: Partial<FanPackageLine>) =>
+    api.post<FanPackageLine>('/fan-package-lines/', data);
+
+  deleteFanPackageLine = (id: number) =>
+    api.delete(`/fan-package-lines/${id}/`);
 }
 
 export default new CompetitionsRepository();

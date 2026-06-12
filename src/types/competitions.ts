@@ -84,6 +84,8 @@ export interface Competition {
   notes: string;
   is_enable: boolean;
   is_active: boolean;
+  team_fee: string;
+  multi_team_discount: string;
 }
 
 export interface Division {
@@ -96,6 +98,7 @@ export interface Division {
   category: DivisionCategory;
   scoring_system: ScoringSystem | '';
   suggested_scoring_system: ScoringSystem;
+  athlete_fee: string;
   min_athletes: number | null;
   max_athletes: number | null;
   is_enable: boolean;
@@ -437,3 +440,71 @@ export const AVG_FIELD_GROUPS: Record<string, ScoreFieldKey[]> = {
   showmanship: ['showmanship_building', 'showmanship_tumbling', 'showmanship_overall'],
 };
 export const AVG_GROUP_MAX = 2.0;
+
+// ── Billing ───────────────────────────────────────────────────────────────────
+
+export type PaymentStatus = 'paid' | 'partial' | 'pending';
+
+export interface FanPackage {
+  id: number;
+  competition: number;
+  name: string;
+  price: string;
+  description: string;
+  is_enable: boolean;
+}
+
+export interface AthleteInvoiceLine {
+  id: number;
+  invoice: number;
+  athlete: number;
+  athlete_name: string;
+  gross_fee: string;
+  discount: string;
+  net_fee: string;
+  amount_paid: string;
+  paid_at: string | null;
+  payment_status: PaymentStatus;
+  balance_due: string;
+}
+
+export interface TeamInvoiceLine {
+  id: number;
+  invoice: number;
+  registration: number;
+  team_name: string;
+  division_name: string;
+  team_fee_snapshot: string;
+}
+
+export interface FanPackageLine {
+  id: number;
+  invoice: number;
+  fan_package: number;
+  package_name: string;
+  athlete: number | null;
+  athlete_name: string;
+  quantity: number;
+  unit_price_snapshot: string;
+  subtotal: string;
+}
+
+export interface GymInvoice {
+  id: number;
+  competition: number;
+  competition_name: string;
+  gym: number;
+  gym_name: string;
+  paid: boolean;
+  paid_at: string | null;
+  athlete_subtotal: string;
+  discount_subtotal: string;
+  team_subtotal: string;
+  fan_subtotal: string;
+  total: string;
+  amount_paid: string;
+  balance_due: string;
+  athlete_lines: AthleteInvoiceLine[];
+  team_lines: TeamInvoiceLine[];
+  fan_lines: FanPackageLine[];
+}

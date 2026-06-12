@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList, Receipt } from 'lucide-react';
 import { PrintButton } from '@/components/print/PrintButton';
 import { Modal } from '@/components/ui/modal';
 import { toast } from 'sonner';
@@ -230,6 +230,14 @@ export default function CompetitionDetailPage() {
               >
                 <Upload className="h-3.5 w-3.5" />
                 Importar inscripción
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => router.push(`/competitions/${competitionId}/billing`)}
+              >
+                <Receipt className="h-3.5 w-3.5" />
+                Facturación
               </Button>
               <Button variant="secondary" size="sm" onClick={() => setCompModalOpen(true)}>
                 <Pencil className="h-3.5 w-3.5" />
