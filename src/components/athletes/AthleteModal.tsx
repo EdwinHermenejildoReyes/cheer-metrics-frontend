@@ -130,6 +130,16 @@ export function AthleteModal({ open, onClose, onSaved, gymId, initial }: Props) 
     <Modal open={open} onClose={onClose} title={isEdit ? 'Editar atleta' : 'Nuevo atleta'}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
 
+        {/* Cédula — first so future DINARDAP auto-fill populates the rest */}
+        <Input
+          label="Cédula ecuatoriana *"
+          id="document_id"
+          placeholder="1712345678"
+          maxLength={10}
+          error={errors.document_id?.message}
+          {...register('document_id')}
+        />
+
         {/* Photo */}
         <div className="flex items-center gap-4">
           <div
@@ -174,16 +184,6 @@ export function AthleteModal({ open, onClose, onSaved, gymId, initial }: Props) 
           <Input label="Fecha de nacimiento *" id="birth_date" type="date" error={errors.birth_date?.message} {...register('birth_date')} />
           <Select label="Género *" id="gender" options={GENDER_OPTIONS} error={errors.gender?.message} {...register('gender')} />
         </div>
-
-        {/* Cédula */}
-        <Input
-          label="Cédula ecuatoriana *"
-          id="document_id"
-          placeholder="1712345678"
-          maxLength={10}
-          error={errors.document_id?.message}
-          {...register('document_id')}
-        />
 
         {/* Gym selector — only when gymId is not preset */}
         {!fixedGym && (
