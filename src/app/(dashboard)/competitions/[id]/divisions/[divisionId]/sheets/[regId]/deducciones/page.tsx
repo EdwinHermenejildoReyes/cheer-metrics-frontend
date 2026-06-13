@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { PageSpinner } from '@/components/ui/spinner';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
+import { useConfirm } from '@/hooks/useConfirm';
 import { useBranding } from '@/contexts/BrandingContext';
 import { PrintButton } from '@/components/print/PrintButton';
 import { DeduccionesSheetPrintView } from '@/components/print/DeduccionesSheetPrintView';
@@ -118,6 +119,7 @@ export default function DeduccionesSheetPage() {
   const divId          = Number(divisionId);
   const registrationId = Number(regId);
 
+  const confirm = useConfirm();
   const { isJudge, isCompetitionActive } = useJudge();
   const { organization } = useBranding();
   const primary = organization?.primary_color ?? 'var(--brand-primary)';
@@ -516,9 +518,9 @@ export default function DeduccionesSheetPage() {
                                             key={ded.id}
                                             title={`${DEDUCTION_TYPE_LABELS[ded.deduction_type]}${ded.count > 1 ? ` ×${ded.count}` : ''} = −${ded.total_amount}`}
                                             className={`group/chip flex items-center gap-0.5 rounded px-1.5 py-0.5 border text-[10px] font-bold cursor-pointer transition-all hover:scale-105 ${BADGE_COLORS[ck]}`}
-                                            onClick={(e) => {
+                                            onClick={async (e) => {
                                               e.stopPropagation();
-                                              if (confirm(`Eliminar ${DEDUCTION_CODES[ded.deduction_type]} (−${ded.total_amount})?`)) {
+                                              if (await confirm({ title: 'Eliminar descuento', message: `¿Eliminar ${DEDUCTION_CODES[ded.deduction_type]} — ${DEDUCTION_TYPE_LABELS[ded.deduction_type]} (−${ded.total_amount})?`, confirmLabel: 'Eliminar' })) {
                                                 handleDelete(ded);
                                               }
                                             }}
@@ -650,8 +652,8 @@ export default function DeduccionesSheetPage() {
                             <div
                               key={ded.id}
                               className={`flex items-center gap-1 rounded-md px-2 py-0.5 border text-xs font-bold cursor-pointer hover:scale-105 transition-all ${BADGE_COLORS[ck]}`}
-                              onClick={() => {
-                                if (confirm(`Eliminar ${DEDUCTION_CODES[ded.deduction_type]} (−${ded.total_amount})?`)) {
+                              onClick={async () => {
+                                if (await confirm({ title: 'Eliminar descuento', message: `¿Eliminar ${DEDUCTION_CODES[ded.deduction_type]} — ${DEDUCTION_TYPE_LABELS[ded.deduction_type]} (−${ded.total_amount})?`, confirmLabel: 'Eliminar' })) {
                                   handleDelete(ded);
                                 }
                               }}

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { BrandingProvider } from '@/contexts/BrandingContext';
+import { ConfirmProvider } from '@/hooks/useConfirm';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { BrandingBar } from '@/components/layout/BrandingBar';
 import { PageSpinner } from '@/components/ui/spinner';
@@ -28,6 +29,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   return (
     <BrandingProvider>
+      <ConfirmProvider>
       <div className="dashboard-shell flex h-screen overflow-hidden">
         <div className="print:hidden"><Sidebar /></div>
         <div className="flex flex-1 flex-col overflow-hidden">
@@ -37,6 +39,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </main>
         </div>
       </div>
+      </ConfirmProvider>
     </BrandingProvider>
   );
 }

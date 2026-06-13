@@ -12,6 +12,7 @@ import { ScoringSheetModal } from '@/components/competitions/ScoringSheetModal';
 import { DeductionModal } from '@/components/competitions/DeductionModal';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
+import { useConfirm } from '@/hooks/useConfirm';
 import {
   AGE_GROUP_LABELS,
   SKILL_LEVEL_LABELS,
@@ -39,6 +40,7 @@ const STATUS_VARIANT: Record<RegistrationStatus, 'default' | 'success' | 'warnin
 };
 
 export default function DivisionDetailPage() {
+  const confirm = useConfirm();
   const router = useRouter();
   const { id, divisionId } = useParams<{ id: string; divisionId: string }>();
   const competitionId = Number(id);
@@ -101,7 +103,7 @@ export default function DivisionDetailPage() {
   };
 
   const handleDeleteReg = async (reg: Registration) => {
-    if (!confirm(`¿Eliminar la inscripción de ${reg.team_name}?`)) return;
+    if (!await confirm({ title: 'Eliminar inscripción', message: `¿Seguro que deseas eliminar la inscripción de ${reg.team_name}? Esta acción no se puede deshacer.`, confirmLabel: 'Eliminar' })) return;
     try {
       await competitionsRepository.deleteRegistration(reg.id);
       setRegistrations((prev) => prev.filter((r) => r.id !== reg.id));

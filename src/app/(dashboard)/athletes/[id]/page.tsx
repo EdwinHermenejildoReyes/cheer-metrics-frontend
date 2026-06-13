@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Plus, Pencil, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
+import { useConfirm } from '@/hooks/useConfirm';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PageSpinner } from '@/components/ui/spinner';
@@ -26,6 +27,7 @@ const GENDER_VARIANT: Record<Gender, 'info' | 'violet' | 'default'> = {
 };
 
 export default function AthleteDetailPage() {
+  const confirm = useConfirm();
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
   const athleteId = Number(id);
@@ -53,7 +55,7 @@ export default function AthleteDetailPage() {
   };
 
   const handleDeleteMembership = async (m: TeamMembership) => {
-    if (!confirm(`¿Quitar a ${athlete?.full_name} del equipo ${m.team_name}?`)) return;
+    if (!await confirm({ title: 'Quitar del equipo', message: `¿Seguro que deseas quitar a ${athlete?.full_name} del equipo ${m.team_name}?`, confirmLabel: 'Quitar' })) return;
     try {
       await athletesRepository.deleteMembership(m.id);
       setAthlete((prev) =>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Pencil, Trash2, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { useConfirm } from '@/hooks/useConfirm';
 import { PageSpinner } from '@/components/ui/spinner';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import type { Organization, PaginatedResponse } from '@/types/competitions';
@@ -256,6 +257,7 @@ function OrgModal({ editing, onClose, onSaved }: {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function OrganizationsPage() {
+  const confirm = useConfirm();
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -278,7 +280,7 @@ export default function OrganizationsPage() {
   const closeModal = () => setModalOpen(false);
 
   const handleDelete = async (org: Organization) => {
-    if (!confirm(`¿Eliminar "${org.name}"?`)) return;
+    if (!await confirm({ title: 'Eliminar organización', message: `¿Seguro que deseas eliminar "${org.name}"? Esta acción no se puede deshacer.`, confirmLabel: 'Eliminar' })) return;
     setDeleting(org.id);
     try {
       await competitionsRepository.deleteOrganization(org.id);

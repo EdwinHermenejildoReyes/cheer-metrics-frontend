@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { ImageIcon, Trash2, Upload, GripVertical } from 'lucide-react';
 import { toast } from 'sonner';
+import { useConfirm } from '@/hooks/useConfirm';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import type { HeroImage } from '@/types/competitions';
 
 export default function HeroImagesPage() {
+  const confirm = useConfirm();
   const [images, setImages]   = useState<HeroImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -47,7 +49,7 @@ export default function HeroImagesPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('¿Eliminar esta imagen del carrusel?')) return;
+    if (!await confirm({ title: 'Eliminar imagen', message: '¿Seguro que deseas quitar esta imagen del carrusel?', confirmLabel: 'Eliminar' })) return;
     try {
       await competitionsRepository.deleteHeroImage(id);
       setImages(prev => prev.filter(img => img.id !== id));

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Plus, Pencil, Building2, ChevronDown, ChevronRight, UserPlus, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
+import { useConfirm } from '@/hooks/useConfirm';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PageSpinner } from '@/components/ui/spinner';
@@ -29,6 +30,7 @@ const GENDER_VARIANT: Record<Gender, 'info' | 'violet' | 'default'> = {
 };
 
 export default function GymsPage() {
+  const confirm = useConfirm();
   const [gyms,         setGyms]         = useState<Gym[]>([]);
   const [loading,      setLoading]      = useState(true);
   const [expanded,     setExpanded]     = useState<Set<number>>(new Set());
@@ -139,7 +141,7 @@ export default function GymsPage() {
   };
 
   const handleRemoveMembership = async (membershipId: number, athleteId: number, gymId: number) => {
-    if (!confirm('¿Quitar este atleta del equipo?')) return;
+    if (!await confirm({ title: 'Quitar atleta del equipo', message: '¿Seguro que deseas quitar este atleta del equipo?', confirmLabel: 'Quitar' })) return;
     try {
       await athletesRepository.deleteMembership(membershipId);
       toast.success('Atleta quitado del equipo');
