@@ -42,9 +42,10 @@ const schema = z.object({
   last_name:   z.string().min(2, 'Mínimo 2 caracteres'),
   birth_date:  z.string().min(1, 'Requerido'),
   gender:      z.enum(['F', 'M', 'O']),
-  document_id: z.string().optional().refine(validateCedula, {
-    message: 'Cédula inválida — debe tener 10 dígitos y pasar el dígito verificador',
-  }),
+  document_id: z
+    .string()
+    .min(10, 'La cédula es obligatoria (10 dígitos)')
+    .refine(validateCedula, { message: 'Cédula inválida — dígito verificador incorrecto' }),
   gym: z.coerce.number().min(1, 'Seleccione un gimnasio'),
 });
 
@@ -161,7 +162,7 @@ export function AthleteModal({ open, onClose, onSaved, gymId, initial }: Props) 
 
         {/* Cédula */}
         <Input
-          label="Cédula ecuatoriana (opcional)"
+          label="Cédula ecuatoriana *"
           id="document_id"
           placeholder="1712345678"
           maxLength={10}
