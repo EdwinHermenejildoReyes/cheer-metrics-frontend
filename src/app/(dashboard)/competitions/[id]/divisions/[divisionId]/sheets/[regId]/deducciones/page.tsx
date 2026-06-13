@@ -101,6 +101,14 @@ interface Pending {
   hitZero: boolean;
 }
 
+// Direct-add (non-fall types — bypass the track)
+interface DirectPending {
+  type:    DeductionType;
+  count:   number;
+  notes:   string;
+  hitZero: boolean;
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function DeduccionesSheetPage() {
   const router = useRouter();
@@ -128,11 +136,14 @@ export default function DeduccionesSheetPage() {
   const [deleting,  setDeleting]  = useState<number | null>(null);
   const [saving,    setSaving]    = useState(false);
 
-  // Track interaction state
-  const [armedType,   setArmedType]   = useState<DeductionType | null>(null);
-  const [hoveredZone, setHoveredZone] = useState<string | null>(null);
-  const [pending,     setPending]     = useState<Pending | null>(null);
-  const dragTypeRef   = useRef<DeductionType | null>(null);
+  // Track interaction state (falls only)
+  const [armedType,    setArmedType]    = useState<DeductionType | null>(null);
+  const [hoveredZone,  setHoveredZone]  = useState<string | null>(null);
+  const [pending,      setPending]      = useState<Pending | null>(null);
+  const dragTypeRef    = useRef<DeductionType | null>(null);
+
+  // Direct-add state (tiempo, ilegalidades, administrativas)
+  const [directPending, setDirectPending] = useState<DirectPending | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -180,6 +191,28 @@ export default function DeduccionesSheetPage() {
       });
       toast.success('Descuento registrado');
       setPending(null);
+      await load();
+    } catch {
+      toast.error('No se pudo registrar el descuento');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDirectConfirm = async () => {
+    if (!sheet || !directPending) return;
+    setSaving(true);
+    try {
+      await competitionsRepository.createDeduction({
+        score_sheet:    sheet.id,
+        deduction_type: directPending.type,
+        count:          directPending.count,
+        routine_time:   '',
+        hit_zero:       directPending.hitZero,
+        notes:          directPending.notes,
+      });
+      toast.success('Descuento registrado');
+      setDirectPending(null);
       await load();
     } catch {
       toast.error('No se pudo registrar el descuento');
@@ -303,58 +336,73 @@ export default function DeduccionesSheetPage() {
 
               {/* ═══ LEFT — Deduction palette ═══════════════════════════════ */}
               <div className="flex flex-col gap-3 sticky top-20">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-1">
-                  Arrastra o toca → pista
-                </p>
 
                 {[
-                  { key: 'CAÍDAS',          types: FALLS   },
-                  { key: 'TIEMPO',          types: TIME    },
-                  { key: 'ILEGALIDADES',    types: ILLEGAL },
-                  { key: 'ADMINISTRATIVAS', types: ADMIN   },
-                ].map(({ key, types }) => {
+                  { key: 'CAÍDAS',          types: FALLS,   isFallGroup: true  },
+                  { key: 'TIEMPO',          types: TIME,    isFallGroup: false },
+                  { key: 'ILEGALIDADES',    types: ILLEGAL, isFallGroup: false },
+                  { key: 'ADMINISTRATIVAS', types: ADMIN,   isFallGroup: false },
+                ].map(({ key, types, isFallGroup }) => {
                   const { label, color } = SECTION_COLORS[key];
                   return (
                     <div key={key} className="flex flex-col gap-1">
-                      <p className={`text-[9px] font-bold uppercase tracking-widest px-1 ${
+                      <p className={`text-[9px] font-bold uppercase tracking-widest px-1 flex items-center gap-1 ${
                         color === 'red' ? 'text-red-500' :
                         color === 'orange' ? 'text-orange-500' :
                         color === 'amber' ? 'text-amber-600' : 'text-zinc-500'
-                      }`}>{label}</p>
+                      }`}>
+                        {label}
+                        <span className="font-normal normal-case tracking-normal opacity-60">
+                          {isFallGroup ? '→ pista' : '→ lista'}
+                        </span>
+                      </p>
                       <div className="flex flex-col gap-1">
                         {types.map(type => {
-                          const isArmed = armedType === type;
-                          const ck = colorFor(type);
+                          const isArmed   = armedType === type;
+                          const isDirect  = directPending?.type === type;
+                          const ck        = colorFor(type);
                           return (
                             <div
                               key={type}
-                              draggable
-                              onDragStart={(e) => {
+                              draggable={isFallGroup}
+                              onDragStart={isFallGroup ? (e) => {
                                 e.dataTransfer.setData('deduction-type', type);
                                 dragTypeRef.current = type;
                                 setArmedType(type);
-                              }}
-                              onDragEnd={() => {
+                              } : undefined}
+                              onDragEnd={isFallGroup ? () => {
                                 setTimeout(() => {
                                   if (!pending) setArmedType(null);
                                 }, 50);
+                              } : undefined}
+                              onClick={() => {
+                                if (isFallGroup) {
+                                  setArmedType(prev => prev === type ? null : type);
+                                  setDirectPending(null);
+                                } else {
+                                  setDirectPending(prev =>
+                                    prev?.type === type ? null : { type, count: 1, notes: '', hitZero: false }
+                                  );
+                                  setArmedType(null);
+                                }
                               }}
-                              onClick={() => setArmedType(prev => prev === type ? null : type)}
-                              className={`flex items-center justify-between rounded-lg px-3 py-2 cursor-grab active:cursor-grabbing border transition-all select-none ${
-                                isArmed
+                              className={`flex items-center justify-between rounded-lg px-3 py-2 border transition-all select-none ${
+                                isFallGroup ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'
+                              } ${
+                                isArmed || isDirect
                                   ? `${PILL_COLORS[ck]} border-transparent shadow-md scale-[1.02]`
                                   : 'bg-white border-zinc-200 hover:border-zinc-400 hover:shadow-sm'
                               }`}
                             >
                               <div className="flex items-center gap-2 min-w-0">
-                                <span className={`text-sm font-black shrink-0 ${isArmed ? 'text-white' : 'text-zinc-900'}`}>
+                                <span className={`text-sm font-black shrink-0 ${isArmed || isDirect ? 'text-white' : 'text-zinc-900'}`}>
                                   {DEDUCTION_CODES[type]}
                                 </span>
-                                <span className={`text-[9px] truncate ${isArmed ? 'text-white/75' : 'text-zinc-400'}`}>
+                                <span className={`text-[9px] truncate ${isArmed || isDirect ? 'text-white/75' : 'text-zinc-400'}`}>
                                   {DEDUCTION_TYPE_LABELS[type].split(' ').slice(0, 2).join(' ')}
                                 </span>
                               </div>
-                              <span className={`text-[10px] font-bold tabular-nums shrink-0 ml-1 ${isArmed ? 'text-white/90' : 'text-red-600'}`}>
+                              <span className={`text-[10px] font-bold tabular-nums shrink-0 ml-1 ${isArmed || isDirect ? 'text-white/90' : 'text-red-600'}`}>
                                 −{DEDUCTION_AMOUNTS[type]}
                               </span>
                             </div>
@@ -437,11 +485,11 @@ export default function DeduccionesSheetPage() {
                                   onDrop={(e) => {
                                     e.preventDefault();
                                     const type = (e.dataTransfer.getData('deduction-type') || dragTypeRef.current) as DeductionType | null;
-                                    if (type) handlePlace(type, fullKey);
+                                    if (type && FALLS.includes(type)) handlePlace(type, fullKey);
                                     setHoveredZone(null);
                                   }}
                                   onClick={() => {
-                                    if (armedType && !pending) handlePlace(armedType, fullKey);
+                                    if (armedType && FALLS.includes(armedType) && !pending) handlePlace(armedType, fullKey);
                                   }}
                                 >
                                   {/* Row depth label on the left cell of each row */}
@@ -616,7 +664,7 @@ export default function DeduccionesSheetPage() {
                 {/* Track footer */}
                 <div className="px-4 py-2 border-t border-zinc-100 bg-zinc-50">
                   <p className="text-[9px] text-zinc-400 text-center">
-                    Arrastra o selecciona un tipo y toca una celda · F = Frente · C = Centro · T = Fondo · Clic en badge para eliminar
+                    Solo caídas · Arrastra o selecciona y toca una celda · F = Frente · C = Centro · T = Fondo · Clic en badge para eliminar
                   </p>
                 </div>
               </div>
@@ -656,6 +704,71 @@ export default function DeduccionesSheetPage() {
               </div>
 
             </div>
+
+            {/* ── Direct-add panel (tiempo / ilegalidades / administrativas) ─ */}
+            {directPending && (
+              <div className="mt-6 rounded-xl border border-zinc-300 bg-white shadow-sm px-4 py-3">
+                <div className="flex items-start gap-3">
+                  <span className={`rounded-lg px-2.5 py-1 text-sm font-black shrink-0 ${PILL_COLORS[colorFor(directPending.type)]}`}>
+                    {DEDUCTION_CODES[directPending.type]}
+                  </span>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <span className="text-xs font-semibold text-zinc-700">{DEDUCTION_TYPE_LABELS[directPending.type]}</span>
+                      <span className="text-xs font-bold text-red-600">
+                        −{(directPending.count * parseFloat(DEDUCTION_AMOUNTS[directPending.type])).toFixed(2)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-zinc-500">Cantidad:</span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setDirectPending(p => p ? { ...p, count: Math.max(1, p.count - 1) } : p)}
+                            className="w-6 h-6 rounded border border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-100 text-sm font-bold flex items-center justify-center"
+                          >−</button>
+                          <span className="w-5 text-center text-sm font-bold tabular-nums">{directPending.count}</span>
+                          <button
+                            type="button"
+                            onClick={() => setDirectPending(p => p ? { ...p, count: p.count + 1 } : p)}
+                            className="w-6 h-6 rounded border border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-100 text-sm font-bold flex items-center justify-center"
+                          >+</button>
+                        </div>
+                      </div>
+
+                      <input
+                        type="text"
+                        placeholder="Nota (opcional)"
+                        value={directPending.notes}
+                        onChange={(e) => setDirectPending(p => p ? { ...p, notes: e.target.value } : p)}
+                        className="flex-1 min-w-32 h-7 rounded-lg border border-zinc-300 bg-white px-2.5 text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setDirectPending(null)}
+                      className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDirectConfirm}
+                      disabled={saving}
+                      className="rounded-lg bg-zinc-900 hover:bg-zinc-700 text-white px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50"
+                    >
+                      {saving ? '...' : `Agregar −${(directPending.count * parseFloat(DEDUCTION_AMOUNTS[directPending.type])).toFixed(2)}`}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* ── Deductions list + totals ──────────────────────────────────── */}
             <div className="mt-6 flex flex-col gap-3">
