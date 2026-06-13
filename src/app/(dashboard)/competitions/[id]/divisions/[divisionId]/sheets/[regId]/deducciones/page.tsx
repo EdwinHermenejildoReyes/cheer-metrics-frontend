@@ -102,14 +102,6 @@ interface Pending {
   hitZero: boolean;
 }
 
-// Direct-add (non-fall types — bypass the track)
-// Keyed by deduction type so multiple can be active simultaneously
-interface DirectPendingEntry {
-  count:   number;
-  notes:   string;
-  hitZero: boolean;
-}
-type DirectPendings = Partial<Record<DeductionType, DirectPendingEntry>>;
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function DeduccionesSheetPage() {
@@ -145,9 +137,8 @@ export default function DeduccionesSheetPage() {
   const [pending,      setPending]      = useState<Pending | null>(null);
   const dragTypeRef    = useRef<DeductionType | null>(null);
 
-  // Direct-add state (tiempo, ilegalidades, administrativas)
-  const [directPendings, setDirectPendings] = useState<DirectPendings>({});
-  const [savingDirect,   setSavingDirect]   = useState<DeductionType | null>(null);
+  // Direct-add saving indicator (tiempo, ilegalidades, administrativas)
+  const [savingDirect, setSavingDirect] = useState<Set<DeductionType>>(new Set());
 
   const load = useCallback(async () => {
     try {
@@ -203,26 +194,31 @@ export default function DeduccionesSheetPage() {
     }
   };
 
-  const handleDirectConfirm = async (type: DeductionType) => {
-    const entry = directPendings[type];
-    if (!sheet || !entry) return;
-    setSavingDirect(type);
+  // One click = save immediately; repeated click = increment existing count
+  const handleDirectAdd = async (type: DeductionType, currentDeductions: Deduction[]) => {
+    if (!sheet || savingDirect.has(type)) return;
+    setSavingDirect(prev => new Set(prev).add(type));
     try {
-      await competitionsRepository.createDeduction({
-        score_sheet:    sheet.id,
-        deduction_type: type,
-        count:          entry.count,
-        routine_time:   '',
-        hit_zero:       entry.hitZero,
-        notes:          entry.notes,
-      });
-      toast.success('Descuento registrado');
-      setDirectPendings(prev => { const next = { ...prev }; delete next[type]; return next; });
+      const existing = currentDeductions.find(
+        d => d.deduction_type === type && (!d.routine_time || d.routine_time === '')
+      );
+      if (existing) {
+        await competitionsRepository.updateDeduction(existing.id, { count: existing.count + 1 });
+      } else {
+        await competitionsRepository.createDeduction({
+          score_sheet:    sheet.id,
+          deduction_type: type,
+          count:          1,
+          routine_time:   '',
+          hit_zero:       false,
+          notes:          '',
+        });
+      }
       await load();
     } catch {
       toast.error('No se pudo registrar el descuento');
     } finally {
-      setSavingDirect(null);
+      setSavingDirect(prev => { const next = new Set(prev); next.delete(type); return next; });
     }
   };
 
@@ -364,7 +360,7 @@ export default function DeduccionesSheetPage() {
                       <div className="flex flex-col gap-1">
                         {types.map(type => {
                           const isArmed   = armedType === type;
-                          const isDirect  = type in directPendings;
+                          const isBusy    = savingDirect.has(type);
                           const ck        = colorFor(type);
                           return (
                             <div
@@ -383,34 +379,29 @@ export default function DeduccionesSheetPage() {
                               onClick={() => {
                                 if (isFallGroup) {
                                   setArmedType(prev => prev === type ? null : type);
-                                  setDirectPendings({});
                                 } else {
-                                  setDirectPendings(prev => {
-                                    if (type in prev) {
-                                      const next = { ...prev }; delete next[type]; return next;
-                                    }
-                                    return { ...prev, [type]: { count: 1, notes: '', hitZero: false } };
-                                  });
-                                  setArmedType(null);
+                                  handleDirectAdd(type, deductions);
                                 }
                               }}
                               className={`flex items-center justify-between rounded-lg px-3 py-2 border transition-all select-none ${
-                                isFallGroup ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'
+                                isFallGroup ? 'cursor-grab active:cursor-grabbing' : isBusy ? 'cursor-wait' : 'cursor-pointer'
                               } ${
-                                isArmed || isDirect
+                                isArmed
                                   ? `${PILL_COLORS[ck]} border-transparent shadow-md scale-[1.02]`
+                                  : isBusy
+                                  ? 'bg-zinc-100 border-zinc-200 opacity-60'
                                   : 'bg-white border-zinc-200 hover:border-zinc-400 hover:shadow-sm'
                               }`}
                             >
                               <div className="flex items-center gap-2 min-w-0">
-                                <span className={`text-sm font-black shrink-0 ${isArmed || isDirect ? 'text-white' : 'text-zinc-900'}`}>
+                                <span className={`text-sm font-black shrink-0 ${isArmed ? 'text-white' : 'text-zinc-900'}`}>
                                   {DEDUCTION_CODES[type]}
                                 </span>
-                                <span className={`text-[9px] truncate ${isArmed || isDirect ? 'text-white/75' : 'text-zinc-400'}`}>
+                                <span className={`text-[9px] truncate ${isArmed ? 'text-white/75' : 'text-zinc-400'}`}>
                                   {DEDUCTION_TYPE_LABELS[type].split(' ').slice(0, 2).join(' ')}
                                 </span>
                               </div>
-                              <span className={`text-[10px] font-bold tabular-nums shrink-0 ml-1 ${isArmed || isDirect ? 'text-white/90' : 'text-red-600'}`}>
+                              <span className={`text-[10px] font-bold tabular-nums shrink-0 ml-1 ${isArmed ? 'text-white/90' : 'text-red-600'}`}>
                                 −{DEDUCTION_AMOUNTS[type]}
                               </span>
                             </div>
@@ -713,78 +704,6 @@ export default function DeduccionesSheetPage() {
 
             </div>
 
-            {/* ── Direct-add panel (tiempo / ilegalidades / administrativas) ─ */}
-            {Object.keys(directPendings).length > 0 && (
-              <div className="mt-6 rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
-                <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                    Por registrar ({Object.keys(directPendings).length})
-                  </p>
-                </div>
-                <div className="divide-y divide-zinc-100">
-                  {(Object.entries(directPendings) as [DeductionType, DirectPendingEntry][]).map(([type, entry]) => {
-                    const ck      = colorFor(type);
-                    const total   = (entry.count * parseFloat(DEDUCTION_AMOUNTS[type])).toFixed(2);
-                    const isBusy  = savingDirect === type;
-                    return (
-                      <div key={type} className="flex items-center gap-3 px-4 py-3">
-                        <span className={`rounded-lg px-2.5 py-1 text-sm font-black shrink-0 ${PILL_COLORS[ck]}`}>
-                          {DEDUCTION_CODES[type]}
-                        </span>
-
-                        <div className="flex-1 min-w-0 flex items-center gap-3 flex-wrap">
-                          <span className="text-xs font-semibold text-zinc-700 shrink-0">
-                            {DEDUCTION_TYPE_LABELS[type]}
-                          </span>
-
-                          <div className="flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => setDirectPendings(p => ({ ...p, [type]: { ...entry, count: Math.max(1, entry.count - 1) } }))}
-                              className="w-6 h-6 rounded border border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-100 text-sm font-bold flex items-center justify-center"
-                            >−</button>
-                            <span className="w-5 text-center text-sm font-bold tabular-nums">{entry.count}</span>
-                            <button
-                              type="button"
-                              onClick={() => setDirectPendings(p => ({ ...p, [type]: { ...entry, count: entry.count + 1 } }))}
-                              className="w-6 h-6 rounded border border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-100 text-sm font-bold flex items-center justify-center"
-                            >+</button>
-                          </div>
-
-                          <input
-                            type="text"
-                            placeholder="Nota (opcional)"
-                            value={entry.notes}
-                            onChange={(e) => setDirectPendings(p => ({ ...p, [type]: { ...entry, notes: e.target.value } }))}
-                            className="flex-1 min-w-28 h-7 rounded-lg border border-zinc-300 bg-white px-2.5 text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400"
-                          />
-
-                          <span className="text-xs font-bold text-red-600 tabular-nums shrink-0">−{total}</span>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => setDirectPendings(prev => { const next = { ...prev }; delete next[type]; return next; })}
-                            className="rounded-lg border border-zinc-200 p-1.5 text-zinc-400 hover:text-red-500 hover:border-red-200 transition-colors"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDirectConfirm(type)}
-                            disabled={isBusy}
-                            className="rounded-lg bg-zinc-900 hover:bg-zinc-700 text-white px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50"
-                          >
-                            {isBusy ? '...' : `Agregar −${total}`}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
             {/* ── Deductions list + totals ──────────────────────────────────── */}
             <div className="mt-6 flex flex-col gap-3">
