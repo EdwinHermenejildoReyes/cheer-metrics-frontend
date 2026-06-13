@@ -102,12 +102,13 @@ interface Pending {
 }
 
 // Direct-add (non-fall types — bypass the track)
-interface DirectPending {
-  type:    DeductionType;
+// Keyed by deduction type so multiple can be active simultaneously
+interface DirectPendingEntry {
   count:   number;
   notes:   string;
   hitZero: boolean;
 }
+type DirectPendings = Partial<Record<DeductionType, DirectPendingEntry>>;
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function DeduccionesSheetPage() {
@@ -143,7 +144,8 @@ export default function DeduccionesSheetPage() {
   const dragTypeRef    = useRef<DeductionType | null>(null);
 
   // Direct-add state (tiempo, ilegalidades, administrativas)
-  const [directPending, setDirectPending] = useState<DirectPending | null>(null);
+  const [directPendings, setDirectPendings] = useState<DirectPendings>({});
+  const [savingDirect,   setSavingDirect]   = useState<DeductionType | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -199,25 +201,26 @@ export default function DeduccionesSheetPage() {
     }
   };
 
-  const handleDirectConfirm = async () => {
-    if (!sheet || !directPending) return;
-    setSaving(true);
+  const handleDirectConfirm = async (type: DeductionType) => {
+    const entry = directPendings[type];
+    if (!sheet || !entry) return;
+    setSavingDirect(type);
     try {
       await competitionsRepository.createDeduction({
         score_sheet:    sheet.id,
-        deduction_type: directPending.type,
-        count:          directPending.count,
+        deduction_type: type,
+        count:          entry.count,
         routine_time:   '',
-        hit_zero:       directPending.hitZero,
-        notes:          directPending.notes,
+        hit_zero:       entry.hitZero,
+        notes:          entry.notes,
       });
       toast.success('Descuento registrado');
-      setDirectPending(null);
+      setDirectPendings(prev => { const next = { ...prev }; delete next[type]; return next; });
       await load();
     } catch {
       toast.error('No se pudo registrar el descuento');
     } finally {
-      setSaving(false);
+      setSavingDirect(null);
     }
   };
 
@@ -359,7 +362,7 @@ export default function DeduccionesSheetPage() {
                       <div className="flex flex-col gap-1">
                         {types.map(type => {
                           const isArmed   = armedType === type;
-                          const isDirect  = directPending?.type === type;
+                          const isDirect  = type in directPendings;
                           const ck        = colorFor(type);
                           return (
                             <div
@@ -378,11 +381,14 @@ export default function DeduccionesSheetPage() {
                               onClick={() => {
                                 if (isFallGroup) {
                                   setArmedType(prev => prev === type ? null : type);
-                                  setDirectPending(null);
+                                  setDirectPendings({});
                                 } else {
-                                  setDirectPending(prev =>
-                                    prev?.type === type ? null : { type, count: 1, notes: '', hitZero: false }
-                                  );
+                                  setDirectPendings(prev => {
+                                    if (type in prev) {
+                                      const next = { ...prev }; delete next[type]; return next;
+                                    }
+                                    return { ...prev, [type]: { count: 1, notes: '', hitZero: false } };
+                                  });
                                   setArmedType(null);
                                 }
                               }}
@@ -706,66 +712,74 @@ export default function DeduccionesSheetPage() {
             </div>
 
             {/* ── Direct-add panel (tiempo / ilegalidades / administrativas) ─ */}
-            {directPending && (
-              <div className="mt-6 rounded-xl border border-zinc-300 bg-white shadow-sm px-4 py-3">
-                <div className="flex items-start gap-3">
-                  <span className={`rounded-lg px-2.5 py-1 text-sm font-black shrink-0 ${PILL_COLORS[colorFor(directPending.type)]}`}>
-                    {DEDUCTION_CODES[directPending.type]}
-                  </span>
+            {Object.keys(directPendings).length > 0 && (
+              <div className="mt-6 rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
+                <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                    Por registrar ({Object.keys(directPendings).length})
+                  </p>
+                </div>
+                <div className="divide-y divide-zinc-100">
+                  {(Object.entries(directPendings) as [DeductionType, DirectPendingEntry][]).map(([type, entry]) => {
+                    const ck      = colorFor(type);
+                    const total   = (entry.count * parseFloat(DEDUCTION_AMOUNTS[type])).toFixed(2);
+                    const isBusy  = savingDirect === type;
+                    return (
+                      <div key={type} className="flex items-center gap-3 px-4 py-3">
+                        <span className={`rounded-lg px-2.5 py-1 text-sm font-black shrink-0 ${PILL_COLORS[ck]}`}>
+                          {DEDUCTION_CODES[type]}
+                        </span>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <span className="text-xs font-semibold text-zinc-700">{DEDUCTION_TYPE_LABELS[directPending.type]}</span>
-                      <span className="text-xs font-bold text-red-600">
-                        −{(directPending.count * parseFloat(DEDUCTION_AMOUNTS[directPending.type])).toFixed(2)}
-                      </span>
-                    </div>
+                        <div className="flex-1 min-w-0 flex items-center gap-3 flex-wrap">
+                          <span className="text-xs font-semibold text-zinc-700 shrink-0">
+                            {DEDUCTION_TYPE_LABELS[type]}
+                          </span>
 
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] text-zinc-500">Cantidad:</span>
-                        <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => setDirectPendings(p => ({ ...p, [type]: { ...entry, count: Math.max(1, entry.count - 1) } }))}
+                              className="w-6 h-6 rounded border border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-100 text-sm font-bold flex items-center justify-center"
+                            >−</button>
+                            <span className="w-5 text-center text-sm font-bold tabular-nums">{entry.count}</span>
+                            <button
+                              type="button"
+                              onClick={() => setDirectPendings(p => ({ ...p, [type]: { ...entry, count: entry.count + 1 } }))}
+                              className="w-6 h-6 rounded border border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-100 text-sm font-bold flex items-center justify-center"
+                            >+</button>
+                          </div>
+
+                          <input
+                            type="text"
+                            placeholder="Nota (opcional)"
+                            value={entry.notes}
+                            onChange={(e) => setDirectPendings(p => ({ ...p, [type]: { ...entry, notes: e.target.value } }))}
+                            className="flex-1 min-w-28 h-7 rounded-lg border border-zinc-300 bg-white px-2.5 text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400"
+                          />
+
+                          <span className="text-xs font-bold text-red-600 tabular-nums shrink-0">−{total}</span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
                           <button
                             type="button"
-                            onClick={() => setDirectPending(p => p ? { ...p, count: Math.max(1, p.count - 1) } : p)}
-                            className="w-6 h-6 rounded border border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-100 text-sm font-bold flex items-center justify-center"
-                          >−</button>
-                          <span className="w-5 text-center text-sm font-bold tabular-nums">{directPending.count}</span>
+                            onClick={() => setDirectPendings(prev => { const next = { ...prev }; delete next[type]; return next; })}
+                            className="rounded-lg border border-zinc-200 p-1.5 text-zinc-400 hover:text-red-500 hover:border-red-200 transition-colors"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
                           <button
                             type="button"
-                            onClick={() => setDirectPending(p => p ? { ...p, count: p.count + 1 } : p)}
-                            className="w-6 h-6 rounded border border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-100 text-sm font-bold flex items-center justify-center"
-                          >+</button>
+                            onClick={() => handleDirectConfirm(type)}
+                            disabled={isBusy}
+                            className="rounded-lg bg-zinc-900 hover:bg-zinc-700 text-white px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50"
+                          >
+                            {isBusy ? '...' : `Agregar −${total}`}
+                          </button>
                         </div>
                       </div>
-
-                      <input
-                        type="text"
-                        placeholder="Nota (opcional)"
-                        value={directPending.notes}
-                        onChange={(e) => setDirectPending(p => p ? { ...p, notes: e.target.value } : p)}
-                        className="flex-1 min-w-32 h-7 rounded-lg border border-zinc-300 bg-white px-2.5 text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setDirectPending(null)}
-                      className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleDirectConfirm}
-                      disabled={saving}
-                      className="rounded-lg bg-zinc-900 hover:bg-zinc-700 text-white px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50"
-                    >
-                      {saving ? '...' : `Agregar −${(directPending.count * parseFloat(DEDUCTION_AMOUNTS[directPending.type])).toFixed(2)}`}
-                    </button>
-                  </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
