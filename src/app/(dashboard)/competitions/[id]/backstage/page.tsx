@@ -112,7 +112,7 @@ export default function BackstagePage() {
               const countStr = counts[reg.id] ?? '';
               const count    = parseInt(countStr, 10);
               const hasCount = !isNaN(count) && count > 0;
-              const groups   = hasCount && div ? getConstructionGroups(count, div.category) : null;
+              const groups   = hasCount ? getConstructionGroups(count) : null;
               const isSaving = saving === reg.id;
               const isDirty  = countStr !== (reg.athlete_count != null ? String(reg.athlete_count) : '');
 
@@ -182,18 +182,18 @@ export default function BackstagePage() {
                   {groups && (
                     <div className="grid grid-cols-3 gap-2 rounded-lg border border-zinc-100 bg-zinc-50 p-3">
                       <div className="text-center">
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Elevaciones</p>
-                        <p className="text-2xl font-black text-zinc-900 tabular-nums">{groups.stunts}</p>
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Mayoría</p>
+                        <p className="text-2xl font-black text-zinc-900 tabular-nums">{groups.mayoria}</p>
                         <p className="text-[9px] text-zinc-400">grupos</p>
                       </div>
                       <div className="text-center border-x border-zinc-200">
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Pirámides</p>
-                        <p className="text-2xl font-black text-zinc-900 tabular-nums">{groups.pyramids}</p>
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Gran parte</p>
+                        <p className="text-2xl font-black text-zinc-900 tabular-nums">{groups.gran_parte}</p>
                         <p className="text-[9px] text-zinc-400">grupos</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Lanzamientos</p>
-                        <p className="text-2xl font-black text-zinc-900 tabular-nums">{groups.tosses}</p>
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Máximo</p>
+                        <p className="text-2xl font-black text-zinc-900 tabular-nums">{groups.max}</p>
                         <p className="text-[9px] text-zinc-400">grupos</p>
                       </div>
                     </div>

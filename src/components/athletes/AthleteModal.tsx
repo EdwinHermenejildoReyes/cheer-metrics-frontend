@@ -37,10 +37,25 @@ const GENDER_OPTIONS = [
   { value: 'O', label: 'Otro' },
 ];
 
+const MIN_COMPETITION_AGE = 4; // Tiny category (UCA Ecuador / IASF)
+
+function calcAge(birthDateStr: string): number {
+  const today = new Date();
+  const birth = new Date(birthDateStr + 'T00:00:00');
+  return today.getFullYear() - birth.getFullYear() -
+    ((today.getMonth() * 100 + today.getDate()) < (birth.getMonth() * 100 + birth.getDate()) ? 1 : 0);
+}
+
 const schema = z.object({
   first_name:  z.string().min(2, 'Mínimo 2 caracteres'),
   last_name:   z.string().min(2, 'Mínimo 2 caracteres'),
-  birth_date:  z.string().min(1, 'Requerido'),
+  birth_date: z
+    .string()
+    .min(1, 'Requerido')
+    .refine(v => new Date(v + 'T00:00:00') <= new Date(), { message: 'La fecha no puede ser futura' })
+    .refine(v => calcAge(v) >= MIN_COMPETITION_AGE, {
+      message: `El atleta debe tener al menos ${MIN_COMPETITION_AGE} años para competir (categoría Tiny)`,
+    }),
   gender:      z.enum(['F', 'M', 'O']),
   document_id: z
     .string()
