@@ -212,8 +212,8 @@ export default function DashboardPage() {
   }, [isJudge, router]);
 
   if (isJudge || loading) return <PageSpinner />;
-
-  const d = data!;
+  if (!data) return null;
+  const d = data;
   const greeting = user?.first_name ? `, ${user.first_name}` : '';
 
   return (
