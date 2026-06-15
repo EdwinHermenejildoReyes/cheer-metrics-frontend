@@ -9,7 +9,9 @@ const api = axios.create({
   baseURL: mainApiUrl ?? '',
   headers: { 'content-type': 'application/json' },
   timeout: 15000,
-  withCredentials: true, // sends httpOnly JWT cookies on every request
+  withCredentials: true,   // sends httpOnly JWT cookies on every request
+  xsrfCookieName: 'csrftoken',   // Django's CSRF cookie name (not httpOnly)
+  xsrfHeaderName: 'X-CSRFToken', // Django's expected CSRF header
 });
 
 api.interceptors.response.use(
