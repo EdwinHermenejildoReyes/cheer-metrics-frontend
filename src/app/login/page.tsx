@@ -13,7 +13,6 @@ import { setUser } from '@/store/auth/slices';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import authRepository from '@/repositories/authRepository';
-import api from '@/services/api';
 
 const schema = z.object({
   email: z.string().email('Correo inválido'),
@@ -27,11 +26,6 @@ export default function LoginPage() {
   const dispatch = useDispatch();
   const user = useSelector((s: RootState) => s.auth.user);
   const isAuthenticated = useSelector((s: RootState) => s.auth.isAuthenticated);
-
-  useEffect(() => {
-    // Ensures Django sets the csrftoken cookie before any mutating request.
-    api.get('auth/csrf/').catch(() => {});
-  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) return;
