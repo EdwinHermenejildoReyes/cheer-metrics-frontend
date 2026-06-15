@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList, Receipt } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList, Receipt, Link as LinkIcon, Copy, Check } from 'lucide-react';
 import { PrintButton } from '@/components/print/PrintButton';
 import { Modal } from '@/components/ui/modal';
 import { toast } from 'sonner';
@@ -13,6 +13,8 @@ import { CompetitionModal } from '@/components/competitions/CompetitionModal';
 import { DivisionModal } from '@/components/competitions/DivisionModal';
 import competitionsRepository, { type RestConflict } from '@/repositories/competitionsRepository';
 import authRepository, { type SimpleUser } from '@/repositories/authRepository';
+import publicRegistrationRepository from '@/repositories/publicRegistrationRepository';
+import getEnvVars from '@/utils/getEnvVars';
 import { useJudge } from '@/hooks/useJudge';
 import {
   AGE_GROUP_LABELS,
@@ -53,6 +55,16 @@ export default function CompetitionDetailPage() {
   const [conflictsLoading, setConflictsLoading] = useState(false);
   const [assigningOrders, setAssigningOrders] = useState(false);
   const [itineraryModalOpen, setItineraryModalOpen] = useState(false);
+
+  // Registration tokens
+  const [tokensOpen, setTokensOpen] = useState(false);
+  interface RegToken { id: number; token: string; expires_at: string; max_uses: number | null; used_count: number; notes: string; is_valid: boolean; }
+  const [tokens, setTokens] = useState<RegToken[]>([]);
+  const [newTokenExpiry, setNewTokenExpiry] = useState('');
+  const [newTokenMaxUses, setNewTokenMaxUses] = useState('');
+  const [newTokenNotes, setNewTokenNotes] = useState('');
+  const [creatingToken, setCreatingToken] = useState(false);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
 
   const { isJudge, isCompetitionActive } = useJudge();
 
@@ -118,6 +130,55 @@ export default function CompetitionDetailPage() {
   useEffect(() => {
     if (conflictsOpen) loadConflicts();
   }, [conflictsOpen, loadConflicts]);
+
+  const loadTokens = useCallback(async () => {
+    const res = await publicRegistrationRepository.listTokens(competitionId);
+    setTokens(res.results ?? res);
+  }, [competitionId]);
+
+  useEffect(() => {
+    if (tokensOpen) loadTokens();
+  }, [tokensOpen, loadTokens]);
+
+  const handleCreateToken = async () => {
+    if (!newTokenExpiry) { toast.error('Indica la fecha de expiración.'); return; }
+    setCreatingToken(true);
+    try {
+      await publicRegistrationRepository.createToken({
+        competition: competitionId,
+        expires_at: new Date(newTokenExpiry).toISOString(),
+        max_uses: newTokenMaxUses ? Number(newTokenMaxUses) : null,
+        notes: newTokenNotes,
+      });
+      toast.success('Token creado');
+      setNewTokenExpiry('');
+      setNewTokenMaxUses('');
+      setNewTokenNotes('');
+      await loadTokens();
+    } catch {
+      toast.error('No se pudo crear el token.');
+    } finally {
+      setCreatingToken(false);
+    }
+  };
+
+  const handleDeleteToken = async (tokenId: number) => {
+    try {
+      await publicRegistrationRepository.deleteToken(tokenId);
+      toast.success('Token eliminado');
+      await loadTokens();
+    } catch {
+      toast.error('No se pudo eliminar el token.');
+    }
+  };
+
+  const copyTokenLink = (token: string, tokenId: number) => {
+    const { webUrl } = getEnvVars();
+    const base = (webUrl ?? window.location.origin).replace(/\/$/, '');
+    navigator.clipboard.writeText(`${base}/registro?token=${token}`);
+    setCopiedId(tokenId);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   const handleAddJudge = async () => {
     if (!newJudgeUserId) return;
@@ -395,6 +456,115 @@ export default function CompetitionDetailPage() {
                     </button>
                   </div>
                 </>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Panel de links de inscripción (solo admin) ─────────────────── */}
+      {!isJudge && (
+        <div className="print:hidden flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => setTokensOpen((v) => !v)}
+            className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-3.5 text-left hover:bg-zinc-50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <LinkIcon className="h-4 w-4 text-zinc-400" />
+              <span className="text-sm font-semibold text-zinc-900">Links de inscripción</span>
+              {tokens.length > 0 && (
+                <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
+                  {tokens.length}
+                </span>
+              )}
+            </div>
+            {tokensOpen ? <ChevronUp className="h-4 w-4 text-zinc-400" /> : <ChevronDown className="h-4 w-4 text-zinc-400" />}
+          </button>
+
+          {tokensOpen && (
+            <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+              {/* Create form */}
+              <div className="grid grid-cols-2 gap-3 px-5 py-4 border-b border-zinc-100 bg-zinc-50 lg:flex lg:items-end">
+                <div>
+                  <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Expira el *</label>
+                  <input
+                    type="datetime-local"
+                    value={newTokenExpiry}
+                    onChange={(e) => setNewTokenExpiry(e.target.value)}
+                    className="h-9 rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  />
+                </div>
+                <div className="lg:w-28">
+                  <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Usos máx.</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={newTokenMaxUses}
+                    onChange={(e) => setNewTokenMaxUses(e.target.value)}
+                    placeholder="∞"
+                    className="h-9 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  />
+                </div>
+                <div className="col-span-2 lg:flex-1">
+                  <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Nota (opcional)</label>
+                  <input
+                    type="text"
+                    value={newTokenNotes}
+                    onChange={(e) => setNewTokenNotes(e.target.value)}
+                    placeholder="Ej. Gimnasio XYZ"
+                    className="h-9 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  />
+                </div>
+                <div className="col-span-2 flex justify-end lg:col-span-1">
+                  <Button size="sm" onClick={handleCreateToken} disabled={!newTokenExpiry || creatingToken}>
+                    <Plus className="h-4 w-4" />
+                    Crear link
+                  </Button>
+                </div>
+              </div>
+
+              {/* List */}
+              {tokens.length === 0 ? (
+                <p className="px-5 py-4 text-sm text-zinc-400">Sin links activos. Crea uno para enviar a los gimnasios.</p>
+              ) : (
+                <div className="divide-y divide-zinc-100">
+                  {tokens.map((tk) => (
+                    <div key={tk.id} className="flex items-center justify-between px-5 py-3 gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${tk.is_valid ? 'bg-green-100 text-green-700' : 'bg-zinc-100 text-zinc-400'}`}>
+                            {tk.is_valid ? 'Activo' : 'Inactivo'}
+                          </span>
+                          {tk.notes && <span className="text-xs text-zinc-600 font-medium">{tk.notes}</span>}
+                        </div>
+                        <p className="text-[11px] font-mono text-zinc-400">
+                          Expira: {new Date(tk.expires_at).toLocaleString('es-EC')}
+                          {tk.max_uses != null && ` · ${tk.used_count}/${tk.max_uses} usos`}
+                          {tk.max_uses == null && tk.used_count > 0 && ` · ${tk.used_count} usos`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => copyTokenLink(tk.token, tk.id)}
+                          title="Copiar link de inscripción"
+                          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs text-zinc-600 border border-zinc-200 hover:bg-zinc-50 transition-colors"
+                        >
+                          {copiedId === tk.id ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
+                          {copiedId === tk.id ? 'Copiado' : 'Copiar link'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteToken(tk.id)}
+                          className="rounded-lg p-1.5 text-zinc-300 hover:bg-red-50 hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           )}
