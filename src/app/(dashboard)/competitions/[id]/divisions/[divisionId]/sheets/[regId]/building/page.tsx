@@ -18,12 +18,67 @@ import type { BuildingConfig } from '@/lib/scoringConfig';
 import type { Division, DivisionCategory, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 import type { BuildingPrintData } from '@/components/print/BuildingSheetPrintView';
+import { InfoButton } from '@/components/ui/InfoButton';
 
 // ── Execution categories (same for all scoring systems) ──────────────────────
 const EXEC_CATS      = ['Flyer', 'Base/Spotter', 'Transición', 'Sincronización'];
 const TOSS_EXEC_CATS = ['Flyer', 'Base/Spotter', 'Altura'];
 const EXEC_DED_OPTS   = [0.05, 0.10, 0.20, 0.30];
 const EXEC_DED_LABELS = ['Mínimos', 'Menores', 'Múltiples', 'Generalizados'];
+
+// ── Execution deduction rules info content ────────────────────────────────────
+function ExecInfoContent({ cats, note }: { cats: string[]; note?: string }) {
+  return (
+    <div className="space-y-4 text-sm">
+      <div>
+        <h3 className="font-semibold text-zinc-900 mb-2">Niveles de Deducción</h3>
+        <table className="w-full text-xs border-collapse">
+          <thead>
+            <tr className="bg-zinc-50">
+              <th className="text-left px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600">Nivel</th>
+              <th className="text-center px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600 w-16">Descuento</th>
+              <th className="text-left px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600">Criterio</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              { label: 'Mínimos', amt: '−0.05', desc: 'Errores leves, casi imperceptibles; no afectan el conjunto' },
+              { label: 'Menores', amt: '−0.10', desc: 'Errores claramente visibles pero controlados y aislados' },
+              { label: 'Múltiples', amt: '−0.20', desc: 'Errores frecuentes o repetidos en varias ejecuciones' },
+              { label: 'Generalizados', amt: '−0.30', desc: 'Errores graves o falta de control notoria en la categoría' },
+            ].map(({ label, amt, desc }) => (
+              <tr key={label} className="even:bg-zinc-50">
+                <td className="px-3 py-1.5 border border-zinc-200 font-medium">{label}</td>
+                <td className="px-3 py-1.5 border border-zinc-200 text-center text-red-600 font-semibold tabular-nums">{amt}</td>
+                <td className="px-3 py-1.5 border border-zinc-200 text-zinc-500">{desc}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3 className="font-semibold text-zinc-900 mb-2">Categorías Evaluadas</h3>
+        <ul className="space-y-1.5 text-xs text-zinc-600">
+          {cats.map((cat) => (
+            <li key={cat} className="flex items-start gap-2">
+              <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" />
+              <span><strong>{cat}:</strong> {CAT_DESCRIPTIONS[cat] ?? 'Calidad técnica de ejecución en esta categoría.'}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {note && <p className="text-xs text-zinc-400 leading-relaxed border-t border-zinc-100 pt-3">{note}</p>}
+    </div>
+  );
+}
+
+const CAT_DESCRIPTIONS: Record<string, string> = {
+  'Flyer': 'Posición corporal, rigidez, extensión y control del cuerpo durante la habilidad.',
+  'Base/Spotter': 'Técnica de sujeción, estabilidad, posición y coordinación de los bases y spotter.',
+  'Transición': 'Limpieza, control y fluidez al entrar y salir de cada habilidad.',
+  'Sincronización': 'Coordinación y tiempo entre los diferentes grupos o stunts del equipo.',
+  'Altura': 'Alcance del pico máximo, limpieza en la subida y técnica durante el lanzamiento.',
+};
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 type ExecDeds = (number | null)[];
@@ -49,13 +104,14 @@ function NoAplicaBadge({ label }: { label: string }) {
 
 // ── Execution sub-component ──────────────────────────────────────────────────
 function ExecSection({
-  label, max, deds, onChange, cats = EXEC_CATS,
+  label, max, deds, onChange, cats = EXEC_CATS, info,
 }: {
   label: string;
   max: number;
   deds: ExecDeds;
   onChange: (deds: ExecDeds) => void;
   cats?: string[];
+  info?: React.ReactNode;
 }) {
   const score = execScore(max, deds);
   const totalDed = deds.reduce<number>((s, d) => s + (d ?? 0), 0);
@@ -64,7 +120,12 @@ function ExecSection({
     <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
       <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">{label} — Ejecución</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">{label} — Ejecución</span>
+            {info && (
+              <InfoButton title={`Ejecución — ${label}`} size="lg">{info}</InfoButton>
+            )}
+          </div>
           <span className="text-sm font-semibold tabular-nums text-zinc-600">Máx: {fmt(max)}</span>
         </div>
         <p className="text-[10px] text-zinc-400 mt-0.5">Se Descuenta por Cantidad, Frecuencia y/o Gravedad de Errores</p>
@@ -551,8 +612,63 @@ export default function BuildingSheetPage() {
 
         {/* ── STUNTS ──────────────────────────────────────────────────── */}
         <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
+          <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700 flex items-center gap-2">
             Elevaciones — Stunts
+            <InfoButton title="Elevaciones — Stunts" size="xl">
+              <div className="space-y-5 text-sm text-zinc-700">
+                <p className="text-zinc-500 text-xs leading-relaxed">
+                  Evalúa las habilidades de elevación (stunts) ejecutadas por el equipo, considerando dificultad, ejecución técnica y habilidades de los drivers (spotter/base).
+                </p>
+                <div>
+                  <h3 className="font-semibold text-zinc-900 mb-2">Rango Base de Complejidad</h3>
+                  <table className="w-full text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-zinc-50">
+                        <th className="text-left px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600">Criterio</th>
+                        <th className="text-center px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600 w-16">Puntaje</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        ['No cumple con 4.0 (habilidades básicas)', '3.5'],
+                        ['4 Habilidades Acumulativas del nivel', '4.0'],
+                        ['2 Habilidades Diferentes del nivel', '4.5'],
+                        ['3 Habilidades Diferentes del nivel', '5.0'],
+                        ['4 Habilidades Diferentes del nivel', '5.5'],
+                        ['5 Hab Diferentes / 1 Habilidad Coed', '6.0'],
+                      ].map(([label, score]) => (
+                        <tr key={label} className="even:bg-zinc-50">
+                          <td className="px-3 py-1.5 border border-zinc-200">{label}</td>
+                          <td className="px-3 py-1.5 border border-zinc-200 text-center font-semibold tabular-nums">{score}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-zinc-900 mb-1">Grado de Dificultad por Habilidad</h3>
+                  <p className="text-xs text-zinc-500 mb-2">Se aplica a cada habilidad individual ejecutada dentro del rango seleccionado.</p>
+                  <div className="flex flex-col gap-1.5">
+                    {[
+                      { label: 'No Cumple', desc: 'Habilidad básica o no ejecutada al nivel requerido', color: 'bg-zinc-100 text-zinc-600' },
+                      { label: 'Avanzado  +0.10', desc: 'Habilidad claramente de dificultad avanzada dentro del nivel', color: 'bg-blue-50 text-blue-700' },
+                      { label: 'Elite  +0.20', desc: 'Habilidad de máxima dificultad o complejidad Elite dentro del nivel', color: 'bg-violet-50 text-violet-700' },
+                    ].map(({ label, desc, color }) => (
+                      <div key={label} className={`rounded-lg px-3 py-2 ${color}`}>
+                        <p className="font-semibold text-xs">{label}</p>
+                        <p className="text-xs opacity-80 mt-0.5">{desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-zinc-900 mb-1">Part Max — Spotter / Base</h3>
+                  <p className="text-xs text-zinc-500 leading-relaxed">
+                    Bonificación por la participación máxima de Spotter/Base en una habilidad en Canon o Sincronizado. No se pueden repetir atletas entre grupos contados.
+                  </p>
+                </div>
+              </div>
+            </InfoButton>
           </h2>
           {!bCfg.hasStunts ? (
             <NoAplicaBadge label="Sin Stunts — No Aplica para esta División" />
@@ -569,8 +685,15 @@ export default function BuildingSheetPage() {
                 </div>
               ) : (
                 <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-                  <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
+                  <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200 flex items-center gap-1.5">
                     <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Dificultad</span>
+                    <InfoButton title="Dificultad — Stunts" size="md">
+                      <div className="space-y-3 text-xs text-zinc-700">
+                        <p className="text-zinc-500 leading-relaxed">El puntaje de dificultad combina el <strong>Rango Base</strong> (tipo de habilidades ejecutadas) más el <strong>Grado de Dificultad</strong> individual de cada habilidad.</p>
+                        <p className="leading-relaxed"><strong>Fórmula:</strong> Rango Base + Σ Grado por Habilidad + Part Max (Spotter/Base)</p>
+                        <p className="text-zinc-500 leading-relaxed">Solo cuentan las habilidades que califiquen dentro del rango seleccionado. Las habilidades con menor nivel al del rango elegido no suman grado de dificultad.</p>
+                      </div>
+                    </InfoButton>
                   </div>
                   <div className="p-4 flex flex-col gap-5">
 
@@ -682,7 +805,9 @@ export default function BuildingSheetPage() {
 
               {/* RIGHT: Execution + Total + Comments */}
               <div className="flex flex-col gap-4">
-                <ExecSection label="Elevaciones" max={bCfg.stuntsExecMax} deds={stuntsExecDeds} onChange={setStuntsExecDeds} />
+                <ExecSection label="Elevaciones" max={bCfg.stuntsExecMax} deds={stuntsExecDeds} onChange={setStuntsExecDeds}
+                  info={<ExecInfoContent cats={EXEC_CATS} note="Cada categoría se evalúa de forma independiente. Solo se puede seleccionar un nivel de deducción por categoría por vuelta." />}
+                />
                 <SectionTotal
                   label="Total Elevaciones"
                   breakdown={
@@ -703,7 +828,28 @@ export default function BuildingSheetPage() {
 
         {/* ── PYRAMIDS ────────────────────────────────────────────────── */}
         <section className="flex flex-col gap-3 mt-6">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Pirámides</h2>
+          <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700 flex items-center gap-2">
+            Pirámides
+            <InfoButton title="Pirámides" size="xl">
+              <div className="space-y-4 text-sm text-zinc-700">
+                <p className="text-zinc-500 text-xs leading-relaxed">
+                  Evalúa las estructuras de pirámide ejecutadas por el equipo. Se considera la variedad y dificultad de las estructuras diferentes del nivel, junto con la calidad de ejecución.
+                </p>
+                <div>
+                  <h3 className="font-semibold text-zinc-900 mb-2">Rango de Dificultad</h3>
+                  <p className="text-xs text-zinc-500 leading-relaxed mb-2">
+                    Basado en el número de <strong>Habilidades Diferentes del Nivel</strong> y el número de <strong>Estructuras por Gran Parte</strong> del equipo. Cada rango tiene un puntaje mínimo y máximo; el <strong>Ajuste Fino</strong> permite ubicar el desempeño dentro de ese rango.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-zinc-900 mb-2">Ejecución — Pirámides</h3>
+                  <p className="text-xs text-zinc-500 leading-relaxed">
+                    Se evalúan las mismas categorías que en Stunts (Flyer, Base/Spotter, Transición, Sincronización). La <strong>Sincronización</strong> en pirámides considera la coordinación entre todos los stunts que conforman la estructura simultáneamente.
+                  </p>
+                </div>
+              </div>
+            </InfoButton>
+          </h2>
           {!bCfg.hasPyramids ? (
             <NoAplicaBadge label="Sin Pirámides — No Aplica para esta División" />
           ) : (
@@ -779,7 +925,9 @@ export default function BuildingSheetPage() {
 
               {/* RIGHT: Execution + Drivers + Total + Comments */}
               <div className="flex flex-col gap-4">
-                <ExecSection label="Pirámides" max={bCfg.pyramidsExecMax} deds={pyramidsExecDeds} onChange={setPyramidsExecDeds} />
+                <ExecSection label="Pirámides" max={bCfg.pyramidsExecMax} deds={pyramidsExecDeds} onChange={setPyramidsExecDeds}
+                  info={<ExecInfoContent cats={EXEC_CATS} note="En pirámides, la Sincronización evalúa la coordinación entre todos los stunts que forman la estructura simultáneamente." />}
+                />
 
                 {/* Pyramid drivers (escolar_ab only) */}
                 {bCfg.pyramidDriversOpts.length > 0 && (
@@ -831,7 +979,24 @@ export default function BuildingSheetPage() {
         {/* ── TOSSES ──────────────────────────────────────────────────── */}
         {bCfg.hasTosses && (
           <section className="flex flex-col gap-3 mt-6">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Lanzamientos — Tosses</h2>
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700 flex items-center gap-2">
+              Lanzamientos — Tosses
+              <InfoButton title="Lanzamientos — Tosses" size="lg">
+                <div className="space-y-4 text-sm text-zinc-700">
+                  <p className="text-zinc-500 text-xs leading-relaxed">
+                    Evalúa los lanzamientos (basket tosses y similares) ejecutados por el equipo. Se considera la dificultad de la habilidad lanzada y la calidad de ejecución técnica.
+                  </p>
+                  <div>
+                    <h3 className="font-semibold text-zinc-900 mb-2">Dificultad</h3>
+                    <p className="text-xs text-zinc-500 leading-relaxed">Basada en el lanzamiento apropiado al nivel de la categoría. El puntaje refleja si la habilidad ejecutada corresponde al nivel mínimo requerido o lo supera.</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-zinc-900 mb-2">Ejecución</h3>
+                    <p className="text-xs text-zinc-500 leading-relaxed">Se evalúan <strong>Flyer</strong> (posición corporal y control en el aire), <strong>Base/Spotter</strong> (técnica del lanzamiento y recepción) y <strong>Altura</strong> (alcance del pico máximo y limpieza de trayectoria).</p>
+                  </div>
+                </div>
+              </InfoButton>
+            </h2>
             <div className="grid grid-cols-2 gap-5 items-start">
 
               {/* LEFT: Difficulty */}
@@ -866,7 +1031,9 @@ export default function BuildingSheetPage() {
 
               {/* RIGHT: Execution + Total + Comments */}
               <div className="flex flex-col gap-4">
-                <ExecSection label="Lanzamientos" max={bCfg.tossesExecMax} deds={tossesExecDeds} onChange={setTossesExecDeds} cats={TOSS_EXEC_CATS} />
+                <ExecSection label="Lanzamientos" max={bCfg.tossesExecMax} deds={tossesExecDeds} onChange={setTossesExecDeds} cats={TOSS_EXEC_CATS}
+                  info={<ExecInfoContent cats={TOSS_EXEC_CATS} note="En lanzamientos, la Altura evalúa el alcance del pico máximo y la limpieza de la trayectoria; no se evalúa Sincronización." />}
+                />
                 <SectionTotal
                   label="Total Lanzamientos"
                   breakdown={[
@@ -889,8 +1056,35 @@ export default function BuildingSheetPage() {
         {/* ── CREATIVITY + SHOWMANSHIP ─────────────────────────────────── */}
         <section className="flex flex-col gap-4 mt-6">
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700 flex items-center gap-2">
               {bCfg.hasCreativity ? 'Creatividad & Showmanship' : 'Cheer / Animación'}
+              <InfoButton title={bCfg.hasCreativity ? 'Creatividad & Showmanship' : 'Cheer / Animación'} size="lg">
+                <div className="space-y-4 text-sm text-zinc-700">
+                  <p className="text-xs text-zinc-500 leading-relaxed">
+                    Este puntaje es asignado individualmente por cada juez y luego <strong>promediado entre los tres jueces de building</strong>. No se suma directamente; el promedio es el que contribuye al total final.
+                  </p>
+                  {bCfg.hasCreativity ? (
+                    <div className="space-y-3">
+                      <div className="rounded-lg border border-zinc-200 p-3">
+                        <p className="font-semibold text-zinc-900 text-xs mb-1">Creatividad (0.0 – 2.0)</p>
+                        <p className="text-xs text-zinc-500 leading-relaxed">Evalúa la creatividad, innovación y valor visual del equipo durante formaciones, transiciones y construcciones. Considera originalidad y propuesta artística dentro de las habilidades.</p>
+                      </div>
+                      <div className="rounded-lg border border-zinc-200 p-3">
+                        <p className="font-semibold text-zinc-900 text-xs mb-1">Showmanship (0.0 – 2.0)</p>
+                        <p className="text-xs text-zinc-500 leading-relaxed">Evalúa la expresión facial, energía, presencia escénica y la capacidad del equipo de proyectar emoción al público y al panel de jueces durante toda la rutina.</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-zinc-200 p-3">
+                      <p className="font-semibold text-zinc-900 text-xs mb-1">Cheer / Animación (0.0 – 5.0)</p>
+                      <p className="text-xs text-zinc-500 leading-relaxed">Evalúa la animación, energía, proyección y el espíritu general del equipo. Incluye vocalización de cheers, expresión corporal y conexión con el público.</p>
+                    </div>
+                  )}
+                  <p className="text-xs text-zinc-400 border-t border-zinc-100 pt-3">
+                    Selecciona el valor con el slider o escríbelo directamente en el campo numérico.
+                  </p>
+                </div>
+              </InfoButton>
             </h2>
             <p className="text-xs text-zinc-400 mt-0.5">Puntuado por este juez — se promedia con los otros dos jueces</p>
           </div>
