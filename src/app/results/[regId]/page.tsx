@@ -32,6 +32,11 @@ export default function PublicResultPage() {
   const [error, setError]     = useState(false);
 
   useEffect(() => {
+    if (!/^\d+$/.test(regId ?? '')) {
+      setError(true);
+      setLoading(false);
+      return;
+    }
     fetch(`${BASE}registrations/${regId}/public-result/`)
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(setData)
