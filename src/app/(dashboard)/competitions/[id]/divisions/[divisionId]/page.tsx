@@ -264,7 +264,7 @@ export default function DivisionDetailPage() {
                           <Layers className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'partner_stunt') && (
+                      {canViewSheet(competitionId, 'partner_stunt') && activeScoringSystem === 'partner_stunt' && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -272,16 +272,6 @@ export default function DivisionDetailPage() {
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/partner-stunt`)}
                         >
                           <Users className="h-3.5 w-3.5 text-orange-500" />
-                        </Button>
-                      )}
-                      {canViewSheet(competitionId, 'rangos') && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Planilla Rangos (Dificultad)"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/rangos`)}
-                        >
-                          <Target className="h-3.5 w-3.5 text-amber-500" />
                         </Button>
                       )}
                       {canViewSheet(competitionId, 'deducciones') && (
@@ -292,6 +282,16 @@ export default function DivisionDetailPage() {
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/deducciones`)}
                         >
                           <Flag className="h-3.5 w-3.5 text-red-500" />
+                        </Button>
+                      )}
+                      {canViewSheet(competitionId, 'rangos') && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Planilla Rangos (Dificultad)"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/rangos`)}
+                        >
+                          <Target className="h-3.5 w-3.5 text-amber-500" />
                         </Button>
                       )}
                       {sheet && (
