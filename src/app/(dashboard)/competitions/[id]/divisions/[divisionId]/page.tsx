@@ -26,12 +26,6 @@ import {
   type ScoringSystem,
 } from '@/types/competitions';
 
-function sheetRoute(base: string, sheet: 'building' | 'tumbling' | 'overall', isIasfWorld: boolean) {
-  if (isIasfWorld) {
-    return `${base}/iasf-${sheet}`;
-  }
-  return `${base}/${sheet}`;
-}
 
 const STATUS_VARIANT: Record<RegistrationStatus, 'default' | 'success' | 'warning' | 'danger'> = {
   pending:   'warning',
@@ -234,32 +228,62 @@ export default function DivisionDetailPage() {
                           {sheet ? 'Editar' : 'Calificar'}
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'building') && (
+                      {canViewSheet(competitionId, 'building') && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
                         <Button
                           size="icon"
                           variant="ghost"
-                          title={isIasfWorld ? 'IASF World — Elevaciones' : 'Planilla Building'}
-                          onClick={() => router.push(sheetRoute(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}`, 'building', isIasfWorld))}
+                          title="Planilla Building"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/building`)}
                         >
                           <ClipboardList className="h-3.5 w-3.5 text-blue-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'tumbling') && (
+                      {canViewSheet(competitionId, 'building') && isIasfWorld && (
                         <Button
                           size="icon"
                           variant="ghost"
-                          title={isIasfWorld ? 'IASF World — Gimnasia' : 'Planilla Tumbling'}
-                          onClick={() => router.push(sheetRoute(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}`, 'tumbling', isIasfWorld))}
+                          title="IASF World — Elevaciones"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/iasf-building`)}
+                        >
+                          <ClipboardList className="h-3.5 w-3.5 text-blue-500" />
+                        </Button>
+                      )}
+                      {canViewSheet(competitionId, 'tumbling') && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Planilla Tumbling"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/tumbling`)}
                         >
                           <Activity className="h-3.5 w-3.5 text-green-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'overall') && (
+                      {canViewSheet(competitionId, 'tumbling') && isIasfWorld && (
                         <Button
                           size="icon"
                           variant="ghost"
-                          title={isIasfWorld ? 'IASF World — General' : 'Planilla Overall'}
-                          onClick={() => router.push(sheetRoute(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}`, 'overall', isIasfWorld))}
+                          title="IASF World — Gimnasia"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/iasf-tumbling`)}
+                        >
+                          <Activity className="h-3.5 w-3.5 text-green-500" />
+                        </Button>
+                      )}
+                      {canViewSheet(competitionId, 'overall') && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Planilla Overall"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/overall`)}
+                        >
+                          <Layers className="h-3.5 w-3.5 text-purple-500" />
+                        </Button>
+                      )}
+                      {canViewSheet(competitionId, 'overall') && isIasfWorld && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="IASF World — General"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/iasf-overall`)}
                         >
                           <Layers className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
