@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Trash2, AlertCircle, X } from 'lucide-react';
+import { ArrowLeft, Trash2, AlertCircle, X, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageSpinner } from '@/components/ui/spinner';
 import competitionsRepository from '@/repositories/competitionsRepository';
@@ -113,6 +113,7 @@ export default function DeduccionesSheetPage() {
 
   const confirm = useConfirm();
   const { isJudge, isCompetitionActive } = useJudge();
+  const readOnly = !isJudge;
   const { organization } = useBranding();
   const primary = organization?.primary_color ?? 'var(--brand-primary)';
 
@@ -294,9 +295,15 @@ export default function DeduccionesSheetPage() {
           </div>
         )}
       </div>
+      {readOnly && (
+        <div className="print:hidden bg-amber-50 border-b border-amber-200 px-6 py-2 flex items-center gap-2">
+          <Eye className="w-4 h-4 text-amber-600 shrink-0" />
+          <p className="text-sm text-amber-700 font-medium">Solo lectura — solo los jueces asignados pueden calificar.</p>
+        </div>
+      )}
       <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
 
-      <div className="max-w-6xl mx-auto px-4 py-6 print:hidden">
+      <div className={`max-w-6xl mx-auto px-4 py-6 print:hidden${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
 
         {/* ── No sheet warning ─────────────────────────────────────────────── */}
         {!sheet && (
@@ -383,7 +390,7 @@ export default function DeduccionesSheetPage() {
                                   handleDirectAdd(type, deductions);
                                 }
                               }}
-                              className={`flex items-center justify-between rounded-lg px-3 py-2 border transition-all select-none ${
+                              className={`relative flex items-center justify-between rounded-lg px-3 py-2 border transition-all select-none ${
                                 isFallGroup ? 'cursor-grab active:cursor-grabbing' : isBusy ? 'cursor-wait' : 'cursor-pointer'
                               } ${
                                 isArmed
@@ -393,6 +400,14 @@ export default function DeduccionesSheetPage() {
                                   : 'bg-white border-zinc-200 hover:border-zinc-400 hover:shadow-sm'
                               }`}
                             >
+                              {!isFallGroup && (() => {
+                                const cnt = deductions.find(d => d.deduction_type === type && !d.routine_time)?.count ?? 0;
+                                return cnt > 0 ? (
+                                  <span className="absolute -top-2 -right-2 z-10 min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-1 shadow-sm leading-none">
+                                    {cnt}
+                                  </span>
+                                ) : null;
+                              })()}
                               <div className="flex items-center gap-2 min-w-0">
                                 <span className={`text-sm font-black shrink-0 ${isArmed ? 'text-white' : 'text-zinc-900'}`}>
                                   {DEDUCTION_CODES[type]}
@@ -419,17 +434,17 @@ export default function DeduccionesSheetPage() {
                 {/* Track header with column labels */}
                 <div className="flex items-stretch border-b border-zinc-200 bg-zinc-50">
                   <div className="w-20 shrink-0 flex items-center justify-center px-2 border-r border-zinc-200">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Tiempo</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-700">Tiempo</p>
                   </div>
                   <div className="flex-1 grid grid-cols-3">
                     {ZONE_COLS.map((col, ci) => (
                       <div key={col.key} className={`py-2 text-center ${ci < 2 ? 'border-r border-zinc-200' : ''}`}>
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">{col.label}</p>
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-700">{col.label}</p>
                       </div>
                     ))}
                   </div>
                   <div className="w-20 shrink-0 flex items-center justify-center px-2 border-l border-zinc-200">
-                    <p className="text-[10px] text-zinc-400">2:30 min</p>
+                    <p className="text-[10px] text-zinc-700">2:30 min</p>
                   </div>
                 </div>
 
@@ -670,7 +685,7 @@ export default function DeduccionesSheetPage() {
 
               {/* ═══ RIGHT — Reference table ════════════════════════════════ */}
               <div className="flex flex-col gap-2 sticky top-20">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-1">Referencia</p>
+                <p className="text-sm font-bold uppercase tracking-widest text-zinc-700 px-1">Referencia</p>
 
                 {[
                   { title: 'CAÍDAS',          types: FALLS,   color: 'red'    as ColorKey },
@@ -707,7 +722,7 @@ export default function DeduccionesSheetPage() {
 
             {/* ── Deductions list + totals ──────────────────────────────────── */}
             <div className="mt-6 flex flex-col gap-3">
-              <h2 className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
                 Descuentos registrados{deductions.length > 0 && ` (${deductions.length})`}
               </h2>
 

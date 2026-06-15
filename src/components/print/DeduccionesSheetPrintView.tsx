@@ -12,26 +12,48 @@ const TIME:    DeductionType[] = ['tiempo', 'tiempo_grave'];
 const ILLEGAL: DeductionType[] = ['pi', 'eap', 'rg', 'gfn', 'bfn', 'seg'];
 const ADMIN:   DeductionType[] = ['ad', 'div'];
 
-const GROUP_LABELS: Record<string, string> = {
-  falls:   'Caídas',
-  time:    'Tiempo',
-  illegal: 'Ilegalidades',
-  admin:   'Administrativas',
-};
+const ZONE_ROWS = [
+  { key: 'F' },
+  { key: 'C' },
+  { key: 'T' },
+] as const;
 
-function groupOf(type: DeductionType): string {
+const ZONE_COLS = [
+  { key: 'IZQ' },
+  { key: 'CTR' },
+  { key: 'DER' },
+] as const;
+
+const TRACK_INTERVALS = [
+  '0 a 15', '15 a 30', '30 a 45', '45 a 1',
+  '1 a 1:15', '1:15 a 1:30', '1:30 a 1:45', '1:45 a 2:00',
+  '2:00 a 2:15', '2:15 a 2:30',
+];
+
+const MIDPOINTS = new Set(['1 a 1:15', '2:00 a 2:15']);
+
+const GROUP_COLOR = {
+  falls:   { border: '#dc2626', bg: '#fef2f2', text: '#991b1b', badge: '#dc2626', badgeText: '#fff' },
+  time:    { border: '#f97316', bg: '#fff7ed', text: '#9a3412', badge: '#f97316', badgeText: '#fff' },
+  illegal: { border: '#f59e0b', bg: '#fffbeb', text: '#92400e', badge: '#f59e0b', badgeText: '#fff' },
+  admin:   { border: '#a3a3a3', bg: '#fafafa', text: '#525252', badge: '#737373', badgeText: '#fff' },
+} as const;
+
+type GroupKey = keyof typeof GROUP_COLOR;
+
+const GROUPS: Array<{ key: GroupKey; label: string; types: DeductionType[] }> = [
+  { key: 'falls',   label: 'CAÍDAS',          types: FALLS   },
+  { key: 'time',    label: 'TIEMPO',           types: TIME    },
+  { key: 'illegal', label: 'ILEGALIDADES',     types: ILLEGAL },
+  { key: 'admin',   label: 'ADMINISTRATIVAS',  types: ADMIN   },
+];
+
+function groupOf(type: DeductionType): GroupKey {
   if (FALLS.includes(type))   return 'falls';
   if (TIME.includes(type))    return 'time';
   if (ILLEGAL.includes(type)) return 'illegal';
   return 'admin';
 }
-
-const GROUP_COLOR: Record<string, { border: string; bg: string; text: string; badge: string; badgeText: string }> = {
-  falls:   { border: '#dc2626', bg: '#fef2f2', text: '#991b1b', badge: '#dc2626', badgeText: '#fff' },
-  time:    { border: '#f97316', bg: '#fff7ed', text: '#9a3412', badge: '#f97316', badgeText: '#fff' },
-  illegal: { border: '#f59e0b', bg: '#fffbeb', text: '#92400e', badge: '#f59e0b', badgeText: '#fff' },
-  admin:   { border: '#a3a3a3', bg: '#fafafa', text: '#525252', badge: '#737373', badgeText: '#fff' },
-};
 
 function fmt(n: number) { return n.toFixed(2); }
 
@@ -45,181 +67,283 @@ export interface DeduccionesPrintData {
   finalScore: number;
 }
 
-// ── Sub-components ─────────────────────────────────────────────────────────────
-
-function SectionBar({ label, color }: { label: string; color: typeof GROUP_COLOR[string] }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', borderBottom: `1.5px solid ${color.border}40`, paddingBottom: '6px', marginBottom: '8px', marginTop: '10px' }}>
-      <div style={{ width: '4px', height: '16px', borderRadius: '3px', backgroundColor: color.border, flexShrink: 0 }} />
-      <p style={{ fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', color: color.text, margin: 0 }}>{label}</p>
-    </div>
-  );
-}
-
-function CodeReferenceGrid({ types }: { types: DeductionType[] }) {
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(types.length, 6)}, 1fr)`, gap: '4px' }}>
-      {types.map(type => {
-        const grp = groupOf(type);
-        const c = GROUP_COLOR[grp];
-        return (
-          <div key={type} style={{ border: `1px solid ${c.border}`, borderRadius: '5px', padding: '4px 3px', textAlign: 'center', backgroundColor: c.bg }}>
-            <div style={{ fontWeight: 900, fontSize: '10px', color: c.text, lineHeight: 1 }}>{DEDUCTION_CODES[type]}</div>
-            <div style={{ fontSize: '7.5px', color: c.text, opacity: 0.75, marginTop: '2px', lineHeight: 1.2 }}>{DEDUCTION_TYPE_LABELS[type]}</div>
-            <div style={{ fontSize: '9px', fontWeight: 700, color: '#dc2626', marginTop: '3px', fontVariantNumeric: 'tabular-nums' }}>−{DEDUCTION_AMOUNTS[type]}</div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ── Main component ─────────────────────────────────────────────────────────────
-
-export function DeduccionesSheetPrintView({ data }: { data: DeduccionesPrintData }) {
+export function DeduccionesSheetPrintView({ data, className }: { data: DeduccionesPrintData; className?: string }) {
   const { teamName, divisionName, organization, deductions, totalDed, scaledScore, finalScore } = data;
 
   const primary     = organization?.primary_color  ?? '#18181b';
   const primaryText = organization?.text_on_primary ?? '#ffffff';
-  const orgName     = organization?.name ?? '';
-  const logoUrl     = organization?.logo ?? '';
 
-  const hasDeds = deductions.length > 0;
+  const dedsByZone: Record<string, Deduction[]> = {};
+  for (const d of deductions) {
+    const k = d.routine_time || 'sin tiempo';
+    if (!dedsByZone[k]) dedsByZone[k] = [];
+    dedsByZone[k].push(d);
+  }
 
-  // Group deductions by category for the registered table
-  const byGroup: Record<string, Deduction[]> = { falls: [], time: [], illegal: [], admin: [] };
-  for (const d of deductions) byGroup[groupOf(d.deduction_type)].push(d);
+  const sinTiempoDeds = dedsByZone['sin tiempo'] ?? [];
+
+  const bd     = '1px solid #e4e4e7';
+  const bdLight = '1px solid #f3f4f6';
+  const bdDash  = '1px dashed #f3f4f6';
+
+  const thBase: React.CSSProperties = {
+    padding: '2px 4px',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    color: '#71717a',
+    textAlign: 'center',
+    fontSize: '8px',
+    lineHeight: 1.3,
+  };
 
   return (
     <div
-      className="hidden print:block"
-      style={{ fontFamily: 'system-ui, sans-serif', fontSize: '10px', color: '#18181b', padding: '20px 24px', maxWidth: '800px', margin: '0 auto' }}
+      className={className ?? 'hidden print:block'}
+      style={{ fontFamily: 'system-ui, sans-serif', fontSize: '9px', color: '#18181b', lineHeight: 1.3 }}
     >
-      <style>{`@media print { @page { size: A4 portrait; margin: 8mm; } }`}</style>
-      {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '14px', borderBottom: '2px solid #e4e4e7', paddingBottom: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {logoUrl && (
+      <style>{`
+        @media print {
+          @page { size: A4 landscape; margin: 8mm; }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+      `}</style>
+
+      {/* ── Header ──────────────────────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #e4e4e7', paddingBottom: '5px', marginBottom: '5px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {organization?.logo && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt={orgName} style={{ height: '36px', objectFit: 'contain' }} />
+            <img src={organization.logo} alt="" style={{ height: '26px', objectFit: 'contain' }} />
           )}
           <div>
-            {orgName && <p style={{ fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#71717a', margin: 0 }}>{orgName}</p>}
-            <p style={{ fontSize: '15px', fontWeight: 800, margin: 0, lineHeight: 1.1 }}>{teamName}</p>
-            {divisionName && <p style={{ fontSize: '9px', color: '#71717a', margin: '2px 0 0' }}>{divisionName}</p>}
+            {organization?.name && (
+              <p style={{ fontSize: '7.5px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#71717a', margin: 0 }}>{organization.name}</p>
+            )}
+            <p style={{ fontSize: '13px', fontWeight: 800, margin: 0, lineHeight: 1.1 }}>{teamName}</p>
+            {divisionName && <p style={{ fontSize: '7.5px', color: '#71717a', margin: '1px 0 0' }}>{divisionName}</p>}
           </div>
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <p style={{ fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#71717a', margin: 0 }}>Planilla</p>
-          <p style={{ fontSize: '13px', fontWeight: 800, margin: '1px 0 0', color: primary }}>Deducciones</p>
+
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: '7.5px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#71717a', margin: 0 }}>Planilla</p>
+          <p style={{ fontSize: '11px', fontWeight: 800, margin: 0, color: primary }}>Deducciones</p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: '7.5px', color: '#71717a', textTransform: 'uppercase', margin: 0 }}>Descuentos</p>
+            <p style={{ fontSize: '15px', fontWeight: 900, color: totalDed > 0 ? '#dc2626' : '#d4d4d8', margin: 0, fontVariantNumeric: 'tabular-nums' }}>−{fmt(totalDed)}</p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: '7.5px', color: '#71717a', textTransform: 'uppercase', margin: 0 }}>Score final</p>
+            <p style={{ fontSize: '15px', fontWeight: 900, color: '#18181b', margin: 0, fontVariantNumeric: 'tabular-nums' }}>{fmt(finalScore)}</p>
+          </div>
         </div>
       </div>
 
-      {/* ── Reference table: all deduction types ────────────────────────────── */}
-      <div style={{ marginBottom: '12px' }}>
-        <p style={{ fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#a1a1aa', margin: '0 0 5px' }}>Referencia de descuentos</p>
+      {/* ── 3-column body ────────────────────────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '55mm 1fr 50mm', gap: '3mm', alignItems: 'start' }}>
 
-        {/* Falls */}
-        <div style={{ marginBottom: '6px' }}>
-          <SectionBar label={GROUP_LABELS.falls} color={GROUP_COLOR.falls} />
-          <CodeReferenceGrid types={FALLS} />
-        </div>
-
-        {/* Time */}
-        <div style={{ marginBottom: '6px' }}>
-          <SectionBar label={GROUP_LABELS.time} color={GROUP_COLOR.time} />
-          <CodeReferenceGrid types={TIME} />
-        </div>
-
-        {/* Illegalities */}
-        <div style={{ marginBottom: '6px' }}>
-          <SectionBar label={GROUP_LABELS.illegal} color={GROUP_COLOR.illegal} />
-          <CodeReferenceGrid types={ILLEGAL} />
-        </div>
-
-        {/* Admin */}
-        <div style={{ marginBottom: '6px' }}>
-          <SectionBar label={GROUP_LABELS.admin} color={GROUP_COLOR.admin} />
-          <CodeReferenceGrid types={ADMIN} />
-        </div>
-      </div>
-
-      {/* ── Registered deductions ───────────────────────────────────────────── */}
-      <div style={{ marginBottom: '10px' }}>
-        <p style={{ fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#a1a1aa', margin: '0 0 5px' }}>
-          Descuentos registrados{hasDeds ? ` (${deductions.length})` : ''}
-        </p>
-
-        {!hasDeds ? (
-          <div style={{ border: '1.5px dashed #d4d4d8', borderRadius: '6px', padding: '14px', textAlign: 'center' }}>
-            <p style={{ fontSize: '9px', color: '#a1a1aa', margin: 0 }}>Sin descuentos registrados</p>
-          </div>
-        ) : (
-          <div style={{ border: '1px solid #e4e4e7', borderRadius: '6px', overflow: 'hidden' }}>
-            {/* Table header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '52px 48px 1fr 60px 70px', gap: 0, backgroundColor: '#f4f4f5', padding: '4px 8px', borderBottom: '1px solid #e4e4e7' }}>
-              {['Tiempo', 'Código', 'Descripción', 'Cant.', 'Monto'].map((h, i) => (
-                <span key={h} style={{ fontSize: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#71717a', textAlign: i >= 3 ? 'right' : 'left' }}>{h}</span>
-              ))}
-            </div>
-
-            {/* Rows */}
-            {deductions.map((ded, idx) => {
-              const grp = groupOf(ded.deduction_type);
-              const c = GROUP_COLOR[grp];
-              const isLast = idx === deductions.length - 1;
-              return (
-                <div key={ded.id} style={{ display: 'grid', gridTemplateColumns: '52px 48px 1fr 60px 70px', gap: 0, alignItems: 'center', padding: '5px 8px', borderBottom: isLast ? 'none' : '1px solid #f4f4f5', backgroundColor: idx % 2 === 0 ? '#fff' : '#fafafa' }}>
-                  {/* Time */}
-                  <span style={{ fontSize: '9px', fontVariantNumeric: 'tabular-nums', color: '#737373' }}>{ded.routine_time || '—'}</span>
-                  {/* Code badge */}
-                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', backgroundColor: c.badge, color: c.badgeText, borderRadius: '4px', padding: '1px 5px', fontSize: '8.5px', fontWeight: 900, width: 'fit-content' }}>
-                    {DEDUCTION_CODES[ded.deduction_type]}
-                  </span>
-                  {/* Description */}
-                  <div style={{ paddingRight: '6px' }}>
-                    <p style={{ fontSize: '9px', color: '#3f3f46', margin: 0, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-                      {ded.notes || DEDUCTION_TYPE_LABELS[ded.deduction_type]}
-                    </p>
-                    {ded.hit_zero && (
-                      <p style={{ fontSize: '8px', fontWeight: 700, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '1px 0 0' }}>Hit Zero</p>
-                    )}
-                  </div>
-                  {/* Count */}
-                  <span style={{ fontSize: '9px', fontVariantNumeric: 'tabular-nums', color: '#3f3f46', textAlign: 'right' }}>
-                    {ded.count > 1 ? `${ded.count} × −${ded.unit_amount}` : `× ${ded.count}`}
-                  </span>
-                  {/* Amount */}
-                  <span style={{ fontSize: '10px', fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: '#dc2626', textAlign: 'right' }}>
-                    −{ded.total_amount}
+        {/* ═══ LEFT — Palette ════════════════════════════════════════════════════ */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {GROUPS.map(({ key, label, types }) => {
+            const c = GROUP_COLOR[key];
+            return (
+              <div key={key}>
+                <div style={{ backgroundColor: c.bg, borderLeft: `3px solid ${c.border}`, padding: '2px 5px', marginBottom: '2px' }}>
+                  <span style={{ fontWeight: 800, fontSize: '7.5px', textTransform: 'uppercase', letterSpacing: '0.07em', color: c.text }}>{label}</span>
+                  <span style={{ fontSize: '7px', color: c.text, opacity: 0.5, marginLeft: '5px' }}>
+                    {key === 'falls' ? '→ pista' : '→ lista'}
                   </span>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* ── Score summary ────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-        {/* Total deductions */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#dc2626', borderRadius: '6px', padding: '8px 14px' }}>
-          <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff' }}>Total Descuentos</span>
-          <span style={{ fontSize: '18px', fontWeight: 900, fontVariantNumeric: 'tabular-nums', color: '#fff' }}>−{fmt(totalDed)}</span>
+                {types.map(type => {
+                  const cnt = key !== 'falls'
+                    ? (deductions.find(d => d.deduction_type === type && !d.routine_time)?.count ?? 0)
+                    : 0;
+                  return (
+                    <div key={type} style={{ display: 'flex', alignItems: 'center', padding: '1.5px 5px', borderBottom: `1px solid ${c.border}15` }}>
+                      <span style={{ fontWeight: 900, fontSize: '9px', color: c.text, width: '26px', flexShrink: 0 }}>{DEDUCTION_CODES[type]}</span>
+                      <span style={{ fontSize: '7px', color: c.text, opacity: 0.75, flex: 1, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                        {DEDUCTION_TYPE_LABELS[type].split(' ').slice(0, 3).join(' ')}
+                      </span>
+                      {cnt > 0 && (
+                        <span style={{ backgroundColor: '#dc2626', color: '#fff', borderRadius: '8px', fontSize: '6.5px', fontWeight: 900, padding: '0 3px', marginRight: '3px', lineHeight: '12px' }}>
+                          ×{cnt}
+                        </span>
+                      )}
+                      <span style={{ fontSize: '8px', fontWeight: 700, color: '#dc2626', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>−{DEDUCTION_AMOUNTS[type]}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
 
-        {/* Final score breakdown */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: primary, borderRadius: '6px', padding: '8px 14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <span style={{ fontSize: '8.5px', textTransform: 'uppercase', letterSpacing: '0.06em', color: primaryText, opacity: 0.6 }}>Score final</span>
-            <span style={{ fontSize: '10px', color: primaryText, fontVariantNumeric: 'tabular-nums' }}>
+        {/* ═══ CENTER — Track grid ═══════════════════════════════════════════════ */}
+        <div style={{ border: bd, borderRadius: '5px', overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '8px' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f4f4f5' }}>
+                <th style={{ ...thBase, borderRight: bd, width: '18mm' }}>Tiempo</th>
+                <th style={{ ...thBase, borderRight: bd, width: '5mm', color: '#c4c4c4' }}></th>
+                {ZONE_COLS.map((col, ci) => (
+                  <th key={col.key} style={{ ...thBase, borderRight: ci < 2 ? bdLight : 'none' }}>{col.key}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {TRACK_INTERVALS.map((intervalKey, iIdx) => {
+                const isMid  = MIDPOINTS.has(intervalKey);
+                const rowBg  = isMid ? '#f8fafc' : (iIdx % 2 === 0 ? '#ffffff' : '#fafafa');
+                const isLast = iIdx === TRACK_INTERVALS.length - 1;
+                const [from, to] = intervalKey.split(' a ');
+
+                return ZONE_ROWS.map((row, rIdx) => {
+                  const isLastSub = rIdx === ZONE_ROWS.length - 1;
+                  return (
+                    <tr key={`${intervalKey}-${row.key}`} style={{ backgroundColor: rowBg }}>
+                      {rIdx === 0 && (
+                        <td
+                          rowSpan={3}
+                          style={{
+                            borderRight: bd,
+                            borderBottom: isLast ? 'none' : bd,
+                            textAlign: 'center',
+                            verticalAlign: 'middle',
+                            padding: '1px 3px',
+                            backgroundColor: isMid ? '#f1f5f9' : rowBg,
+                          }}
+                        >
+                          <span style={{ fontWeight: 700, fontSize: '7.5px', color: isMid ? '#374151' : '#6b7280', display: 'block', lineHeight: 1.2 }}>{from}</span>
+                          <span style={{ fontSize: '6px', color: '#d1d5db', display: 'block' }}>a</span>
+                          <span style={{ fontWeight: 700, fontSize: '7.5px', color: isMid ? '#374151' : '#6b7280', display: 'block', lineHeight: 1.2 }}>{to}</span>
+                        </td>
+                      )}
+
+                      <td style={{
+                        borderRight: bd,
+                        borderBottom: isLastSub ? (isLast ? 'none' : bd) : bdDash,
+                        textAlign: 'center',
+                        verticalAlign: 'middle',
+                        padding: '0',
+                        width: '5mm',
+                        fontSize: '7px',
+                        fontWeight: 700,
+                        color: '#d1d5db',
+                      }}>
+                        {row.key}
+                      </td>
+
+                      {ZONE_COLS.map((col, cIdx) => {
+                        const fullKey  = `${intervalKey} / ${row.key}·${col.key}`;
+                        const zoneDeds = dedsByZone[fullKey] ?? [];
+                        return (
+                          <td
+                            key={col.key}
+                            style={{
+                              borderRight: cIdx < 2 ? bdLight : 'none',
+                              borderBottom: isLastSub ? (isLast ? 'none' : bd) : bdDash,
+                              textAlign: 'center',
+                              verticalAlign: 'middle',
+                              padding: '1px 2px',
+                              height: '13px',
+                            }}
+                          >
+                            {zoneDeds.length > 0 ? (
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1px', justifyContent: 'center', alignItems: 'center' }}>
+                                {zoneDeds.map(ded => {
+                                  const c = GROUP_COLOR[groupOf(ded.deduction_type)];
+                                  return (
+                                    <span
+                                      key={ded.id}
+                                      style={{ backgroundColor: c.badge, color: c.badgeText, borderRadius: '2px', padding: '0 2px', fontSize: '7px', fontWeight: 900, lineHeight: '11px', whiteSpace: 'nowrap' }}
+                                    >
+                                      {DEDUCTION_CODES[ded.deduction_type]}{ded.count > 1 ? `×${ded.count}` : ''}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <span style={{ display: 'inline-block', width: '3px', height: '3px', borderRadius: '50%', backgroundColor: '#e5e7eb' }} />
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                });
+              })}
+
+              {sinTiempoDeds.length > 0 && (
+                <tr style={{ backgroundColor: '#f9fafb' }}>
+                  <td colSpan={2} style={{ borderTop: bd, borderRight: bd, padding: '2px 5px', fontSize: '7px', color: '#9ca3af', textAlign: 'right', fontStyle: 'italic' }}>
+                    Sin tiempo
+                  </td>
+                  <td colSpan={3} style={{ borderTop: bd, padding: '2px 5px', verticalAlign: 'middle' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px' }}>
+                      {sinTiempoDeds.map(ded => {
+                        const c = GROUP_COLOR[groupOf(ded.deduction_type)];
+                        return (
+                          <span key={ded.id} style={{ backgroundColor: c.badge, color: c.badgeText, borderRadius: '3px', padding: '0 3px', fontSize: '7px', fontWeight: 900, lineHeight: '13px' }}>
+                            {DEDUCTION_CODES[ded.deduction_type]}{ded.count > 1 ? `×${ded.count}` : ''}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+          <div style={{ borderTop: bdLight, backgroundColor: '#f9fafb', padding: '2px 6px', textAlign: 'center' }}>
+            <p style={{ fontSize: '6.5px', color: '#9ca3af', margin: 0 }}>F = Frente · C = Centro · T = Fondo · Solo caídas en la pista</p>
+          </div>
+        </div>
+
+        {/* ═══ RIGHT — Reference ═════════════════════════════════════════════════ */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+          <p style={{ fontSize: '7px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#a1a1aa', margin: '0 0 2px' }}>Referencia</p>
+          {GROUPS.map(({ key, label, types }) => {
+            const c = GROUP_COLOR[key];
+            return (
+              <div key={key} style={{ border: `1px solid ${c.border}40`, borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ backgroundColor: c.bg, padding: '2px 5px', fontSize: '7px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: c.text }}>{label}</div>
+                {types.map(type => (
+                  <div key={type} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5px 5px', borderTop: `1px solid ${c.border}20` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                      <span style={{ fontWeight: 900, fontSize: '8px', color: '#1f2937', width: '24px', flexShrink: 0 }}>{DEDUCTION_CODES[type]}</span>
+                      <span style={{ fontSize: '6.5px', color: '#71717a', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', maxWidth: '58px' }}>
+                        {DEDUCTION_TYPE_LABELS[type].split(' ').slice(0, 2).join(' ')}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '7.5px', fontWeight: 700, color: '#dc2626', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>−{DEDUCTION_AMOUNTS[type]}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+
+      </div>
+
+      {/* ── Score summary ────────────────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', gap: '5px', marginTop: '5px' }}>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#dc2626', borderRadius: '5px', padding: '5px 10px' }}>
+          <span style={{ fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff' }}>Total Descuentos</span>
+          <span style={{ fontSize: '14px', fontWeight: 900, fontVariantNumeric: 'tabular-nums', color: '#fff' }}>−{fmt(totalDed)}</span>
+        </div>
+        <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: primary, borderRadius: '5px', padding: '5px 10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '7.5px', textTransform: 'uppercase', letterSpacing: '0.06em', color: primaryText, opacity: 0.6 }}>Score final</span>
+            <span style={{ fontSize: '8.5px', color: primaryText, fontVariantNumeric: 'tabular-nums' }}>
               Escalado: <strong>{fmt(scaledScore)}</strong>
             </span>
-            <span style={{ fontSize: '10px', color: '#fca5a5', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-              − {fmt(totalDed)}
-            </span>
+            <span style={{ fontSize: '8.5px', color: '#fca5a5', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>− {fmt(totalDed)}</span>
           </div>
-          <span style={{ fontSize: '20px', fontWeight: 900, fontVariantNumeric: 'tabular-nums', color: primaryText }}>{fmt(finalScore)}</span>
+          <span style={{ fontSize: '15px', fontWeight: 900, fontVariantNumeric: 'tabular-nums', color: primaryText }}>{fmt(finalScore)}</span>
         </div>
       </div>
     </div>

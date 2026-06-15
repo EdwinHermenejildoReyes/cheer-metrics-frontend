@@ -50,47 +50,53 @@ function RadioOpts({ opts, selected, primary, primaryText }: {
   );
 }
 
-function ExecTable({ cats, deds, max, primary }: { cats: string[]; deds: ExecDeds; max: number; primary: string }) {
+function ExecTable({ label, cats, deds, max }: { label: string; cats: string[]; deds: ExecDeds; max: number }) {
   const total = deds.reduce<number>((s, d) => s + (d ?? 0), 0);
   const score = execScore(max, deds);
   return (
-    <table style={{ width: '100%', fontSize: '9px', borderCollapse: 'collapse' }}>
-      <thead>
-        <tr>
-          <th style={{ textAlign: 'left', padding: '1px 3px 2px', color: '#a1a1aa', fontWeight: 500, borderBottom: '1px solid #e4e4e7' }}>Categoría</th>
-          {EXEC_DED_OPTS.map((a, i) => (
-            <th key={a} style={{ textAlign: 'center', padding: '1px 3px 2px', color: '#a1a1aa', fontWeight: 500, width: '38px', borderBottom: '1px solid #e4e4e7' }}>
-              −{fmt(a)}<br /><span style={{ fontSize: '7.5px' }}>{DED_LABELS[i]}</span>
-            </th>
-          ))}
-          <th style={{ textAlign: 'right', padding: '1px 3px 2px', color: '#a1a1aa', fontWeight: 500, width: '32px', borderBottom: '1px solid #e4e4e7' }}>Ded.</th>
-        </tr>
-      </thead>
-      <tbody>
-        {cats.map((cat, i) => (
-          <tr key={cat} style={{ borderBottom: '1px solid #f4f4f5' }}>
-            <td style={{ padding: '2px 3px', fontSize: '9px' }}>{cat}</td>
-            {EXEC_DED_OPTS.map(a => {
-              const sel = deds[i] === a;
-              return (
-                <td key={a} style={{ textAlign: 'center', padding: '2px 3px' }}>
-                  <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', border: `1.5px solid ${sel ? '#dc2626' : '#d4d4d8'}`, backgroundColor: sel ? '#dc2626' : 'transparent' }} />
-                </td>
-              );
-            })}
-            <td style={{ textAlign: 'right', padding: '2px 3px', color: deds[i] != null ? '#dc2626' : '#d4d4d8', fontVariantNumeric: 'tabular-nums', fontSize: '9px' }}>
-              {deds[i] != null ? `−${fmt(deds[i]!)}` : '—'}
-            </td>
+    <div style={{ border: '1px solid #e4e4e7', borderRadius: '6px', overflow: 'hidden', marginTop: '8px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 8px', backgroundColor: '#f4f4f5', borderBottom: '1px solid #e4e4e7' }}>
+        <span style={{ fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.05em', color: '#52525b' }}>{label} — Ejecución</span>
+        <span style={{ fontSize: '8px', color: '#a1a1aa' }}>Máx: {fmt(max)}</span>
+      </div>
+      <table style={{ width: '100%', fontSize: '8.5px', borderCollapse: 'collapse' as const }}>
+        <thead>
+          <tr>
+            <th style={{ textAlign: 'left' as const, padding: '2px 6px', color: '#a1a1aa', fontWeight: 500, borderBottom: '1px solid #e4e4e7', fontSize: '7.5px' }}>Categoría</th>
+            {EXEC_DED_OPTS.map((a, i) => (
+              <th key={a} style={{ textAlign: 'center' as const, padding: '2px 3px', color: '#a1a1aa', fontWeight: 500, width: '36px', borderBottom: '1px solid #e4e4e7', fontSize: '7.5px' }}>
+                −{fmt(a)}<br /><span style={{ fontSize: '7px' }}>{DED_LABELS[i]}</span>
+              </th>
+            ))}
+            <th style={{ textAlign: 'right' as const, padding: '2px 6px', color: '#a1a1aa', fontWeight: 500, width: '28px', borderBottom: '1px solid #e4e4e7', fontSize: '7.5px' }}>Ded.</th>
           </tr>
-        ))}
-        <tr style={{ borderTop: '1.5px solid #d4d4d8', backgroundColor: '#f4f4f5' }}>
-          <td colSpan={EXEC_DED_OPTS.length + 1} style={{ padding: '2px 3px', color: '#52525b', fontSize: '9px' }}>
-            Desc. total: <span style={{ color: total > 0 ? '#dc2626' : '#71717a', fontWeight: 600 }}>−{fmt(total)}</span>
-          </td>
-          <td style={{ textAlign: 'right', padding: '2px 3px', fontWeight: 700, color: total > 0 ? '#dc2626' : '#18181b', fontVariantNumeric: 'tabular-nums', fontSize: '9px' }}>{fmt(score)}</td>
-        </tr>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {cats.map((cat, i) => (
+            <tr key={cat} style={{ borderBottom: '1px solid #f4f4f5' }}>
+              <td style={{ padding: '2.5px 6px', fontSize: '8.5px', color: '#3f3f46' }}>{cat}</td>
+              {EXEC_DED_OPTS.map(a => {
+                const sel = deds[i] === a;
+                return (
+                  <td key={a} style={{ textAlign: 'center' as const, padding: '2px 3px' }}>
+                    <span style={{ display: 'inline-block', width: '9px', height: '9px', borderRadius: '50%', border: `1.5px solid ${sel ? '#dc2626' : '#d4d4d8'}`, backgroundColor: sel ? '#dc2626' : 'transparent' }} />
+                  </td>
+                );
+              })}
+              <td style={{ textAlign: 'right' as const, padding: '2.5px 6px', color: deds[i] != null ? '#dc2626' : '#d4d4d8', fontVariantNumeric: 'tabular-nums' as const, fontSize: '8.5px', fontWeight: deds[i] != null ? 700 : 400 }}>
+                {deds[i] != null ? `−${fmt(deds[i]!)}` : '—'}
+              </td>
+            </tr>
+          ))}
+          <tr style={{ borderTop: '1.5px solid #d4d4d8', backgroundColor: '#f4f4f5' }}>
+            <td colSpan={EXEC_DED_OPTS.length + 1} style={{ padding: '2.5px 6px', color: '#52525b', fontSize: '8px' }}>
+              Desc.: <span style={{ color: total > 0 ? '#dc2626' : '#71717a', fontWeight: 600 }}>−{fmt(total)}</span>
+            </td>
+            <td style={{ textAlign: 'right' as const, padding: '2.5px 6px', fontWeight: 700, color: total > 0 ? '#dc2626' : '#18181b', fontVariantNumeric: 'tabular-nums' as const, fontSize: '9px' }}>{fmt(score)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -117,6 +123,16 @@ function SliderRow({ label, value, max, primary }: { label: string; value: numbe
         <div style={{ width: `${pct}%`, height: '100%', backgroundColor: primary, borderRadius: '3px' }} />
       </div>
       <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums', minWidth: '52px', textAlign: 'right' }}>{fmt(value)} / {fmt(max)}</span>
+    </div>
+  );
+}
+
+function SectionNotes({ text }: { text: string }) {
+  if (!text || !text.trim()) return null;
+  return (
+    <div style={{ marginTop: '6px', padding: '5px 8px', backgroundColor: '#f9fafb', borderRadius: '5px', borderLeft: '2px solid #d4d4d8' }}>
+      <p style={{ fontSize: '7.5px', fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: '0 0 2px' }}>Notas del juez</p>
+      <p style={{ fontSize: '8.5px', color: '#52525b', margin: 0, whiteSpace: 'pre-wrap' as const, lineHeight: 1.4 }}>{text}</p>
     </div>
   );
 }
@@ -264,13 +280,11 @@ export function TumblingSheetPrintView(p: TumblingPrintData) {
               {p.tCfg.standingHasDiff
                 ? <GymDiffCard label="Estática" rangoOpts={p.tCfg.standingRango} habilidadOpts={p.tCfg.standingHabilidad} rango={p.standingRango} habilidad={p.standingHabilidad} primary={primary} primaryText={primaryText} />
                 : <p style={{ fontSize: '9px', color: '#a1a1aa', fontStyle: 'italic', margin: '0 0 6px' }}>Solo ejecución</p>}
-              <SubLabel text={`Ejecución (máx ${fmt(p.tCfg.standingExecMax)})`} />
-              <ExecTable cats={STANDING_EXEC_CATS} deds={p.standingExecDeds} max={p.tCfg.standingExecMax} primary={primary} />
               <TotalPill
                 label={p.tCfg.isCombinedSR ? 'Total Gimnasia Combinada' : 'Total Estática'}
                 breakdown={p.tCfg.standingHasDiff
-                  ? `Base ${fmt(p.standingDiffEff)} + Hab ${fmt(p.standingHabEff)} + Ejec ${fmt(p.standingExecTotal)}`
-                  : `Ejec ${fmt(p.standingExecTotal)}`}
+                  ? `Base ${fmt(p.standingDiffEff)} + Hab ${fmt(p.standingHabEff)}`
+                  : ''}
                 value={p.standingTotal}
                 primary={primary}
                 primaryText={primaryText}
@@ -285,13 +299,11 @@ export function TumblingSheetPrintView(p: TumblingPrintData) {
               {p.tCfg.runningHasDiff
                 ? <GymDiffCard label="Con Carrera" rangoOpts={p.tCfg.runningRango} habilidadOpts={p.tCfg.runningHabilidad} rango={p.runningRango} habilidad={p.runningHabilidad} primary={primary} primaryText={primaryText} />
                 : <p style={{ fontSize: '9px', color: '#a1a1aa', fontStyle: 'italic', margin: '0 0 6px' }}>Solo ejecución</p>}
-              <SubLabel text={`Ejecución (máx ${fmt(p.tCfg.runningExecMax)})`} />
-              <ExecTable cats={STANDING_EXEC_CATS} deds={p.runningExecDeds} max={p.tCfg.runningExecMax} primary={primary} />
               <TotalPill
                 label="Total Con Carrera"
                 breakdown={p.tCfg.runningHasDiff
-                  ? `Base ${fmt(p.runningDiffEff)} + Hab ${fmt(p.runningHabEff)} + Ejec ${fmt(p.runningExecTotal)}`
-                  : `Ejec ${fmt(p.runningExecTotal)}`}
+                  ? `Base ${fmt(p.runningDiffEff)} + Hab ${fmt(p.runningHabEff)}`
+                  : ''}
                 value={p.runningTotal}
                 primary={primary}
                 primaryText={primaryText}
@@ -304,13 +316,9 @@ export function TumblingSheetPrintView(p: TumblingPrintData) {
             <div style={{ border: '1px solid #e4e4e7', borderRadius: '8px', padding: '10px 12px', backgroundColor: '#fafafa' }}>
               <SectionBar label="Saltos" primary={primary} />
               <JumpsDiffCard diffOpts={p.tCfg.jumpsDiffOpts} jumpsDiff={p.jumpsDiff} primary={primary} primaryText={primaryText} />
-              <SubLabel text={`Ejecución (máx ${fmt(p.tCfg.jumpsExecMax)})`} />
-              <ExecTable cats={JUMPS_EXEC_CATS} deds={p.jumpsExecDeds} max={p.tCfg.jumpsExecMax} primary={primary} />
               <TotalPill
                 label="Total Saltos"
-                breakdown={p.tCfg.jumpsHasDiff
-                  ? `Dif ${fmt(p.jumpsDiffEff)} + Ejec ${fmt(p.jumpsExecTotal)}`
-                  : `Ejec ${fmt(p.jumpsExecTotal)}`}
+                breakdown={p.tCfg.jumpsHasDiff ? `Dif ${fmt(p.jumpsDiffEff)}` : ''}
                 value={p.jumpsTotal}
                 primary={primary}
                 primaryText={primaryText}
@@ -372,15 +380,6 @@ export function TumblingSheetPrintView(p: TumblingPrintData) {
                     </td>
                   </tr>
                 )}
-                {p.tCfg.hasStanding && (
-                  <tr style={{ borderBottom: '1px solid #f4f4f5' }}>
-                    <td style={{ padding: '4px 10px', color: '#52525b' }}>{p.tCfg.isCombinedSR ? 'Gimn. Comb.' : 'Estática'} — Ejecución</td>
-                    <td style={{ padding: '4px 10px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
-                      <span style={{ fontWeight: 700 }}>{fmt(p.standingExecTotal)}</span>
-                      <span style={{ color: '#a1a1aa' }}> / {fmt(p.tCfg.standingExecMax)}</span>
-                    </td>
-                  </tr>
-                )}
                 {p.tCfg.hasRunning && p.tCfg.runningHasDiff && (
                   <tr style={{ borderBottom: '1px solid #f4f4f5' }}>
                     <td style={{ padding: '4px 10px', color: '#52525b' }}>Con Carrera — Dificultad</td>
@@ -390,30 +389,12 @@ export function TumblingSheetPrintView(p: TumblingPrintData) {
                     </td>
                   </tr>
                 )}
-                {p.tCfg.hasRunning && (
-                  <tr style={{ borderBottom: '1px solid #f4f4f5' }}>
-                    <td style={{ padding: '4px 10px', color: '#52525b' }}>Con Carrera — Ejecución</td>
-                    <td style={{ padding: '4px 10px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
-                      <span style={{ fontWeight: 700 }}>{fmt(p.runningExecTotal)}</span>
-                      <span style={{ color: '#a1a1aa' }}> / {fmt(p.tCfg.runningExecMax)}</span>
-                    </td>
-                  </tr>
-                )}
                 {p.tCfg.hasJumps && p.tCfg.jumpsHasDiff && (
                   <tr style={{ borderBottom: '1px solid #f4f4f5' }}>
                     <td style={{ padding: '4px 10px', color: '#52525b' }}>Saltos — Dificultad</td>
                     <td style={{ padding: '4px 10px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
                       <span style={{ fontWeight: 700 }}>{fmt(p.jumpsDiffEff)}</span>
                       <span style={{ color: '#a1a1aa' }}> / {fmt(maxJumpsDiff)}</span>
-                    </td>
-                  </tr>
-                )}
-                {p.tCfg.hasJumps && (
-                  <tr style={{ borderBottom: '1px solid #f4f4f5' }}>
-                    <td style={{ padding: '4px 10px', color: '#52525b' }}>Saltos — Ejecución</td>
-                    <td style={{ padding: '4px 10px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
-                      <span style={{ fontWeight: 700 }}>{fmt(p.jumpsExecTotal)}</span>
-                      <span style={{ color: '#a1a1aa' }}> / {fmt(p.tCfg.jumpsExecMax)}</span>
                     </td>
                   </tr>
                 )}

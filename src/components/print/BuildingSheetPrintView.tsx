@@ -3,7 +3,16 @@ import type { BuildingConfig } from '@/lib/scoringConfig';
 
 type ExecDeds = (number | null)[];
 
+const EXEC_CATS      = ['Flyer', 'Base/Spotter', 'Transición', 'Sincronización'];
+const TOSS_EXEC_CATS = ['Flyer', 'Base/Spotter', 'Altura'];
+const EXEC_DED_OPTS  = [0.05, 0.10, 0.20, 0.30];
+const DED_LABELS     = ['Mín.', 'Men.', 'Múlt.', 'Gen.'];
+
 function fmt(n: number) { return n.toFixed(2); }
+
+function execScore(max: number, deds: ExecDeds) {
+  return Math.max(0, max - deds.reduce<number>((s, d) => s + (d ?? 0), 0));
+}
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -86,6 +95,68 @@ function SliderRow({ label, value, max, primary }: { label: string; value: numbe
 
 function SubLabel({ text }: { text: string }) {
   return <p style={{ fontSize: '8.5px', fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '8px 0 3px' }}>{text}</p>;
+}
+
+function ExecTable({ label, max, deds, cats }: {
+  label: string; max: number; deds: ExecDeds; cats: string[];
+}) {
+  const total = deds.reduce<number>((s, d) => s + (d ?? 0), 0);
+  const score = execScore(max, deds);
+  return (
+    <div style={{ border: '1px solid #e4e4e7', borderRadius: '6px', overflow: 'hidden', marginTop: '8px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 8px', backgroundColor: '#f4f4f5', borderBottom: '1px solid #e4e4e7' }}>
+        <span style={{ fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.05em', color: '#52525b' }}>{label} — Ejecución</span>
+        <span style={{ fontSize: '8px', color: '#a1a1aa' }}>Máx: {fmt(max)}</span>
+      </div>
+      <table style={{ width: '100%', fontSize: '8.5px', borderCollapse: 'collapse' as const }}>
+        <thead>
+          <tr>
+            <th style={{ textAlign: 'left' as const, padding: '2px 6px', color: '#a1a1aa', fontWeight: 500, borderBottom: '1px solid #e4e4e7', fontSize: '7.5px' }}>Categoría</th>
+            {EXEC_DED_OPTS.map((a, i) => (
+              <th key={a} style={{ textAlign: 'center' as const, padding: '2px 3px', color: '#a1a1aa', fontWeight: 500, width: '36px', borderBottom: '1px solid #e4e4e7', fontSize: '7.5px' }}>
+                −{fmt(a)}<br /><span style={{ fontSize: '7px' }}>{DED_LABELS[i]}</span>
+              </th>
+            ))}
+            <th style={{ textAlign: 'right' as const, padding: '2px 6px', color: '#a1a1aa', fontWeight: 500, width: '28px', borderBottom: '1px solid #e4e4e7', fontSize: '7.5px' }}>Ded.</th>
+          </tr>
+        </thead>
+        <tbody>
+          {cats.map((cat, i) => (
+            <tr key={cat} style={{ borderBottom: '1px solid #f4f4f5' }}>
+              <td style={{ padding: '2.5px 6px', fontSize: '8.5px', color: '#3f3f46' }}>{cat}</td>
+              {EXEC_DED_OPTS.map(a => {
+                const sel = deds[i] === a;
+                return (
+                  <td key={a} style={{ textAlign: 'center' as const, padding: '2px 3px' }}>
+                    <span style={{ display: 'inline-block', width: '9px', height: '9px', borderRadius: '50%', border: `1.5px solid ${sel ? '#dc2626' : '#d4d4d8'}`, backgroundColor: sel ? '#dc2626' : 'transparent' }} />
+                  </td>
+                );
+              })}
+              <td style={{ textAlign: 'right' as const, padding: '2.5px 6px', color: deds[i] != null ? '#dc2626' : '#d4d4d8', fontVariantNumeric: 'tabular-nums' as const, fontSize: '8.5px', fontWeight: deds[i] != null ? 700 : 400 }}>
+                {deds[i] != null ? `−${fmt(deds[i]!)}` : '—'}
+              </td>
+            </tr>
+          ))}
+          <tr style={{ borderTop: '1.5px solid #d4d4d8', backgroundColor: '#f4f4f5' }}>
+            <td colSpan={EXEC_DED_OPTS.length + 1} style={{ padding: '2.5px 6px', color: '#52525b', fontSize: '8px' }}>
+              Desc.: <span style={{ color: total > 0 ? '#dc2626' : '#71717a', fontWeight: 600 }}>−{fmt(total)}</span>
+            </td>
+            <td style={{ textAlign: 'right' as const, padding: '2.5px 6px', fontWeight: 700, color: total > 0 ? '#dc2626' : '#18181b', fontVariantNumeric: 'tabular-nums' as const, fontSize: '9px' }}>{fmt(score)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function SectionNotes({ text }: { text: string }) {
+  if (!text || !text.trim()) return null;
+  return (
+    <div style={{ marginTop: '6px', padding: '5px 8px', backgroundColor: '#f9fafb', borderRadius: '5px', borderLeft: '2px solid #d4d4d8' }}>
+      <p style={{ fontSize: '7.5px', fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px' }}>Notas del juez</p>
+      <p style={{ fontSize: '8.5px', color: '#52525b', margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{text}</p>
+    </div>
+  );
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -228,9 +299,12 @@ export function BuildingSheetPrintView(p: BuildingPrintData) {
               ) : (
                 <p style={{ color: '#a1a1aa', fontStyle: 'italic', fontSize: '9px', margin: '4px 0 0' }}>Sin dificultad</p>
               )}
+
               <TotalPill
                 label="Total Stunts"
-                breakdown={p.bCfg.stuntsHasDiff ? `Rango ${fmt(p.stuntsRango)} + Drivers ${fmt(p.stuntsDriversTotal)}` : ''}
+                breakdown={p.bCfg.stuntsHasDiff
+                  ? `Rango ${fmt(p.stuntsRango)} + Drv ${fmt(p.stuntsDriversTotal)}`
+                  : ''}
                 value={p.stuntsSectionTotal}
                 primary={primary}
                 primaryText={primaryText}
@@ -279,6 +353,7 @@ export function BuildingSheetPrintView(p: BuildingPrintData) {
               ) : (
                 <p style={{ color: '#a1a1aa', fontStyle: 'italic', fontSize: '9px', margin: '4px 0 0' }}>Sin dificultad</p>
               )}
+
               <TotalPill
                 label="Total Pirámides"
                 breakdown={p.bCfg.pyramidsHasDiff
@@ -297,6 +372,7 @@ export function BuildingSheetPrintView(p: BuildingPrintData) {
               <SectionBar label="Lanzamientos — Tosses" primary={primary} />
               <SubLabel text="Dificultad" />
               <RadioOpts opts={p.bCfg.tossDiffOpts} selected={p.tossesDiff} primary={primary} primaryText={primaryText} />
+
               <TotalPill
                 label="Total Lanzamientos"
                 breakdown={`Dif ${fmt(p.tossesDiff)}`}
@@ -352,6 +428,7 @@ export function BuildingSheetPrintView(p: BuildingPrintData) {
             </div>
             <table style={{ width: '100%', fontSize: '9.5px', borderCollapse: 'collapse' }}>
               <tbody>
+                {/* ── Stunts ── */}
                 {p.bCfg.hasStunts && p.bCfg.stuntsHasDiff && (
                   <tr style={{ borderBottom: '1px solid #f4f4f5' }}>
                     <td style={{ padding: '4px 10px', color: '#52525b' }}>Stunts — Dificultad (Rango)</td>
@@ -370,6 +447,8 @@ export function BuildingSheetPrintView(p: BuildingPrintData) {
                     </td>
                   </tr>
                 )}
+
+                {/* ── Pyramids ── */}
                 {p.bCfg.hasPyramids && p.bCfg.pyramidsHasDiff && (
                   <tr style={{ borderBottom: '1px solid #f4f4f5' }}>
                     <td style={{ padding: '4px 10px', color: '#52525b' }}>Pirámides — Dificultad</td>
@@ -388,6 +467,8 @@ export function BuildingSheetPrintView(p: BuildingPrintData) {
                     </td>
                   </tr>
                 )}
+
+                {/* ── Tosses ── */}
                 {p.bCfg.hasTosses && (
                   <tr style={{ borderBottom: '1px solid #f4f4f5' }}>
                     <td style={{ padding: '4px 10px', color: '#52525b' }}>Lanzamientos — Dificultad</td>
@@ -397,6 +478,8 @@ export function BuildingSheetPrintView(p: BuildingPrintData) {
                     </td>
                   </tr>
                 )}
+
+                {/* ── Totals ── */}
                 <tr style={{ backgroundColor: `${primary}12`, borderBottom: '1px solid #f4f4f5' }}>
                   <td style={{ padding: '4px 10px', fontWeight: 700, color: primary }}>Subtotal Elevaciones</td>
                   <td style={{ padding: '4px 10px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: primary }}>{fmt(p.buildingTotal)}</td>

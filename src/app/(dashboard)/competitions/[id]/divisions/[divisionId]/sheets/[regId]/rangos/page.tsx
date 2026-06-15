@@ -2,13 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, FileDown, Clock, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { getScoringConfig, DEFAULT_BUILDING_CONFIG, DEFAULT_TUMBLING_CONFIG } from '@/lib/scoringConfig';
-import { useJudge } from '@/hooks/useJudge';
 import type { BuildingConfig, TumblingConfig } from '@/lib/scoringConfig';
 import type { ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
@@ -23,23 +21,15 @@ export default function RangosSheetPage() {
   const divId          = Number(divisionId);
   const registrationId = Number(regId);
 
-  const { isJudge, isCompetitionActive } = useJudge();
-
-  useEffect(() => {
-    if (isJudge && !isCompetitionActive(competitionId)) {
-      toast.error('El evento ha finalizado. Ya no puedes acceder a las planillas.');
-      router.replace(`/competitions/${competitionId}`);
-    }
-  }, [isJudge, competitionId, isCompetitionActive, router]);
-
-  const [teamName,       setTeamName]       = useState<string>('');
-  const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
-  const [loading,        setLoading]        = useState(true);
-  const [saving,         setSaving]         = useState(false);
-  const [bCfg,           setBCfg]           = useState<BuildingConfig>(DEFAULT_BUILDING_CONFIG);
-  const [tCfg,           setTCfg]           = useState<TumblingConfig>(DEFAULT_TUMBLING_CONFIG);
-  const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
-  const [requirePayment, setRequirePayment] = useState(false);
+  const [teamName,           setTeamName]           = useState<string>('');
+  const [existingSheet,      setExistingSheet]      = useState<ScoreSheet | null>(null);
+  const [loading,            setLoading]            = useState(true);
+  const [exporting,          setExporting]          = useState(false);
+  const [bCfg,               setBCfg]               = useState<BuildingConfig>(DEFAULT_BUILDING_CONFIG);
+  const [tCfg,               setTCfg]               = useState<TumblingConfig>(DEFAULT_TUMBLING_CONFIG);
+  const [unpaidAthletes,     setUnpaidAthletes]     = useState<UnpaidAthlete[]>([]);
+  const [requirePayment,     setRequirePayment]     = useState(false);
+  const [protestStartedAt,   setProtestStartedAt]   = useState<string | null>(null);
 
   // ── Stunts difficulty ─────────────────────────────────────────────────────
   const [stuntsRango,   setStuntsRango]   = useState<number>(0);
@@ -63,10 +53,6 @@ export default function RangosSheetPage() {
 
   // ── Jumps difficulty ──────────────────────────────────────────────────────
   const [jumpsDiff, setJumpsDiff] = useState<number>(0);
-
-  // ── Notes ─────────────────────────────────────────────────────────────────
-  const [construccionesNotes, setConstruccionesNotes] = useState('');
-  const [gimnasiaNotes,       setGimnasiaNotes]       = useState('');
 
   // ── Computed ──────────────────────────────────────────────────────────────
   const stuntsSkillsTotal  = parseFloat(stuntsSkills.reduce<number>((s, v) => s + (v ?? 0), 0).toFixed(2));
@@ -179,7 +165,7 @@ export default function RangosSheetPage() {
           if (match) setJumpsDiff(match.value);
         }
 
-        // Notes + raw score restoration
+        // Notes restoration
         if (sheet.notes) {
           try {
             const p = JSON.parse(sheet.notes);
@@ -191,11 +177,8 @@ export default function RangosSheetPage() {
               }
               if (s.stuntsPartMax !== undefined && s.stuntsPartMax !== null && bcfg.stuntsPartMaxOpts.some(o => o.value === s.stuntsPartMax)) setStuntsPartMax(s.stuntsPartMax);
             }
-            setConstruccionesNotes(p.construcciones ?? '');
-            setGimnasiaNotes(p.gimnasia ?? '');
-          } catch {
-            setConstruccionesNotes(sheet.notes);
-          }
+            if (p.protest_started_at) setProtestStartedAt(p.protest_started_at);
+          } catch { /* ignore malformed notes */ }
         }
       }
     } finally {
@@ -205,45 +188,32 @@ export default function RangosSheetPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // ── Save ──────────────────────────────────────────────────────────────────
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const payload: Partial<ScoreSheet> = {
-        stunts_difficulty:   String(stuntsRango),
-        stunts_drivers:      String(stuntsDriversTotal),
-        pyramids_difficulty: String(pyramidsDiff),
-        tosses_difficulty:   String(tossesDiff),
-        standing_difficulty: String(standingDiff),
-        standing_drivers:    String(standingDrvs),
-        running_difficulty:  String(runningDiff),
-        running_drivers:     String(runningDrvs),
-        jumps_difficulty:    String(jumpsDiffEffective),
-        notes: JSON.stringify({
-          construcciones: construccionesNotes,
-          gimnasia: gimnasiaNotes,
-          _scores: { stuntsRango, stuntsSkills, stuntsPartMax },
-        }),
-      };
+  // ── Export PDF — records protest start on first export ────────────────────
+  const handleExport = async () => {
+    if (!existingSheet) { window.print(); return; }
 
-      let saved: ScoreSheet;
-      if (existingSheet) {
-        const res = await competitionsRepository.updateScoreSheet(existingSheet.id, payload);
-        saved = res.data;
-      } else {
-        const res = await competitionsRepository.createScoreSheet({
-          registration: registrationId as unknown as number,
-          ...payload,
-        } as Partial<ScoreSheet>);
-        saved = res.data;
+    // If protest hasn't started yet, record the timestamp now
+    if (!protestStartedAt) {
+      setExporting(true);
+      try {
+        let existing: Record<string, unknown> = {};
+        try { existing = JSON.parse(existingSheet.notes || '{}'); } catch {}
+        const now = new Date().toISOString();
+        const res = await competitionsRepository.updateScoreSheet(existingSheet.id, {
+          notes: JSON.stringify({ ...existing, protest_started_at: now }),
+        });
+        setExistingSheet(res.data);
+        setProtestStartedAt(now);
+        toast.success('Reloj de reclamo iniciado — 15 minutos');
+      } catch {
+        toast.error('No se pudo registrar la exportación');
+        return;
+      } finally {
+        setExporting(false);
       }
-      setExistingSheet(saved);
-      toast.success('Rangos guardados');
-    } catch {
-      toast.error('No se pudo guardar');
-    } finally {
-      setSaving(false);
     }
+
+    window.print();
   };
 
   if (loading) return <PageSpinner />;
@@ -252,7 +222,7 @@ export default function RangosSheetPage() {
     <div className="min-h-screen bg-zinc-50 pb-16">
 
       {/* ── Sticky top bar ──────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 bg-white border-b border-zinc-200 px-6 py-3 shadow-sm">
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 bg-white border-b border-zinc-200 px-6 py-3 shadow-sm print:hidden">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}`)}
@@ -267,14 +237,19 @@ export default function RangosSheetPage() {
             </p>
           </div>
         </div>
-        <Button onClick={handleSave} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0}>
-          <Save className="h-4 w-4" />
-          Guardar
-        </Button>
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium bg-zinc-900 text-white hover:bg-zinc-700 transition-colors disabled:opacity-50"
+        >
+          <FileDown className="h-4 w-4" />
+          {exporting ? 'Registrando...' : 'Exportar PDF'}
+        </button>
       </div>
       <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
+      {protestStartedAt && <ProtestTimer startedAt={protestStartedAt} />}
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-6 py-8 pointer-events-none select-none">
         <div className="grid grid-cols-2 gap-8 items-start">
 
         {/* ══ CONSTRUCCIONES ════════════════════════════════════════════════ */}
@@ -286,7 +261,7 @@ export default function RangosSheetPage() {
           {/* ── ELEVACIONES ─────────────────────────────────────────────── */}
           {bCfg.hasStunts ? (
             <section className="flex flex-col gap-4 mb-8">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
                 Elevaciones — Stunts
               </h2>
 
@@ -299,7 +274,7 @@ export default function RangosSheetPage() {
                 <>
                   <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                     <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Rango Base de Complejidad</span>
+                      <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Rango Base de Complejidad</span>
                     </div>
                     <div className="p-4 flex flex-col gap-2">
                       {bCfg.stuntsRango.map(({ value, label }) => (
@@ -327,7 +302,7 @@ export default function RangosSheetPage() {
                   {bCfg.stuntsSkillCount > 0 && (
                     <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                       <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Grado de Dificultad — Habilidades</span>
+                        <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Grado de Dificultad — Habilidades</span>
                       </div>
                       <div className="divide-y divide-zinc-100">
                         {stuntSkillLabels.map((skill, i) => (
@@ -371,7 +346,7 @@ export default function RangosSheetPage() {
                   {bCfg.stuntsPartMaxOpts.length > 0 && (
                     <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                       <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Part Max — Spotter / Base</span>
+                        <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Part Max — Spotter / Base</span>
                         <p className="text-[10px] text-zinc-400 mt-0.5">Habilidad en Canon o Sincronizado · Sin Repetir Atletas</p>
                       </div>
                       <div className="p-4">
@@ -402,7 +377,7 @@ export default function RangosSheetPage() {
                   {/* Stunts subtotal */}
                   <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
                     <div className="flex items-center gap-4 text-sm">
-                      <span className="text-xs uppercase tracking-wide opacity-60">Total Elevaciones</span>
+                      <span className="text-base font-bold">Total Elevaciones</span>
                       <span>Dif: <strong className="tabular-nums">{fmt(stuntsRango)}</strong></span>
                       <span>Drivers: <strong className="tabular-nums">{fmt(stuntsDriversTotal)}</strong></span>
                     </div>
@@ -415,7 +390,7 @@ export default function RangosSheetPage() {
             </section>
           ) : (
             <section className="mb-8">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-4">Elevaciones — Stunts</h2>
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700 mb-4">Elevaciones — Stunts</h2>
               <div className="rounded-xl border border-zinc-100 bg-zinc-50 px-5 py-4 text-center">
                 <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">No Aplica para esta División</p>
               </div>
@@ -425,7 +400,7 @@ export default function RangosSheetPage() {
           {/* ── PIRÁMIDES ───────────────────────────────────────────────── */}
           {bCfg.hasPyramids ? (
             <section className="flex flex-col gap-4 mb-8">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Pirámides</h2>
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Pirámides</h2>
 
               {!bCfg.pyramidsHasDiff ? (
                 <div className="rounded-xl border border-zinc-100 bg-zinc-50 px-5 py-5 text-center">
@@ -435,7 +410,7 @@ export default function RangosSheetPage() {
               ) : (
                 <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                   <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Rango de Complejidad</span>
+                    <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Rango de Complejidad</span>
                   </div>
                   <div className="p-4 flex flex-col gap-2">
                     {bCfg.pyramidRango.map(({ low, high, label }, idx) => (
@@ -501,11 +476,11 @@ export default function RangosSheetPage() {
           {/* ── LANZAMIENTOS ────────────────────────────────────────────── */}
           {bCfg.hasTosses && (
             <section className="flex flex-col gap-4">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Lanzamientos — Tosses</h2>
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Lanzamientos — Tosses</h2>
 
               <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Dificultad</span>
+                  <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Dificultad</span>
                 </div>
                 <div className="p-4 flex flex-col gap-2">
                   {bCfg.tossDiffOpts.map(({ value, label }) => (
@@ -531,17 +506,6 @@ export default function RangosSheetPage() {
             </section>
           )}
 
-          {/* Comentarios Construcciones */}
-          <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden mt-4">
-            <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
-              <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Construcciones</span>
-            </div>
-            <div className="p-3">
-              <textarea value={construccionesNotes} onChange={(e) => setConstruccionesNotes(e.target.value)}
-                placeholder="Observaciones sobre Elevaciones, Pirámides y Lanzamientos..." rows={4}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
-            </div>
-          </div>
         </div>
 
         {/* ══ GIMNASIA ══════════════════════════════════════════════════════ */}
@@ -553,7 +517,7 @@ export default function RangosSheetPage() {
           {/* ── ESTÁTICA ────────────────────────────────────────────────── */}
           {tCfg.hasStanding ? (
             <section className="flex flex-col gap-4 mb-8">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
                 Gimnasia Estática (Standing)
               </h2>
 
@@ -580,7 +544,7 @@ export default function RangosSheetPage() {
 
                   <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
                     <div className="flex items-center gap-4 text-sm">
-                      <span className="text-xs uppercase tracking-wide opacity-60">Total Estática</span>
+                      <span className="text-base font-bold">Total Estática</span>
                       <span>Rango: <strong className="tabular-nums">{fmt(standingDiff)}</strong></span>
                       <span>Hab: <strong className="tabular-nums">{fmt(standingDrvs)}</strong></span>
                     </div>
@@ -596,7 +560,7 @@ export default function RangosSheetPage() {
           {/* ── CON CARRERA ─────────────────────────────────────────────── */}
           {tCfg.hasRunning ? (
             <section className="flex flex-col gap-4 mb-8">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
                 Gimnasia Con Carrera (Running)
               </h2>
 
@@ -623,7 +587,7 @@ export default function RangosSheetPage() {
 
                   <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
                     <div className="flex items-center gap-4 text-sm">
-                      <span className="text-xs uppercase tracking-wide opacity-60">Total Con Carrera</span>
+                      <span className="text-base font-bold">Total Con Carrera</span>
                       <span>Rango: <strong className="tabular-nums">{fmt(runningDiff)}</strong></span>
                       <span>Hab: <strong className="tabular-nums">{fmt(runningDrvs)}</strong></span>
                     </div>
@@ -639,7 +603,7 @@ export default function RangosSheetPage() {
           {/* ── SALTOS ──────────────────────────────────────────────────── */}
           {tCfg.hasJumps && (
             <section className="flex flex-col gap-4">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
                 Saltos (Jumps)
               </h2>
 
@@ -651,7 +615,7 @@ export default function RangosSheetPage() {
               ) : (
                 <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                   <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Dificultad</span>
+                    <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Dificultad</span>
                   </div>
                   <div className="p-4 flex flex-col gap-2">
                     {tCfg.jumpsDiffOpts.map(({ value, label }) => (
@@ -677,20 +641,47 @@ export default function RangosSheetPage() {
             </section>
           )}
 
-          {/* Comentarios Gimnasia */}
-          <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden mt-4">
-            <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
-              <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Gimnasia</span>
-            </div>
-            <div className="p-3">
-              <textarea value={gimnasiaNotes} onChange={(e) => setGimnasiaNotes(e.target.value)}
-                placeholder="Observaciones sobre Estática, Con Carrera y Saltos..." rows={4}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
-            </div>
-          </div>
         </div>
 
         </div>{/* end grid */}
+      </div>
+    </div>
+  );
+}
+
+// ── Protest timer ─────────────────────────────────────────────────────────────
+
+function ProtestTimer({ startedAt }: { startedAt: string }) {
+  const deadline = new Date(new Date(startedAt).getTime() + 15 * 60 * 1000);
+  const [remaining, setRemaining] = useState<number>(deadline.getTime() - Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setRemaining(deadline.getTime() - Date.now()), 1000);
+    return () => clearInterval(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startedAt]);
+
+  if (remaining <= 0) {
+    return (
+      <div className="flex items-center gap-2 bg-zinc-100 border-b border-zinc-200 px-6 py-2.5 text-zinc-500">
+        <CheckCircle className="h-4 w-4 shrink-0" />
+        <p className="text-sm">La ventana de reclamo ha expirado.</p>
+      </div>
+    );
+  }
+
+  const mins = Math.floor(remaining / 60000);
+  const secs = Math.floor((remaining % 60000) / 1000);
+  const isUrgent = remaining < 3 * 60 * 1000;
+
+  return (
+    <div className={`flex items-center gap-2 border-b px-6 py-2.5 ${isUrgent ? 'bg-red-50 border-red-200 text-red-700' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>
+      <Clock className={`h-4 w-4 shrink-0 ${isUrgent ? 'text-red-500' : 'text-amber-500'}`} />
+      <div>
+        <p className="text-sm font-semibold">
+          Ventana de reclamo: {mins}:{secs.toString().padStart(2, '0')} restantes
+        </p>
+        <p className="text-xs opacity-75">Vence a las {deadline.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })}</p>
       </div>
     </div>
   );
@@ -721,7 +712,7 @@ function TumblingDiffCard({
   return (
     <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
       <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-        <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{label}</span>
+        <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">{label}</span>
       </div>
       <div className="p-4 flex flex-col gap-2">
         {options.map(({ value, label: optLabel }) => (

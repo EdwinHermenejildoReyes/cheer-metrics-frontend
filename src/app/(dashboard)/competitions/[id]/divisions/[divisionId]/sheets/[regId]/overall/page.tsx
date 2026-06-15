@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Save, CheckCircle2, Eye, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
@@ -113,6 +113,8 @@ export default function OverallSheetPage() {
 
   const { isJudge, isCompetitionActive } = useJudge();
   const { organization } = useBranding();
+  const [protestExpired, setProtestExpired] = useState(false);
+  const readOnly = !isJudge || protestExpired;
 
   useEffect(() => {
     if (isJudge && !isCompetitionActive(competitionId)) {
@@ -198,6 +200,10 @@ export default function OverallSheetPage() {
             const p = JSON.parse(sheet.notes);
             setFormationsNotes(p.formations ?? '');
             setDanceNotes(p.dance ?? '');
+            if (p.protest_started_at) {
+              const elapsed = Date.now() - new Date(p.protest_started_at).getTime();
+              if (elapsed >= 15 * 60 * 1000) setProtestExpired(true);
+            }
           } catch {
             setFormationsNotes(sheet.notes);
           }
@@ -210,6 +216,22 @@ export default function OverallSheetPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Continuously check if protest window expires while page is open
+  useEffect(() => {
+    if (protestExpired) return;
+    const id = setInterval(() => {
+      if (!existingSheet?.notes) return;
+      try {
+        const p = JSON.parse(existingSheet.notes);
+        if (p.protest_started_at) {
+          const elapsed = Date.now() - new Date(p.protest_started_at).getTime();
+          if (elapsed >= 15 * 60 * 1000) setProtestExpired(true);
+        }
+      } catch {}
+    }, 10_000);
+    return () => clearInterval(id);
+  }, [existingSheet, protestExpired]);
+
   // ── Save ──────────────────────────────────────────────────────────────────
   const handleSave = async () => {
     setSaving(true);
@@ -220,7 +242,11 @@ export default function OverallSheetPage() {
         dance_execution:     String(danceExecution),
         creativity_overall:  String(isEscolarAB ? 0 : creativityOverall),
         showmanship_overall: String(showmanshipOverall),
-        notes: JSON.stringify({ formations: formationsNotes, dance: danceNotes }),
+        notes: (() => {
+          let existing: Record<string, unknown> = {};
+          try { existing = JSON.parse(existingSheet?.notes ?? '{}'); } catch { /* noop */ }
+          return JSON.stringify({ ...existing, formations: formationsNotes, dance: danceNotes });
+        })(),
       };
 
       let saved: ScoreSheet;
@@ -270,12 +296,30 @@ export default function OverallSheetPage() {
             <p className="text-2xl font-bold tabular-nums text-zinc-900">{fmt(sheetTotal)}</p>
           </div>
           <PrintButton />
-          <Button onClick={handleSave} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
-            <Save className="h-4 w-4" />
-            Guardar
-          </Button>
+          {readOnly ? (
+            <span className="print:hidden text-xs font-medium text-zinc-400 px-3 py-1.5 rounded-lg bg-zinc-100 border border-zinc-200">
+              Solo lectura
+            </span>
+          ) : (
+            <Button onClick={handleSave} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
+              <Save className="h-4 w-4" />
+              Guardar
+            </Button>
+          )}
         </div>
       </div>
+      {protestExpired && (
+        <div className="print:hidden bg-red-50 border-b border-red-200 px-6 py-2 flex items-center gap-2">
+          <Lock className="w-4 h-4 text-red-600 shrink-0" />
+          <p className="text-sm text-red-700 font-medium">La ventana de reclamo ha vencido. La planilla está bloqueada.</p>
+        </div>
+      )}
+      {!protestExpired && readOnly && (
+        <div className="print:hidden bg-amber-50 border-b border-amber-200 px-6 py-2 flex items-center gap-2">
+          <Eye className="w-4 h-4 text-amber-600 shrink-0" />
+          <p className="text-sm text-amber-700 font-medium">Solo lectura — solo los jueces asignados pueden calificar.</p>
+        </div>
+      )}
       <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
 
       {!loading && (
@@ -306,7 +350,7 @@ export default function OverallSheetPage() {
         />
       )}
 
-      <div className="print:hidden max-w-6xl mx-auto px-6 py-8 flex flex-col gap-10">
+      <div className={`print:hidden max-w-6xl mx-auto px-6 py-8 flex flex-col gap-14${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
 
         {/* ── DOS COLUMNAS: Formaciones | Baile ────────────────────────── */}
         <div className="grid grid-cols-2 gap-5 items-start">
@@ -314,13 +358,13 @@ export default function OverallSheetPage() {
           {/* LEFT: Formaciones */}
           <section className="flex flex-col gap-3">
             <div>
-              <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Formaciones y Transiciones</h2>
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Formaciones y Transiciones</h2>
               <p className="text-xs text-zinc-400 mt-0.5">−0.1 por cada problema de espaciado en formaciones o choque/empalme en transiciones</p>
             </div>
 
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
               <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Valor Inicial</span>
+                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Valor Inicial</span>
                 <div className="flex items-center gap-3">
                   {errorsCount > 0 && (
                     <span className="text-xs text-red-500 tabular-nums">{errorsCount} error{errorsCount !== 1 ? 'es' : ''} × −0.1</span>
@@ -358,43 +402,22 @@ export default function OverallSheetPage() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-              <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
-                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Formaciones</span>
-              </div>
-              <div className="p-3">
-                <textarea value={formationsNotes} onChange={(e) => setFormationsNotes(e.target.value)}
-                  placeholder="Observaciones sobre formaciones y transiciones..." rows={4}
-                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
-              </div>
-            </div>
           </section>
 
           {/* RIGHT: Baile */}
           <section className="flex flex-col gap-3">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Baile</h2>
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Baile</h2>
 
             <DanceLevelSelector label="Dificultad de Baile" criteria={DANCE_DIFF_CRITERIA} levels={danceDiffLevels} value={danceDifficulty} onChange={setDanceDifficulty} />
             {danceDifficulty === 0 && <p className="text-xs text-amber-600 text-center">— Selecciona un nivel de dificultad —</p>}
 
             <DanceLevelSelector label="Ejecución de Baile" criteria={DANCE_EXEC_CRITERIA} levels={danceExecLevels} value={danceExecution} onChange={setDanceExecution} />
             {danceExecution === 0 && <p className="text-xs text-amber-600 text-center">— Selecciona un nivel de ejecución —</p>}
-
-            <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-              <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
-                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Baile</span>
-              </div>
-              <div className="p-3">
-                <textarea value={danceNotes} onChange={(e) => setDanceNotes(e.target.value)}
-                  placeholder="Observaciones sobre dificultad y ejecución de baile..." rows={4}
-                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
-              </div>
-            </div>
           </section>
         </div>
 
         {/* ── OVERALL SUBTOTAL ──────────────────────────────────────────── */}
-        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
+        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm mb-6" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
           <div className="flex gap-6 text-sm items-center">
             <span className="text-xs uppercase tracking-wide opacity-70">Subtotal General</span>
             <span>Form: <strong>{fmt(formationsScore)}</strong></span>
@@ -405,9 +428,9 @@ export default function OverallSheetPage() {
         </div>
 
         {/* ── CREATIVITY + SHOWMANSHIP ─────────────────────────────────── */}
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-4 mt-6">
           <div>
-            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
               {isEscolarAB ? 'Cheer / Animación' : 'Creatividad & Showmanship'}
             </h2>
             <p className="text-xs text-zinc-400 mt-0.5">Puntuado por este juez — se promedia con los otros dos jueces</p>
@@ -418,7 +441,7 @@ export default function OverallSheetPage() {
             {!isEscolarAB && (
               <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Creatividad</span>
+                  <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Creatividad</span>
                   <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(creativityOverall)}</span>
                 </div>
                 <div className="p-4 flex flex-col gap-2">
@@ -453,7 +476,7 @@ export default function OverallSheetPage() {
             {/* Showmanship / Cheer-Animación */}
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
               <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">
                   {isEscolarAB ? 'Cheer / Animación' : 'Showmanship'}
                 </span>
                 <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(showmanshipOverall)}</span>
@@ -492,11 +515,33 @@ export default function OverallSheetPage() {
           </div>
         </section>
 
+        {/* ── OBSERVATIONS ─────────────────────────────────────────────── */}
+        <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+          <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
+            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Observaciones del juez</span>
+            <p className="text-[10px] text-zinc-400 mt-0.5">Aquí se consolidarán los comentarios de todas las secciones calificadas (Formaciones, Baile)</p>
+          </div>
+          <div className="divide-y divide-zinc-100">
+            <div className="p-4">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Formaciones</p>
+              <textarea value={formationsNotes} onChange={(e) => setFormationsNotes(e.target.value)}
+                placeholder="Observaciones sobre formaciones y transiciones..." rows={4}
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+            </div>
+            <div className="p-4">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Baile</p>
+              <textarea value={danceNotes} onChange={(e) => setDanceNotes(e.target.value)}
+                placeholder="Observaciones sobre dificultad y ejecución de baile..." rows={4}
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+            </div>
+          </div>
+        </div>
+
         {/* ── GRAND TOTAL ───────────────────────────────────────────────── */}
         <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
           <div>
-            <p className="text-xs uppercase tracking-wide opacity-60 font-medium">Total Planilla Overall</p>
-            <p className="text-xs opacity-40 mt-0.5">
+            <p className="text-base uppercase tracking-wide font-bold">Total Planilla Overall</p>
+            <p className="text-xs opacity-70 mt-0.5">
               {isEscolarAB
                 ? `General + Cheer/Animación (${fmt(showmanshipOverall)})`
                 : `General + Creatividad (${fmt(creativityOverall)}) + Showmanship (${fmt(showmanshipOverall)})`}
@@ -510,7 +555,7 @@ export default function OverallSheetPage() {
           <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
               <CheckCircle2 className="h-4 w-4 text-green-500" />
-              <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">
                 Estadísticas de la Competencia
               </span>
             </div>
@@ -559,7 +604,7 @@ export default function OverallSheetPage() {
         {/* ── Score summary ─────────────────────────────────────────────── */}
         <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden text-sm">
           <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-            <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Resumen de puntajes</span>
+            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Resumen de puntajes</span>
           </div>
           <table className="w-full">
             <tbody className="divide-y divide-zinc-100">

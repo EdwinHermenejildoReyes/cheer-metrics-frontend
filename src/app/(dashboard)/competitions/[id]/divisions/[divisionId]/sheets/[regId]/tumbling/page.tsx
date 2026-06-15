@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Eye, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
@@ -59,7 +59,7 @@ function ExecSection({
     <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
       <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{label} — Ejecución</span>
+          <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">{label} — Ejecución</span>
           <span className="text-sm font-semibold tabular-nums text-zinc-600">Máx: {fmt(max)}</span>
         </div>
         <p className="text-[10px] text-zinc-400 mt-0.5">Se Descuenta por Cantidad, Frecuencia y/o Gravedad de Errores</p>
@@ -147,7 +147,7 @@ function TumblingDiffCard({
   return (
     <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
       <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-        <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{label} — Dificultad</span>
+        <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">{label} — Dificultad</span>
       </div>
       <div className="p-4 flex flex-col gap-5">
 
@@ -226,6 +226,8 @@ export default function TumblingSheetPage() {
 
   const { isJudge, isCompetitionActive } = useJudge();
   const { organization } = useBranding();
+  const [protestExpired, setProtestExpired] = useState(false);
+  const readOnly = !isJudge || protestExpired;
 
   useEffect(() => {
     if (isJudge && !isCompetitionActive(competitionId)) {
@@ -371,6 +373,10 @@ export default function TumblingSheetPage() {
               if (Array.isArray(s.runningExecDeds))  setRunningExecDeds(s.runningExecDeds);
               if (Array.isArray(s.jumpsExecDeds))    setJumpsExecDeds(s.jumpsExecDeds);
             }
+            if (p.protest_started_at) {
+              const elapsed = Date.now() - new Date(p.protest_started_at).getTime();
+              if (elapsed >= 15 * 60 * 1000) setProtestExpired(true);
+            }
           } catch {
             setStandingNotes(sheet.notes);
           }
@@ -382,6 +388,22 @@ export default function TumblingSheetPage() {
   }, [registrationId, divId]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Continuously check if protest window expires while page is open
+  useEffect(() => {
+    if (protestExpired) return;
+    const id = setInterval(() => {
+      if (!existingSheet?.notes) return;
+      try {
+        const p = JSON.parse(existingSheet.notes);
+        if (p.protest_started_at) {
+          const elapsed = Date.now() - new Date(p.protest_started_at).getTime();
+          if (elapsed >= 15 * 60 * 1000) setProtestExpired(true);
+        }
+      } catch {}
+    }, 10_000);
+    return () => clearInterval(id);
+  }, [existingSheet, protestExpired]);
 
   // ── Save ──────────────────────────────────────────────────────────────────
   const handleSave = async () => {
@@ -398,10 +420,18 @@ export default function TumblingSheetPage() {
         jumps_execution:      String(tCfg.hasJumps    ? jumpsExecTotal     : 0),
         creativity_tumbling:  String(tCfg.hasCreativity ? creativityTumbling : 0),
         showmanship_tumbling: String(showmanshipTumbling),
-        notes: JSON.stringify({
-          standing: standingNotes, running: runningNotes, jumps: jumpsNotes,
-          _scores: { standingExecDeds, runningExecDeds, jumpsExecDeds },
-        }),
+        notes: (() => {
+          let existing: Record<string, unknown> = {};
+          try { existing = JSON.parse(existingSheet?.notes ?? '{}'); } catch { /* noop */ }
+          const existingScores = (existing._scores as Record<string, unknown>) ?? {};
+          return JSON.stringify({
+            ...existing,
+            standing: standingNotes,
+            running: runningNotes,
+            jumps: jumpsNotes,
+            _scores: { ...existingScores, standingExecDeds, runningExecDeds, jumpsExecDeds },
+          });
+        })(),
       };
 
       let saved: ScoreSheet;
@@ -451,12 +481,30 @@ export default function TumblingSheetPage() {
             <p className="text-2xl font-bold tabular-nums text-zinc-900">{fmt(sheetTotal)}</p>
           </div>
           <PrintButton />
-          <Button onClick={handleSave} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
-            <Save className="h-4 w-4" />
-            Guardar
-          </Button>
+          {readOnly ? (
+            <span className="print:hidden text-xs font-medium text-zinc-400 px-3 py-1.5 rounded-lg bg-zinc-100 border border-zinc-200">
+              Solo lectura
+            </span>
+          ) : (
+            <Button onClick={handleSave} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
+              <Save className="h-4 w-4" />
+              Guardar
+            </Button>
+          )}
         </div>
       </div>
+      {protestExpired && (
+        <div className="print:hidden bg-red-50 border-b border-red-200 px-6 py-2 flex items-center gap-2">
+          <Lock className="w-4 h-4 text-red-600 shrink-0" />
+          <p className="text-sm text-red-700 font-medium">La ventana de reclamo ha vencido. La planilla está bloqueada.</p>
+        </div>
+      )}
+      {!protestExpired && readOnly && (
+        <div className="print:hidden bg-amber-50 border-b border-amber-200 px-6 py-2 flex items-center gap-2">
+          <Eye className="w-4 h-4 text-amber-600 shrink-0" />
+          <p className="text-sm text-amber-700 font-medium">Solo lectura — solo los jueces asignados pueden calificar.</p>
+        </div>
+      )}
       <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
 
       {!loading && (
@@ -494,13 +542,13 @@ export default function TumblingSheetPage() {
         />
       )}
 
-      <div className="print:hidden max-w-6xl mx-auto px-6 py-8 flex flex-col gap-10">
+      <div className={`print:hidden max-w-6xl mx-auto px-6 py-8 flex flex-col gap-14${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
 
         {/* ── Gym construction table banner ────────────────────────────── */}
         {(() => {
           const groups = athleteCount ? getGymGroups(athleteCount) : null;
           return (
-            <div className={`rounded-xl border px-5 py-4 flex items-center justify-between gap-4 ${
+            <div className={`rounded-xl border px-5 py-4 flex items-center justify-between gap-4 mb-6 ${
               groups ? 'border-zinc-200 bg-white' : 'border-dashed border-zinc-300 bg-zinc-50'
             }`}>
               <div>
@@ -542,7 +590,7 @@ export default function TumblingSheetPage() {
         {/* ── GIMNASIA ESTÁTICA ────────────────────────────────────────── */}
         {tCfg.hasStanding && (
           <section className="flex flex-col gap-3">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
               {tCfg.isCombinedSR ? 'Gimnasia — Estática / Con Carrera (Combinadas)' : 'Gimnasia Estática (Standing)'}
             </h2>
             <div className="grid grid-cols-2 gap-5 items-start">
@@ -583,16 +631,6 @@ export default function TumblingSheetPage() {
                   }
                   total={standingTotal}
                 />
-                <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-                  <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Estática</span>
-                  </div>
-                  <div className="p-3">
-                    <textarea value={standingNotes} onChange={(e) => setStandingNotes(e.target.value)}
-                      placeholder="Observaciones sobre Gimnasia Estática..." rows={3}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
-                  </div>
-                </div>
               </div>
             </div>
           </section>
@@ -600,8 +638,8 @@ export default function TumblingSheetPage() {
 
         {/* ── GIMNASIA CON CARRERA ─────────────────────────────────────── */}
         {tCfg.hasRunning && (
-          <section className="flex flex-col gap-3">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Gimnasia con Carrera (Running)</h2>
+          <section className="flex flex-col gap-3 mt-6">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Gimnasia con Carrera (Running)</h2>
             <div className="grid grid-cols-2 gap-5 items-start">
               {tCfg.runningHasDiff ? (
                 <TumblingDiffCard
@@ -640,16 +678,6 @@ export default function TumblingSheetPage() {
                   }
                   total={runningTotal}
                 />
-                <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-                  <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Con Carrera</span>
-                  </div>
-                  <div className="p-3">
-                    <textarea value={runningNotes} onChange={(e) => setRunningNotes(e.target.value)}
-                      placeholder="Observaciones sobre Gimnasia con Carrera..." rows={3}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
-                  </div>
-                </div>
               </div>
             </div>
           </section>
@@ -657,13 +685,13 @@ export default function TumblingSheetPage() {
 
         {/* ── SALTOS ───────────────────────────────────────────────────── */}
         {tCfg.hasJumps && (
-          <section className="flex flex-col gap-3">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Saltos (Jumps)</h2>
+          <section className="flex flex-col gap-3 mt-6">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Saltos (Jumps)</h2>
             <div className="grid grid-cols-2 gap-5 items-start">
               {tCfg.jumpsHasDiff && tCfg.jumpsDiffOpts.length > 0 ? (
                 <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                   <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Dificultad — Saltos Avanzados</span>
+                    <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Dificultad — Saltos Avanzados</span>
                   </div>
                   <div className="p-4 flex flex-col gap-1.5">
                     {tCfg.jumpsDiffOpts.map(({ label: lbl, value }) => (
@@ -699,23 +727,13 @@ export default function TumblingSheetPage() {
                   }
                   total={jumpsTotal}
                 />
-                <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-                  <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Saltos</span>
-                  </div>
-                  <div className="p-3">
-                    <textarea value={jumpsNotes} onChange={(e) => setJumpsNotes(e.target.value)}
-                      placeholder="Observaciones sobre Saltos..." rows={3}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
-                  </div>
-                </div>
               </div>
             </div>
           </section>
         )}
 
         {/* ── TUMBLING SUBTOTAL ─────────────────────────────────────────── */}
-        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
+        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm mb-6" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
           <span className="text-sm font-semibold uppercase tracking-wide">Subtotal Gimnasia</span>
           <span className="text-2xl font-bold tabular-nums">{fmt(tumblingSubtotal)}</span>
         </div>
@@ -723,7 +741,7 @@ export default function TumblingSheetPage() {
         {/* ── CREATIVITY + SHOWMANSHIP ─────────────────────────────────── */}
         <section className="flex flex-col gap-4">
           <div>
-            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
               {tCfg.hasCreativity ? 'Creatividad & Showmanship' : 'Cheer / Animación'}
             </h2>
             <p className="text-xs text-zinc-400 mt-0.5">Puntuado por este juez — se promedia con los otros dos jueces</p>
@@ -734,7 +752,7 @@ export default function TumblingSheetPage() {
             {tCfg.hasCreativity && (
               <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Creatividad</span>
+                  <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Creatividad</span>
                   <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(creativityTumbling)}</span>
                 </div>
                 <div className="p-4 flex flex-col gap-2">
@@ -769,7 +787,7 @@ export default function TumblingSheetPage() {
             {/* Showmanship / Cheer-Animación */}
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
               <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">
                   {tCfg.hasCreativity ? 'Showmanship' : 'Cheer / Animación'}
                 </span>
                 <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(showmanshipTumbling)}</span>
@@ -808,11 +826,45 @@ export default function TumblingSheetPage() {
           </div>
         </section>
 
+        {/* ── OBSERVATIONS ─────────────────────────────────────────────── */}
+        <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+          <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
+            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Observaciones del juez</span>
+            <p className="text-[10px] text-zinc-400 mt-0.5">Aquí se consolidarán los comentarios de todas las secciones calificadas (Estática, Con Carrera, Saltos)</p>
+          </div>
+          <div className="divide-y divide-zinc-100">
+            {tCfg.hasStanding && (
+              <div className="p-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Estática</p>
+                <textarea value={standingNotes} onChange={(e) => setStandingNotes(e.target.value)}
+                  placeholder="Observaciones sobre Gimnasia Estática..." rows={3}
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+              </div>
+            )}
+            {tCfg.hasRunning && (
+              <div className="p-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Con Carrera</p>
+                <textarea value={runningNotes} onChange={(e) => setRunningNotes(e.target.value)}
+                  placeholder="Observaciones sobre Gimnasia con Carrera..." rows={3}
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+              </div>
+            )}
+            {tCfg.hasJumps && (
+              <div className="p-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Saltos</p>
+                <textarea value={jumpsNotes} onChange={(e) => setJumpsNotes(e.target.value)}
+                  placeholder="Observaciones sobre Saltos..." rows={3}
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* ── GRAND TOTAL ───────────────────────────────────────────────── */}
         <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
           <div>
-            <p className="text-xs uppercase tracking-wide opacity-60 font-medium">Total Planilla Tumbling</p>
-            <p className="text-xs opacity-40 mt-0.5">
+            <p className="text-base uppercase tracking-wide font-bold">Total Planilla Tumbling</p>
+            <p className="text-xs opacity-70 mt-0.5">
               {tCfg.hasCreativity
                 ? `Gimnasia + Creatividad (${fmt(creativityTumbling)}) + Showmanship (${fmt(showmanshipTumbling)})`
                 : `Gimnasia + Cheer/Animación (${fmt(showmanshipTumbling)})`}
@@ -824,7 +876,7 @@ export default function TumblingSheetPage() {
         {/* ── Score summary table ───────────────────────────────────────── */}
         <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden text-sm">
           <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-            <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Resumen de puntajes</span>
+            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Resumen de puntajes</span>
           </div>
           <table className="w-full">
             <tbody className="divide-y divide-zinc-100">

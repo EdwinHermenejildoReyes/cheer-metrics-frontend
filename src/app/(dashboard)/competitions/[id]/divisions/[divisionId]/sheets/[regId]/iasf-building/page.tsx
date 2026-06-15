@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
@@ -191,6 +191,7 @@ export default function IasfBuildingSheetPage() {
   const registrationId = Number(regId);
 
   const { isJudge, isCompetitionActive } = useJudge();
+  const readOnly = !isJudge;
   const { organization } = useBranding();
 
   useEffect(() => {
@@ -311,12 +312,24 @@ export default function IasfBuildingSheetPage() {
             </p>
           </div>
           <PrintButton />
-          <Button onClick={handleSave} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
-            <Save className="h-4 w-4" />
-            Guardar
-          </Button>
+          {readOnly ? (
+            <span className="print:hidden text-xs font-medium text-zinc-400 px-3 py-1.5 rounded-lg bg-zinc-100 border border-zinc-200">
+              Solo lectura
+            </span>
+          ) : (
+            <Button onClick={handleSave} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
+              <Save className="h-4 w-4" />
+              Guardar
+            </Button>
+          )}
         </div>
       </div>
+      {readOnly && (
+        <div className="print:hidden bg-amber-50 border-b border-amber-200 px-6 py-2 flex items-center gap-2">
+          <Eye className="w-4 h-4 text-amber-600 shrink-0" />
+          <p className="text-sm text-amber-700 font-medium">Solo lectura — solo los jueces asignados pueden calificar.</p>
+        </div>
+      )}
       <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
 
       <IasfSheetPrintView
@@ -336,11 +349,11 @@ export default function IasfBuildingSheetPage() {
         }}
       />
 
-      <div className="print:hidden max-w-2xl mx-auto px-6 py-8 flex flex-col gap-6">
+      <div className={`print:hidden max-w-2xl mx-auto px-6 py-8 flex flex-col gap-6${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
         <div className="rounded-xl bg-white border border-zinc-200 p-4 flex items-center gap-4">
           <div className="flex-1">
             <div className="flex items-center justify-between text-xs text-zinc-500 mb-1.5">
-              <span>Progreso total</span>
+              <span className="text-sm font-bold text-zinc-700">Progreso total</span>
               <span className="tabular-nums font-medium">{pct.toFixed(1)}%</span>
             </div>
             <div className="h-3 rounded-full bg-zinc-100 overflow-hidden">
@@ -364,7 +377,7 @@ export default function IasfBuildingSheetPage() {
 
         <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
           <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-            <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios del juez</span>
+            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Comentarios del juez</span>
           </div>
           <div className="p-4">
             <textarea value={notes} onChange={e => setNotes(e.target.value)}
@@ -383,7 +396,7 @@ export default function IasfBuildingSheetPage() {
               </div>
             ))}
             <div className="mt-2 pt-2 border-t border-zinc-200 flex items-center justify-between">
-              <span className="text-sm font-semibold text-zinc-700">Total Elevaciones</span>
+              <span className="text-base font-bold text-zinc-700">Total Elevaciones</span>
               <span className="text-lg font-bold tabular-nums text-zinc-900">{total} / {MAX_TOTAL}</span>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import type { ScoringSystem, Division, DivisionCategory } from '@/types/competitions';
 
 // ── Primitive option types ────────────────────────────────────────────────────
-export interface RangoOpt  { value: number; label: string; note?: string }
+export interface RangoOpt  { value: number; label: string; note?: string; skillCount?: number }
 export interface PyramidRangoOpt { low: number; high: number; label: string }
 
 // ── Building config ───────────────────────────────────────────────────────────
@@ -60,22 +60,22 @@ export interface TumblingConfig {
 // ── Shared option sets ────────────────────────────────────────────────────────
 
 const ELITE_STUNT_RANGO: RangoOpt[] = [
-  { value: 3.5, label: 'No cumple con 4.0' },
-  { value: 4.0, label: '4 Acumulativas' },
-  { value: 4.5, label: '2 Habilidades Diferentes' },
-  { value: 5.0, label: '3 Habilidades Diferentes' },
-  { value: 5.5, label: '4 Habilidades Diferentes' },
-  { value: 6.0, label: '5 Habilidades Diferentes' },
+  { value: 3.5, label: 'No cumple con 4.0',     skillCount: 0 },
+  { value: 4.0, label: '4 Acumulativas',         skillCount: 4 },
+  { value: 4.5, label: '2 Habilidades Diferentes', skillCount: 2 },
+  { value: 5.0, label: '3 Habilidades Diferentes', skillCount: 3 },
+  { value: 5.5, label: '4 Habilidades Diferentes', skillCount: 4 },
+  { value: 6.0, label: '5 Habilidades Diferentes', skillCount: 5 },
 ];
 
 // All Girl: el 6.0 requiere además al menos 1 habilidad de ≥Nivel 3
 const ELITE_STUNT_RANGO_ALL_GIRL: RangoOpt[] = [
-  { value: 3.5, label: 'No cumple con 4.0' },
-  { value: 4.0, label: '4 Acumulativas' },
-  { value: 4.5, label: '2 Habilidades Diferentes' },
-  { value: 5.0, label: '3 Habilidades Diferentes' },
-  { value: 5.5, label: '4 Habilidades Diferentes' },
-  { value: 6.0, label: '5 Hab Dif / 1 Hab ≥Niv 3' },
+  { value: 3.5, label: 'No cumple con 4.0',       skillCount: 0 },
+  { value: 4.0, label: '4 Acumulativas',           skillCount: 4 },
+  { value: 4.5, label: '2 Habilidades Diferentes', skillCount: 2 },
+  { value: 5.0, label: '3 Habilidades Diferentes', skillCount: 3 },
+  { value: 5.5, label: '4 Habilidades Diferentes', skillCount: 4 },
+  { value: 6.0, label: '5 Hab Dif / 1 Hab ≥Niv 3', skillCount: 5 },
 ];
 
 // All Male: tabla general, sin requisito adicional en 6.0
@@ -83,12 +83,12 @@ const ELITE_STUNT_RANGO_ALL_MALE: RangoOpt[] = ELITE_STUNT_RANGO;
 
 // Coed: el 6.0 requiere además al menos 1 habilidad Coed simultánea
 const ELITE_STUNT_RANGO_COED: RangoOpt[] = [
-  { value: 3.5, label: 'No cumple con 4.0' },
-  { value: 4.0, label: '4 Acumulativas' },
-  { value: 4.5, label: '2 Habilidades Diferentes' },
-  { value: 5.0, label: '3 Habilidades Diferentes' },
-  { value: 5.5, label: '4 Habilidades Diferentes' },
-  { value: 6.0, label: '5 Hab Dif / 1 Hab Coed' },
+  { value: 3.5, label: 'No cumple con 4.0',       skillCount: 0 },
+  { value: 4.0, label: '4 Acumulativas',           skillCount: 4 },
+  { value: 4.5, label: '2 Habilidades Diferentes', skillCount: 2 },
+  { value: 5.0, label: '3 Habilidades Diferentes', skillCount: 3 },
+  { value: 5.5, label: '4 Habilidades Diferentes', skillCount: 4 },
+  { value: 6.0, label: '5 Hab Dif / 1 Hab Coed',  skillCount: 5 },
 ];
 
 // Non-Tumbling: tabla general, sin requisito adicional en 6.0
@@ -146,10 +146,10 @@ const PYRAMID_FINE_STEPS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
 
 // Prep shares skill grade values (labels differ slightly but scores identical)
 const PREP_STUNT_RANGO: RangoOpt[] = [
-  { value: 2.5, label: 'No cumple con 3.0' },
-  { value: 3.0, label: '4 Hab Dif por Gran Parte (Acumulativas)' },
-  { value: 3.5, label: '2 Hab Dif Simultáneas por Gran Parte' },
-  { value: 4.0, label: '3 Hab Dif Simultáneas por Gran Parte' },
+  { value: 2.5, label: 'No cumple con 3.0',                      skillCount: 0 },
+  { value: 3.0, label: '4 Hab Dif por Gran Parte (Acumulativas)', skillCount: 3 },
+  { value: 3.5, label: '2 Hab Dif Simultáneas por Gran Parte',    skillCount: 2 },
+  { value: 4.0, label: '3 Hab Dif Simultáneas por Gran Parte',    skillCount: 3 },
 ];
 
 const PREP_SKILL_GRADES: RangoOpt[] = [
@@ -192,11 +192,11 @@ const PREP_JUMPS: RangoOpt[] = [
 // ── Escolar AB (Adventure Brands) option sets ─────────────────────────────────
 
 const ESCOLAR_AB_STUNT_RANGO: RangoOpt[] = [
-  { value: 2.0, label: 'No cumple con 2.5' },
-  { value: 2.5, label: '4 Hab Dif por Gran Parte (Acumulativas)' },
-  { value: 3.0, label: '2 Hab Dif Simultáneas por Gran Parte' },
-  { value: 3.5, label: '3 Hab Dif Simultáneas por Gran Parte' },
-  { value: 3.7, label: '4+ Hab Dif Simultáneas por Gran Parte' },
+  { value: 2.0, label: 'No cumple con 2.5',                      skillCount: 0 },
+  { value: 2.5, label: '4 Hab Dif por Gran Parte (Acumulativas)', skillCount: 4 },
+  { value: 3.0, label: '2 Hab Dif Simultáneas por Gran Parte',    skillCount: 2 },
+  { value: 3.5, label: '3 Hab Dif Simultáneas por Gran Parte',    skillCount: 3 },
+  { value: 3.7, label: '4+ Hab Dif Simultáneas por Gran Parte',   skillCount: 4 },
 ];
 
 // Binary drivers: met the level or not (0 or 0.3)

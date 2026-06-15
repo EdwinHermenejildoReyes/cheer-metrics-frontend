@@ -1,6 +1,8 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { toast } from 'sonner';
 import getEnvVars from '@/utils/getEnvVars';
+import { store, persistor } from '@/core/store';
+import { clearAuth } from '@/store/auth/slices';
 
 const { mainApiUrl } = getEnvVars();
 
@@ -51,9 +53,12 @@ export default (axiosClient: AxiosInstance): void => {
       return axiosClient.request(config!);
     } catch (refreshError) {
       processQueue(refreshError as Error);
+      store.dispatch(clearAuth());
       toast('Su sesión ha expirado, por favor inicie sesión nuevamente.');
       if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-        window.location.href = '/login';
+        persistor.flush().finally(() => {
+          window.location.href = '/login';
+        });
       }
       return Promise.reject(refreshError);
     } finally {

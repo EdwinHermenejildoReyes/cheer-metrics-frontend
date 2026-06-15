@@ -41,6 +41,18 @@ function SliderRow({ label, value, max, primary }: { label: string; value: numbe
   );
 }
 
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function SectionNotes({ text }: { text: string }) {
+  if (!text || !text.trim()) return null;
+  return (
+    <div style={{ marginTop: '6px', padding: '5px 8px', backgroundColor: '#f9fafb', borderRadius: '5px', borderLeft: '2px solid #d4d4d8' }}>
+      <p style={{ fontSize: '7.5px', fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: '0 0 2px' }}>Notas del juez</p>
+      <p style={{ fontSize: '8.5px', color: '#52525b', margin: 0, whiteSpace: 'pre-wrap' as const, lineHeight: 1.4 }}>{text}</p>
+    </div>
+  );
+}
+
 // ── Dance level card ──────────────────────────────────────────────────────────
 
 function DanceLevelCard({ label, criteria, levels, selected, primary, primaryText }: {
@@ -192,24 +204,22 @@ export function OverallSheetPrintView(p: OverallPrintData) {
           {/* Baile card */}
           <div style={{ border: '1px solid #e4e4e7', borderRadius: '8px', padding: '10px 12px', backgroundColor: '#fafafa' }}>
             <SectionBar label="Baile" primary={primary} />
-            <SubLabel text="Dificultad de Baile" />
-            <DanceLevelCard
-              label="Dificultad"
-              criteria={DANCE_DIFF_CRITERIA}
-              levels={p.danceDiffLevels}
-              selected={p.danceDifficulty}
-              primary={primary}
-              primaryText={primaryText}
-            />
-            <SubLabel text="Ejecución de Baile" />
-            <DanceLevelCard
-              label="Ejecución"
-              criteria={DANCE_EXEC_CRITERIA}
-              levels={p.danceExecLevels}
-              selected={p.danceExecution}
-              primary={primary}
-              primaryText={primaryText}
-            />
+            <div style={{ border: '1px solid #e4e4e7', borderRadius: '6px', overflow: 'hidden', marginTop: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 8px', backgroundColor: '#f4f4f5', borderBottom: '1px solid #e4e4e7' }}>
+                <span style={{ fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.05em', color: '#52525b' }}>Dificultad de Baile</span>
+                <span style={{ fontSize: '8px', color: '#a1a1aa' }}>Seleccionado: {fmt(p.danceDifficulty)}</span>
+              </div>
+              <div style={{ padding: '6px 8px' }}>
+                <DanceLevelCard
+                  label="Dificultad"
+                  criteria={DANCE_DIFF_CRITERIA}
+                  levels={p.danceDiffLevels}
+                  selected={p.danceDifficulty}
+                  primary={primary}
+                  primaryText={primaryText}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Overall subtotal */}
@@ -311,13 +321,6 @@ export function OverallSheetPrintView(p: OverallPrintData) {
                   <td style={{ padding: '4px 10px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
                     <span style={{ fontWeight: 700 }}>{fmt(p.danceDifficulty)}</span>
                     <span style={{ color: '#a1a1aa' }}> / {fmt(maxDanceDiff)}</span>
-                  </td>
-                </tr>
-                <tr style={{ borderBottom: '1px solid #f4f4f5' }}>
-                  <td style={{ padding: '4px 10px', color: '#52525b' }}>Ejecución de Baile</td>
-                  <td style={{ padding: '4px 10px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
-                    <span style={{ fontWeight: 700 }}>{fmt(p.danceExecution)}</span>
-                    <span style={{ color: '#a1a1aa' }}> / {fmt(maxDanceExec)}</span>
                   </td>
                 </tr>
                 <tr style={{ backgroundColor: `${primary}12`, borderBottom: '1px solid #f4f4f5' }}>

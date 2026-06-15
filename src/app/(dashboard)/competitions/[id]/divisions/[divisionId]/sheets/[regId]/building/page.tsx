@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Eye, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
@@ -20,7 +20,7 @@ import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBa
 import type { BuildingPrintData } from '@/components/print/BuildingSheetPrintView';
 
 // ── Execution categories (same for all scoring systems) ──────────────────────
-const EXEC_CATS      = ['Volante', 'Base/Spotter', 'Transición', 'Sincronización'];
+const EXEC_CATS      = ['Flyer', 'Base/Spotter', 'Transición', 'Sincronización'];
 const TOSS_EXEC_CATS = ['Flyer', 'Base/Spotter', 'Altura'];
 const EXEC_DED_OPTS   = [0.05, 0.10, 0.20, 0.30];
 const EXEC_DED_LABELS = ['Mínimos', 'Menores', 'Múltiples', 'Generalizados'];
@@ -64,7 +64,7 @@ function ExecSection({
     <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
       <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{label} — Ejecución</span>
+          <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">{label} — Ejecución</span>
           <span className="text-sm font-semibold tabular-nums text-zinc-600">Máx: {fmt(max)}</span>
         </div>
         <p className="text-[10px] text-zinc-400 mt-0.5">Se Descuenta por Cantidad, Frecuencia y/o Gravedad de Errores</p>
@@ -148,6 +148,8 @@ export default function BuildingSheetPage() {
 
   const { isJudge, isCompetitionActive } = useJudge();
   const { organization } = useBranding();
+  const [protestExpired, setProtestExpired] = useState(false);
+  const readOnly = !isJudge || protestExpired;
 
   useEffect(() => {
     if (isJudge && !isCompetitionActive(competitionId)) {
@@ -233,6 +235,17 @@ export default function BuildingSheetPage() {
     (_, i) => i === 4 && isCoed ? 'Habilidad #5 / Coed' : `Habilidad #${i + 1}`
   );
 
+  // Derive how many skill slots are active from the selected rango option's skillCount.
+  // Falls back to stuntsSkillCount (all slots) when skillCount is not defined.
+  const activeStuntsRangoOpt = activeStuntsRango.find(r => r.value === stuntsRango);
+  const activeSkillCount = activeStuntsRangoOpt?.skillCount ?? bCfg.stuntsSkillCount;
+
+  // Reset all skill grades whenever the rango changes.
+  useEffect(() => {
+    setStuntsSkills(Array(bCfg.stuntsSkillCount).fill(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stuntsRango]);
+
   // ── Load ──────────────────────────────────────────────────────────────────
   const load = useCallback(async () => {
     try {
@@ -315,6 +328,10 @@ export default function BuildingSheetPage() {
             setStuntsNotes(parsed.stunts ?? '');
             setPyramidsNotes(parsed.pyramids ?? '');
             setTossesNotes(parsed.tosses ?? '');
+            if (parsed.protest_started_at) {
+              const elapsed = Date.now() - new Date(parsed.protest_started_at).getTime();
+              if (elapsed >= 15 * 60 * 1000) setProtestExpired(true);
+            }
           } catch {
             setStuntsNotes(sheet.notes);
           }
@@ -326,6 +343,22 @@ export default function BuildingSheetPage() {
   }, [registrationId, divId]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Continuously check if protest window expires while page is open
+  useEffect(() => {
+    if (protestExpired) return;
+    const id = setInterval(() => {
+      if (!existingSheet?.notes) return;
+      try {
+        const p = JSON.parse(existingSheet.notes);
+        if (p.protest_started_at) {
+          const elapsed = Date.now() - new Date(p.protest_started_at).getTime();
+          if (elapsed >= 15 * 60 * 1000) setProtestExpired(true);
+        }
+      } catch {}
+    }, 10_000);
+    return () => clearInterval(id);
+  }, [existingSheet, protestExpired]);
 
   // ── Save ──────────────────────────────────────────────────────────────────
   const handleSave = async () => {
@@ -342,16 +375,23 @@ export default function BuildingSheetPage() {
         tosses_execution:     String(bCfg.hasTosses ? tossesExecTotal : 0),
         creativity_building:  String(bCfg.hasCreativity ? creativityBuilding : 0),
         showmanship_building: String(showmanshipBuilding),
-        notes: JSON.stringify({
-          stunts: stuntsNotes,
-          pyramids: pyramidsNotes,
-          tosses: tossesNotes,
-          _scores: {
-            stuntsRango, stuntsSkills, stuntsPartMax,
-            stuntsExecDeds, pyramidsExecDeds, tossesExecDeds,
-            pyramidsRangeIdx, pyramidsFine,
-          },
-        }),
+        notes: (() => {
+          let existing: Record<string, unknown> = {};
+          try { existing = JSON.parse(existingSheet?.notes ?? '{}'); } catch { /* noop */ }
+          const existingScores = (existing._scores as Record<string, unknown>) ?? {};
+          return JSON.stringify({
+            ...existing,
+            stunts: stuntsNotes,
+            pyramids: pyramidsNotes,
+            tosses: tossesNotes,
+            _scores: {
+              ...existingScores,
+              stuntsRango, stuntsSkills, stuntsPartMax,
+              stuntsExecDeds, pyramidsExecDeds, tossesExecDeds,
+              pyramidsRangeIdx, pyramidsFine,
+            },
+          });
+        })(),
       };
 
       let saved: ScoreSheet;
@@ -400,12 +440,30 @@ export default function BuildingSheetPage() {
             <p className="text-2xl font-bold tabular-nums text-zinc-900">{fmt(sheetTotal)}</p>
           </div>
           <PrintButton />
-          <Button onClick={handleSave} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
-            <Save className="h-4 w-4" />
-            Guardar
-          </Button>
+          {readOnly ? (
+            <span className="print:hidden text-xs font-medium text-zinc-400 px-3 py-1.5 rounded-lg bg-zinc-100 border border-zinc-200">
+              Solo lectura
+            </span>
+          ) : (
+            <Button onClick={handleSave} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
+              <Save className="h-4 w-4" />
+              Guardar
+            </Button>
+          )}
         </div>
       </div>
+      {protestExpired && (
+        <div className="print:hidden bg-red-50 border-b border-red-200 px-6 py-2 flex items-center gap-2">
+          <Lock className="w-4 h-4 text-red-600 shrink-0" />
+          <p className="text-sm text-red-700 font-medium">La ventana de reclamo ha vencido. La planilla está bloqueada.</p>
+        </div>
+      )}
+      {!protestExpired && readOnly && (
+        <div className="print:hidden bg-amber-50 border-b border-amber-200 px-6 py-2 flex items-center gap-2">
+          <Eye className="w-4 h-4 text-amber-600 shrink-0" />
+          <p className="text-sm text-amber-700 font-medium">Solo lectura — solo los jueces asignados pueden calificar.</p>
+        </div>
+      )}
       <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
 
       {/* Print-only view (hidden in browser, visible when printing) */}
@@ -444,13 +502,13 @@ export default function BuildingSheetPage() {
         />
       )}
 
-      <div className="print:hidden max-w-6xl mx-auto px-6 py-8 flex flex-col gap-10">
+      <div className={`print:hidden max-w-6xl mx-auto px-6 py-8 flex flex-col gap-14${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
 
         {/* ── Construction table banner ────────────────────────────────── */}
         {(() => {
           const groups = athleteCount ? getConstructionGroups(athleteCount) : null;
           return (
-            <div className={`rounded-xl border px-5 py-4 flex items-center justify-between gap-4 ${
+            <div className={`rounded-xl border px-5 py-4 flex items-center justify-between gap-4 mb-6 ${
               groups ? 'border-zinc-200 bg-white' : 'border-dashed border-zinc-300 bg-zinc-50'
             }`}>
               <div>
@@ -493,7 +551,7 @@ export default function BuildingSheetPage() {
 
         {/* ── STUNTS ──────────────────────────────────────────────────── */}
         <section className="flex flex-col gap-3">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+          <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
             Elevaciones — Stunts
           </h2>
           {!bCfg.hasStunts ? (
@@ -512,7 +570,7 @@ export default function BuildingSheetPage() {
               ) : (
                 <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                   <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Dificultad</span>
+                    <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Dificultad</span>
                   </div>
                   <div className="p-4 flex flex-col gap-5">
 
@@ -546,35 +604,41 @@ export default function BuildingSheetPage() {
                       <div>
                         <p className="text-xs font-medium text-zinc-500 mb-2">Grado de Dificultad — Habilidades (+0.10 / +0.20)</p>
                         <div className="flex flex-col gap-2">
-                          {stuntSkillLabels.map((skill, i) => (
-                            <div key={skill} className="flex items-center gap-3">
-                              <span className="w-28 shrink-0 text-sm text-zinc-700">{skill}</span>
-                              <div className="flex flex-1 gap-1.5">
-                                {bCfg.stuntsSkillGrades.map(({ label, value }) => (
-                                  <button
-                                    key={label}
-                                    type="button"
-                                    onClick={() => {
-                                      const next = [...stuntsSkills];
-                                      next[i] = value;
-                                      setStuntsSkills(next);
-                                    }}
-                                    className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors border ${
-                                      stuntsSkills[i] !== null && stuntsSkills[i] === value
-                                        ? 'border-transparent'
-                                        : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-600'
-                                    }`}
-                                    style={stuntsSkills[i] !== null && stuntsSkills[i] === value ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
-                                  >
-                                    {label}
-                                    {value > 0 && (
-                                      <span className="ml-1 opacity-70">+{value.toFixed(2)}</span>
-                                    )}
-                                  </button>
-                                ))}
+                          {stuntSkillLabels.map((skill, i) => {
+                            const skillDisabled = i >= activeSkillCount;
+                            return (
+                              <div key={skill} className="flex items-center gap-3">
+                                <span className={`w-28 shrink-0 text-sm ${skillDisabled ? 'text-zinc-400' : 'text-zinc-700'}`}>{skill}</span>
+                                <div className="flex flex-1 gap-1.5">
+                                  {bCfg.stuntsSkillGrades.map(({ label, value }) => (
+                                    <button
+                                      key={label}
+                                      type="button"
+                                      disabled={skillDisabled}
+                                      onClick={() => {
+                                        const next = [...stuntsSkills];
+                                        next[i] = value;
+                                        setStuntsSkills(next);
+                                      }}
+                                      className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors border ${
+                                        skillDisabled
+                                          ? 'bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed opacity-50'
+                                          : stuntsSkills[i] !== null && stuntsSkills[i] === value
+                                            ? 'border-transparent'
+                                            : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-600'
+                                      }`}
+                                      style={!skillDisabled && stuntsSkills[i] !== null && stuntsSkills[i] === value ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
+                                    >
+                                      {label}
+                                      {value > 0 && (
+                                        <span className="ml-1 opacity-70">+{value.toFixed(2)}</span>
+                                      )}
+                                    </button>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                         <div className="mt-3 flex justify-between text-xs border-t border-zinc-100 pt-2">
                           <span className="text-zinc-500">
@@ -632,28 +696,14 @@ export default function BuildingSheetPage() {
                   }
                   total={stuntsSectionTotal}
                 />
-                <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-                  <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Elevaciones</span>
-                  </div>
-                  <div className="p-3">
-                    <textarea
-                      value={stuntsNotes}
-                      onChange={(e) => setStuntsNotes(e.target.value)}
-                      placeholder="Observaciones sobre Elevaciones..."
-                      rows={3}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                    />
-                  </div>
-                </div>
               </div>
             </div>
           )}
         </section>
 
         {/* ── PYRAMIDS ────────────────────────────────────────────────── */}
-        <section className="flex flex-col gap-3">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Pirámides</h2>
+        <section className="flex flex-col gap-3 mt-6">
+          <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Pirámides</h2>
           {!bCfg.hasPyramids ? (
             <NoAplicaBadge label="Sin Pirámides — No Aplica para esta División" />
           ) : (
@@ -670,7 +720,7 @@ export default function BuildingSheetPage() {
               ) : (
                 <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                   <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Dificultad</span>
+                    <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Dificultad</span>
                     <p className="text-[10px] text-zinc-400 mt-0.5"># Habilidades Diferentes del Nivel + # Estructuras x Gran Parte</p>
                   </div>
                   <div className="p-4 flex flex-col gap-4">
@@ -735,7 +785,7 @@ export default function BuildingSheetPage() {
                 {bCfg.pyramidDriversOpts.length > 0 && (
                   <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                     <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Drivers — Pirámides</span>
+                      <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Drivers — Pirámides</span>
                     </div>
                     <div className="p-3 flex flex-col gap-1.5">
                       {bCfg.pyramidDriversOpts.map(({ value, label }) => (
@@ -773,20 +823,6 @@ export default function BuildingSheetPage() {
                   }
                   total={pyramidsSectionTotal}
                 />
-                <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-                  <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Pirámides</span>
-                  </div>
-                  <div className="p-3">
-                    <textarea
-                      value={pyramidsNotes}
-                      onChange={(e) => setPyramidsNotes(e.target.value)}
-                      placeholder="Observaciones sobre Pirámides..."
-                      rows={3}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                    />
-                  </div>
-                </div>
               </div>
             </div>
           )}
@@ -794,14 +830,14 @@ export default function BuildingSheetPage() {
 
         {/* ── TOSSES ──────────────────────────────────────────────────── */}
         {bCfg.hasTosses && (
-          <section className="flex flex-col gap-3">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Lanzamientos — Tosses</h2>
+          <section className="flex flex-col gap-3 mt-6">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Lanzamientos — Tosses</h2>
             <div className="grid grid-cols-2 gap-5 items-start">
 
               {/* LEFT: Difficulty */}
               <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Dificultad</span>
+                  <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Dificultad</span>
                   <p className="text-[10px] text-zinc-400 mt-0.5">Lanzamiento Apropiado del Nivel</p>
                 </div>
                 <div className="p-4">
@@ -839,35 +875,21 @@ export default function BuildingSheetPage() {
                   ]}
                   total={tossesSectionTotal}
                 />
-                <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-                  <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Comentarios — Lanzamientos</span>
-                  </div>
-                  <div className="p-3">
-                    <textarea
-                      value={tossesNotes}
-                      onChange={(e) => setTossesNotes(e.target.value)}
-                      placeholder="Observaciones sobre Lanzamientos..."
-                      rows={3}
-                      className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                    />
-                  </div>
-                </div>
               </div>
             </div>
           </section>
         )}
 
         {/* ── BUILDING SUBTOTAL ────────────────────────────────────────── */}
-        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
+        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm mb-6" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
           <span className="text-sm font-semibold uppercase tracking-wide">Subtotal Elevaciones</span>
           <span className="text-2xl font-bold tabular-nums">{fmt(buildingTotal)}</span>
         </div>
 
         {/* ── CREATIVITY + SHOWMANSHIP ─────────────────────────────────── */}
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-4 mt-6">
           <div>
-            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
               {bCfg.hasCreativity ? 'Creatividad & Showmanship' : 'Cheer / Animación'}
             </h2>
             <p className="text-xs text-zinc-400 mt-0.5">Puntuado por este juez — se promedia con los otros dos jueces</p>
@@ -878,7 +900,7 @@ export default function BuildingSheetPage() {
             {bCfg.hasCreativity && (
               <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Creatividad</span>
+                  <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Creatividad</span>
                   <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(creativityBuilding)}</span>
                 </div>
                 <div className="p-4 flex flex-col gap-2">
@@ -913,7 +935,7 @@ export default function BuildingSheetPage() {
             {/* Showmanship / Cheer-Animación */}
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
               <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">
                   {bCfg.hasCreativity ? 'Showmanship' : 'Cheer / Animación'}
                 </span>
                 <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(showmanshipBuilding)}</span>
@@ -952,11 +974,57 @@ export default function BuildingSheetPage() {
           </div>
         </section>
 
+        {/* ── OBSERVATIONS ─────────────────────────────────────────────── */}
+        <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+          <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
+            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Observaciones del juez</span>
+            <p className="text-[10px] text-zinc-400 mt-0.5">Aquí se consolidarán los comentarios de todas las secciones calificadas (Elevaciones, Pirámides, Lanzamientos)</p>
+          </div>
+          <div className="divide-y divide-zinc-100">
+            {bCfg.hasStunts && (
+              <div className="p-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Elevaciones</p>
+                <textarea
+                  value={stuntsNotes}
+                  onChange={(e) => setStuntsNotes(e.target.value)}
+                  placeholder="Observaciones sobre Elevaciones..."
+                  rows={3}
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                />
+              </div>
+            )}
+            {bCfg.hasPyramids && (
+              <div className="p-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Pirámides</p>
+                <textarea
+                  value={pyramidsNotes}
+                  onChange={(e) => setPyramidsNotes(e.target.value)}
+                  placeholder="Observaciones sobre Pirámides..."
+                  rows={3}
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                />
+              </div>
+            )}
+            {bCfg.hasTosses && (
+              <div className="p-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Lanzamientos</p>
+                <textarea
+                  value={tossesNotes}
+                  onChange={(e) => setTossesNotes(e.target.value)}
+                  placeholder="Observaciones sobre Lanzamientos..."
+                  rows={3}
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* ── GRAND TOTAL ───────────────────────────────────────────────── */}
         <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
           <div>
-            <p className="text-xs uppercase tracking-wide opacity-60 font-medium">Total Planilla Building</p>
-            <p className="text-xs opacity-40 mt-0.5">
+            <p className="text-base uppercase tracking-wide font-bold">Total Planilla Building</p>
+            <p className="text-xs opacity-70 mt-0.5">
               {bCfg.hasCreativity
                 ? `Elevaciones + Creatividad (${fmt(creativityBuilding)}) + Showmanship (${fmt(showmanshipBuilding)})`
                 : `Elevaciones + Cheer/Animación (${fmt(showmanshipBuilding)})`}
@@ -968,7 +1036,7 @@ export default function BuildingSheetPage() {
         {/* Score summary table */}
         <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden text-sm">
           <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-            <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Resumen de puntajes</span>
+            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Resumen de puntajes</span>
           </div>
           <table className="w-full">
             <tbody className="divide-y divide-zinc-100">
