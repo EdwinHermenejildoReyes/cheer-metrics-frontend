@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Trash2, AlertCircle, X, Eye } from 'lucide-react';
+import { InfoButton } from '@/components/ui/InfoButton';
 import { toast } from 'sonner';
 import { PageSpinner } from '@/components/ui/spinner';
 import competitionsRepository from '@/repositories/competitionsRepository';
@@ -354,7 +355,7 @@ export default function DeduccionesSheetPage() {
                   const { label, color } = SECTION_COLORS[key];
                   return (
                     <div key={key} className="flex flex-col gap-1">
-                      <p className={`text-[9px] font-bold uppercase tracking-widest px-1 flex items-center gap-1 ${
+                      <div className={`text-[9px] font-bold uppercase tracking-widest px-1 flex items-center gap-1 ${
                         color === 'red' ? 'text-red-500' :
                         color === 'orange' ? 'text-orange-500' :
                         color === 'amber' ? 'text-amber-600' : 'text-zinc-500'
@@ -363,7 +364,29 @@ export default function DeduccionesSheetPage() {
                         <span className="font-normal normal-case tracking-normal opacity-60">
                           {isFallGroup ? '→ pista' : '→ lista'}
                         </span>
-                      </p>
+                        <InfoButton title={`Deducciones — ${label}`} size="lg">
+                          <div className="space-y-3 text-sm">
+                            <table className="w-full text-xs border-collapse">
+                              <thead>
+                                <tr className="bg-zinc-50">
+                                  <th className="text-left px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600">Código</th>
+                                  <th className="text-left px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600">Descripción</th>
+                                  <th className="text-center px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600 w-16">Monto</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {types.map(t => (
+                                  <tr key={t} className="even:bg-zinc-50">
+                                    <td className="px-3 py-1.5 border border-zinc-200 font-black text-zinc-900">{DEDUCTION_CODES[t]}</td>
+                                    <td className="px-3 py-1.5 border border-zinc-200 text-zinc-600">{DEDUCTION_TYPE_LABELS[t]}</td>
+                                    <td className="px-3 py-1.5 border border-zinc-200 text-center text-red-600 font-semibold tabular-nums">−{DEDUCTION_AMOUNTS[t]}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </InfoButton>
+                      </div>
                       <div className="flex flex-col gap-1">
                         {types.map(type => {
                           const isArmed   = armedType === type;

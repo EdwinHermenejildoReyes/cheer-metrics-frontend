@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Save, CheckCircle2, Eye, Lock } from 'lucide-react';
+import { InfoButton } from '@/components/ui/InfoButton';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
@@ -54,18 +55,26 @@ function fmt(n: number) { return n.toFixed(2); }
 
 // ── Dance level selector ──────────────────────────────────────────────────────
 function DanceLevelSelector({
-  label, criteria, levels, value, onChange,
+  label, criteria, levels, value, onChange, info,
 }: {
   label: string;
   criteria: string[];
   levels: { label: string; sublabel: string; value: number }[];
   value: number;
   onChange: (v: number) => void;
+  info?: React.ReactNode;
 }) {
   return (
     <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
       <div className="px-4 py-2.5 border-b border-black/20" style={{ backgroundColor: 'var(--brand-secondary)' }}>
-        <span className="text-xs font-semibold uppercase tracking-wide text-white">{label}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-semibold uppercase tracking-wide text-white">{label}</span>
+          {info && (
+            <InfoButton title={label} size="lg">
+              {info}
+            </InfoButton>
+          )}
+        </div>
         <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
           {criteria.map((c) => (
             <span key={c} className="text-[10px] text-white/50">· {c}</span>
@@ -358,7 +367,19 @@ export default function OverallSheetPage() {
           {/* LEFT: Formaciones */}
           <section className="flex flex-col gap-3">
             <div>
-              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Formaciones y Transiciones</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Formaciones y Transiciones</h2>
+                <InfoButton title="Formaciones y Transiciones — Reglas" size="lg">
+                  <div className="space-y-3 text-sm">
+                    <p className="text-zinc-600">Evalúa la precisión en las formaciones del equipo y la fluidez al cambiar entre ellas. El puntaje inicia en <strong>2.0</strong> y se descuenta <strong>−0.1</strong> por cada error observado.</p>
+                    <ul className="space-y-1.5 text-xs text-zinc-600">
+                      <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Espaciado:</strong> Desigualdad en la distancia entre atletas dentro de la formación.</span></li>
+                      <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Alineación:</strong> Falta de alineación visible en filas, columnas o figuras.</span></li>
+                      <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Transiciones:</strong> Choques, empalmes o pérdida de control al cambiar de formación.</span></li>
+                    </ul>
+                  </div>
+                </InfoButton>
+              </div>
               <p className="text-xs text-zinc-400 mt-0.5">−0.1 por cada problema de espaciado en formaciones o choque/empalme en transiciones</p>
             </div>
 
@@ -406,12 +427,57 @@ export default function OverallSheetPage() {
 
           {/* RIGHT: Baile */}
           <section className="flex flex-col gap-3">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Baile</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Baile</h2>
+              <InfoButton title="Baile — Reglas de Puntuación" size="lg">
+                <div className="space-y-3 text-sm">
+                  <p className="text-zinc-600">El baile se evalúa en dos dimensiones: <strong>Dificultad</strong> (complejidad y variedad de los elementos coreográficos) y <strong>Ejecución</strong> (calidad técnica y expresiva). Cada juez asigna un nivel y los tres puntajes se promedian.</p>
+                  <div>
+                    <p className="text-xs font-semibold text-zinc-700 mb-1">Dificultad — Criterios evaluados:</p>
+                    <ul className="space-y-1 text-xs text-zinc-600">
+                      {DANCE_DIFF_CRITERIA.map((c) => <li key={c} className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span>{c}</span></li>)}
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-zinc-700 mb-1">Ejecución — Criterios evaluados:</p>
+                    <ul className="space-y-1 text-xs text-zinc-600">
+                      {DANCE_EXEC_CRITERIA.map((c) => <li key={c} className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span>{c}</span></li>)}
+                    </ul>
+                  </div>
+                </div>
+              </InfoButton>
+            </div>
 
-            <DanceLevelSelector label="Dificultad de Baile" criteria={DANCE_DIFF_CRITERIA} levels={danceDiffLevels} value={danceDifficulty} onChange={setDanceDifficulty} />
+            <DanceLevelSelector
+              label="Dificultad de Baile"
+              criteria={DANCE_DIFF_CRITERIA}
+              levels={danceDiffLevels}
+              value={danceDifficulty}
+              onChange={setDanceDifficulty}
+              info={
+                <ul className="space-y-1.5 text-xs text-zinc-600">
+                  <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Reducido (Bajo el Promedio):</strong> Coreografía simple, pocos elementos de dificultad, variedad limitada.</span></li>
+                  <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Moderado (Promedio):</strong> Coreografía con variedad adecuada, elementos de dificultad media y buen uso del espacio.</span></li>
+                  <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Elevado (Sobre el Promedio):</strong> Coreografía compleja, alta variedad de elementos, excelente uso de niveles y velocidad.</span></li>
+                </ul>
+              }
+            />
             {danceDifficulty === 0 && <p className="text-xs text-amber-600 text-center">— Selecciona un nivel de dificultad —</p>}
 
-            <DanceLevelSelector label="Ejecución de Baile" criteria={DANCE_EXEC_CRITERIA} levels={danceExecLevels} value={danceExecution} onChange={setDanceExecution} />
+            <DanceLevelSelector
+              label="Ejecución de Baile"
+              criteria={DANCE_EXEC_CRITERIA}
+              levels={danceExecLevels}
+              value={danceExecution}
+              onChange={setDanceExecution}
+              info={
+                <ul className="space-y-1.5 text-xs text-zinc-600">
+                  <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Reducido (Bajo el Promedio):</strong> Técnica deficiente, movimientos imprecisos, falta de sincronización y energía.</span></li>
+                  <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Moderado (Promedio):</strong> Técnica aceptable, movimientos coordinados, sincronización y energía consistentes.</span></li>
+                  <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Elevado (Sobre el Promedio):</strong> Alta precisión, excelente sincronización, energía y expresividad sobresalientes.</span></li>
+                </ul>
+              }
+            />
             {danceExecution === 0 && <p className="text-xs text-amber-600 text-center">— Selecciona un nivel de ejecución —</p>}
           </section>
         </div>
@@ -430,9 +496,20 @@ export default function OverallSheetPage() {
         {/* ── CREATIVITY + SHOWMANSHIP ─────────────────────────────────── */}
         <section className="flex flex-col gap-4 mt-6">
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
-              {isEscolarAB ? 'Cheer / Animación' : 'Creatividad & Showmanship'}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
+                {isEscolarAB ? 'Cheer / Animación' : 'Creatividad & Showmanship'}
+              </h2>
+              <InfoButton title="Creatividad & Showmanship — Reglas" size="lg">
+                <div className="space-y-3 text-sm">
+                  <p className="text-zinc-600">Estos puntajes son asignados individualmente por cada juez y se <strong>promedian</strong> entre los tres jueces de Overall para obtener el valor final (máx. efectivo: 2.00 por categoría).</p>
+                  <ul className="space-y-1.5 text-xs text-zinc-600">
+                    <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Creatividad:</strong> Originalidad de la coreografía, uso innovador del espacio, variedad de formaciones y efectos visuales durante toda la rutina.</span></li>
+                    <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Showmanship:</strong> Confianza, presencia escénica y conexión emocional del equipo durante la presentación de Overall.</span></li>
+                  </ul>
+                </div>
+              </InfoButton>
+            </div>
             <p className="text-xs text-zinc-400 mt-0.5">Puntuado por este juez — se promedia con los otros dos jueces</p>
           </div>
 

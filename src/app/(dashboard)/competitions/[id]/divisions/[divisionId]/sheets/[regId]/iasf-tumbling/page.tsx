@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Eye } from 'lucide-react';
+import { InfoButton } from '@/components/ui/InfoButton';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
@@ -115,7 +116,30 @@ function ScoreSelector({
     <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
       <div className="flex items-start justify-between px-4 py-3 bg-zinc-50 border-b border-zinc-200">
         <div>
-          <span className="text-sm font-semibold text-zinc-900">{category.label}</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-semibold text-zinc-900">{category.label}</span>
+            <InfoButton title={`${category.label} — Reglas`} size="lg">
+              <div className="space-y-3 text-sm">
+                <p className="text-zinc-600">{category.description}</p>
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-zinc-50">
+                      <th className="text-left px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600">Rango</th>
+                      <th className="text-left px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600">Nivel</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {category.bands.map(b => (
+                      <tr key={b.label} className="even:bg-zinc-50">
+                        <td className="px-3 py-1.5 border border-zinc-200 font-semibold tabular-nums">{b.range}</td>
+                        <td className="px-3 py-1.5 border border-zinc-200 text-zinc-600">{b.label}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </InfoButton>
+          </div>
           <p className="text-xs text-zinc-500 mt-0.5">{category.description}</p>
         </div>
         <div className="text-right ml-4 shrink-0">

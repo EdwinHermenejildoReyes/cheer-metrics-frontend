@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Eye, Lock } from 'lucide-react';
+import { InfoButton } from '@/components/ui/InfoButton';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
@@ -42,15 +43,70 @@ function fmt(n: number) {
   return n.toFixed(2);
 }
 
+// ── Tumbling category descriptions for info modals ───────────────────────────
+const TUMBLING_CAT_DESCRIPTIONS: Record<string, string> = {
+  'Aprox.': 'Aproximación a la habilidad — posición inicial, pasos de carrera y control antes de ejecutar.',
+  'Con. Corporal': 'Control corporal durante la habilidad — posición de brazos, piernas y tronco.',
+  'Aterrizajes': 'Calidad del aterrizaje — absorción, equilibrio y control al finalizar la habilidad.',
+  'Sinc': 'Sincronización entre los integrantes del equipo al ejecutar la habilidad simultáneamente.',
+  'P. Brazos': 'Posición y técnica de brazos durante el salto — elevación, ángulo y limpieza.',
+  'P. Piernas': 'Posición y técnica de piernas durante el salto — extensión, ángulo y control.',
+};
+
+function TumblingExecInfoContent({ cats }: { cats: string[] }) {
+  return (
+    <div className="space-y-4 text-sm">
+      <div>
+        <h3 className="font-semibold text-zinc-900 mb-2">Niveles de Deducción</h3>
+        <table className="w-full text-xs border-collapse">
+          <thead>
+            <tr className="bg-zinc-50">
+              <th className="text-left px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600">Nivel</th>
+              <th className="text-center px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600 w-16">Descuento</th>
+              <th className="text-left px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600">Criterio</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              { label: 'Mínimos',       amt: '−0.05', desc: 'Errores leves, casi imperceptibles; no afectan el conjunto' },
+              { label: 'Menores',       amt: '−0.10', desc: 'Errores claramente visibles pero controlados y aislados' },
+              { label: 'Múltiples',     amt: '−0.20', desc: 'Errores frecuentes o repetidos en varias ejecuciones' },
+              { label: 'Generalizados', amt: '−0.30', desc: 'Errores graves o falta de control notoria en la categoría' },
+            ].map(({ label, amt, desc }) => (
+              <tr key={label} className="even:bg-zinc-50">
+                <td className="px-3 py-1.5 border border-zinc-200 font-medium">{label}</td>
+                <td className="px-3 py-1.5 border border-zinc-200 text-center text-red-600 font-semibold tabular-nums">{amt}</td>
+                <td className="px-3 py-1.5 border border-zinc-200 text-zinc-500">{desc}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3 className="font-semibold text-zinc-900 mb-2">Categorías Evaluadas</h3>
+        <ul className="space-y-1.5 text-xs text-zinc-600">
+          {cats.map((cat) => (
+            <li key={cat} className="flex items-start gap-2">
+              <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" />
+              <span><strong>{cat}:</strong> {TUMBLING_CAT_DESCRIPTIONS[cat] ?? 'Calidad técnica de ejecución en esta categoría.'}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 // ── Execution sub-component ───────────────────────────────────────────────────
 function ExecSection({
-  label, max, categories, deds, onChange,
+  label, max, categories, deds, onChange, info,
 }: {
   label: string;
   max: number;
   categories: string[];
   deds: ExecDeds;
   onChange: (deds: ExecDeds) => void;
+  info?: React.ReactNode;
 }) {
   const score    = execScore(max, deds);
   const totalDed = deds.reduce<number>((s, d) => s + (d ?? 0), 0);
@@ -59,7 +115,10 @@ function ExecSection({
     <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
       <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">{label} — Ejecución</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">{label} — Ejecución</span>
+            {info && <InfoButton title={`${label} — Reglas de Ejecución`}>{info}</InfoButton>}
+          </div>
           <span className="text-sm font-semibold tabular-nums text-zinc-600">Máx: {fmt(max)}</span>
         </div>
         <p className="text-[10px] text-zinc-400 mt-0.5">Se Descuenta por Cantidad, Frecuencia y/o Gravedad de Errores</p>
@@ -590,9 +649,21 @@ export default function TumblingSheetPage() {
         {/* ── GIMNASIA ESTÁTICA ────────────────────────────────────────── */}
         {tCfg.hasStanding && (
           <section className="flex flex-col gap-3">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
-              {tCfg.isCombinedSR ? 'Gimnasia — Estática / Con Carrera (Combinadas)' : 'Gimnasia Estática (Standing)'}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
+                {tCfg.isCombinedSR ? 'Gimnasia — Estática / Con Carrera (Combinadas)' : 'Gimnasia Estática (Standing)'}
+              </h2>
+              <InfoButton title="Gimnasia Estática — Reglas" size="lg">
+                <div className="space-y-3 text-sm">
+                  <p className="text-zinc-600">Evalúa habilidades de tumbling realizadas sin carrera previa (standing tumbling). Se valora la dificultad de las habilidades ejecutadas y la calidad técnica de su ejecución.</p>
+                  <ul className="space-y-1.5 text-xs text-zinc-600">
+                    <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Rango Base:</strong> Nivel de complejidad general de las habilidades realizadas por mayoría del equipo.</span></li>
+                    <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Habilidad:</strong> Bonus por la habilidad de mayor dificultad ejecutada por gran parte del equipo.</span></li>
+                    <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Ejecución:</strong> Calidad técnica — aproximación, control corporal, aterrizajes y sincronización.</span></li>
+                  </ul>
+                </div>
+              </InfoButton>
+            </div>
             <div className="grid grid-cols-2 gap-5 items-start">
               {tCfg.standingHasDiff ? (
                 <TumblingDiffCard
@@ -617,6 +688,7 @@ export default function TumblingSheetPage() {
                   categories={STANDING_EXEC_CATS}
                   deds={standingExecDeds}
                   onChange={setStandingExecDeds}
+                  info={<TumblingExecInfoContent cats={STANDING_EXEC_CATS} />}
                 />
                 <SectionTotal
                   label="Total Estática"
@@ -639,7 +711,19 @@ export default function TumblingSheetPage() {
         {/* ── GIMNASIA CON CARRERA ─────────────────────────────────────── */}
         {tCfg.hasRunning && (
           <section className="flex flex-col gap-3 mt-6">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Gimnasia con Carrera (Running)</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Gimnasia con Carrera (Running)</h2>
+              <InfoButton title="Gimnasia con Carrera — Reglas" size="lg">
+                <div className="space-y-3 text-sm">
+                  <p className="text-zinc-600">Evalúa habilidades de tumbling ejecutadas con carrera previa (running tumbling). Se considera la dificultad del paso de carrera y las habilidades enlazadas.</p>
+                  <ul className="space-y-1.5 text-xs text-zinc-600">
+                    <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Rango Base:</strong> Nivel de complejidad de las series con carrera realizadas por mayoría del equipo.</span></li>
+                    <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Habilidad:</strong> Bonus por la serie de mayor dificultad ejecutada por gran parte del equipo.</span></li>
+                    <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Ejecución:</strong> Calidad técnica — aproximación, control corporal, aterrizajes y sincronización.</span></li>
+                  </ul>
+                </div>
+              </InfoButton>
+            </div>
             <div className="grid grid-cols-2 gap-5 items-start">
               {tCfg.runningHasDiff ? (
                 <TumblingDiffCard
@@ -664,6 +748,7 @@ export default function TumblingSheetPage() {
                   categories={RUNNING_EXEC_CATS}
                   deds={runningExecDeds}
                   onChange={setRunningExecDeds}
+                  info={<TumblingExecInfoContent cats={RUNNING_EXEC_CATS} />}
                 />
                 <SectionTotal
                   label="Total Carrera"
@@ -686,7 +771,19 @@ export default function TumblingSheetPage() {
         {/* ── SALTOS ───────────────────────────────────────────────────── */}
         {tCfg.hasJumps && (
           <section className="flex flex-col gap-3 mt-6">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Saltos (Jumps)</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Saltos (Jumps)</h2>
+              <InfoButton title="Saltos — Reglas" size="lg">
+                <div className="space-y-3 text-sm">
+                  <p className="text-zinc-600">Evalúa la calidad y dificultad de los saltos realizados por el equipo. Se considera la técnica de brazos, la extensión de piernas y la sincronización grupal.</p>
+                  <ul className="space-y-1.5 text-xs text-zinc-600">
+                    <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>P. Brazos:</strong> Posición y técnica de brazos durante el salto — elevación, ángulo y limpieza.</span></li>
+                    <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>P. Piernas:</strong> Posición y técnica de piernas — extensión completa, ángulo de apertura y control.</span></li>
+                    <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Sinc:</strong> Sincronización del equipo al ejecutar los saltos simultáneamente.</span></li>
+                  </ul>
+                </div>
+              </InfoButton>
+            </div>
             <div className="grid grid-cols-2 gap-5 items-start">
               {tCfg.jumpsHasDiff && tCfg.jumpsDiffOpts.length > 0 ? (
                 <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
@@ -717,7 +814,7 @@ export default function TumblingSheetPage() {
                 </div>
               )}
               <div className="flex flex-col gap-4">
-                <ExecSection label="Saltos" max={tCfg.jumpsExecMax} categories={JUMPS_EXEC_CATS} deds={jumpsExecDeds} onChange={setJumpsExecDeds} />
+                <ExecSection label="Saltos" max={tCfg.jumpsExecMax} categories={JUMPS_EXEC_CATS} deds={jumpsExecDeds} onChange={setJumpsExecDeds} info={<TumblingExecInfoContent cats={JUMPS_EXEC_CATS} />} />
                 <SectionTotal
                   label="Total Saltos"
                   breakdown={
@@ -741,9 +838,20 @@ export default function TumblingSheetPage() {
         {/* ── CREATIVITY + SHOWMANSHIP ─────────────────────────────────── */}
         <section className="flex flex-col gap-4">
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
-              {tCfg.hasCreativity ? 'Creatividad & Showmanship' : 'Cheer / Animación'}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
+                {tCfg.hasCreativity ? 'Creatividad & Showmanship' : 'Cheer / Animación'}
+              </h2>
+              <InfoButton title="Creatividad & Showmanship — Reglas" size="lg">
+                <div className="space-y-3 text-sm">
+                  <p className="text-zinc-600">Estos puntajes son asignados individualmente por cada juez y se <strong>promedian</strong> entre los tres jueces de gimnasia para obtener el valor final (máx. efectivo: 2.00 por categoría).</p>
+                  <ul className="space-y-1.5 text-xs text-zinc-600">
+                    <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Creatividad:</strong> Innovación visual, variedad de habilidades y uso creativo del espacio durante la rutina de gimnasia.</span></li>
+                    <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Showmanship:</strong> Confianza, limpieza y conexión emocional durante la ejecución de las habilidades de gimnasia.</span></li>
+                  </ul>
+                </div>
+              </InfoButton>
+            </div>
             <p className="text-xs text-zinc-400 mt-0.5">Puntuado por este juez — se promedia con los otros dos jueces</p>
           </div>
 
