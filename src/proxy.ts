@@ -8,9 +8,7 @@ const PUBLIC_PATHS = new Set(['/', '/login', '/register', '/pending', '/schedule
 const PUBLIC_PREFIXES = ['/results/', '/_next/', '/api/', '/media/', '/admin/'];
 
 function isPublic(pathname: string): boolean {
-  // Strip trailing slash for comparison (trailingSlash:true redirects /login → /login/)
-  const normalized = pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
-  if (PUBLIC_PATHS.has(normalized)) return true;
+  if (PUBLIC_PATHS.has(pathname)) return true;
   return PUBLIC_PREFIXES.some(p => pathname.startsWith(p));
 }
 
