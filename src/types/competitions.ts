@@ -29,8 +29,10 @@ export type Regulation = 'IASF' | 'ICU' | 'AMBAS';
 export type AgeGroup = 'tiny' | 'mini' | 'youth' | 'junior' | 'senior' | 'open';
 export type SkillLevel =
   | 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'L6' | 'L7'
-  | 'novice' | 'novice_plus' | 'prep' | 'escolar' | 'elite' | 'icc' | 'iasf_cat' | 'star';
-export type DivisionCategory = 'all_girl' | 'coed' | 'all_male' | 'non_tumbling';
+  | 'novice' | 'novice_plus' | 'prep' | 'escolar'
+  | 'escolar_l3' | 'escolar_l4' | 'escolar_l5' | 'escolar_l6' | 'escolar_l7'
+  | 'elite' | 'icc' | 'iasf_cat' | 'star';
+export type DivisionCategory = 'all_girl' | 'coed' | 'all_male' | 'non_tumbling' | 'mixed';
 export type RegistrationStatus = 'pending' | 'confirmed' | 'withdrawn';
 
 // Deduction codes matching the Level Up / Adventure Brands United system
@@ -274,12 +276,15 @@ export const SKILL_LEVEL_LABELS: Record<SkillLevel, string> = {
   L1: 'Level 1', L2: 'Level 2', L3: 'Level 3', L4: 'Level 4',
   L5: 'Level 5', L6: 'Level 6', L7: 'Level 7',
   novice: 'All Star Novice', novice_plus: 'Novice Plus',
+  escolar_l3: 'Escolar N3', escolar_l4: 'Escolar N4', escolar_l5: 'Escolar N5',
+  escolar_l6: 'Escolar N6', escolar_l7: 'Escolar N7',
   prep: 'Prep', escolar: 'Escolar', elite: 'Elite',
   icc: 'ICC', iasf_cat: 'IASF', star: 'Star',
 };
 
 export const CATEGORY_LABELS: Record<DivisionCategory, string> = {
   all_girl: 'All Girl', coed: 'Coed', all_male: 'All Male', non_tumbling: 'Non-Tumbling',
+  mixed: 'Mixto',
 };
 
 export const REGISTRATION_STATUS_LABELS: Record<RegistrationStatus, string> = {

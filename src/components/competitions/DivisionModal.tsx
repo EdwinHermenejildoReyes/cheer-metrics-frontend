@@ -19,6 +19,11 @@ import {
   type ScoringSystem,
 } from '@/types/competitions';
 
+// Niveles que NO distinguen Coed/All Girl → categoría = 'mixed'
+const MIXED_CATEGORY_LEVELS = new Set([
+  'novice', 'prep', 'escolar', 'L1', 'L2',
+]);
+
 function suggestScoringSystem(skillLevel: string, ageGroup: string, category: string): ScoringSystem {
   if (category === 'non_tumbling') return 'elite_nt';
   if (skillLevel === 'novice') return ageGroup === 'tiny' ? 'tiny_novice' : 'mini_novice';
@@ -26,6 +31,11 @@ function suggestScoringSystem(skillLevel: string, ageGroup: string, category: st
     novice_plus: 'novice_plus',
     prep:        'prep',
     escolar:     'escolar',
+    escolar_l3:  'escolar',
+    escolar_l4:  'escolar',
+    escolar_l5:  'escolar',
+    escolar_l6:  'escolar',
+    escolar_l7:  'escolar',
     L1:          'elite_l1',
     L2:          'elite_l2_7',
     L3:          'elite_l2_7',
@@ -76,6 +86,19 @@ export function DivisionModal({ open, onClose, onSaved, competitionId, initial }
     control,
     name: ['age_group', 'skill_level', 'category'],
   });
+
+  const isMixedLevel = MIXED_CATEGORY_LEVELS.has(skillLevel ?? '');
+
+  // Auto-set category to 'mixed' for levels with no gender distinction
+  useEffect(() => {
+    if (!skillLevel) return;
+    if (MIXED_CATEGORY_LEVELS.has(skillLevel)) {
+      setValue('category', 'mixed');
+    } else if (category === 'mixed') {
+      setValue('category', '');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [skillLevel]);
 
   // Auto-suggest scoring system when classification fields change (create mode only)
   useEffect(() => {
@@ -142,14 +165,24 @@ export function DivisionModal({ open, onClose, onSaved, competitionId, initial }
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Select
-            label="Categoría"
-            id="category"
-            options={toOptions(CATEGORY_LABELS)}
-            placeholder="Seleccionar..."
-            error={errors.category?.message}
-            {...register('category')}
-          />
+          {isMixedLevel ? (
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-zinc-700">Categoría</span>
+              <div className="flex h-9 items-center rounded-lg border border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-400">
+                Mixto (sin distinción)
+              </div>
+              <input type="hidden" {...register('category')} value="mixed" />
+            </div>
+          ) : (
+            <Select
+              label="Categoría"
+              id="category"
+              options={toOptions(CATEGORY_LABELS).filter(o => o.value !== 'mixed')}
+              placeholder="Seleccionar..."
+              error={errors.category?.message}
+              {...register('category')}
+            />
+          )}
           <Select
             label="Sistema de puntuación"
             id="scoring_system"

@@ -11,6 +11,36 @@ import publicRegistrationRepository, {
   WizardAthleteSearch,
 } from '@/repositories/publicRegistrationRepository';
 
+// ── Age group validation ────────────────────────────────────────────────────────
+
+const AGE_GROUP_RANGES: Record<string, [number, number]> = {
+  tiny:   [4,  6],
+  mini:   [5,  9],
+  youth:  [8,  12],
+  junior: [9,  16],
+  senior: [12, 19],
+  open:   [12, 99],
+};
+
+function calcAge(birthDate: string): number {
+  const today = new Date();
+  const bd = new Date(birthDate);
+  let age = today.getFullYear() - bd.getFullYear();
+  if (today.getMonth() < bd.getMonth() || (today.getMonth() === bd.getMonth() && today.getDate() < bd.getDate())) age--;
+  return age;
+}
+
+function ageError(birthDate: string, ageGroup: string, ageGroupLabel: string): string | null {
+  const range = AGE_GROUP_RANGES[ageGroup];
+  if (!range || !birthDate) return null;
+  const age = calcAge(birthDate);
+  const [min, max] = range;
+  if (age < min || age > max) {
+    return `El atleta tiene ${age} años y no cumple el rango de edad para la categoría ${ageGroupLabel} (${min}–${max === 99 ? '12+' : max} años).`;
+  }
+  return null;
+}
+
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 type Step = 'loading' | 'invalid' | 'gym' | 'team' | 'athletes' | 'done';
@@ -28,6 +58,8 @@ interface RegistrationResult {
   team_name: string;
   gym_name: string;
   division_name: string;
+  age_group: string;
+  division_id: number;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -407,15 +439,19 @@ function Step3Athletes({
   token,
   gymId,
   teamId,
+  registrationId,
   teamName,
   divisionName,
+  ageGroup,
   onFinish,
 }: {
   token: string;
   gymId: number;
   teamId: number;
+  registrationId: number;
   teamName: string;
   divisionName: string;
+  ageGroup: string;
   onFinish: () => void;
 }) {
   const [ci, setCi] = useState('');
@@ -426,6 +462,7 @@ function Step3Athletes({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [added, setAdded] = useState<AddedAthlete[]>([]);
+  const ageValidationError = form.birth_date ? ageError(form.birth_date, ageGroup, AGE_GROUP_LABELS[ageGroup] ?? ageGroup) : null;
 
   const handleCiChange = useCallback(async (value: string) => {
     setCi(value);
@@ -467,12 +504,14 @@ function Step3Athletes({
     if (!form.first_name.trim() || !form.last_name.trim()) { setError('Nombre y apellido son obligatorios.'); return; }
     if (!form.birth_date) { setError('La fecha de nacimiento es obligatoria.'); return; }
     if (!form.document_id || form.document_id.length !== 10) { setError('Ingrese una cédula de 10 dígitos.'); return; }
+    if (ageValidationError) { setError(ageValidationError); return; }
 
     setSaving(true); setError('');
     try {
       const result = await publicRegistrationRepository.saveAthlete({
         token,
-        team_id:     teamId,
+        team_id:         teamId,
+        registration_id: registrationId,
         role,
         first_name:  form.first_name.trim(),
         last_name:   form.last_name.trim(),
@@ -558,7 +597,15 @@ function Step3Athletes({
         <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="block text-xs font-medium text-zinc-600 mb-1">Fecha de nacimiento *</label>
-            <input type="date" className="w-full px-2.5 py-2 border border-zinc-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" value={form.birth_date} onChange={(e) => updateForm('birth_date', e.target.value)} />
+            <input
+              type="date"
+              className={`w-full px-2.5 py-2 border rounded text-sm focus:outline-none focus:ring-1 ${ageValidationError ? 'border-red-400 focus:ring-red-400' : 'border-zinc-300 focus:ring-blue-500'}`}
+              value={form.birth_date}
+              onChange={(e) => updateForm('birth_date', e.target.value)}
+            />
+            {ageValidationError && (
+              <p className="mt-1 text-[11px] text-red-600 leading-tight">{ageValidationError}</p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-medium text-zinc-600 mb-1">Género *</label>
@@ -581,7 +628,7 @@ function Step3Athletes({
 
         <button
           onClick={handleAddAthlete}
-          disabled={saving}
+          disabled={saving || !!ageValidationError}
           className="w-full flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg disabled:opacity-50 transition-colors"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
@@ -741,8 +788,10 @@ export default function RegistroPage() {
               token={token}
               gymId={selectedGym.id}
               teamId={registrationResult.team_id}
+              registrationId={registrationResult.registration_id}
               teamName={registrationResult.team_name}
               divisionName={registrationResult.division_name}
+              ageGroup={registrationResult.age_group}
               onFinish={handleAthletesFinish}
             />
           )}

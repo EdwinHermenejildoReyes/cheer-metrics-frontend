@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Trophy, Building2, Users, LogOut, Landmark, UserCog, User as UserIcon, ClipboardList, LayoutDashboard, ImageIcon, Settings, Receipt, Monitor, Upload } from 'lucide-react';
+import { Trophy, Building2, Users, LogOut, Landmark, UserCog, User as UserIcon, ClipboardList, LayoutDashboard, ImageIcon, Settings, Receipt, Monitor, Upload, Link2 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
@@ -33,9 +33,10 @@ const JUDGE_NAV = [
 ];
 
 const ADMIN_COMPETITION_SUBNAV = [
-  { slug: 'backstage', label: 'Backstage',  icon: Monitor },
-  { slug: 'import',    label: 'Importar',   icon: Upload },
-  { slug: 'billing',   label: 'Facturación', icon: Receipt },
+  { slug: 'backstage', label: 'Backstage',       icon: Monitor },
+  { slug: 'import',    label: 'Importar',         icon: Upload },
+  { slug: 'billing',   label: 'Facturación',      icon: Receipt },
+  { slug: 'tokens',    label: 'Links inscripción', icon: Link2 },
 ];
 
 const JUDGE_COMPETITION_SUBNAV = [

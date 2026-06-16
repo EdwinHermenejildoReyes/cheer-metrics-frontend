@@ -44,6 +44,8 @@ export interface WizardTeamResult {
   team_name: string;
   gym_name: string;
   division_name: string;
+  age_group: string;
+  division_id: number;
 }
 
 export interface WizardAthleteSearch {
@@ -59,6 +61,7 @@ export interface WizardAthleteSearch {
 export interface WizardAthleteCreate {
   token: string;
   team_id: number;
+  registration_id: number;
   role: string;
   first_name: string;
   last_name: string;
