@@ -88,6 +88,13 @@ export default function DivisionDetailPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Polling: refresh score sheets every 5s for admin (judge scores update in real time)
+  useEffect(() => {
+    if (isJudge) return;
+    const interval = setInterval(() => { loadSheets(); }, 5000);
+    return () => clearInterval(interval);
+  }, [isJudge, loadSheets]);
+
   const handleRegSaved = (saved: Registration) => {
     setRegistrations((prev) =>
       prev.some((r) => r.id === saved.id)
@@ -138,25 +145,36 @@ export default function DivisionDetailPage() {
   return (
     <div className="flex flex-col gap-6 p-8">
       {/* Header */}
-      <div className="flex items-start gap-3">
-        <button
-          onClick={() => router.push(`/competitions/${competitionId}`)}
-          className="mt-0.5 rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-600"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-semibold text-zinc-900">{division.name}</h1>
-          <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <Badge variant="default">{AGE_GROUP_LABELS[division.age_group]}</Badge>
-            <Badge variant="violet">{SKILL_LEVEL_LABELS[division.skill_level]}</Badge>
-            <Badge variant="info">{CATEGORY_LABELS[division.category]}</Badge>
-            {activeScoringSystem && (
-              <Badge variant="success">{SCORING_SYSTEM_LABELS[activeScoringSystem]}</Badge>
-            )}
-            <span className="text-sm text-zinc-500">{division.competition_name}</span>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <button
+            onClick={() => router.push(`/competitions/${competitionId}`)}
+            className="mt-0.5 rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-600"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-semibold text-zinc-900">{division.name}</h1>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <Badge variant="default">{AGE_GROUP_LABELS[division.age_group]}</Badge>
+              <Badge variant="violet">{SKILL_LEVEL_LABELS[division.skill_level]}</Badge>
+              <Badge variant="info">{CATEGORY_LABELS[division.category]}</Badge>
+              {activeScoringSystem && (
+                <Badge variant="success">{SCORING_SYSTEM_LABELS[activeScoringSystem]}</Badge>
+              )}
+              <span className="text-sm text-zinc-500">{division.competition_name}</span>
+            </div>
           </div>
         </div>
+        {!isJudge && (
+          <div className="flex items-center gap-1.5 shrink-0 mt-1">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+            </span>
+            <span className="text-xs text-zinc-400">En vivo</span>
+          </div>
+        )}
       </div>
 
       {/* Registrations */}

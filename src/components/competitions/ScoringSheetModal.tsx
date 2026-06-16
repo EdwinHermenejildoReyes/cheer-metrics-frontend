@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { toast } from 'sonner';
+import { Check, Loader2, AlertCircle } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -259,11 +259,15 @@ interface Props {
   initial?: ScoreSheet;
 }
 
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+
 export function ScoringSheetModal({
   open, onClose, onSaved, registrationId, teamName, scoringSystem, initial,
 }: Props) {
-  const isEdit = !!initial;
   const [preferredTab, setPreferredTab] = useState('building');
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const sheetIdRef  = useRef<number | undefined>(initial?.id);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const activeFields: Set<ScoreFieldKey> = new Set(
     scoringSystem ? SCORING_SYSTEM_FIELDS[scoringSystem] : (Object.keys(FIELD_MAXIMA) as ScoreFieldKey[])
@@ -275,12 +279,17 @@ export function ScoringSheetModal({
   const activeTab = visibleTabs.find((t) => t.key === preferredTab)?.key ?? visibleTabs[0]?.key ?? 'building';
 
   const {
-    register, handleSubmit, reset,
-    formState: { errors, isSubmitting },
+    register, reset, getValues,
+    formState: { errors, isDirty },
     control,
   } = useForm<FormValues>({ resolver: zodResolver(schema) as Resolver<FormValues> });
 
   const watched = useWatch({ control });
+
+  // Sync sheetId when initial changes (modal reuse)
+  useEffect(() => {
+    sheetIdRef.current = initial?.id;
+  }, [initial?.id]);
 
   useEffect(() => {
     if (!open) return;
@@ -294,8 +303,41 @@ export function ScoringSheetModal({
     } else {
       reset({ notes: '', formations_score: 2.0 });
     }
+    setSaveStatus('idle');
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initial]);
+
+  // Auto-save with 800ms debounce whenever form values change
+  useEffect(() => {
+    if (!open || !isDirty) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(async () => {
+      const values = getValues();
+      const payload: Record<string, unknown> = { notes: values.notes ?? '' };
+      (Object.keys(FIELD_MAXIMA) as ScoreFieldKey[]).forEach((k) => {
+        payload[k] = activeFields.has(k)
+          ? ((values[k as keyof FormValues] as number | undefined) ?? null)
+          : null;
+      });
+      setSaveStatus('saving');
+      try {
+        let res;
+        if (sheetIdRef.current) {
+          res = await competitionsRepository.updateScoreSheet(sheetIdRef.current, payload);
+        } else {
+          res = await competitionsRepository.createScoreSheet({ ...payload, registration: registrationId });
+          sheetIdRef.current = res.data.id;
+        }
+        onSaved(res.data);
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2500);
+      } catch {
+        setSaveStatus('error');
+      }
+    }, 800);
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watched, open, isDirty]);
 
   const activeFieldList = scoringSystem
     ? SCORING_SYSTEM_FIELDS[scoringSystem]
@@ -332,26 +374,9 @@ export function ScoringSheetModal({
     return vals.reduce((a, b) => a + b, 0) / vals.length;
   })();
 
-  const onSubmit = async (values: FormValues) => {
-    const payload: Record<string, unknown> = { notes: values.notes ?? '' };
-    (Object.keys(FIELD_MAXIMA) as ScoreFieldKey[]).forEach((k) => {
-      payload[k] = activeFields.has(k) ? ((values[k as keyof FormValues] as number | undefined) ?? null) : null;
-    });
-    try {
-      const res = isEdit
-        ? await competitionsRepository.updateScoreSheet(initial!.id, payload)
-        : await competitionsRepository.createScoreSheet({ ...payload, registration: registrationId });
-      toast.success(isEdit ? 'Planilla actualizada' : 'Planilla registrada');
-      onSaved(res.data);
-      onClose();
-    } catch {
-      toast.error('No se pudo guardar la planilla');
-    }
-  };
-
   return (
     <Modal open={open} onClose={onClose} title={`Planilla — ${teamName}`} size="xl">
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+      <form className="flex flex-col gap-5">
 
         {/* Tabs */}
         <div className="flex gap-1 border-b border-zinc-200">
@@ -482,9 +507,32 @@ export function ScoringSheetModal({
           {...register('notes')}
         />
 
-        <div className="flex justify-end gap-2 pt-1">
-          <Button type="button" variant="secondary" onClick={onClose}>Cancelar</Button>
-          <Button type="submit" loading={isSubmitting}>{isEdit ? 'Actualizar' : 'Registrar'}</Button>
+        {/* Auto-save status + close */}
+        <div className="flex items-center justify-between pt-1">
+          <div className="flex items-center gap-1.5 text-xs">
+            {saveStatus === 'saving' && (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-400" />
+                <span className="text-zinc-400">Guardando…</span>
+              </>
+            )}
+            {saveStatus === 'saved' && (
+              <>
+                <Check className="h-3.5 w-3.5 text-green-500" />
+                <span className="text-green-600">Guardado</span>
+              </>
+            )}
+            {saveStatus === 'error' && (
+              <>
+                <AlertCircle className="h-3.5 w-3.5 text-red-500" />
+                <span className="text-red-500">Error al guardar</span>
+              </>
+            )}
+            {saveStatus === 'idle' && sheetIdRef.current && (
+              <span className="text-zinc-300">Auto-guardado activo</span>
+            )}
+          </div>
+          <Button type="button" variant="secondary" onClick={onClose}>Cerrar</Button>
         </div>
       </form>
     </Modal>
