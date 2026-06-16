@@ -5,14 +5,14 @@ import type { NextRequest } from 'next/server';
 const PUBLIC_PATHS = new Set(['/', '/login', '/register', '/pending', '/schedule']);
 
 // Path prefixes that are always public
-const PUBLIC_PREFIXES = ['/results/', '/_next/', '/api/'];
+const PUBLIC_PREFIXES = ['/results/', '/_next/', '/api/', '/media/', '/admin/'];
 
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PATHS.has(pathname)) return true;
   return PUBLIC_PREFIXES.some(p => pathname.startsWith(p));
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (isPublic(pathname)) return NextResponse.next();
