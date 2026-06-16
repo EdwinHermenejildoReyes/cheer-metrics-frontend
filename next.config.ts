@@ -3,6 +3,11 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   output: 'standalone',
 
+  // Preserve trailing slashes so Next.js dev-server rewrites forward
+  // /api/v1/auth/login/ (with slash) to Django, which requires them.
+  // Without this, Next.js redirects /login/ → /login, stripping the slash.
+  trailingSlash: true,
+
   // Allow HMR from local network devices
   allowedDevOrigins: ['192.168.1.66'],
 
