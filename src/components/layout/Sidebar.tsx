@@ -110,7 +110,7 @@ export function Sidebar() {
                   const subHref = `/competitions/${activeCompetitionId}/${slug}`;
                   const active  = pathname === subHref || pathname.startsWith(subHref + '/');
                   const activeStyle = active
-                    ? { backgroundColor: var(--plt-primary), color: var(--plt-primary-fg) }
+                    ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }
                     : undefined;
                   return (
                     <Link
