@@ -252,7 +252,7 @@ export default function BuildingExecutionPage() {
       {(() => {
         const groups = athleteCount ? getConstructionGroups(athleteCount) : null;
         return (
-          <div className="mx-auto max-w-3xl px-6 pt-6">
+          <div className="mx-auto max-w-5xl px-6 pt-6">
             <div className={`rounded-xl border px-5 py-4 flex items-center justify-between gap-4 ${
               groups ? 'border-zinc-200 bg-white' : 'border-dashed border-zinc-300 bg-zinc-50'
             }`}>
@@ -291,47 +291,65 @@ export default function BuildingExecutionPage() {
         );
       })()}
 
-      <div className={`max-w-3xl mx-auto px-6 py-8 flex flex-col gap-8${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
+      <div className={`max-w-5xl mx-auto px-6 py-8 flex flex-col gap-10${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
+
         {bCfg.hasStunts && (
           <section className="flex flex-col gap-3">
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Elevaciones — Ejecución</h2>
-            <ExecSection label="Elevaciones" max={bCfg.stuntsExecMax} deds={stuntsExecDeds} onChange={setStuntsExecDeds} />
+            <div className="grid grid-cols-[3fr_2fr] gap-5 items-stretch">
+              <ExecSection label="Elevaciones" max={bCfg.stuntsExecMax} deds={stuntsExecDeds} onChange={setStuntsExecDeds} />
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden flex flex-col">
+                <div className="px-3 py-2 bg-zinc-50 border-b border-zinc-200">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Observaciones</span>
+                </div>
+                <div className="p-3 flex-1 flex">
+                  <textarea value={stuntsNotes} onChange={e => setStuntsNotes(e.target.value)}
+                    placeholder="Observaciones sobre Elevaciones..."
+                    className="flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                </div>
+              </div>
+            </div>
           </section>
         )}
+
         {bCfg.hasPyramids && (
           <section className="flex flex-col gap-3">
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Pirámides — Ejecución</h2>
-            <ExecSection label="Pirámides" max={bCfg.pyramidsExecMax} deds={pyramidsExecDeds} onChange={setPyramidsExecDeds} />
+            <div className="grid grid-cols-[3fr_2fr] gap-5 items-stretch">
+              <ExecSection label="Pirámides" max={bCfg.pyramidsExecMax} deds={pyramidsExecDeds} onChange={setPyramidsExecDeds} />
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden flex flex-col">
+                <div className="px-3 py-2 bg-zinc-50 border-b border-zinc-200">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Observaciones</span>
+                </div>
+                <div className="p-3 flex-1 flex">
+                  <textarea value={pyramidsNotes} onChange={e => setPyramidsNotes(e.target.value)}
+                    placeholder="Observaciones sobre Pirámides..."
+                    className="flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                </div>
+              </div>
+            </div>
           </section>
         )}
+
         {bCfg.hasTosses && (
           <section className="flex flex-col gap-3">
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Lanzamientos — Ejecución</h2>
-            <ExecSection label="Lanzamientos" max={bCfg.tossesExecMax} deds={tossesExecDeds} onChange={setTossesExecDeds} cats={TOSS_EXEC_CATS} />
+            <div className="grid grid-cols-[3fr_2fr] gap-5 items-stretch">
+              <ExecSection label="Lanzamientos" max={bCfg.tossesExecMax} deds={tossesExecDeds} onChange={setTossesExecDeds} cats={TOSS_EXEC_CATS} />
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden flex flex-col">
+                <div className="px-3 py-2 bg-zinc-50 border-b border-zinc-200">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Observaciones</span>
+                </div>
+                <div className="p-3 flex-1 flex">
+                  <textarea value={tossesNotes} onChange={e => setTossesNotes(e.target.value)}
+                    placeholder="Observaciones sobre Lanzamientos..."
+                    className="flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                </div>
+              </div>
+            </div>
           </section>
         )}
 
-        {/* ── Observations ─────────────────────────────────────────────── */}
-        <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-          <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Observaciones del juez</span>
-          </div>
-          <div className="divide-y divide-zinc-100">
-            {[
-              { key: 'stunts', label: 'Elevaciones', value: stuntsNotes, set: setStuntsNotes },
-              { key: 'pyramids', label: 'Pirámides', value: pyramidsNotes, set: setPyramidsNotes },
-              ...(bCfg.hasTosses ? [{ key: 'tosses', label: 'Lanzamientos', value: tossesNotes, set: setTossesNotes }] : []),
-            ].map(({ key, label, value, set }) => (
-              <div key={key} className="p-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">{label}</p>
-                <textarea value={value} onChange={e => set(e.target.value)} placeholder={`Observaciones sobre ${label}...`} rows={2}
-                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Grand total ───────────────────────────────────────────────── */}
         <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
           <p className="text-base uppercase tracking-wide font-bold">Total Planilla — Ejecución</p>
           <span className="text-4xl font-bold tabular-nums">{fmt(sheetTotal)}</span>

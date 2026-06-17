@@ -246,7 +246,7 @@ export default function TumblingExecutionPage() {
       {(() => {
         const groups = athleteCount ? getGymGroups(athleteCount) : null;
         return (
-          <div className="mx-auto max-w-3xl px-6 pt-6">
+          <div className="mx-auto max-w-5xl px-6 pt-6">
             <div className={`rounded-xl border px-5 py-4 flex items-center justify-between gap-4 ${
               groups ? 'border-zinc-200 bg-white' : 'border-dashed border-zinc-300 bg-zinc-50'
             }`}>
@@ -281,45 +281,64 @@ export default function TumblingExecutionPage() {
         );
       })()}
 
-      <div className={`max-w-3xl mx-auto px-6 py-8 flex flex-col gap-8${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
+      <div className={`max-w-5xl mx-auto px-6 py-8 flex flex-col gap-10${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
 
         {tCfg.hasStanding && (
           <section className="flex flex-col gap-3">
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">{tCfg.isCombinedSR ? 'Gimnasia Estática / Con Carrera' : 'Gimnasia Estática'}</h2>
-            <ExecSection label="Estática" max={tCfg.standingExecMax} categories={STANDING_CATS} deds={standingExecDeds} onChange={setStandingExecDeds} />
-          </section>
-        )}
-        {tCfg.hasRunning && (
-          <section className="flex flex-col gap-3">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Gimnasia con Carrera</h2>
-            <ExecSection label="Con Carrera" max={tCfg.runningExecMax} categories={RUNNING_CATS} deds={runningExecDeds} onChange={setRunningExecDeds} />
-          </section>
-        )}
-        {tCfg.hasJumps && (
-          <section className="flex flex-col gap-3">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Saltos</h2>
-            <ExecSection label="Saltos" max={tCfg.jumpsExecMax} categories={JUMPS_CATS} deds={jumpsExecDeds} onChange={setJumpsExecDeds} />
+            <div className="grid grid-cols-[3fr_2fr] gap-5 items-stretch">
+              <ExecSection label="Estática" max={tCfg.standingExecMax} categories={STANDING_CATS} deds={standingExecDeds} onChange={setStandingExecDeds} />
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden flex flex-col">
+                <div className="px-3 py-2 bg-zinc-50 border-b border-zinc-200">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Observaciones</span>
+                </div>
+                <div className="p-3 flex-1 flex">
+                  <textarea value={standingNotes} onChange={e => setStandingNotes(e.target.value)}
+                    placeholder="Observaciones sobre Estática..."
+                    className="flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                </div>
+              </div>
+            </div>
           </section>
         )}
 
-        <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-          <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Observaciones del juez</span>
-          </div>
-          <div className="divide-y divide-zinc-100">
-            {[
-              { key: 'standing', label: 'Estática', value: standingNotes, set: setStandingNotes, show: tCfg.hasStanding },
-              { key: 'running',  label: 'Con Carrera', value: runningNotes, set: setRunningNotes, show: tCfg.hasRunning },
-              { key: 'jumps',    label: 'Saltos', value: jumpsNotes, set: setJumpsNotes, show: tCfg.hasJumps },
-            ].filter(s => s.show).map(({ key, label, value, set }) => (
-              <div key={key} className="p-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">{label}</p>
-                <textarea value={value} onChange={e => set(e.target.value)} placeholder={`Observaciones sobre ${label}...`} rows={2}
-                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+        {tCfg.hasRunning && (
+          <section className="flex flex-col gap-3">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Gimnasia con Carrera</h2>
+            <div className="grid grid-cols-[3fr_2fr] gap-5 items-stretch">
+              <ExecSection label="Con Carrera" max={tCfg.runningExecMax} categories={RUNNING_CATS} deds={runningExecDeds} onChange={setRunningExecDeds} />
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden flex flex-col">
+                <div className="px-3 py-2 bg-zinc-50 border-b border-zinc-200">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Observaciones</span>
+                </div>
+                <div className="p-3 flex-1 flex">
+                  <textarea value={runningNotes} onChange={e => setRunningNotes(e.target.value)}
+                    placeholder="Observaciones sobre Con Carrera..."
+                    className="flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          </section>
+        )}
+
+        {tCfg.hasJumps && (
+          <section className="flex flex-col gap-3">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Saltos</h2>
+            <div className="grid grid-cols-[3fr_2fr] gap-5 items-stretch">
+              <ExecSection label="Saltos" max={tCfg.jumpsExecMax} categories={JUMPS_CATS} deds={jumpsExecDeds} onChange={setJumpsExecDeds} />
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden flex flex-col">
+                <div className="px-3 py-2 bg-zinc-50 border-b border-zinc-200">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Observaciones</span>
+                </div>
+                <div className="p-3 flex-1 flex">
+                  <textarea value={jumpsNotes} onChange={e => setJumpsNotes(e.target.value)}
+                    placeholder="Observaciones sobre Saltos..."
+                    className="flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
           <p className="text-base uppercase tracking-wide font-bold">Total Planilla — Ejecución Gimnasia</p>
