@@ -39,6 +39,89 @@ const PILL_COLORS: Record<ColorKey, string> = {
 
 function fmt(n: number | string) { return parseFloat(String(n)).toFixed(2); }
 
+// ── Per-deduction card with inline annotation auto-save ───────────────────────
+function DeductionCard({ ded, onDelete, isDeleting, confirm }: {
+  ded: Deduction;
+  onDelete: () => void;
+  isDeleting: boolean;
+  confirm: ReturnType<typeof useConfirm>;
+}) {
+  const ck = ILLEGAL.includes(ded.deduction_type as DeductionType) ? 'amber' as const : 'zinc' as const;
+  const [regla,   setRegla]   = useState(ded.notes);
+  const [tiempo,  setTiempo]  = useState(ded.routine_time);
+  const [saving,  setSaving]  = useState(false);
+
+  const saveAnnotation = async (nextRegla: string, nextTiempo: string) => {
+    if (nextRegla === ded.notes && nextTiempo === ded.routine_time) return;
+    setSaving(true);
+    try {
+      await competitionsRepository.updateDeduction(ded.id, { notes: nextRegla, routine_time: nextTiempo });
+    } catch {
+      toast.error('No se pudo guardar la anotación');
+      setRegla(ded.notes);
+      setTiempo(ded.routine_time);
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+      {/* ── Top row ── */}
+      <div className="flex items-center gap-3 px-3 py-2.5">
+        <span className={`inline-flex items-center justify-center rounded-md px-2 py-0.5 text-xs font-black shrink-0 border ${BADGE_COLORS[ck]}`}>
+          {DEDUCTION_CODES[ded.deduction_type as DeductionType]}
+        </span>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium text-zinc-700 leading-snug">
+            {DEDUCTION_TYPE_LABELS[ded.deduction_type as DeductionType]}
+          </p>
+          {ded.count > 1 && (
+            <p className="text-[10px] text-zinc-400">{ded.count} × −{ded.unit_amount}</p>
+          )}
+        </div>
+        <span className="text-sm font-bold tabular-nums text-red-600 shrink-0">−{ded.total_amount}</span>
+        <button
+          type="button"
+          onClick={async () => {
+            if (await confirm({ title: 'Eliminar descuento', message: `¿Eliminar ${DEDUCTION_CODES[ded.deduction_type as DeductionType]} (−${ded.total_amount})?`, confirmLabel: 'Eliminar' }))
+              onDelete();
+          }}
+          disabled={isDeleting}
+          className="flex items-center justify-center rounded-lg p-1 text-zinc-300 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-40 shrink-0"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      {/* ── Annotation row ── */}
+      <div className="flex items-center gap-2 border-t border-zinc-100 bg-zinc-50 px-3 py-2">
+        <div className="flex items-center gap-1 shrink-0">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 w-10">Regla</span>
+        </div>
+        <input
+          type="text"
+          value={regla}
+          onChange={e => setRegla(e.target.value)}
+          onBlur={() => saveAnnotation(regla, tiempo)}
+          placeholder="Ej. Art. 3.2.1"
+          className="flex-1 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-800 placeholder:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-400 min-w-0"
+        />
+        <div className="flex items-center gap-1 shrink-0">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 w-11 text-right">Tiempo</span>
+        </div>
+        <input
+          type="text"
+          value={tiempo}
+          onChange={e => setTiempo(e.target.value)}
+          onBlur={() => saveAnnotation(regla, tiempo)}
+          placeholder="0:45"
+          className="w-16 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-800 placeholder:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-400 text-center"
+        />
+        {saving && <span className="text-[9px] text-zinc-400 shrink-0">guardando…</span>}
+      </div>
+    </div>
+  );
+}
+
 export default function SafetyRulesPage() {
   const router = useRouter();
   const { id, divisionId, regId } = useParams<{ id: string; divisionId: string; regId: string }>();
@@ -287,38 +370,16 @@ export default function SafetyRulesPage() {
                     <p className="text-sm text-zinc-400">Sin descuentos — toca un tipo en el panel izquierdo para agregar</p>
                   </div>
                 ) : (
-                  <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-                    <div className="grid grid-cols-[4.5rem_1fr_5rem_2.5rem] gap-0 border-b border-zinc-200 bg-zinc-50 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-                      <span>Código</span><span>Descripción</span><span className="text-right">Monto</span><span />
-                    </div>
-                    <div className="divide-y divide-zinc-100">
-                      {myDeds.map(ded => {
-                        const ck = colorFor(ded.deduction_type as DeductionType);
-                        return (
-                          <div key={ded.id} className="grid grid-cols-[4.5rem_1fr_5rem_2.5rem] gap-0 items-center px-3 py-2.5">
-                            <span className={`inline-flex items-center justify-center self-center rounded-md px-2 py-0.5 text-xs font-black w-fit ${BADGE_COLORS[ck]}`}>
-                              {DEDUCTION_CODES[ded.deduction_type as DeductionType]}
-                            </span>
-                            <div className="min-w-0 pr-2">
-                              <p className="text-xs text-zinc-700 truncate">{ded.notes || DEDUCTION_TYPE_LABELS[ded.deduction_type as DeductionType]}</p>
-                              {ded.count > 1 && <p className="text-[10px] text-zinc-400">{ded.count} × −{ded.unit_amount}</p>}
-                            </div>
-                            <span className="text-sm font-bold tabular-nums text-red-600 text-right">−{ded.total_amount}</span>
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                if (await confirm({ title: 'Eliminar descuento', message: `¿Eliminar ${DEDUCTION_CODES[ded.deduction_type as DeductionType]} (−${ded.total_amount})?`, confirmLabel: 'Eliminar' }))
-                                  handleDelete(ded);
-                              }}
-                              disabled={deleting === ded.id}
-                              className="flex items-center justify-center rounded-lg p-1 text-zinc-300 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-40"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
+                  <div className="flex flex-col gap-3">
+                    {myDeds.map(ded => (
+                      <DeductionCard
+                        key={ded.id}
+                        ded={ded}
+                        onDelete={() => handleDelete(ded)}
+                        isDeleting={deleting === ded.id}
+                        confirm={confirm}
+                      />
+                    ))}
                   </div>
                 )}
               </div>
