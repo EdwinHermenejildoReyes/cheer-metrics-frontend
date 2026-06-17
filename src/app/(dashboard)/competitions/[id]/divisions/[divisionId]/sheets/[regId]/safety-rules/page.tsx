@@ -20,6 +20,7 @@ import {
   type UnpaidAthlete,
 } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
+import { getConstructionGroups } from '@/lib/constructionTable';
 
 const ILLEGAL: DeductionType[] = ['pi', 'eap', 'rg', 'gfn', 'bfn', 'seg'];
 const ADMIN:   DeductionType[] = ['ad', 'div'];
@@ -64,6 +65,7 @@ export default function SafetyRulesPage() {
   const [teamName,       setTeamName]       = useState('');
   const [sheet,          setSheet]          = useState<ScoreSheet | null>(null);
   const [loading,        setLoading]        = useState(true);
+  const [athleteCount,   setAthleteCount]   = useState<number | null>(null);
   const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
   const [requirePayment, setRequirePayment] = useState(false);
   const [deleting,       setDeleting]       = useState<number | null>(null);
@@ -76,7 +78,7 @@ export default function SafetyRulesPage() {
         competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' }),
       ]);
       const reg = regRes.data.results.find(r => r.id === registrationId);
-      if (reg) { setTeamName(reg.team_name); setUnpaidAthletes(reg.unpaid_athletes); setRequirePayment(reg.competition_require_payment); }
+      if (reg) { setTeamName(reg.team_name); setAthleteCount(reg.athlete_count ?? null); setUnpaidAthletes(reg.unpaid_athletes); setRequirePayment(reg.competition_require_payment); }
       if (sheetRes.data.results.length > 0) {
         const s = sheetRes.data.results[0];
         setSheet(s);
@@ -144,6 +146,49 @@ export default function SafetyRulesPage() {
         </div>
       )}
       <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
+
+      {/* ── Construction table banner ─────────────────────────────────── */}
+      {(() => {
+        const groups = athleteCount ? getConstructionGroups(athleteCount) : null;
+        return (
+          <div className="mx-auto max-w-4xl px-4 pt-6 print:hidden">
+            <div className={`rounded-xl border px-5 py-4 flex items-center justify-between gap-4 ${
+              groups ? 'border-zinc-200 bg-white' : 'border-dashed border-zinc-300 bg-zinc-50'
+            }`}>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Tabla de cantidad en construcción</p>
+                {groups ? (
+                  <p className="text-xs text-zinc-500">Basado en <span className="font-semibold text-zinc-800">{athleteCount} atletas</span> confirmados en backstage</p>
+                ) : (
+                  <p className="text-xs text-zinc-400">
+                    {athleteCount
+                      ? `${athleteCount} atletas — fuera del rango de tabla (10–30)`
+                      : 'Sin conteo de atletas — ingresa el número en la página de Backstage'}
+                  </p>
+                )}
+              </div>
+              {groups ? (
+                <div className="flex items-center gap-6 shrink-0">
+                  <div className="text-center">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Mayoría</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.mayoria}</p>
+                  </div>
+                  <div className="text-center border-x border-zinc-200 px-6">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Gran Parte</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.gran_parte}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Máx</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.max}</p>
+                  </div>
+                </div>
+              ) : (
+                <span className="text-xs text-zinc-300 italic shrink-0">—</span>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       <div className={`max-w-4xl mx-auto px-4 py-6 print:hidden${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
 
