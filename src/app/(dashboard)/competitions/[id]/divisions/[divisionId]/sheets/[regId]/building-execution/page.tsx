@@ -9,6 +9,7 @@ import { PageSpinner } from '@/components/ui/spinner';
 import { InfoButton } from '@/components/ui/InfoButton';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { getScoringConfig, DEFAULT_BUILDING_CONFIG } from '@/lib/scoringConfig';
+import { getConstructionGroups } from '@/lib/constructionTable';
 import { useJudge } from '@/hooks/useJudge';
 import { toastApiError } from '@/utils/apiErrors';
 import type { BuildingConfig } from '@/lib/scoringConfig';
@@ -120,6 +121,7 @@ export default function BuildingExecutionPage() {
   const [loading,        setLoading]        = useState(true);
   const [saving,         setSaving]         = useState(false);
   const [bCfg,           setBCfg]           = useState<BuildingConfig>(DEFAULT_BUILDING_CONFIG);
+  const [athleteCount,   setAthleteCount]   = useState<number | null>(null);
   const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
   const [requirePayment, setRequirePayment] = useState(false);
 
@@ -144,7 +146,7 @@ export default function BuildingExecutionPage() {
         competitionsRepository.getDivision(divId),
       ]);
       const reg = regRes.data.results.find(r => r.id === registrationId);
-      if (reg) { setTeamName(reg.team_name); setUnpaidAthletes(reg.unpaid_athletes); setRequirePayment(reg.competition_require_payment); }
+      if (reg) { setTeamName(reg.team_name); setAthleteCount(reg.athlete_count ?? null); setUnpaidAthletes(reg.unpaid_athletes); setRequirePayment(reg.competition_require_payment); }
       const cfg = getScoringConfig(divRes.data).building;
       setBCfg(cfg);
       if (sheetRes.data.results.length > 0) {
@@ -245,6 +247,49 @@ export default function BuildingExecutionPage() {
         </div>
       )}
       <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
+
+      {/* ── Construction table banner ─────────────────────────────────── */}
+      {(() => {
+        const groups = athleteCount ? getConstructionGroups(athleteCount) : null;
+        return (
+          <div className="mx-auto max-w-3xl px-6 pt-6">
+            <div className={`rounded-xl border px-5 py-4 flex items-center justify-between gap-4 ${
+              groups ? 'border-zinc-200 bg-white' : 'border-dashed border-zinc-300 bg-zinc-50'
+            }`}>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Tabla de cantidad en construcción</p>
+                {groups ? (
+                  <p className="text-xs text-zinc-500">Basado en <span className="font-semibold text-zinc-800">{athleteCount} atletas</span> confirmados en backstage</p>
+                ) : (
+                  <p className="text-xs text-zinc-400">
+                    {athleteCount
+                      ? `${athleteCount} atletas — fuera del rango de tabla (10–30)`
+                      : 'Sin conteo de atletas — ingresa el número en la página de Backstage'}
+                  </p>
+                )}
+              </div>
+              {groups ? (
+                <div className="flex items-center gap-6 shrink-0">
+                  <div className="text-center">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Mayoría</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.mayoria}</p>
+                  </div>
+                  <div className="text-center border-x border-zinc-200 px-6">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Gran Parte</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.gran_parte}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Máx</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.max}</p>
+                  </div>
+                </div>
+              ) : (
+                <span className="text-xs text-zinc-300 italic shrink-0">—</span>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       <div className={`max-w-3xl mx-auto px-6 py-8 flex flex-col gap-8${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
         {bCfg.hasStunts && (

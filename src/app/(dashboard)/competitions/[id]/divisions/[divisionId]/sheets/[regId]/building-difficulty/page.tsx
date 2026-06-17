@@ -9,6 +9,7 @@ import { PageSpinner } from '@/components/ui/spinner';
 import { InfoButton } from '@/components/ui/InfoButton';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { getScoringConfig, DEFAULT_BUILDING_CONFIG } from '@/lib/scoringConfig';
+import { getConstructionGroups } from '@/lib/constructionTable';
 import { useJudge } from '@/hooks/useJudge';
 import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
@@ -60,6 +61,7 @@ export default function BuildingDifficultyPage() {
   const [loading,        setLoading]        = useState(true);
   const [saving,         setSaving]         = useState(false);
   const [bCfg,           setBCfg]           = useState<BuildingConfig>(DEFAULT_BUILDING_CONFIG);
+  const [athleteCount,   setAthleteCount]   = useState<number | null>(null);
   const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
   const [requirePayment, setRequirePayment] = useState(false);
 
@@ -80,8 +82,8 @@ export default function BuildingDifficultyPage() {
   const [tossesNotes, setTossesNotes] = useState('');
 
   // ── Cross-sheet ───────────────────────────────────────────────────────────
-  const [creativityBuilding,  setCreativityBuilding]  = useState<number>(0.0);
-  const [showmanshipBuilding, setShowmanshipBuilding] = useState<number>(0.0);
+  const [creativityBuilding,  setCreativityBuilding]  = useState<number>(1.5);
+  const [showmanshipBuilding, setShowmanshipBuilding] = useState<number>(1.0);
 
   // ── Computed ──────────────────────────────────────────────────────────────
   const stuntsSkillsTotal  = parseFloat(stuntsSkills.reduce<number>((s, v) => s + (v ?? 0), 0).toFixed(2));
@@ -120,6 +122,7 @@ export default function BuildingDifficultyPage() {
       const reg = regRes.data.results.find(r => r.id === registrationId);
       if (reg) {
         setTeamName(reg.team_name);
+        setAthleteCount(reg.athlete_count ?? null);
         setUnpaidAthletes(reg.unpaid_athletes);
         setRequirePayment(reg.competition_require_payment);
       }
@@ -153,8 +156,8 @@ export default function BuildingDifficultyPage() {
           const v = parseFloat(sheet.pyramids_drivers);
           if (cfg.pyramidDriversOpts.some(o => o.value === v)) setPyramidsDrivers(v);
         }
-        if (sheet.creativity_building) setCreativityBuilding(Math.min(2.0, parseFloat(sheet.creativity_building)));
-        if (sheet.showmanship_building) setShowmanshipBuilding(Math.min(cfg.showmanshipMax, parseFloat(sheet.showmanship_building)));
+        if (sheet.creativity_building) setCreativityBuilding(Math.min(2.0, Math.max(1.5, parseFloat(sheet.creativity_building))));
+        if (sheet.showmanship_building) setShowmanshipBuilding(Math.min(cfg.showmanshipMax, Math.max(1.0, parseFloat(sheet.showmanship_building))));
 
         if (sheet.notes) {
           try {
@@ -271,12 +274,73 @@ export default function BuildingDifficultyPage() {
       )}
       <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
 
-      <div className={`max-w-4xl mx-auto px-6 py-8 flex flex-col gap-10${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
+      {/* ── Construction table banner ─────────────────────────────────── */}
+      {(() => {
+        const groups = athleteCount ? getConstructionGroups(athleteCount) : null;
+        return (
+          <div className={`mx-auto max-w-4xl px-6 pt-6`}>
+            <div className={`rounded-xl border px-5 py-4 flex items-center justify-between gap-4 ${
+              groups ? 'border-zinc-200 bg-white' : 'border-dashed border-zinc-300 bg-zinc-50'
+            }`}>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Tabla de cantidad en construcción</p>
+                {groups ? (
+                  <p className="text-xs text-zinc-500">Basado en <span className="font-semibold text-zinc-800">{athleteCount} atletas</span> confirmados en backstage</p>
+                ) : (
+                  <p className="text-xs text-zinc-400">
+                    {athleteCount
+                      ? `${athleteCount} atletas — fuera del rango de tabla (10–30)`
+                      : 'Sin conteo de atletas — ingresa el número en la página de Backstage'}
+                  </p>
+                )}
+              </div>
+              {groups ? (
+                <div className="flex items-center gap-6 shrink-0">
+                  <div className="text-center">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Mayoría</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.mayoria}</p>
+                  </div>
+                  <div className="text-center border-x border-zinc-200 px-6">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Gran Parte</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.gran_parte}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Máx</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.max}</p>
+                  </div>
+                </div>
+              ) : (
+                <span className="text-xs text-zinc-300 italic shrink-0">—</span>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      <div className={`max-w-4xl mx-auto px-6 py-8 flex flex-col gap-16${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
 
         {/* ── STUNTS DIFFICULTY ────────────────────────────────────────── */}
         {bCfg.hasStunts && bCfg.stuntsHasDiff && (
-          <section className="flex flex-col gap-3">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Elevaciones — Dificultad</h2>
+          <section className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Elevaciones — Dificultad</h2>
+              <InfoButton title="Elevaciones — Dificultad" size="lg">
+                <div className="flex flex-col gap-3 text-xs text-zinc-600">
+                  <div>
+                    <p className="font-bold text-zinc-800 mb-1">Rango Base de Complejidad</p>
+                    <p>Selecciona el nivel general que describe la mayoría de las elevaciones ejecutadas por el equipo.</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-zinc-800 mb-1">Grado de Dificultad — Habilidades</p>
+                    <p>Por cada habilidad individual: <strong>+0.10</strong> si es avanzada dentro del nivel, <strong>+0.20</strong> si supera el nivel (Elite). Solo cuenta el rango activo.</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-zinc-800 mb-1">Part Max — Spotter / Base</p>
+                    <p>Habilidad ejecutada en Canon o Sincronizado sin repetir atletas en la misma posición.</p>
+                  </div>
+                </div>
+              </InfoButton>
+            </div>
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between">
                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Rango Base de Complejidad</span>
@@ -351,8 +415,22 @@ export default function BuildingDifficultyPage() {
 
         {/* ── PYRAMIDS DIFFICULTY ──────────────────────────────────────── */}
         {bCfg.hasPyramids && bCfg.pyramidsHasDiff && (
-          <section className="flex flex-col gap-3">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Pirámides — Dificultad</h2>
+          <section className="flex flex-col gap-4" style={{ paddingTop: '1rem' }}>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Pirámides — Dificultad</h2>
+              <InfoButton title="Pirámides — Dificultad" size="lg">
+                <div className="flex flex-col gap-3 text-xs text-zinc-600">
+                  <div>
+                    <p className="font-bold text-zinc-800 mb-1">Rango de Pirámides</p>
+                    <p>Se determina por el número de <strong>Habilidades Diferentes del Nivel</strong> y el número de <strong>Estructuras ejecutadas en Gran Parte</strong> por el equipo.</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-zinc-800 mb-1">Ajuste dentro del rango</p>
+                    <p>Una vez seleccionado el rango, ajusta con incrementos de +0.1 según la precisión y calidad de las pirámides.</p>
+                  </div>
+                </div>
+              </InfoButton>
+            </div>
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Rango de Pirámides</span>
@@ -417,8 +495,16 @@ export default function BuildingDifficultyPage() {
 
         {/* ── TOSSES DIFFICULTY ────────────────────────────────────────── */}
         {bCfg.hasTosses && (
-          <section className="flex flex-col gap-3">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Lanzamientos — Dificultad</h2>
+          <section className="flex flex-col gap-4" style={{ paddingTop: '1rem' }}>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Lanzamientos — Dificultad</h2>
+              <InfoButton title="Lanzamientos — Dificultad" size="lg">
+                <div className="flex flex-col gap-2 text-xs text-zinc-600">
+                  <p className="font-bold text-zinc-800">Lanzamiento Apropiado del Nivel</p>
+                  <p>Evalúa si el equipo ejecuta el lanzamiento correspondiente al nivel de la división, considerando la mayoría de los atletas y la sincronización del grupo.</p>
+                </div>
+              </InfoButton>
+            </div>
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Dificultad</span>
@@ -441,13 +527,13 @@ export default function BuildingDifficultyPage() {
         )}
 
         {/* ── TOTAL DIFICULTAD ─────────────────────────────────────────── */}
-        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
+        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', marginTop: '1rem' }}>
           <span className="text-sm font-semibold uppercase tracking-wide">Subtotal Dificultad</span>
           <span className="text-2xl font-bold tabular-nums">{fmt(diffTotal)}</span>
         </div>
 
         {/* ── CREATIVITY + SHOWMANSHIP ─────────────────────────────────── */}
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-4" style={{ paddingTop: '1rem' }}>
           <div>
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
               {bCfg.hasCreativity ? 'Creatividad & Showmanship' : 'Cheer / Animación'}
@@ -458,13 +544,22 @@ export default function BuildingDifficultyPage() {
             {bCfg.hasCreativity && (
               <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                  <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Creatividad</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Creatividad</span>
+                    <InfoButton title="Creatividad AD Escénica">
+                      <div className="flex flex-col gap-2 text-xs text-zinc-600">
+                        <p><strong className="text-zinc-800">Rango: 1.5 – 2.0</strong></p>
+                        <p>Evalúa la Creatividad, Innovación y/o efecto visual durante las formaciones, transiciones y construcciones de elevaciones a lo largo de la rutina.</p>
+                        <p className="text-zinc-400">Se promedia con los otros dos jueces del panel.</p>
+                      </div>
+                    </InfoButton>
+                  </div>
                   <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(creativityBuilding)}</span>
                 </div>
                 <div className="p-4 flex flex-col gap-2">
                   <div className="flex items-center gap-3">
-                    <input type="range" min="0" max="2.0" step="0.1" value={creativityBuilding} onChange={e => setCreativityBuilding(parseFloat(e.target.value))} className="flex-1 accent-zinc-900" />
-                    <input type="number" min="0" max="2.0" step="0.1" value={creativityBuilding} onChange={e => setCreativityBuilding(parseFloat(Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0)).toFixed(2)))} className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                    <input type="range" min="1.5" max="2.0" step="0.1" value={creativityBuilding} onChange={e => setCreativityBuilding(parseFloat(e.target.value))} className="flex-1 accent-zinc-900" />
+                    <input type="number" min="1.5" max="2.0" step="0.1" value={creativityBuilding} onChange={e => setCreativityBuilding(parseFloat(Math.min(2.0, Math.max(1.5, parseFloat(e.target.value) || 1.5)).toFixed(2)))} className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900" />
                   </div>
                   <p className="text-[11px] text-zinc-400">Creatividad, Innovación y/o visual durante formaciones y construcciones</p>
                 </div>
@@ -472,13 +567,25 @@ export default function BuildingDifficultyPage() {
             )}
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
               <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">{bCfg.hasCreativity ? 'Showmanship' : 'Cheer / Animación'}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">{bCfg.hasCreativity ? 'Showmanship' : 'Cheer / Animación'}</span>
+                  {bCfg.hasCreativity && (
+                    <InfoButton title="Showmanship (Habilidad Escénica)">
+                      <div className="flex flex-col gap-2 text-xs text-zinc-600">
+                        <p><strong className="text-zinc-800">Rango: 1.0 – 2.0</strong></p>
+                        <p>Impresión general del panel sobre toda la presentación, abarcando todas las áreas de la categoría.</p>
+                        <p>Enfocarse en: energía del equipo, entusiasmo genuino, confianza, contacto visual y expresión facial.</p>
+                        <p className="text-zinc-400">Se promedia con los otros dos jueces del panel.</p>
+                      </div>
+                    </InfoButton>
+                  )}
+                </div>
                 <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(showmanshipBuilding)}</span>
               </div>
               <div className="p-4 flex flex-col gap-2">
                 <div className="flex items-center gap-3">
-                  <input type="range" min="0" max={bCfg.showmanshipMax} step="0.1" value={showmanshipBuilding} onChange={e => setShowmanshipBuilding(parseFloat(e.target.value))} className="flex-1 accent-zinc-900" />
-                  <input type="number" min="0" max={bCfg.showmanshipMax} step="0.1" value={showmanshipBuilding} onChange={e => setShowmanshipBuilding(parseFloat(Math.min(bCfg.showmanshipMax, Math.max(0, parseFloat(e.target.value) || 0)).toFixed(2)))} className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                  <input type="range" min="1.0" max={bCfg.showmanshipMax} step="0.1" value={showmanshipBuilding} onChange={e => setShowmanshipBuilding(parseFloat(e.target.value))} className="flex-1 accent-zinc-900" />
+                  <input type="number" min="1.0" max={bCfg.showmanshipMax} step="0.1" value={showmanshipBuilding} onChange={e => setShowmanshipBuilding(parseFloat(Math.min(bCfg.showmanshipMax, Math.max(1.0, parseFloat(e.target.value) || 1.0)).toFixed(2)))} className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900" />
                 </div>
                 <p className="text-[11px] text-zinc-400">{bCfg.hasCreativity ? 'Ritmo, Confianza y Conexión durante la rutina' : 'Cheer / Animación — máx 5.0'}</p>
               </div>
@@ -507,7 +614,7 @@ export default function BuildingDifficultyPage() {
         </div>
 
         {/* ── GRAND TOTAL ───────────────────────────────────────────────── */}
-        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
+        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', marginTop: '1rem' }}>
           <div>
             <p className="text-base uppercase tracking-wide font-bold">Total Planilla — Dificultad</p>
             <p className="text-xs opacity-70 mt-0.5">Dif. + Creatividad ({fmt(creativityBuilding)}) + Showmanship ({fmt(showmanshipBuilding)})</p>

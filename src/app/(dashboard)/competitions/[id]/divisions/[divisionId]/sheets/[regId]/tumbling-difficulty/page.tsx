@@ -6,8 +6,10 @@ import { ArrowLeft, Save, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
+import { InfoButton } from '@/components/ui/InfoButton';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { getScoringConfig, DEFAULT_TUMBLING_CONFIG } from '@/lib/scoringConfig';
+import { getGymGroups } from '@/lib/constructionTable';
 import { useJudge } from '@/hooks/useJudge';
 import { toastApiError } from '@/utils/apiErrors';
 import type { TumblingConfig } from '@/lib/scoringConfig';
@@ -104,6 +106,7 @@ export default function TumblingDifficultyPage() {
   const [loading,        setLoading]        = useState(true);
   const [saving,         setSaving]         = useState(false);
   const [tCfg,           setTCfg]           = useState<TumblingConfig>(DEFAULT_TUMBLING_CONFIG);
+  const [athleteCount,   setAthleteCount]   = useState<number | null>(null);
   const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
   const [requirePayment, setRequirePayment] = useState(false);
 
@@ -112,8 +115,8 @@ export default function TumblingDifficultyPage() {
   const [runningRango,     setRunningRango]     = useState<number>(0);
   const [runningHabilidad, setRunningHabilidad] = useState<number>(0.0);
   const [jumpsDiff,        setJumpsDiff]        = useState<number>(0);
-  const [creativityTumbling,  setCreativityTumbling]  = useState<number>(0.0);
-  const [showmanshipTumbling, setShowmanshipTumbling] = useState<number>(0.0);
+  const [creativityTumbling,  setCreativityTumbling]  = useState<number>(1.5);
+  const [showmanshipTumbling, setShowmanshipTumbling] = useState<number>(1.0);
   const [standingNotes, setStandingNotes] = useState('');
   const [runningNotes,  setRunningNotes]  = useState('');
   const [jumpsNotes,    setJumpsNotes]    = useState('');
@@ -139,7 +142,7 @@ export default function TumblingDifficultyPage() {
         competitionsRepository.getDivision(divId),
       ]);
       const reg = regRes.data.results.find(r => r.id === registrationId);
-      if (reg) { setTeamName(reg.team_name); setUnpaidAthletes(reg.unpaid_athletes); setRequirePayment(reg.competition_require_payment); }
+      if (reg) { setTeamName(reg.team_name); setAthleteCount(reg.athlete_count ?? null); setUnpaidAthletes(reg.unpaid_athletes); setRequirePayment(reg.competition_require_payment); }
       const tcfg = getScoringConfig(divRes.data).tumbling;
       setTCfg(tcfg);
 
@@ -177,8 +180,8 @@ export default function TumblingDifficultyPage() {
           const match = tcfg.jumpsDiffOpts.find(o => o.value === v);
           if (match) setJumpsDiff(v);
         }
-        if (sheet.creativity_tumbling)  setCreativityTumbling(Math.min(2.0, parseFloat(sheet.creativity_tumbling)));
-        if (sheet.showmanship_tumbling) setShowmanshipTumbling(Math.min(tcfg.showmanshipMax, parseFloat(sheet.showmanship_tumbling)));
+        if (sheet.creativity_tumbling)  setCreativityTumbling(Math.min(2.0, Math.max(1.5, parseFloat(sheet.creativity_tumbling))));
+        if (sheet.showmanship_tumbling) setShowmanshipTumbling(Math.min(tcfg.showmanshipMax, Math.max(1.0, parseFloat(sheet.showmanship_tumbling))));
 
         if (sheet.notes) {
           try {
@@ -266,11 +269,64 @@ export default function TumblingDifficultyPage() {
       )}
       <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
 
-      <div className={`max-w-4xl mx-auto px-6 py-8 flex flex-col gap-10${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
+      {/* ── Gym groups table banner ───────────────────────────────────── */}
+      {(() => {
+        const groups = athleteCount ? getGymGroups(athleteCount) : null;
+        return (
+          <div className="mx-auto max-w-4xl px-6 pt-6">
+            <div className={`rounded-xl border px-5 py-4 flex items-center justify-between gap-4 ${
+              groups ? 'border-zinc-200 bg-white' : 'border-dashed border-zinc-300 bg-zinc-50'
+            }`}>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Tabla de cantidad en gimnasia / saltos</p>
+                {groups ? (
+                  <p className="text-xs text-zinc-500">Basado en <span className="font-semibold text-zinc-800">{athleteCount} atletas</span> confirmados en backstage</p>
+                ) : (
+                  <p className="text-xs text-zinc-400">
+                    {athleteCount
+                      ? `${athleteCount} atletas — fuera del rango de tabla (10–30)`
+                      : 'Sin conteo de atletas — ingresa el número en la página de Backstage'}
+                  </p>
+                )}
+              </div>
+              {groups ? (
+                <div className="flex items-center gap-6 shrink-0">
+                  <div className="text-center">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Mayoría</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.mayoria}</p>
+                  </div>
+                  <div className="text-center border-l border-zinc-200 pl-6">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Gran Parte</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.gran_parte}</p>
+                  </div>
+                </div>
+              ) : (
+                <span className="text-xs text-zinc-300 italic shrink-0">—</span>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      <div className={`max-w-4xl mx-auto px-6 py-8 flex flex-col gap-16${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
 
         {tCfg.hasStanding && (
           <section className="flex flex-col gap-3">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">{tCfg.isCombinedSR ? 'Gimnasia Estática / Con Carrera' : 'Gimnasia Estática (Standing)'}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">{tCfg.isCombinedSR ? 'Gimnasia Estática / Con Carrera' : 'Gimnasia Estática (Standing)'}</h2>
+              <InfoButton title="Gimnasia Estática — Dificultad" size="lg">
+                <div className="flex flex-col gap-3 text-xs text-zinc-600">
+                  <div>
+                    <p className="font-bold text-zinc-800 mb-1">Rango Base de Complejidad</p>
+                    <p>Selecciona el nivel que describe la mayoría de los elementos de gimnasia estática ejecutados por el equipo.</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-zinc-800 mb-1">Habilidad Realizada o Gran Parte</p>
+                    <p>Bonus según la habilidad más avanzada ejecutada en gran parte: <strong>+0.3</strong> Avanzada, <strong>+0.5</strong> Elite.</p>
+                  </div>
+                </div>
+              </InfoButton>
+            </div>
             {tCfg.standingHasDiff ? (
               <TumblingDiffCard label="Estática" rangoOpts={tCfg.standingRango} habilidadOpts={tCfg.standingHabilidad} rango={standingRango} onRango={setStandingRango} habilidad={standingHabilidad} onHabilidad={setStandingHabilidad} />
             ) : (
@@ -283,8 +339,22 @@ export default function TumblingDifficultyPage() {
         )}
 
         {tCfg.hasRunning && (
-          <section className="flex flex-col gap-3">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Gimnasia con Carrera (Running)</h2>
+          <section className="flex flex-col gap-3" style={{ paddingTop: '1rem' }}>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Gimnasia con Carrera (Running)</h2>
+              <InfoButton title="Gimnasia con Carrera — Dificultad" size="lg">
+                <div className="flex flex-col gap-3 text-xs text-zinc-600">
+                  <div>
+                    <p className="font-bold text-zinc-800 mb-1">Rango Base de Complejidad</p>
+                    <p>Selecciona el nivel que describe la mayoría de los elementos de gimnasia con carrera ejecutados por el equipo.</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-zinc-800 mb-1">Habilidad Realizada o Gran Parte</p>
+                    <p>Bonus según la habilidad más avanzada ejecutada en gran parte: <strong>+0.3</strong> Avanzada, <strong>+0.5</strong> Elite.</p>
+                  </div>
+                </div>
+              </InfoButton>
+            </div>
             {tCfg.runningHasDiff ? (
               <TumblingDiffCard label="Con Carrera" rangoOpts={tCfg.runningRango} habilidadOpts={tCfg.runningHabilidad} rango={runningRango} onRango={setRunningRango} habilidad={runningHabilidad} onHabilidad={setRunningHabilidad} />
             ) : (
@@ -297,8 +367,22 @@ export default function TumblingDifficultyPage() {
         )}
 
         {tCfg.hasJumps && tCfg.jumpsHasDiff && (
-          <section className="flex flex-col gap-3">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Saltos — Dificultad</h2>
+          <section className="flex flex-col gap-3" style={{ paddingTop: '1rem' }}>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Saltos — Dificultad</h2>
+              <InfoButton title="Saltos — Dificultad" size="lg">
+                <div className="flex flex-col gap-3 text-xs text-zinc-600">
+                  <div>
+                    <p className="font-bold text-zinc-800 mb-1">Nivel de Dificultad</p>
+                    <p>Selecciona el nivel que mejor describe los saltos avanzados ejecutados por el equipo durante la rutina.</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-zinc-800 mb-1">Criterio de evaluación</p>
+                    <p>Se considera la complejidad técnica, la sincronización y la ejecución general de los saltos del equipo.</p>
+                  </div>
+                </div>
+              </InfoButton>
+            </div>
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
               <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Dificultad — Saltos Avanzados</span>
@@ -320,13 +404,13 @@ export default function TumblingDifficultyPage() {
         )}
 
         {/* ── Subtotal ──────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
+        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', marginTop: '2rem' }}>
           <span className="text-sm font-semibold uppercase tracking-wide">Subtotal Dificultad</span>
           <span className="text-2xl font-bold tabular-nums">{fmt(diffSubtotal)}</span>
         </div>
 
         {/* ── Creativity + Showmanship ──────────────────────────────────── */}
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-4" style={{ paddingTop: '2rem' }}>
           <div>
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">{tCfg.hasCreativity ? 'Creatividad & Showmanship' : 'Cheer / Animación'}</h2>
             <p className="text-xs text-zinc-400 mt-0.5">Puntuado por este juez — se promedia con los otros dos jueces</p>
@@ -335,13 +419,27 @@ export default function TumblingDifficultyPage() {
             {tCfg.hasCreativity && (
               <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                  <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Creatividad</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Creatividad</span>
+                    <InfoButton title="Creatividad — 1.5 a 2.0" size="sm">
+                      <div className="flex flex-col gap-3 text-xs text-zinc-600">
+                        <div>
+                          <p className="font-bold text-zinc-800 mb-1">Rango: 1.5 – 2.0</p>
+                          <p>Evalúa la creatividad, innovación y/o impacto visual durante la rutina.</p>
+                        </div>
+                        <div>
+                          <p className="font-bold text-zinc-800 mb-1">Criterio</p>
+                          <p>1.5 = Mínimo esperado · 2.0 = Máximo. Se promedia con los otros dos jueces.</p>
+                        </div>
+                      </div>
+                    </InfoButton>
+                  </div>
                   <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(creativityTumbling)}</span>
                 </div>
                 <div className="p-4 flex flex-col gap-2">
                   <div className="flex items-center gap-3">
-                    <input type="range" min="0" max="2.0" step="0.1" value={creativityTumbling} onChange={e => setCreativityTumbling(parseFloat(e.target.value))} className="flex-1 accent-zinc-900" />
-                    <input type="number" min="0" max="2.0" step="0.1" value={creativityTumbling} onChange={e => setCreativityTumbling(parseFloat(Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0)).toFixed(2)))} className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                    <input type="range" min="1.5" max="2.0" step="0.1" value={creativityTumbling} onChange={e => setCreativityTumbling(parseFloat(e.target.value))} className="flex-1 accent-zinc-900" />
+                    <input type="number" min="1.5" max="2.0" step="0.1" value={creativityTumbling} onChange={e => setCreativityTumbling(parseFloat(Math.min(2.0, Math.max(1.5, parseFloat(e.target.value) || 1.5)).toFixed(2)))} className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900" />
                   </div>
                   <p className="text-[11px] text-zinc-400">Creatividad, Innovación y/o visual durante la rutina</p>
                 </div>
@@ -349,13 +447,36 @@ export default function TumblingDifficultyPage() {
             )}
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
               <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">{tCfg.hasCreativity ? 'Showmanship' : 'Cheer / Animación'}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">{tCfg.hasCreativity ? 'Showmanship' : 'Cheer / Animación'}</span>
+                  {tCfg.hasCreativity && (
+                    <InfoButton title="Showmanship — 1.0 a 2.0" size="sm">
+                      <div className="flex flex-col gap-3 text-xs text-zinc-600">
+                        <div>
+                          <p className="font-bold text-zinc-800 mb-1">Rango: 1.0 – 2.0</p>
+                          <p>Habilidad escénica: impresión general del panel de jueces sobre la presentación del equipo.</p>
+                        </div>
+                        <div>
+                          <p className="font-bold text-zinc-800 mb-1">Criterios</p>
+                          <ul className="list-disc list-inside space-y-0.5">
+                            <li>Energía del equipo</li>
+                            <li>Entusiasmo genuino</li>
+                            <li>Confianza en escena</li>
+                            <li>Contacto visual con el público</li>
+                            <li>Expresión facial</li>
+                          </ul>
+                        </div>
+                        <p>Se promedia con los otros dos jueces.</p>
+                      </div>
+                    </InfoButton>
+                  )}
+                </div>
                 <span className="text-lg font-bold tabular-nums text-zinc-900">{fmt(showmanshipTumbling)}</span>
               </div>
               <div className="p-4 flex flex-col gap-2">
                 <div className="flex items-center gap-3">
-                  <input type="range" min="0" max={tCfg.showmanshipMax} step="0.1" value={showmanshipTumbling} onChange={e => setShowmanshipTumbling(parseFloat(e.target.value))} className="flex-1 accent-zinc-900" />
-                  <input type="number" min="0" max={tCfg.showmanshipMax} step="0.1" value={showmanshipTumbling} onChange={e => setShowmanshipTumbling(parseFloat(Math.min(tCfg.showmanshipMax, Math.max(0, parseFloat(e.target.value) || 0)).toFixed(2)))} className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                  <input type="range" min="1.0" max={tCfg.showmanshipMax} step="0.1" value={showmanshipTumbling} onChange={e => setShowmanshipTumbling(parseFloat(e.target.value))} className="flex-1 accent-zinc-900" />
+                  <input type="number" min="1.0" max={tCfg.showmanshipMax} step="0.1" value={showmanshipTumbling} onChange={e => setShowmanshipTumbling(parseFloat(Math.min(tCfg.showmanshipMax, Math.max(1.0, parseFloat(e.target.value) || 1.0)).toFixed(2)))} className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900" />
                 </div>
                 <p className="text-[11px] text-zinc-400">{tCfg.hasCreativity ? 'Confianza, Limpieza y Conexión' : 'Cheer / Animación — máx 5.0'}</p>
               </div>
@@ -384,7 +505,7 @@ export default function TumblingDifficultyPage() {
         </div>
 
         {/* Grand total */}
-        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
+        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', marginTop: '2rem' }}>
           <div>
             <p className="text-base uppercase tracking-wide font-bold">Total Planilla — Dificultad Gimnasia</p>
             <p className="text-xs opacity-70 mt-0.5">Dif. + Creatividad ({fmt(creativityTumbling)}) + Showmanship ({fmt(showmanshipTumbling)})</p>
