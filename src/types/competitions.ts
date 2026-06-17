@@ -1,13 +1,22 @@
 export type SheetType =
-  | 'building' | 'tumbling' | 'rangos' | 'overall' | 'partner_stunt' | 'deducciones';
+  | 'building' | 'tumbling' | 'rangos' | 'overall' | 'partner_stunt' | 'deducciones'
+  | 'building_difficulty' | 'building_execution'
+  | 'tumbling_difficulty' | 'tumbling_execution'
+  | 'deductions_only' | 'safety_rules';
 
 export const SHEET_TYPE_LABELS: Record<SheetType, string> = {
-  building:      'Building (Elevaciones)',
-  tumbling:      'Tumbling (Gimnasia)',
-  rangos:        'Rangos (Dificultad)',
-  overall:       'Overall (General)',
-  partner_stunt: 'Partner Stunt',
-  deducciones:   'Deducciones',
+  building:             'Building (Elevaciones)',
+  tumbling:             'Tumbling (Gimnasia)',
+  rangos:               'Rangos (Dificultad)',
+  overall:              'Overall (General)',
+  partner_stunt:        'Partner Stunt',
+  deducciones:          'Deducciones',
+  building_difficulty:  'Dificultad — Elevaciones',
+  building_execution:   'Ejecución — Elevaciones',
+  tumbling_difficulty:  'Dificultad — Gimnasia',
+  tumbling_execution:   'Ejecución — Gimnasia',
+  deductions_only:      'Deducciones (Caídas/Tiempo)',
+  safety_rules:         'Reglas y Seguridad',
 };
 
 export interface JudgeAssignment {

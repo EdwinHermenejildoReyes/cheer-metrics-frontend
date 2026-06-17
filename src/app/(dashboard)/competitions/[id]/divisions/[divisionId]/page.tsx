@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, ClipboardList, Activity, Layers, Users, Target, Flag, Link2 } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, ClipboardList, Activity, Layers, Users, Target, Flag, Link2, BarChart3, Zap, Shield, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -334,6 +334,66 @@ export default function DivisionDetailPage() {
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/rangos`)}
                         >
                           <Target className="h-3.5 w-3.5 text-amber-500" />
+                        </Button>
+                      )}
+                      {canViewSheet(competitionId, 'building_difficulty') && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Dificultad — Elevaciones"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/building-difficulty`)}
+                        >
+                          <BarChart3 className="h-3.5 w-3.5 text-blue-700" />
+                        </Button>
+                      )}
+                      {canViewSheet(competitionId, 'building_execution') && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Ejecución — Elevaciones"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/building-execution`)}
+                        >
+                          <Zap className="h-3.5 w-3.5 text-blue-400" />
+                        </Button>
+                      )}
+                      {canViewSheet(competitionId, 'tumbling_difficulty') && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Dificultad — Gimnasia"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/tumbling-difficulty`)}
+                        >
+                          <BarChart3 className="h-3.5 w-3.5 text-green-700" />
+                        </Button>
+                      )}
+                      {canViewSheet(competitionId, 'tumbling_execution') && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Ejecución — Gimnasia"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/tumbling-execution`)}
+                        >
+                          <Zap className="h-3.5 w-3.5 text-green-400" />
+                        </Button>
+                      )}
+                      {canViewSheet(competitionId, 'deductions_only') && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Deducciones (Caídas/Tiempo)"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/deductions-only`)}
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5 text-orange-500" />
+                        </Button>
+                      )}
+                      {canViewSheet(competitionId, 'safety_rules') && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Reglas y Seguridad"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/safety-rules`)}
+                        >
+                          <Shield className="h-3.5 w-3.5 text-amber-500" />
                         </Button>
                       )}
                       {sheet && (
