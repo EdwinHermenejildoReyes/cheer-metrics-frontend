@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Eye } from 'lucide-react';
 import { toast } from 'sonner';
@@ -87,6 +87,20 @@ function ExecSection({ label, max, categories, deds, onChange }: {
         <span className={`text-lg font-bold tabular-nums ${totalDed > 0 ? 'text-red-700' : 'text-zinc-900'}`}>{fmt(score)}</span>
       </div>
     </div>
+  );
+}
+
+function AutoResizeTextarea({ value, onChange, placeholder }: {
+  value: string; onChange: (v: string) => void; placeholder: string;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (ref.current) { ref.current.style.height = 'auto'; ref.current.style.height = `${ref.current.scrollHeight}px`; }
+  }, [value]);
+  return (
+    <textarea ref={ref} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={3}
+      className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-zinc-900"
+      style={{ minHeight: '80px' }} />
   );
 }
 
@@ -286,16 +300,14 @@ export default function TumblingExecutionPage() {
         {tCfg.hasStanding && (
           <section className="flex flex-col gap-3">
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">{tCfg.isCombinedSR ? 'Gimnasia Estática / Con Carrera' : 'Gimnasia Estática'}</h2>
-            <div className="grid grid-cols-[3fr_2fr] gap-5 items-stretch">
+            <div className="grid grid-cols-[3fr_2fr] gap-5 items-start">
               <ExecSection label="Estática" max={tCfg.standingExecMax} categories={STANDING_CATS} deds={standingExecDeds} onChange={setStandingExecDeds} />
-              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden flex flex-col">
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="px-3 py-2 bg-zinc-50 border-b border-zinc-200">
                   <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Observaciones</span>
                 </div>
-                <div className="p-3 flex-1 flex">
-                  <textarea value={standingNotes} onChange={e => setStandingNotes(e.target.value)}
-                    placeholder="Observaciones sobre Estática..."
-                    className="flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                <div className="p-3">
+                  <AutoResizeTextarea value={standingNotes} onChange={setStandingNotes} placeholder="Observaciones sobre Estática..." />
                 </div>
               </div>
             </div>
@@ -303,18 +315,16 @@ export default function TumblingExecutionPage() {
         )}
 
         {tCfg.hasRunning && (
-          <section className="flex flex-col gap-3">
+          <section className="flex flex-col gap-3" style={{ marginTop: '2.5rem' }}>
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Gimnasia con Carrera</h2>
-            <div className="grid grid-cols-[3fr_2fr] gap-5 items-stretch">
+            <div className="grid grid-cols-[3fr_2fr] gap-5 items-start">
               <ExecSection label="Con Carrera" max={tCfg.runningExecMax} categories={RUNNING_CATS} deds={runningExecDeds} onChange={setRunningExecDeds} />
-              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden flex flex-col">
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="px-3 py-2 bg-zinc-50 border-b border-zinc-200">
                   <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Observaciones</span>
                 </div>
-                <div className="p-3 flex-1 flex">
-                  <textarea value={runningNotes} onChange={e => setRunningNotes(e.target.value)}
-                    placeholder="Observaciones sobre Con Carrera..."
-                    className="flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                <div className="p-3">
+                  <AutoResizeTextarea value={runningNotes} onChange={setRunningNotes} placeholder="Observaciones sobre Con Carrera..." />
                 </div>
               </div>
             </div>
@@ -322,25 +332,23 @@ export default function TumblingExecutionPage() {
         )}
 
         {tCfg.hasJumps && (
-          <section className="flex flex-col gap-3">
+          <section className="flex flex-col gap-3" style={{ marginTop: '2.5rem' }}>
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Saltos</h2>
-            <div className="grid grid-cols-[3fr_2fr] gap-5 items-stretch">
+            <div className="grid grid-cols-[3fr_2fr] gap-5 items-start">
               <ExecSection label="Saltos" max={tCfg.jumpsExecMax} categories={JUMPS_CATS} deds={jumpsExecDeds} onChange={setJumpsExecDeds} />
-              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden flex flex-col">
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="px-3 py-2 bg-zinc-50 border-b border-zinc-200">
                   <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Observaciones</span>
                 </div>
-                <div className="p-3 flex-1 flex">
-                  <textarea value={jumpsNotes} onChange={e => setJumpsNotes(e.target.value)}
-                    placeholder="Observaciones sobre Saltos..."
-                    className="flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                <div className="p-3">
+                  <AutoResizeTextarea value={jumpsNotes} onChange={setJumpsNotes} placeholder="Observaciones sobre Saltos..." />
                 </div>
               </div>
             </div>
           </section>
         )}
 
-        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
+        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', marginTop: '2.5rem' }}>
           <p className="text-base uppercase tracking-wide font-bold">Total Planilla — Ejecución Gimnasia</p>
           <span className="text-4xl font-bold tabular-nums">{fmt(sheetTotal)}</span>
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Eye } from 'lucide-react';
 import { toast } from 'sonner';
@@ -96,6 +96,20 @@ function ExecSection({ label, max, deds, onChange, cats = EXEC_CATS }: {
         <span className={`text-lg font-bold tabular-nums ${totalDed > 0 ? 'text-red-700' : 'text-zinc-900'}`}>{fmt(score)}</span>
       </div>
     </div>
+  );
+}
+
+function AutoResizeTextarea({ value, onChange, placeholder }: {
+  value: string; onChange: (v: string) => void; placeholder: string;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (ref.current) { ref.current.style.height = 'auto'; ref.current.style.height = `${ref.current.scrollHeight}px`; }
+  }, [value]);
+  return (
+    <textarea ref={ref} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={3}
+      className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-zinc-900"
+      style={{ minHeight: '80px' }} />
   );
 }
 
@@ -296,16 +310,14 @@ export default function BuildingExecutionPage() {
         {bCfg.hasStunts && (
           <section className="flex flex-col gap-3">
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Elevaciones — Ejecución</h2>
-            <div className="grid grid-cols-[3fr_2fr] gap-5 items-stretch">
+            <div className="grid grid-cols-[3fr_2fr] gap-5 items-start">
               <ExecSection label="Elevaciones" max={bCfg.stuntsExecMax} deds={stuntsExecDeds} onChange={setStuntsExecDeds} />
-              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden flex flex-col">
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="px-3 py-2 bg-zinc-50 border-b border-zinc-200">
                   <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Observaciones</span>
                 </div>
-                <div className="p-3 flex-1 flex">
-                  <textarea value={stuntsNotes} onChange={e => setStuntsNotes(e.target.value)}
-                    placeholder="Observaciones sobre Elevaciones..."
-                    className="flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                <div className="p-3">
+                  <AutoResizeTextarea value={stuntsNotes} onChange={setStuntsNotes} placeholder="Observaciones sobre Elevaciones..." />
                 </div>
               </div>
             </div>
@@ -313,18 +325,16 @@ export default function BuildingExecutionPage() {
         )}
 
         {bCfg.hasPyramids && (
-          <section className="flex flex-col gap-3">
+          <section className="flex flex-col gap-3" style={{ marginTop: '2.5rem' }}>
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Pirámides — Ejecución</h2>
-            <div className="grid grid-cols-[3fr_2fr] gap-5 items-stretch">
+            <div className="grid grid-cols-[3fr_2fr] gap-5 items-start">
               <ExecSection label="Pirámides" max={bCfg.pyramidsExecMax} deds={pyramidsExecDeds} onChange={setPyramidsExecDeds} />
-              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden flex flex-col">
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="px-3 py-2 bg-zinc-50 border-b border-zinc-200">
                   <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Observaciones</span>
                 </div>
-                <div className="p-3 flex-1 flex">
-                  <textarea value={pyramidsNotes} onChange={e => setPyramidsNotes(e.target.value)}
-                    placeholder="Observaciones sobre Pirámides..."
-                    className="flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                <div className="p-3">
+                  <AutoResizeTextarea value={pyramidsNotes} onChange={setPyramidsNotes} placeholder="Observaciones sobre Pirámides..." />
                 </div>
               </div>
             </div>
@@ -332,25 +342,23 @@ export default function BuildingExecutionPage() {
         )}
 
         {bCfg.hasTosses && (
-          <section className="flex flex-col gap-3">
+          <section className="flex flex-col gap-3" style={{ marginTop: '2.5rem' }}>
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Lanzamientos — Ejecución</h2>
-            <div className="grid grid-cols-[3fr_2fr] gap-5 items-stretch">
+            <div className="grid grid-cols-[3fr_2fr] gap-5 items-start">
               <ExecSection label="Lanzamientos" max={bCfg.tossesExecMax} deds={tossesExecDeds} onChange={setTossesExecDeds} cats={TOSS_EXEC_CATS} />
-              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden flex flex-col">
+              <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="px-3 py-2 bg-zinc-50 border-b border-zinc-200">
                   <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Observaciones</span>
                 </div>
-                <div className="p-3 flex-1 flex">
-                  <textarea value={tossesNotes} onChange={e => setTossesNotes(e.target.value)}
-                    placeholder="Observaciones sobre Lanzamientos..."
-                    className="flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                <div className="p-3">
+                  <AutoResizeTextarea value={tossesNotes} onChange={setTossesNotes} placeholder="Observaciones sobre Lanzamientos..." />
                 </div>
               </div>
             </div>
           </section>
         )}
 
-        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
+        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', marginTop: '2.5rem' }}>
           <p className="text-base uppercase tracking-wide font-bold">Total Planilla — Ejecución</p>
           <span className="text-4xl font-bold tabular-nums">{fmt(sheetTotal)}</span>
         </div>
