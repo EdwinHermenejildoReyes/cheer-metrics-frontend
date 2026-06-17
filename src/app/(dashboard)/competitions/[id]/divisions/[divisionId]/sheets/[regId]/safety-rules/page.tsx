@@ -36,10 +36,6 @@ const PILL_COLORS: Record<ColorKey, string> = {
   amber: 'bg-amber-500 text-white',
   zinc:  'bg-zinc-600 text-white',
 };
-const HEADER_COLORS: Record<ColorKey, string> = {
-  amber: 'bg-amber-50 text-amber-500',
-  zinc:  'bg-zinc-100 text-zinc-500',
-};
 
 function fmt(n: number | string) { return parseFloat(String(n)).toFixed(2); }
 
@@ -259,30 +255,6 @@ export default function SafetyRulesPage() {
                   </div>
                 </div>
               ))}
-
-              {/* Reference card */}
-              <div className="flex flex-col gap-1.5 mt-2">
-                <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 px-1">Referencia</p>
-                {[
-                  { title: 'ILEGALES',    types: ILLEGAL, color: 'amber' as ColorKey },
-                  { title: 'ADMIN',       types: ADMIN,   color: 'zinc'  as ColorKey },
-                ].map(({ title, types, color }) => (
-                  <div key={title} className="rounded-lg border border-zinc-100 bg-white overflow-hidden">
-                    <div className={`px-2.5 py-1 text-[8px] font-bold uppercase tracking-widest ${HEADER_COLORS[color]}`}>{title}</div>
-                    <div className="divide-y divide-zinc-50">
-                      {types.map(type => (
-                        <div key={type} className="flex items-center justify-between px-2.5 py-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-black text-zinc-800 w-9">{DEDUCTION_CODES[type]}</span>
-                            <span className="text-[8px] text-zinc-400 leading-tight">{DEDUCTION_TYPE_LABELS[type].split(' ').slice(0, 2).join(' ')}</span>
-                          </div>
-                          <span className="text-[10px] font-bold tabular-nums text-red-500">−{DEDUCTION_AMOUNTS[type]}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
 
             {/* RIGHT — recorded deductions */}
