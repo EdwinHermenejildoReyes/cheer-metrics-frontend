@@ -46,6 +46,18 @@ const BADGE_COLORS: Record<ColorKey, string> = { red: 'bg-red-100 text-red-700 b
 const PILL_COLORS:  Record<ColorKey, string> = { red: 'bg-red-600 text-white', orange: 'bg-orange-500 text-white' };
 function fmt(n: number | string) { return parseFloat(String(n)).toFixed(2); }
 
+const INTERVAL_DISPLAY: Record<string, string> = Object.fromEntries(
+  TRACK_INTERVALS.map(({ key, start, end }) => [key, `${start} - ${end}`])
+);
+function formatRoutineTime(rt: string): string {
+  if (!rt) return '—';
+  const slashIdx = rt.indexOf(' / ');
+  if (slashIdx === -1) return rt;
+  const interval = rt.slice(0, slashIdx);
+  const zone = rt.slice(slashIdx + 3);
+  return `${INTERVAL_DISPLAY[interval] ?? interval} / ${zone}`;
+}
+
 interface Pending { type: DeductionType; time: string; count: number; notes: string; hitZero: boolean; }
 
 export default function DeductionsOnlyPage() {
@@ -437,7 +449,7 @@ export default function DeductionsOnlyPage() {
                       const ck = colorFor(ded.deduction_type as DeductionType);
                       return (
                         <div key={ded.id} className="grid grid-cols-[7rem_4.5rem_1fr_5rem_2.5rem] gap-0 items-center px-3 py-2.5">
-                          <span className="text-xs tabular-nums text-zinc-500 font-mono leading-tight">{ded.routine_time || '—'}</span>
+                          <span className="text-xs tabular-nums text-zinc-500 font-mono leading-tight">{formatRoutineTime(ded.routine_time)}</span>
                           <span className={`inline-flex items-center justify-center self-center rounded-md px-2 py-0.5 text-xs font-black w-fit ${BADGE_COLORS[ck]}`}>{DEDUCTION_CODES[ded.deduction_type as DeductionType]}</span>
                           <div className="min-w-0 pr-2">
                             <p className="text-xs text-zinc-700 truncate">{ded.notes || DEDUCTION_TYPE_LABELS[ded.deduction_type as DeductionType]}</p>
