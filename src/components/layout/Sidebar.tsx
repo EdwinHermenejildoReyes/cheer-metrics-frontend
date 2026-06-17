@@ -74,8 +74,8 @@ export function Sidebar() {
       : pathname === href || pathname.startsWith(href + '/');
     const activeStyle = active
       ? {
-          backgroundColor: var(--plt-primary),
-          color: var(--plt-primary-fg),
+          backgroundColor: 'var(--plt-primary)',
+          color: 'var(--plt-primary-fg)',
         }
       : undefined;
     return (
