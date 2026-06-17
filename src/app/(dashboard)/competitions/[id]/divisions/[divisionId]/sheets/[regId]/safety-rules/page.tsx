@@ -39,6 +39,12 @@ const PILL_COLORS: Record<ColorKey, string> = {
 
 function fmt(n: number | string) { return parseFloat(String(n)).toFixed(2); }
 
+function formatTimeInput(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 4);
+  if (digits.length >= 3) return `${digits.slice(0, 2)}:${digits.slice(2)}`;
+  return digits;
+}
+
 // ── Per-deduction card with inline annotation auto-save ───────────────────────
 function DeductionCard({ ded, onDelete, isDeleting, confirm }: {
   ded: Deduction;
@@ -111,9 +117,9 @@ function DeductionCard({ ded, onDelete, isDeleting, confirm }: {
         <input
           type="text"
           value={tiempo}
-          onChange={e => setTiempo(e.target.value)}
+          onChange={e => setTiempo(formatTimeInput(e.target.value))}
           onBlur={() => saveAnnotation(regla, tiempo)}
-          placeholder="0:45"
+          placeholder="00:00"
           className="w-16 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-800 placeholder:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-400 text-center"
         />
         {saving && <span className="text-[9px] text-zinc-400 shrink-0">guardando…</span>}
