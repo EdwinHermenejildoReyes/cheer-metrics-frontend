@@ -12,18 +12,6 @@ const nextConfig: NextConfig = {
       { protocol: 'http', hostname: '192.168.1.66',   port: '8006', pathname: '**' },
     ],
   },
-
-  // In `npm run dev` (outside Docker), proxy /api and /media to Nginx.
-  // In Docker, Nginx intercepts these routes before they reach Next.js — rewrites are a no-op.
-  // Trailing slash is appended to /api/ and /admin/ destinations because Next.js dev-server
-  // strips trailing slashes from proxied paths, and Django requires them (APPEND_SLASH=True).
-  async rewrites() {
-    return [
-      { source: '/api/:path*',   destination: 'http://localhost:8006/api/:path*/' },
-      { source: '/media/:path*', destination: 'http://localhost:8006/media/:path*' },
-      { source: '/admin/:path*', destination: 'http://localhost:8006/admin/:path*/' },
-    ];
-  },
 };
 
 export default nextConfig;
