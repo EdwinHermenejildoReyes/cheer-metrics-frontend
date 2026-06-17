@@ -39,10 +39,25 @@ const PILL_COLORS: Record<ColorKey, string> = {
 
 function fmt(n: number | string) { return parseFloat(String(n)).toFixed(2); }
 
-function formatTimeInput(raw: string): string {
-  const digits = raw.replace(/\D/g, '').slice(0, 4);
-  if (digits.length >= 3) return `${digits.slice(0, 2)}:${digits.slice(2)}`;
-  return digits;
+// Allow only digits and colon while typing
+function filterTimeChars(raw: string): string {
+  return raw.replace(/[^\d:]/g, '');
+}
+// Interpret any input as total seconds or MM:SS, cap at 02:30 (150 s)
+function normalizeTime(raw: string): string {
+  const cleaned = raw.trim();
+  if (!cleaned) return '';
+  let totalSecs: number;
+  if (cleaned.includes(':')) {
+    const [m, s] = cleaned.split(':');
+    totalSecs = (parseInt(m, 10) || 0) * 60 + (parseInt(s, 10) || 0);
+  } else {
+    totalSecs = parseInt(cleaned, 10) || 0;
+  }
+  const capped = Math.min(totalSecs, 150);
+  const mins = Math.floor(capped / 60);
+  const secs = capped % 60;
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
 // ── Per-deduction card with inline annotation auto-save ───────────────────────
@@ -107,7 +122,7 @@ function DeductionCard({ ded, onDelete, isDeleting, confirm }: {
           type="text"
           value={regla}
           onChange={e => setRegla(e.target.value)}
-          onBlur={() => saveAnnotation(regla, tiempo)}
+          onBlur={() => { const n = normalizeTime(tiempo); if (n !== tiempo) setTiempo(n); saveAnnotation(regla, n); }}
           placeholder="Ej. Art. 3.2.1"
           className="flex-1 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-800 placeholder:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-400 min-w-0"
         />
@@ -117,8 +132,8 @@ function DeductionCard({ ded, onDelete, isDeleting, confirm }: {
         <input
           type="text"
           value={tiempo}
-          onChange={e => setTiempo(formatTimeInput(e.target.value))}
-          onBlur={() => saveAnnotation(regla, tiempo)}
+          onChange={e => setTiempo(filterTimeChars(e.target.value))}
+          onBlur={() => { const n = normalizeTime(tiempo); if (n !== tiempo) setTiempo(n); saveAnnotation(regla, n); }}
           placeholder="00:00"
           className="w-16 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-800 placeholder:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-400 text-center"
         />
