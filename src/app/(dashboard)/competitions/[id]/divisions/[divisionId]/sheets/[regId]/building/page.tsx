@@ -246,8 +246,8 @@ export default function BuildingSheetPage() {
   const [tossesExecDeds, setTossesExecDeds] = useState<ExecDeds>([null, null, null]);
 
   // ── Cross-sheet ───────────────────────────────────────────────────────────
-  const [creativityBuilding,  setCreativityBuilding]  = useState<number>(0.0);
-  const [showmanshipBuilding, setShowmanshipBuilding] = useState<number>(0.0);
+  const [creativityBuilding,  setCreativityBuilding]  = useState<number>(1.0);
+  const [showmanshipBuilding, setShowmanshipBuilding] = useState<number>(1.0);
 
   const [stuntsNotes,   setStuntsNotes]   = useState('');
   const [pyramidsNotes, setPyramidsNotes] = useState('');
@@ -362,10 +362,11 @@ export default function BuildingSheetPage() {
           if (cfg.pyramidDriversOpts.some(o => o.value === v)) setPyramidsDrivers(v);
         }
         if (sheet.creativity_building) {
-          setCreativityBuilding(Math.min(2.0, parseFloat(sheet.creativity_building)));
+          setCreativityBuilding(Math.min(2.0, Math.max(1.0, parseFloat(sheet.creativity_building))));
         }
         if (sheet.showmanship_building) {
-          setShowmanshipBuilding(Math.min(cfg.showmanshipMax, parseFloat(sheet.showmanship_building)));
+          const showMin = cfg.hasCreativity ? 1.0 : 0;
+          setShowmanshipBuilding(Math.min(cfg.showmanshipMax, Math.max(showMin, parseFloat(sheet.showmanship_building))));
         }
         if (sheet.notes) {
           try {
@@ -1066,11 +1067,11 @@ export default function BuildingSheetPage() {
                   {bCfg.hasCreativity ? (
                     <div className="space-y-3">
                       <div className="rounded-lg border border-zinc-200 p-3">
-                        <p className="font-semibold text-zinc-900 text-xs mb-1">Creatividad (0.0 – 2.0)</p>
+                        <p className="font-semibold text-zinc-900 text-xs mb-1">Creatividad (1.0 – 2.0)</p>
                         <p className="text-xs text-zinc-500 leading-relaxed">Evalúa la creatividad, innovación y valor visual del equipo durante formaciones, transiciones y construcciones. Considera originalidad y propuesta artística dentro de las habilidades.</p>
                       </div>
                       <div className="rounded-lg border border-zinc-200 p-3">
-                        <p className="font-semibold text-zinc-900 text-xs mb-1">Showmanship (0.0 – 2.0)</p>
+                        <p className="font-semibold text-zinc-900 text-xs mb-1">Showmanship (1.0 – 2.0)</p>
                         <p className="text-xs text-zinc-500 leading-relaxed">Evalúa la expresión facial, energía, presencia escénica y la capacidad del equipo de proyectar emoción al público y al panel de jueces durante toda la rutina.</p>
                       </div>
                     </div>
@@ -1101,7 +1102,7 @@ export default function BuildingSheetPage() {
                   <div className="flex items-center gap-3">
                     <input
                       type="range"
-                      min="0"
+                      min="1.0"
                       max="2.0"
                       step="0.1"
                       value={creativityBuilding}
@@ -1110,12 +1111,12 @@ export default function BuildingSheetPage() {
                     />
                     <input
                       type="number"
-                      min="0"
+                      min="1.0"
                       max="2.0"
                       step="0.1"
                       value={creativityBuilding}
                       onChange={(e) => {
-                        const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
+                        const v = Math.min(2.0, Math.max(1.0, parseFloat(e.target.value) || 1.0));
                         setCreativityBuilding(parseFloat(v.toFixed(2)));
                       }}
                       className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
@@ -1138,7 +1139,7 @@ export default function BuildingSheetPage() {
                 <div className="flex items-center gap-3">
                   <input
                     type="range"
-                    min="0"
+                    min={bCfg.hasCreativity ? '1.0' : '0'}
                     max={bCfg.showmanshipMax}
                     step="0.1"
                     value={showmanshipBuilding}
@@ -1147,12 +1148,13 @@ export default function BuildingSheetPage() {
                   />
                   <input
                     type="number"
-                    min="0"
+                    min={bCfg.hasCreativity ? '1.0' : '0'}
                     max={bCfg.showmanshipMax}
                     step="0.1"
                     value={showmanshipBuilding}
                     onChange={(e) => {
-                      const v = Math.min(bCfg.showmanshipMax, Math.max(0, parseFloat(e.target.value) || 0));
+                      const showMin = bCfg.hasCreativity ? 1.0 : 0;
+                      const v = Math.min(bCfg.showmanshipMax, Math.max(showMin, parseFloat(e.target.value) || showMin));
                       setShowmanshipBuilding(parseFloat(v.toFixed(2)));
                     }}
                     className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"

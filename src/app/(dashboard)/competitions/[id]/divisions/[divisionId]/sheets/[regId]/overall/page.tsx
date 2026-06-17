@@ -144,8 +144,8 @@ export default function OverallSheetPage() {
   const [formationsScore,    setFormationsScore]    = useState<number>(2.0);
   const [danceDifficulty,    setDanceDifficulty]    = useState<number>(0);   // 0 = not yet selected
   const [danceExecution,     setDanceExecution]     = useState<number>(0);
-  const [creativityOverall,  setCreativityOverall]  = useState<number>(0.0);
-  const [showmanshipOverall, setShowmanshipOverall] = useState<number>(0.0);
+  const [creativityOverall,  setCreativityOverall]  = useState<number>(1.0);
+  const [showmanshipOverall, setShowmanshipOverall] = useState<number>(1.0);
   const [formationsNotes,    setFormationsNotes]    = useState('');
   const [danceNotes,         setDanceNotes]         = useState('');
 
@@ -197,12 +197,13 @@ export default function OverallSheetPage() {
           setDanceExecution(allExecLevels.find((l) => l.value === v) ? v : 0);
         }
         if (sheet.creativity_overall) {
-          setCreativityOverall(Math.min(2.0, parseFloat(sheet.creativity_overall)));
+          setCreativityOverall(Math.min(2.0, Math.max(1.0, parseFloat(sheet.creativity_overall))));
         }
         if (sheet.showmanship_overall) {
           const sys = (div.scoring_system || div.suggested_scoring_system) as string;
           const sMax = sys === 'escolar_ab' ? 5.0 : 2.0;
-          setShowmanshipOverall(Math.min(sMax, parseFloat(sheet.showmanship_overall)));
+          const showMin = sys === 'escolar_ab' ? 0 : 1.0;
+          setShowmanshipOverall(Math.min(sMax, Math.max(showMin, parseFloat(sheet.showmanship_overall))));
         }
         if (sheet.notes) {
           try {
@@ -525,7 +526,7 @@ export default function OverallSheetPage() {
                   <div className="flex items-center gap-3">
                     <input
                       type="range"
-                      min="0"
+                      min="1.0"
                       max="2.0"
                       step="0.1"
                       value={creativityOverall}
@@ -534,12 +535,12 @@ export default function OverallSheetPage() {
                     />
                     <input
                       type="number"
-                      min="0"
+                      min="1.0"
                       max="2.0"
                       step="0.1"
                       value={creativityOverall}
                       onChange={(e) => {
-                        const v = Math.min(2.0, Math.max(0, parseFloat(e.target.value) || 0));
+                        const v = Math.min(2.0, Math.max(1.0, parseFloat(e.target.value) || 1.0));
                         setCreativityOverall(parseFloat(v.toFixed(2)));
                       }}
                       className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
@@ -562,7 +563,7 @@ export default function OverallSheetPage() {
                 <div className="flex items-center gap-3">
                   <input
                     type="range"
-                    min="0"
+                    min={isEscolarAB ? '0' : '1.0'}
                     max={showmanshipMax}
                     step="0.1"
                     value={showmanshipOverall}
@@ -571,12 +572,13 @@ export default function OverallSheetPage() {
                   />
                   <input
                     type="number"
-                    min="0"
+                    min={isEscolarAB ? '0' : '1.0'}
                     max={showmanshipMax}
                     step="0.1"
                     value={showmanshipOverall}
                     onChange={(e) => {
-                      const v = Math.min(showmanshipMax, Math.max(0, parseFloat(e.target.value) || 0));
+                      const showMin = isEscolarAB ? 0 : 1.0;
+                      const v = Math.min(showmanshipMax, Math.max(showMin, parseFloat(e.target.value) || showMin));
                       setShowmanshipOverall(parseFloat(v.toFixed(2)));
                     }}
                     className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
