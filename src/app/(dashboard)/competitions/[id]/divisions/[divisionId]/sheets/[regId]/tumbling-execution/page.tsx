@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -348,7 +348,7 @@ export default function TumblingExecutionPage() {
           </section>
         )}
 
-        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', marginTop: '2.5rem' }}>
+        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', marginTop: '2.5rem' }}>
           <p className="text-base uppercase tracking-wide font-bold">Total Planilla — Ejecución Gimnasia</p>
           <span className="text-4xl font-bold tabular-nums">{fmt(sheetTotal)}</span>
         </div>

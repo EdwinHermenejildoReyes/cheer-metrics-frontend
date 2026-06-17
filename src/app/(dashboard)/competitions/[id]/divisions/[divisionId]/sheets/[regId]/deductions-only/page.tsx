@@ -9,7 +9,6 @@ import { PageSpinner } from '@/components/ui/spinner';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
 import { useConfirm } from '@/hooks/useConfirm';
-import { useBranding } from '@/contexts/BrandingContext';
 import {
   DEDUCTION_CODES,
   DEDUCTION_TYPE_LABELS,
@@ -70,8 +69,6 @@ export default function DeductionsOnlyPage() {
   const confirm = useConfirm();
   const { isJudge, isCompetitionActive } = useJudge();
   const readOnly = !isJudge;
-  const { organization } = useBranding();
-  const primary = organization?.primary_color ?? 'var(--brand-primary)';
 
   useEffect(() => {
     if (isJudge && !isCompetitionActive(competitionId)) {
@@ -197,7 +194,7 @@ export default function DeductionsOnlyPage() {
         {sheet && (
           <>
             {armedType && !pending && (
-              <div className="flex items-center justify-between rounded-xl px-4 py-3 mb-4 shadow-sm" style={{ backgroundColor: primary, color: organization?.text_on_primary ?? '#fff' }}>
+              <div className="flex items-center justify-between rounded-xl px-4 py-3 mb-4 shadow-sm" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }}>
                 <div className="flex items-center gap-3">
                   <span className="text-lg font-black">{DEDUCTION_CODES[armedType]}</span>
                   <div>

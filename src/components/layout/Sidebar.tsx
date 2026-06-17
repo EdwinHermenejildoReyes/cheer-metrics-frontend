@@ -9,7 +9,6 @@ import { cn } from '@/utils/cn';
 import { clearAuth } from '@/store/auth/slices';
 import type { RootState } from '@/core/rootReducer';
 import authRepository from '@/repositories/authRepository';
-import { useBranding } from '@/contexts/BrandingContext';
 import { useJudge } from '@/hooks/useJudge';
 
 const ADMIN_NAV = [
@@ -48,7 +47,6 @@ export function Sidebar() {
   const router = useRouter();
   const dispatch = useDispatch();
   const user = useSelector((s: RootState) => s.auth.user);
-  const { organization } = useBranding();
   const { isJudge, isAdmin } = useJudge();
   const nav         = isJudge ? JUDGE_NAV : ADMIN_NAV;
   const settingsNav = isAdmin ? SETTINGS_NAV : [];
@@ -76,8 +74,8 @@ export function Sidebar() {
       : pathname === href || pathname.startsWith(href + '/');
     const activeStyle = active
       ? {
-          backgroundColor: organization?.primary_color ?? 'var(--brand-primary)',
-          color: organization?.text_on_primary ?? 'var(--brand-primary-text)',
+          backgroundColor: var(--plt-primary),
+          color: var(--plt-primary-fg),
         }
       : undefined;
     return (
@@ -112,7 +110,7 @@ export function Sidebar() {
                   const subHref = `/competitions/${activeCompetitionId}/${slug}`;
                   const active  = pathname === subHref || pathname.startsWith(subHref + '/');
                   const activeStyle = active
-                    ? { backgroundColor: organization?.primary_color ?? 'var(--brand-primary)', color: organization?.text_on_primary ?? 'var(--brand-primary-text)' }
+                    ? { backgroundColor: var(--plt-primary), color: var(--plt-primary-fg) }
                     : undefined;
                   return (
                     <Link

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -9,7 +9,6 @@ import { PageSpinner } from '@/components/ui/spinner';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
 import { useConfirm } from '@/hooks/useConfirm';
-import { useBranding } from '@/contexts/BrandingContext';
 import {
   DEDUCTION_CODES,
   DEDUCTION_TYPE_LABELS,
@@ -153,7 +152,6 @@ export default function SafetyRulesPage() {
   const confirm = useConfirm();
   const { isJudge, isCompetitionActive } = useJudge();
   const readOnly = !isJudge;
-  const { organization } = useBranding();
 
   useEffect(() => {
     if (isJudge && !isCompetitionActive(competitionId)) {

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -25,7 +25,7 @@ function SectionTotal({ label, breakdown, total }: {
   total: number;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
+    <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }}>
       <div className="flex items-center gap-4 text-sm">
         <span className="text-xs uppercase tracking-wide opacity-60">{label}</span>
         {breakdown.map(({ key, value }) => (
@@ -351,7 +351,7 @@ export default function BuildingDifficultyPage() {
                   {activeStuntsRango.map(({ value, label }) => (
                     <button key={value} type="button" onClick={() => setStuntsRango(value)}
                       className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${stuntsRango === value ? 'border-transparent' : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'}`}
-                      style={stuntsRango === value ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
+                      style={stuntsRango === value ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
                     >
                       <span className="flex-1">{label}</span>
                       <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${stuntsRango === value ? 'text-zinc-300' : 'text-zinc-400'}`}>{value.toFixed(1)}</span>
@@ -373,7 +373,7 @@ export default function BuildingDifficultyPage() {
                                 <button key={label} type="button" disabled={disabled}
                                   onClick={() => { const next = [...stuntsSkills]; next[i] = value; setStuntsSkills(next); }}
                                   className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors border ${disabled ? 'bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed opacity-50' : stuntsSkills[i] === value ? 'border-transparent' : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-600'}`}
-                                  style={!disabled && stuntsSkills[i] === value ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
+                                  style={!disabled && stuntsSkills[i] === value ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
                                 >
                                   {label}{value > 0 && <span className="ml-1 opacity-70">+{value.toFixed(2)}</span>}
                                 </button>
@@ -398,7 +398,7 @@ export default function BuildingDifficultyPage() {
                       {bCfg.stuntsPartMaxOpts.map(({ value, label }) => (
                         <button key={value} type="button" onClick={() => setStuntsPartMax(value)}
                           className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${stuntsPartMax === value ? 'border-transparent' : 'bg-white text-zinc-700 border-zinc-300 hover:border-violet-400 hover:text-violet-700'}`}
-                          style={stuntsPartMax === value ? { backgroundColor: 'var(--brand-accent)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-accent)' } : undefined}
+                          style={stuntsPartMax === value ? { backgroundColor: 'var(--plt-accent)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-accent)' } : undefined}
                         >
                           <span className="flex-1">{label}</span>
                           <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${stuntsPartMax === value ? 'text-white/80' : 'text-zinc-400'}`}>{value.toFixed(1)}</span>
@@ -441,7 +441,7 @@ export default function BuildingDifficultyPage() {
                   {bCfg.pyramidRango.map(({ low, high, label }, idx) => (
                     <button key={idx} type="button" onClick={() => { setPyramidsRangeIdx(idx); setPyramidsFine(0.0); }}
                       className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${pyramidsRangeIdx === idx ? 'border-transparent' : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'}`}
-                      style={pyramidsRangeIdx === idx ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
+                      style={pyramidsRangeIdx === idx ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
                     >
                       <span className="flex-1">{label}</span>
                       <span className={`text-sm font-bold tabular-nums ml-3 shrink-0 ${pyramidsRangeIdx === idx ? 'text-zinc-300' : 'text-zinc-400'}`}>{low.toFixed(1)}–{high.toFixed(1)}</span>
@@ -456,7 +456,7 @@ export default function BuildingDifficultyPage() {
                       {bCfg.pyramidFineSteps.map(step => (
                         <button key={step} type="button" onClick={() => setPyramidsFine(step)}
                           className={`rounded-lg py-2 text-xs font-semibold tabular-nums transition-colors border ${pyramidsFine === step ? 'border-transparent' : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-600'}`}
-                          style={pyramidsFine === step ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
+                          style={pyramidsFine === step ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
                         >+{step.toFixed(1)}</button>
                       ))}
                     </div>
@@ -471,7 +471,7 @@ export default function BuildingDifficultyPage() {
                       {bCfg.pyramidDriversOpts.map(({ value, label }) => (
                         <button key={value} type="button" onClick={() => setPyramidsDrivers(value)}
                           className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${pyramidsDrivers === value ? 'border-transparent' : 'bg-white text-zinc-700 border-zinc-300 hover:border-violet-400 hover:text-violet-700'}`}
-                          style={pyramidsDrivers === value ? { backgroundColor: 'var(--brand-accent)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-accent)' } : undefined}
+                          style={pyramidsDrivers === value ? { backgroundColor: 'var(--plt-accent)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-accent)' } : undefined}
                         >
                           <span className="flex-1">{label}</span>
                           <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${pyramidsDrivers === value ? 'text-white/80' : 'text-zinc-400'}`}>{value.toFixed(1)}</span>
@@ -514,7 +514,7 @@ export default function BuildingDifficultyPage() {
                 {bCfg.tossDiffOpts.map(({ value, label }) => (
                   <button key={value} type="button" onClick={() => setTossesDiff(value)}
                     className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${tossesDiff === value ? 'border-transparent' : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'}`}
-                    style={tossesDiff === value ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
+                    style={tossesDiff === value ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
                   >
                     <span className="flex-1">{label}</span>
                     <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${tossesDiff === value ? 'text-zinc-300' : 'text-zinc-400'}`}>{value.toFixed(1)}</span>
@@ -527,7 +527,7 @@ export default function BuildingDifficultyPage() {
         )}
 
         {/* ── TOTAL DIFICULTAD ─────────────────────────────────────────── */}
-        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', marginTop: '1rem' }}>
+        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', marginTop: '1rem' }}>
           <span className="text-sm font-semibold uppercase tracking-wide">Subtotal Dificultad</span>
           <span className="text-2xl font-bold tabular-nums">{fmt(diffTotal)}</span>
         </div>
@@ -614,7 +614,7 @@ export default function BuildingDifficultyPage() {
         </div>
 
         {/* ── GRAND TOTAL ───────────────────────────────────────────────── */}
-        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', marginTop: '1rem' }}>
+        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', marginTop: '1rem' }}>
           <div>
             <p className="text-base uppercase tracking-wide font-bold">Total Planilla — Dificultad</p>
             <p className="text-xs opacity-70 mt-0.5">Dif. + Creatividad ({fmt(creativityBuilding)}) + Showmanship ({fmt(showmanshipBuilding)})</p>

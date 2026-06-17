@@ -116,7 +116,6 @@ export default function DeduccionesSheetPage() {
   const { isJudge, isCompetitionActive } = useJudge();
   const readOnly = !isJudge;
   const { organization } = useBranding();
-  const primary = organization?.primary_color ?? 'var(--brand-primary)';
 
   useEffect(() => {
     if (isJudge && !isCompetitionActive(competitionId)) {
@@ -322,7 +321,7 @@ export default function DeduccionesSheetPage() {
             {armedType && !pending && (
               <div
                 className="flex items-center justify-between rounded-xl px-4 py-3 mb-4 shadow-sm"
-                style={{ backgroundColor: primary, color: organization?.text_on_primary ?? '#fff' }}
+                style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-lg font-black">{DEDUCTION_CODES[armedType]}</span>
@@ -800,7 +799,7 @@ export default function DeduccionesSheetPage() {
                   <span className="text-sm font-semibold uppercase tracking-wide">Total Descuentos</span>
                   <span className="text-2xl font-bold tabular-nums">−{fmt(totalDed)}</span>
                 </div>
-                <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ backgroundColor: primary, color: organization?.text_on_primary ?? '#fff' }}>
+                <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }}>
                   <div className="flex items-center gap-4 text-sm">
                     <span className="text-xs uppercase tracking-wide opacity-60">Score final</span>
                     <span>Escalado: <strong className="tabular-nums">{fmt(scaledScore)}</strong></span>

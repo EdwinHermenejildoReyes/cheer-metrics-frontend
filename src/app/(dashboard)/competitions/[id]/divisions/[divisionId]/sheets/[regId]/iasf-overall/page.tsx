@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -11,7 +11,6 @@ import { PrintButton } from '@/components/print/PrintButton';
 import { IasfSheetPrintView } from '@/components/print/IasfSheetPrintView';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
-import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
 import type { ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
@@ -199,7 +198,6 @@ export default function IasfOverallSheetPage() {
 
   const { isJudge, isCompetitionActive } = useJudge();
   const readOnly = !isJudge;
-  const { organization } = useBranding();
 
   useEffect(() => {
     if (isJudge && !isCompetitionActive(competitionId)) {

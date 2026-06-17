@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -66,7 +66,7 @@ function DanceLevelSelector({
 }) {
   return (
     <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-black/20" style={{ backgroundColor: 'var(--brand-secondary)' }}>
+      <div className="px-4 py-2.5 border-b border-black/20" style={{ backgroundColor: 'var(--plt-surface)' }}>
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-semibold uppercase tracking-wide text-white">{label}</span>
           {info && (
@@ -92,10 +92,10 @@ function DanceLevelSelector({
               className={`flex flex-col items-center gap-1 py-5 px-3 transition-colors ${
                 active ? '' : 'bg-white text-zinc-700 hover:bg-zinc-50'
               }`}
-              style={active ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' } : undefined}
+              style={active ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' } : undefined}
             >
               <span className={`text-2xl font-bold tabular-nums ${active ? '' : 'text-zinc-900'}`}
-                style={active ? { color: 'var(--brand-primary-text)' } : undefined}>
+                style={active ? { color: 'var(--plt-primary-fg)' } : undefined}>
                 {v.toFixed(1)}
               </span>
               <span className={`text-xs font-semibold ${active ? 'opacity-90' : 'text-zinc-700'}`}>
@@ -409,7 +409,7 @@ export default function OverallSheetPage() {
                             : v < 1.8 ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
                             : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                         }`}
-                        style={active ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
+                        style={active ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
                       >
                         <span className="tabular-nums">{v.toFixed(1)}</span>
                       </button>
@@ -483,7 +483,7 @@ export default function OverallSheetPage() {
         </div>
 
         {/* ── OVERALL SUBTOTAL ──────────────────────────────────────────── */}
-        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm mb-6" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
+        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm mb-6" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }}>
           <div className="flex gap-6 text-sm items-center">
             <span className="text-xs uppercase tracking-wide opacity-70">Subtotal General</span>
             <span>Form: <strong>{fmt(formationsScore)}</strong></span>
@@ -615,7 +615,7 @@ export default function OverallSheetPage() {
         </div>
 
         {/* ── GRAND TOTAL ───────────────────────────────────────────────── */}
-        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
+        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }}>
           <div>
             <p className="text-base uppercase tracking-wide font-bold">Total Planilla Overall</p>
             <p className="text-xs opacity-70 mt-0.5">
@@ -657,7 +657,7 @@ export default function OverallSheetPage() {
                 </p>
               </div>
             </div>
-            <div className="border-t border-zinc-100 flex items-center justify-between px-6 py-4 rounded-b-xl" style={{ backgroundColor: 'var(--brand-primary)' }}>
+            <div className="border-t border-zinc-100 flex items-center justify-between px-6 py-4 rounded-b-xl" style={{ backgroundColor: 'var(--plt-primary)' }}>
               <div>
                 <p className="text-xs text-zinc-400 uppercase tracking-wide">Puntaje Final</p>
                 <div className="flex items-center gap-2 mt-0.5">
@@ -699,8 +699,8 @@ export default function OverallSheetPage() {
                 </tr>
               ))}
               <tr className="bg-zinc-50">
-                <td className="px-4 py-2.5 font-semibold" style={{ color: 'var(--brand-primary)' }}>Subtotal General</td>
-                <td className="px-4 py-2.5 text-right font-bold tabular-nums" style={{ color: 'var(--brand-primary)' }}>{fmt(overallSubtotal)}</td>
+                <td className="px-4 py-2.5 font-semibold" style={{ color: 'var(--plt-primary)' }}>Subtotal General</td>
+                <td className="px-4 py-2.5 text-right font-bold tabular-nums" style={{ color: 'var(--plt-primary)' }}>{fmt(overallSubtotal)}</td>
               </tr>
               {!isEscolarAB && (
                 <tr>
@@ -720,9 +720,9 @@ export default function OverallSheetPage() {
                   <span className="text-zinc-400 font-normal"> / {fmt(showmanshipMax)}</span>
                 </td>
               </tr>
-              <tr style={{ backgroundColor: 'var(--brand-primary)' }}>
-                <td className="px-4 py-2.5 font-bold" style={{ color: 'var(--brand-primary-text)' }}>TOTAL</td>
-                <td className="px-4 py-2.5 text-right font-bold tabular-nums text-lg" style={{ color: 'var(--brand-primary-text)' }}>{fmt(sheetTotal)}</td>
+              <tr style={{ backgroundColor: 'var(--plt-primary)' }}>
+                <td className="px-4 py-2.5 font-bold" style={{ color: 'var(--plt-primary-fg)' }}>TOTAL</td>
+                <td className="px-4 py-2.5 text-right font-bold tabular-nums text-lg" style={{ color: 'var(--plt-primary-fg)' }}>{fmt(sheetTotal)}</td>
               </tr>
             </tbody>
           </table>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -185,7 +185,7 @@ function SectionTotal({ label, breakdown, total }: {
   total: number;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
+    <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }}>
       <div className="flex items-center gap-4 text-sm">
         <span className="text-xs uppercase tracking-wide opacity-60">{label}</span>
         {breakdown.map(({ key, value }) => (
@@ -711,7 +711,7 @@ export default function BuildingSheetPage() {
                                 ? 'border-transparent'
                                 : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                             }`}
-                            style={stuntsRango === value ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
+                            style={stuntsRango === value ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
                           >
                             <span className="flex-1">{label}</span>
                             <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${stuntsRango === value ? 'text-zinc-300' : 'text-zinc-400'}`}>
@@ -750,7 +750,7 @@ export default function BuildingSheetPage() {
                                             ? 'border-transparent'
                                             : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-600'
                                       }`}
-                                      style={!skillDisabled && stuntsSkills[i] !== null && stuntsSkills[i] === value ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
+                                      style={!skillDisabled && stuntsSkills[i] !== null && stuntsSkills[i] === value ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
                                     >
                                       {label}
                                       {value > 0 && (
@@ -788,7 +788,7 @@ export default function BuildingSheetPage() {
                                   ? 'border-transparent'
                                   : 'bg-white text-zinc-700 border-zinc-300 hover:border-violet-400 hover:text-violet-700'
                               }`}
-                              style={stuntsPartMax !== null && stuntsPartMax === value ? { backgroundColor: 'var(--brand-accent)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-accent)' } : undefined}
+                              style={stuntsPartMax !== null && stuntsPartMax === value ? { backgroundColor: 'var(--plt-accent)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-accent)' } : undefined}
                             >
                               <span className="flex-1">{label}</span>
                               <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${stuntsPartMax !== null && stuntsPartMax === value ? 'text-white/80' : 'text-zinc-400'}`}>
@@ -883,7 +883,7 @@ export default function BuildingSheetPage() {
                                 ? 'border-transparent'
                                 : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                             }`}
-                            style={pyramidsRangeIdx === idx ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
+                            style={pyramidsRangeIdx === idx ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
                           >
                             <span className="flex-1">{label}</span>
                             <span className={`text-sm font-bold tabular-nums ml-3 shrink-0 ${pyramidsRangeIdx === idx ? 'text-zinc-300' : 'text-zinc-400'}`}>
@@ -908,7 +908,7 @@ export default function BuildingSheetPage() {
                                   ? 'border-transparent'
                                   : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-600'
                               }`}
-                              style={pyramidsFine === step ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
+                              style={pyramidsFine === step ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
                             >
                               +{step.toFixed(1)}
                             </button>
@@ -946,7 +946,7 @@ export default function BuildingSheetPage() {
                               ? 'border-transparent'
                               : 'bg-white text-zinc-700 border-zinc-300 hover:border-violet-400 hover:text-violet-700'
                           }`}
-                          style={pyramidsDrivers === value ? { backgroundColor: 'var(--brand-accent)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-accent)' } : undefined}
+                          style={pyramidsDrivers === value ? { backgroundColor: 'var(--plt-accent)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-accent)' } : undefined}
                         >
                           <span className="flex-1">{label}</span>
                           <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${pyramidsDrivers === value ? 'text-white/80' : 'text-zinc-400'}`}>
@@ -1017,7 +1017,7 @@ export default function BuildingSheetPage() {
                             ? 'border-transparent'
                             : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                         }`}
-                        style={tossesDiff === value ? { backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)', borderColor: 'var(--brand-primary)' } : undefined}
+                        style={tossesDiff === value ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
                       >
                         <span className="flex-1">{label}</span>
                         <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${tossesDiff === value ? 'text-zinc-300' : 'text-zinc-400'}`}>
@@ -1048,7 +1048,7 @@ export default function BuildingSheetPage() {
         )}
 
         {/* ── BUILDING SUBTOTAL ────────────────────────────────────────── */}
-        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm mb-6" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
+        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm mb-6" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }}>
           <span className="text-sm font-semibold uppercase tracking-wide">Subtotal Elevaciones</span>
           <span className="text-2xl font-bold tabular-nums">{fmt(buildingTotal)}</span>
         </div>
@@ -1215,7 +1215,7 @@ export default function BuildingSheetPage() {
         </div>
 
         {/* ── GRAND TOTAL ───────────────────────────────────────────────── */}
-        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
+        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }}>
           <div>
             <p className="text-base uppercase tracking-wide font-bold">Total Planilla Building</p>
             <p className="text-xs opacity-70 mt-0.5">
@@ -1307,8 +1307,8 @@ export default function BuildingSheetPage() {
                 </>
               )}
               <tr className="bg-zinc-50">
-                <td className="px-4 py-2.5 font-semibold" style={{ color: 'var(--brand-primary)' }}>Subtotal Elevaciones</td>
-                <td className="px-4 py-2.5 text-right font-bold tabular-nums" style={{ color: 'var(--brand-primary)' }}>{fmt(buildingTotal)}</td>
+                <td className="px-4 py-2.5 font-semibold" style={{ color: 'var(--plt-primary)' }}>Subtotal Elevaciones</td>
+                <td className="px-4 py-2.5 text-right font-bold tabular-nums" style={{ color: 'var(--plt-primary)' }}>{fmt(buildingTotal)}</td>
               </tr>
               {bCfg.hasCreativity && (
                 <tr>
@@ -1328,9 +1328,9 @@ export default function BuildingSheetPage() {
                   <span className="text-zinc-400 font-normal"> / {fmt(bCfg.showmanshipMax)}</span>
                 </td>
               </tr>
-              <tr style={{ backgroundColor: 'var(--brand-primary)' }}>
-                <td className="px-4 py-2.5 font-bold" style={{ color: 'var(--brand-primary-text)' }}>TOTAL</td>
-                <td className="px-4 py-2.5 text-right font-bold tabular-nums text-lg" style={{ color: 'var(--brand-primary-text)' }}>{fmt(sheetTotal)}</td>
+              <tr style={{ backgroundColor: 'var(--plt-primary)' }}>
+                <td className="px-4 py-2.5 font-bold" style={{ color: 'var(--plt-primary-fg)' }}>TOTAL</td>
+                <td className="px-4 py-2.5 text-right font-bold tabular-nums text-lg" style={{ color: 'var(--plt-primary-fg)' }}>{fmt(sheetTotal)}</td>
               </tr>
             </tbody>
           </table>

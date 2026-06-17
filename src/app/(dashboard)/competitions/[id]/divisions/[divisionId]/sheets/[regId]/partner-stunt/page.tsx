@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -475,7 +475,7 @@ export default function PartnerStuntSheetPage() {
               })}
             </tbody>
           </table>
-          <div className="flex items-center justify-between px-4 py-4 rounded-b-xl" style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-primary-text)' }}>
+          <div className="flex items-center justify-between px-4 py-4 rounded-b-xl" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }}>
             <div>
               <p className="text-base uppercase tracking-wide font-bold">TOTAL Partner Stunt</p>
               <p className="text-xs opacity-70 mt-0.5">{pct.toFixed(1)}% de {MAX_TOTAL} puntos</p>
@@ -508,9 +508,9 @@ export default function PartnerStuntSheetPage() {
                 <p className="text-2xl font-bold tabular-nums text-zinc-900">{existingSheet.percentage}%</p>
               </div>
             </div>
-            <div className="border-t border-zinc-100 flex items-center justify-between px-6 py-4 rounded-b-xl" style={{ backgroundColor: 'var(--brand-primary)' }}>
+            <div className="border-t border-zinc-100 flex items-center justify-between px-6 py-4 rounded-b-xl" style={{ backgroundColor: 'var(--plt-primary)' }}>
               <p className="text-base font-bold">Puntaje Final</p>
-              <span className="text-3xl font-bold tabular-nums" style={{ color: 'var(--brand-primary-text)' }}>
+              <span className="text-3xl font-bold tabular-nums" style={{ color: 'var(--plt-primary-fg)' }}>
                 {parseFloat(existingSheet.final_score).toFixed(0)}
               </span>
             </div>
