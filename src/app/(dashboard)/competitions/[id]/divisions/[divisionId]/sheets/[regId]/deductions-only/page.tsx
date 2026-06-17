@@ -28,11 +28,16 @@ const ZONE_ROWS = [{ key: 'F', label: 'FRENTE' }, { key: 'C', label: 'CENTRO' },
 const ZONE_COLS = [{ key: 'IZQ', label: 'IZQ' }, { key: 'CTR', label: 'CTR' }, { key: 'DER', label: 'DER' }] as const;
 const TRACK_ZONES = ZONE_ROWS.flatMap(r => ZONE_COLS.map(c => ({ key: `${r.key}·${c.key}` as string, rowKey: r.key, colKey: c.key })));
 const TRACK_INTERVALS = [
-  { key: '0 a 15', label: '0 a 15' }, { key: '15 a 30', label: '15 a 30' },
-  { key: '30 a 45', label: '30 a 45' }, { key: '45 a 1', label: '45 a 1' },
-  { key: '1 a 1:15', label: '1 a 1:15' }, { key: '1:15 a 1:30', label: '1:15 a 1:30' },
-  { key: '1:30 a 1:45', label: '1:30 a 1:45' }, { key: '1:45 a 2:00', label: '1:45 a 2:00' },
-  { key: '2:00 a 2:15', label: '2:00 a 2:15' }, { key: '2:15 a 2:30', label: '2:15 a 2:30' },
+  { key: '0 a 15',       label: '0 a 15',       start: '00:00', end: '00:15' },
+  { key: '15 a 30',      label: '15 a 30',      start: '00:15', end: '00:30' },
+  { key: '30 a 45',      label: '30 a 45',      start: '00:30', end: '00:45' },
+  { key: '45 a 1',       label: '45 a 1',       start: '00:45', end: '01:00' },
+  { key: '1 a 1:15',     label: '1 a 1:15',     start: '01:00', end: '01:15' },
+  { key: '1:15 a 1:30',  label: '1:15 a 1:30',  start: '01:15', end: '01:30' },
+  { key: '1:30 a 1:45',  label: '1:30 a 1:45',  start: '01:30', end: '01:45' },
+  { key: '1:45 a 2:00',  label: '1:45 a 2:00',  start: '01:45', end: '02:00' },
+  { key: '2:00 a 2:15',  label: '2:00 a 2:15',  start: '02:00', end: '02:15' },
+  { key: '2:15 a 2:30',  label: '2:15 a 2:30',  start: '02:15', end: '02:30' },
 ];
 
 type ColorKey = 'red' | 'orange';
@@ -266,7 +271,7 @@ export default function DeductionsOnlyPage() {
                 </div>
 
                 <div className="divide-y divide-zinc-200">
-                  {TRACK_INTERVALS.map(({ key, label }) => {
+                  {TRACK_INTERVALS.map(({ key, label, start, end }) => {
                     const hasPending = rowHasPending(key);
                     const isArmedRow = !!armedType && !pending;
                     const isMidpoint = key === '1 a 1:15' || key === '2:00 a 2:15';
@@ -274,9 +279,9 @@ export default function DeductionsOnlyPage() {
                       <div key={key} className={isMidpoint ? 'bg-zinc-50/60' : ''}>
                         <div className={`flex items-stretch min-h-[90px] ${hasPending ? 'bg-blue-50/40' : ''}`}>
                           <div className={`flex flex-col items-end justify-center shrink-0 w-20 px-2.5 py-2 self-stretch border-r ${isMidpoint ? 'border-zinc-400 bg-zinc-100' : 'border-zinc-200'}`}>
-                            <span className={`text-[12px] font-mono font-bold tabular-nums leading-snug text-right ${isMidpoint ? 'text-zinc-700' : 'text-zinc-500'}`}>{label.split(' a ')[0]}</span>
+                            <span className={`text-[12px] font-mono font-bold tabular-nums leading-snug text-right ${isMidpoint ? 'text-zinc-700' : 'text-zinc-500'}`}>{start}</span>
                             <span className="text-[9px] font-mono text-zinc-300 leading-none">a</span>
-                            <span className={`text-[12px] font-mono font-bold tabular-nums leading-snug text-right ${isMidpoint ? 'text-zinc-700' : 'text-zinc-500'}`}>{label.split(' a ')[1]}</span>
+                            <span className={`text-[12px] font-mono font-bold tabular-nums leading-snug text-right ${isMidpoint ? 'text-zinc-700' : 'text-zinc-500'}`}>{end}</span>
                           </div>
                           <div className="flex-1 grid grid-cols-3 grid-rows-3 divide-x divide-y divide-zinc-100">
                             {TRACK_ZONES.map((zone, zi) => {
@@ -323,9 +328,9 @@ export default function DeductionsOnlyPage() {
                             })}
                           </div>
                           <div className={`flex flex-col items-start justify-center shrink-0 w-20 px-2.5 py-2 self-stretch border-l ${isMidpoint ? 'border-zinc-400 bg-zinc-100' : 'border-zinc-200'}`}>
-                            <span className={`text-[12px] font-mono font-bold tabular-nums leading-snug ${isMidpoint ? 'text-zinc-700' : 'text-zinc-500'}`}>{label.split(' a ')[0]}</span>
+                            <span className={`text-[12px] font-mono font-bold tabular-nums leading-snug ${isMidpoint ? 'text-zinc-700' : 'text-zinc-500'}`}>{start}</span>
                             <span className="text-[9px] font-mono text-zinc-300 leading-none">a</span>
-                            <span className={`text-[12px] font-mono font-bold tabular-nums leading-snug ${isMidpoint ? 'text-zinc-700' : 'text-zinc-500'}`}>{label.split(' a ')[1]}</span>
+                            <span className={`text-[12px] font-mono font-bold tabular-nums leading-snug ${isMidpoint ? 'text-zinc-700' : 'text-zinc-500'}`}>{end}</span>
                           </div>
                         </div>
 
