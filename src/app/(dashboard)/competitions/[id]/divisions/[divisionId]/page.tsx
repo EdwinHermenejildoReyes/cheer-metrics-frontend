@@ -141,6 +141,7 @@ export default function DivisionDetailPage() {
 
   const activeScoringSystem = (division.scoring_system || division.suggested_scoring_system) as ScoringSystem;
   const isIasfWorld = activeScoringSystem === 'iasf_world_l6_7';
+  const isGrupalMode = (division.competition_sheet_mode ?? 'grupal') !== 'individual';
 
   return (
     <div className="flex flex-col gap-6 p-8">
@@ -246,7 +247,7 @@ export default function DivisionDetailPage() {
                           {sheet ? 'Editar' : 'Calificar'}
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'building') && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                      {canViewSheet(competitionId, 'building') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -256,7 +257,7 @@ export default function DivisionDetailPage() {
                           <ClipboardList className="h-3.5 w-3.5 text-blue-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'building') && isIasfWorld && (
+                      {canViewSheet(competitionId, 'building') && isGrupalMode && isIasfWorld && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -266,7 +267,7 @@ export default function DivisionDetailPage() {
                           <ClipboardList className="h-3.5 w-3.5 text-blue-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'tumbling') && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                      {canViewSheet(competitionId, 'tumbling') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -276,7 +277,7 @@ export default function DivisionDetailPage() {
                           <Activity className="h-3.5 w-3.5 text-green-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'tumbling') && isIasfWorld && (
+                      {canViewSheet(competitionId, 'tumbling') && isGrupalMode && isIasfWorld && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -286,7 +287,7 @@ export default function DivisionDetailPage() {
                           <Activity className="h-3.5 w-3.5 text-green-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'overall') && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                      {canViewSheet(competitionId, 'overall') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -296,7 +297,7 @@ export default function DivisionDetailPage() {
                           <Layers className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'overall') && isIasfWorld && (
+                      {canViewSheet(competitionId, 'overall') && isGrupalMode && isIasfWorld && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -306,7 +307,7 @@ export default function DivisionDetailPage() {
                           <Layers className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'partner_stunt') && activeScoringSystem === 'partner_stunt' && (
+                      {canViewSheet(competitionId, 'partner_stunt') && isGrupalMode && activeScoringSystem === 'partner_stunt' && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -316,7 +317,7 @@ export default function DivisionDetailPage() {
                           <Users className="h-3.5 w-3.5 text-orange-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'deducciones') && (
+                      {canViewSheet(competitionId, 'deducciones') && isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -326,7 +327,7 @@ export default function DivisionDetailPage() {
                           <Flag className="h-3.5 w-3.5 text-red-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'rangos') && (
+                      {canViewSheet(competitionId, 'rangos') && isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -336,7 +337,7 @@ export default function DivisionDetailPage() {
                           <Target className="h-3.5 w-3.5 text-amber-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'building_difficulty') && (
+                      {canViewSheet(competitionId, 'building_difficulty') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -346,7 +347,7 @@ export default function DivisionDetailPage() {
                           <BarChart3 className="h-3.5 w-3.5 text-blue-700" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'building_execution') && (
+                      {canViewSheet(competitionId, 'building_execution') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -356,7 +357,7 @@ export default function DivisionDetailPage() {
                           <Zap className="h-3.5 w-3.5 text-blue-400" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'tumbling_difficulty') && (
+                      {canViewSheet(competitionId, 'tumbling_difficulty') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -366,7 +367,7 @@ export default function DivisionDetailPage() {
                           <BarChart3 className="h-3.5 w-3.5 text-green-700" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'tumbling_execution') && (
+                      {canViewSheet(competitionId, 'tumbling_execution') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -376,7 +377,7 @@ export default function DivisionDetailPage() {
                           <Zap className="h-3.5 w-3.5 text-green-400" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'deductions_only') && (
+                      {canViewSheet(competitionId, 'deductions_only') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -386,7 +387,7 @@ export default function DivisionDetailPage() {
                           <AlertTriangle className="h-3.5 w-3.5 text-orange-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'safety_rules') && (
+                      {canViewSheet(competitionId, 'safety_rules') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"

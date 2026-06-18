@@ -324,19 +324,51 @@ export default function BuildingDifficultyPage() {
           <section className="flex flex-col gap-4">
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Elevaciones — Dificultad</h2>
-              <InfoButton title="Elevaciones — Dificultad" size="lg">
-                <div className="flex flex-col gap-3 text-xs text-zinc-600">
+              <InfoButton title="Elevaciones — Dificultad" size="xl">
+                <div className="space-y-5 text-sm text-zinc-700">
+                  <p className="text-zinc-500 text-xs leading-relaxed">
+                    Evalúa las habilidades de elevación (stunts) ejecutadas por el equipo, considerando dificultad y habilidades de los drivers (spotter/base).
+                  </p>
                   <div>
-                    <p className="font-bold text-zinc-800 mb-1">Rango Base de Complejidad</p>
-                    <p>Selecciona el nivel general que describe la mayoría de las elevaciones ejecutadas por el equipo.</p>
+                    <h3 className="font-semibold text-zinc-900 mb-2">Rango Base de Complejidad</h3>
+                    <table className="w-full text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-zinc-50">
+                          <th className="text-left px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600">Criterio</th>
+                          <th className="text-center px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600 w-16">Puntaje</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {activeStuntsRango.map(({ value, label }) => (
+                          <tr key={value} className="even:bg-zinc-50">
+                            <td className="px-3 py-1.5 border border-zinc-200">{label}</td>
+                            <td className="px-3 py-1.5 border border-zinc-200 text-center font-semibold tabular-nums">{value.toFixed(1)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                   <div>
-                    <p className="font-bold text-zinc-800 mb-1">Grado de Dificultad — Habilidades</p>
-                    <p>Por cada habilidad individual: <strong>+0.10</strong> si es avanzada dentro del nivel, <strong>+0.20</strong> si supera el nivel (Elite). Solo cuenta el rango activo.</p>
+                    <h3 className="font-semibold text-zinc-900 mb-1">Grado de Dificultad por Habilidad</h3>
+                    <p className="text-xs text-zinc-500 mb-2">Se aplica a cada habilidad individual ejecutada dentro del rango seleccionado.</p>
+                    <div className="flex flex-col gap-1.5">
+                      {[
+                        { label: 'No Cumple',     desc: 'Habilidad básica o no ejecutada al nivel requerido',                          color: 'bg-zinc-100 text-zinc-600' },
+                        { label: 'Avanzado +0.10', desc: 'Habilidad claramente de dificultad avanzada dentro del nivel',               color: 'bg-blue-50 text-blue-700' },
+                        { label: 'Elite  +0.20',  desc: 'Habilidad de máxima dificultad o complejidad Elite dentro del nivel',         color: 'bg-violet-50 text-violet-700' },
+                      ].map(({ label, desc, color }) => (
+                        <div key={label} className={`rounded-lg px-3 py-2 ${color}`}>
+                          <p className="font-semibold text-xs">{label}</p>
+                          <p className="text-xs opacity-80 mt-0.5">{desc}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                   <div>
-                    <p className="font-bold text-zinc-800 mb-1">Part Max — Spotter / Base</p>
-                    <p>Habilidad ejecutada en Canon o Sincronizado sin repetir atletas en la misma posición.</p>
+                    <h3 className="font-semibold text-zinc-900 mb-1">Part Max — Spotter / Base</h3>
+                    <p className="text-xs text-zinc-500 leading-relaxed">
+                      Bonificación por la participación máxima de Spotter/Base en una habilidad en Canon o Sincronizado. No se pueden repetir atletas entre grupos contados.
+                    </p>
                   </div>
                 </div>
               </InfoButton>
@@ -418,15 +450,22 @@ export default function BuildingDifficultyPage() {
           <section className="flex flex-col gap-4" style={{ paddingTop: '1rem' }}>
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Pirámides — Dificultad</h2>
-              <InfoButton title="Pirámides — Dificultad" size="lg">
-                <div className="flex flex-col gap-3 text-xs text-zinc-600">
+              <InfoButton title="Pirámides — Dificultad" size="xl">
+                <div className="space-y-4 text-sm text-zinc-700">
+                  <p className="text-zinc-500 text-xs leading-relaxed">
+                    Evalúa las estructuras de pirámide ejecutadas por el equipo. Se considera la variedad y dificultad de las estructuras diferentes del nivel, junto con la calidad de ejecución.
+                  </p>
                   <div>
-                    <p className="font-bold text-zinc-800 mb-1">Rango de Pirámides</p>
-                    <p>Se determina por el número de <strong>Habilidades Diferentes del Nivel</strong> y el número de <strong>Estructuras ejecutadas en Gran Parte</strong> por el equipo.</p>
+                    <h3 className="font-semibold text-zinc-900 mb-2">Rango de Dificultad</h3>
+                    <p className="text-xs text-zinc-500 leading-relaxed">
+                      Basado en el número de <strong>Habilidades Diferentes del Nivel</strong> y el número de <strong>Estructuras por Gran Parte</strong> del equipo. Cada rango tiene un puntaje mínimo y máximo; el <strong>Ajuste Fino</strong> permite ubicar el desempeño dentro de ese rango.
+                    </p>
                   </div>
                   <div>
-                    <p className="font-bold text-zinc-800 mb-1">Ajuste dentro del rango</p>
-                    <p>Una vez seleccionado el rango, ajusta con incrementos de +0.1 según la precisión y calidad de las pirámides.</p>
+                    <h3 className="font-semibold text-zinc-900 mb-2">Ejecución — Pirámides</h3>
+                    <p className="text-xs text-zinc-500 leading-relaxed">
+                      Se evalúan las mismas categorías que en Stunts (Flyer, Base/Spotter, Transición, Sincronización). La <strong>Sincronización</strong> en pirámides considera la coordinación entre todos los stunts que conforman la estructura simultáneamente.
+                    </p>
                   </div>
                 </div>
               </InfoButton>
@@ -499,9 +538,18 @@ export default function BuildingDifficultyPage() {
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Lanzamientos — Dificultad</h2>
               <InfoButton title="Lanzamientos — Dificultad" size="lg">
-                <div className="flex flex-col gap-2 text-xs text-zinc-600">
-                  <p className="font-bold text-zinc-800">Lanzamiento Apropiado del Nivel</p>
-                  <p>Evalúa si el equipo ejecuta el lanzamiento correspondiente al nivel de la división, considerando la mayoría de los atletas y la sincronización del grupo.</p>
+                <div className="space-y-4 text-sm text-zinc-700">
+                  <p className="text-zinc-500 text-xs leading-relaxed">
+                    Evalúa los lanzamientos (basket tosses y similares) ejecutados por el equipo. Se considera la dificultad de la habilidad lanzada y la calidad de ejecución técnica.
+                  </p>
+                  <div>
+                    <h3 className="font-semibold text-zinc-900 mb-2">Dificultad</h3>
+                    <p className="text-xs text-zinc-500 leading-relaxed">Basada en el lanzamiento apropiado al nivel de la categoría. El puntaje refleja si la habilidad ejecutada corresponde al nivel mínimo requerido o lo supera.</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-zinc-900 mb-2">Ejecución</h3>
+                    <p className="text-xs text-zinc-500 leading-relaxed">Se evalúan <strong>Flyer</strong> (posición corporal y control en el aire), <strong>Base/Spotter</strong> (técnica del lanzamiento y recepción) y <strong>Altura</strong> (alcance del pico máximo y limpieza de trayectoria).</p>
+                  </div>
                 </div>
               </InfoButton>
             </div>

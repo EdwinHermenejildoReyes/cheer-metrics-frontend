@@ -205,7 +205,7 @@ export default function CompetitionDetailPage() {
       await competitionsRepository.createJudgeAssignment({
         user: Number(newJudgeUserId),
         competition: competitionId,
-        sheet_type: newJudgeSheet as SheetType,
+        sheet_type: effectiveJudgeSheet,
         access_from: new Date(newJudgeFrom).toISOString(),
         access_until: new Date(newJudgeUntil).toISOString(),
       });
@@ -554,7 +554,7 @@ export default function CompetitionDetailPage() {
                   />
                 </div>
                 <div className="col-span-2 flex justify-end lg:col-span-1">
-                  <Button size="sm" onClick={handleAddJudge} disabled={!newJudgeUserId || !newJudgeSheet || !newJudgeFrom || !newJudgeUntil || addingJudge}>
+                  <Button size="sm" onClick={handleAddJudge} disabled={!newJudgeUserId || !effectiveJudgeSheet || !newJudgeFrom || !newJudgeUntil || addingJudge}>
                     <Plus className="h-4 w-4" />
                     Asignar
                   </Button>

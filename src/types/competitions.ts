@@ -114,6 +114,7 @@ export interface Division {
   id: number;
   competition: number;
   competition_name: string;
+  competition_sheet_mode: 'grupal' | 'individual';
   name: string;
   age_group: AgeGroup;
   skill_level: SkillLevel;

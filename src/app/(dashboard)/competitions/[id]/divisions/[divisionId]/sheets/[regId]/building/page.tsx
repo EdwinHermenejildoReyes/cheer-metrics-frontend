@@ -630,17 +630,10 @@ export default function BuildingSheetPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {[
-                        ['No cumple con 4.0 (habilidades básicas)', '3.5'],
-                        ['4 Habilidades Acumulativas del nivel', '4.0'],
-                        ['2 Habilidades Diferentes del nivel', '4.5'],
-                        ['3 Habilidades Diferentes del nivel', '5.0'],
-                        ['4 Habilidades Diferentes del nivel', '5.5'],
-                        ['5 Hab Diferentes / 1 Habilidad Coed', '6.0'],
-                      ].map(([label, score]) => (
-                        <tr key={label} className="even:bg-zinc-50">
+                      {activeStuntsRango.map(({ value, label }) => (
+                        <tr key={value} className="even:bg-zinc-50">
                           <td className="px-3 py-1.5 border border-zinc-200">{label}</td>
-                          <td className="px-3 py-1.5 border border-zinc-200 text-center font-semibold tabular-nums">{score}</td>
+                          <td className="px-3 py-1.5 border border-zinc-200 text-center font-semibold tabular-nums">{value.toFixed(1)}</td>
                         </tr>
                       ))}
                     </tbody>

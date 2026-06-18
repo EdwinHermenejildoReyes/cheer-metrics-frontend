@@ -335,7 +335,6 @@ export default function IasfTumblingSheetPage() {
         data={{
           sheetTypeLabel:   'Gimnasia',
           teamName:         teamName || `Inscripción #${registrationId}`,
-          organization:     organization ?? undefined,
           categories:       CATEGORIES,
           maxTotal:         MAX_TOTAL,
           scores,

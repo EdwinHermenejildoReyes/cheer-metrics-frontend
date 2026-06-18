@@ -358,7 +358,6 @@ export default function IasfBuildingSheetPage() {
         data={{
           sheetTypeLabel:   'Elevaciones',
           teamName:         teamName || `Inscripción #${registrationId}`,
-          organization:     organization ?? undefined,
           categories:       CATEGORIES,
           maxTotal:         MAX_TOTAL,
           scores,

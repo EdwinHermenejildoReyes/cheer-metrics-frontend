@@ -338,7 +338,6 @@ export default function IasfOverallSheetPage() {
         data={{
           sheetTypeLabel:   'General',
           teamName:         teamName || `Inscripción #${registrationId}`,
-          organization:     organization ?? undefined,
           categories:       CATEGORIES,
           maxTotal:         MAX_TOTAL,
           scores,

@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '@/core/rootReducer';
-import { setUser } from '@/store/auth/slices';
+import { setUser, clearAuth } from '@/store/auth/slices';
 import { persistor } from '@/core/store';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -23,14 +23,21 @@ type FormValues = z.infer<typeof schema>;
 
 export default function LoginPage() {
   const dispatch = useDispatch();
-  const user = useSelector((s: RootState) => s.auth.user);
   const isAuthenticated = useSelector((s: RootState) => s.auth.isAuthenticated);
 
-  // If already authenticated (persisted session), redirect immediately on mount
+  // If redux shows authenticated (persisted), verify the cookie is still valid
+  // before redirecting. If the cookie is gone, clear stale state and stay.
   useEffect(() => {
     if (!isAuthenticated) return;
-    const target = (!user?.is_staff && !user?.is_approved) ? '/pending' : '/home';
-    window.location.replace(target);
+    authRepository.me()
+      .then(res => {
+        dispatch(setUser(res.data));
+        const target = (!res.data.is_staff && !res.data.is_approved) ? '/pending' : '/home';
+        window.location.replace(target);
+      })
+      .catch(() => {
+        dispatch(clearAuth());
+      });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
