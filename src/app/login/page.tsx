@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,6 +9,7 @@ import { toast } from 'sonner';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '@/core/rootReducer';
 import { setUser } from '@/store/auth/slices';
+import { persistor } from '@/core/store';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import authRepository from '@/repositories/authRepository';
@@ -22,19 +22,17 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function LoginPage() {
-  const router = useRouter();
   const dispatch = useDispatch();
   const user = useSelector((s: RootState) => s.auth.user);
   const isAuthenticated = useSelector((s: RootState) => s.auth.isAuthenticated);
 
+  // If already authenticated (persisted session), redirect immediately on mount
   useEffect(() => {
     if (!isAuthenticated) return;
-    if (!user?.is_staff && !user?.is_approved) {
-      router.replace('/pending');
-    } else {
-      router.replace('/home');
-    }
-  }, [isAuthenticated, user, router]);
+    const target = (!user?.is_staff && !user?.is_approved) ? '/pending' : '/home';
+    window.location.replace(target);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const {
     register,
@@ -47,11 +45,11 @@ export default function LoginPage() {
       await authRepository.login(values);
       const meRes = await authRepository.me();
       dispatch(setUser(meRes.data));
-      if (!meRes.data.is_staff && !meRes.data.is_approved) {
-        router.replace('/pending');
-      } else {
-        router.replace('/home');
-      }
+      // Flush persistence to localStorage before hard-redirecting to avoid
+      // a race where DashboardShell reads stale isAuthenticated=false on mount.
+      await persistor.flush();
+      const target = (!meRes.data.is_staff && !meRes.data.is_approved) ? '/pending' : '/home';
+      window.location.replace(target);
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
       if (status === 401) {
