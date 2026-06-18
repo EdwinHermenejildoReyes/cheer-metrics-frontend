@@ -9,11 +9,12 @@ const { mainApiUrl } = getEnvVars();
 const shouldIntercept = (error: AxiosError): boolean => {
   if (error.response?.status !== 401) return false;
   const url = error.config?.url ?? '';
-  // Never intercept auth endpoints to avoid infinite loops
+  // Never intercept auth or public endpoints to avoid infinite loops / race conditions
   return !(
     url.includes('/auth/login/') ||
     url.includes('/auth/token/refresh/') ||
     url.includes('/auth/logout/') ||
+    url.includes('/settings/branding/') ||
     /\/auth\/users\/?$/.test(url)
   );
 };
