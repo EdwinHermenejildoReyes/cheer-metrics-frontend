@@ -34,6 +34,15 @@ export interface JudgeAssignment {
   is_access_active: boolean;
 }
 
+export type SheetMode = 'grupal' | 'individual';
+
+export const GRUPAL_SHEET_TYPES: SheetType[] = [
+  'building', 'tumbling', 'overall', 'rangos', 'deducciones', 'deductions_only', 'safety_rules',
+];
+export const INDIVIDUAL_SHEET_TYPES: SheetType[] = [
+  'partner_stunt', 'building_difficulty', 'building_execution', 'tumbling_difficulty', 'tumbling_execution',
+];
+
 export type Regulation = 'IASF' | 'ICU' | 'AMBAS';
 export type AgeGroup = 'tiny' | 'mini' | 'youth' | 'junior' | 'senior' | 'open';
 export type SkillLevel =
@@ -92,6 +101,7 @@ export interface Competition {
   venue: string;
   city: string;
   regulation: Regulation;
+  sheet_mode: SheetMode;
   notes: string;
   is_enable: boolean;
   is_active: boolean;

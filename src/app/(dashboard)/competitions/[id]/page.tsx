@@ -22,6 +22,8 @@ import {
   CATEGORY_LABELS,
   SCORING_SYSTEM_LABELS,
   SHEET_TYPE_LABELS,
+  GRUPAL_SHEET_TYPES,
+  INDIVIDUAL_SHEET_TYPES,
   type Competition,
   type Division,
   type JudgeAssignment,
@@ -45,7 +47,7 @@ export default function CompetitionDetailPage() {
   const [assignments, setAssignments] = useState<JudgeAssignment[]>([]);
   const [users, setUsers] = useState<SimpleUser[]>([]);
   const [newJudgeUserId, setNewJudgeUserId] = useState('');
-  const [newJudgeSheet, setNewJudgeSheet] = useState<SheetType>('building');
+  const [newJudgeSheet, setNewJudgeSheet] = useState<SheetType | ''>('');
   const [newJudgeFrom, setNewJudgeFrom] = useState('');
   const [newJudgeUntil, setNewJudgeUntil] = useState('');
   const [addingJudge, setAddingJudge] = useState(false);
@@ -67,6 +69,14 @@ export default function CompetitionDetailPage() {
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
   const { isJudge, isCompetitionActive } = useJudge();
+
+  const availableSheetTypes = competition?.sheet_mode === 'individual'
+    ? INDIVIDUAL_SHEET_TYPES
+    : GRUPAL_SHEET_TYPES;
+
+  const effectiveJudgeSheet: SheetType = (newJudgeSheet && availableSheetTypes.includes(newJudgeSheet as SheetType))
+    ? newJudgeSheet as SheetType
+    : availableSheetTypes[0];
 
   useEffect(() => {
     if (isJudge && !isCompetitionActive(competitionId)) {
@@ -195,7 +205,7 @@ export default function CompetitionDetailPage() {
       await competitionsRepository.createJudgeAssignment({
         user: Number(newJudgeUserId),
         competition: competitionId,
-        sheet_type: newJudgeSheet,
+        sheet_type: newJudgeSheet as SheetType,
         access_from: new Date(newJudgeFrom).toISOString(),
         access_until: new Date(newJudgeUntil).toISOString(),
       });
@@ -512,11 +522,11 @@ export default function CompetitionDetailPage() {
                 <div className="lg:w-44">
                   <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Planilla</label>
                   <select
-                    value={newJudgeSheet}
+                    value={effectiveJudgeSheet}
                     onChange={(e) => setNewJudgeSheet(e.target.value as SheetType)}
                     className="w-full h-9 rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
                   >
-                    {(Object.keys(SHEET_TYPE_LABELS) as SheetType[]).map((st) => (
+                    {availableSheetTypes.map((st) => (
                       <option key={st} value={st}>{SHEET_TYPE_LABELS[st]}</option>
                     ))}
                   </select>
@@ -544,7 +554,7 @@ export default function CompetitionDetailPage() {
                   />
                 </div>
                 <div className="col-span-2 flex justify-end lg:col-span-1">
-                  <Button size="sm" onClick={handleAddJudge} disabled={!newJudgeUserId || !newJudgeFrom || !newJudgeUntil || addingJudge}>
+                  <Button size="sm" onClick={handleAddJudge} disabled={!newJudgeUserId || !newJudgeSheet || !newJudgeFrom || !newJudgeUntil || addingJudge}>
                     <Plus className="h-4 w-4" />
                     Asignar
                   </Button>

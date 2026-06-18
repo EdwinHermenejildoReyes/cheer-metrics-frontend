@@ -19,6 +19,7 @@ const schema = z.object({
   venue: z.string().min(2, 'Requerido'),
   city: z.string().min(2, 'Requerido'),
   regulation: z.enum(['IASF', 'ICU', 'AMBAS']),
+  sheet_mode: z.enum(['grupal', 'individual']),
   notes: z.string().optional(),
   organization: z.string().optional(),
   require_payment: z.boolean().optional(),
@@ -39,6 +40,11 @@ const REGULATION_OPTIONS = [
   { value: 'AMBAS', label: 'AMBAS' },
 ];
 
+const SHEET_MODE_OPTIONS = [
+  { value: 'grupal',     label: 'Planillas Grupales' },
+  { value: 'individual', label: 'Planillas Individuales' },
+];
+
 export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
   const isEdit = !!initial;
   const [orgs, setOrgs] = useState<Organization[]>([]);
@@ -47,7 +53,7 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
     resolver: zodResolver(schema),
     defaultValues: initial
       ? { ...initial, organization: initial.organization ? String(initial.organization) : '' }
-      : { regulation: 'IASF' },
+      : { regulation: 'IASF', sheet_mode: 'grupal' as const },
   });
 
   useEffect(() => {
@@ -61,7 +67,7 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
       reset(
         initial
           ? { ...initial, organization: initial.organization ? String(initial.organization) : '' }
-          : { regulation: 'IASF', name: '', date: '', venue: '', city: '', notes: '', organization: '' },
+          : { regulation: 'IASF', sheet_mode: 'grupal' as const, name: '', date: '', venue: '', city: '', notes: '', organization: '' },
       );
     }
   }, [open, initial, reset]);
@@ -102,6 +108,13 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
             {...register('regulation')}
           />
         </div>
+        <Select
+          label="Tipo de planillas"
+          id="sheet_mode"
+          options={SHEET_MODE_OPTIONS}
+          error={errors.sheet_mode?.message}
+          {...register('sheet_mode')}
+        />
         <Input label="Sede" id="venue" placeholder="Coliseo Mayor" error={errors.venue?.message} {...register('venue')} />
         <Input label="Ciudad" id="city" placeholder="Quito" error={errors.city?.message} {...register('city')} />
         <Select
