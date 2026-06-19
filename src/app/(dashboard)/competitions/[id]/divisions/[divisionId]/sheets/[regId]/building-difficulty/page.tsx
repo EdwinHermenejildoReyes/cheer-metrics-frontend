@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Eye } from 'lucide-react';
+import { ArrowLeft, Save, Eye, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
@@ -66,6 +66,7 @@ export default function BuildingDifficultyPage() {
   const [requirePayment, setRequirePayment] = useState(false);
   const [localCountStr,  setLocalCountStr]  = useState('');
   const [savingCount,    setSavingCount]    = useState(false);
+  const [editingCount,   setEditingCount]   = useState(false);
 
   // ── Stunts difficulty ─────────────────────────────────────────────────────
   const [stuntsRango,   setStuntsRango]   = useState<number>(0);
@@ -126,6 +127,7 @@ export default function BuildingDifficultyPage() {
         setTeamName(reg.team_name);
         setAthleteCount(reg.athlete_count ?? null);
         setLocalCountStr(reg.athlete_count != null ? String(reg.athlete_count) : '');
+        setEditingCount(reg.athlete_count == null);
         setUnpaidAthletes(reg.unpaid_athletes);
         setRequirePayment(reg.competition_require_payment);
       }
@@ -282,6 +284,7 @@ export default function BuildingDifficultyPage() {
     try {
       await competitionsRepository.updateRegistration(registrationId, { athlete_count: val } as Partial<Registration>);
       setAthleteCount(val);
+      setEditingCount(false);
       const ch = new BroadcastChannel('cheer-metrics:athlete-count');
       ch.postMessage({ registrationId, count: val });
       ch.close();
@@ -340,7 +343,7 @@ export default function BuildingDifficultyPage() {
         const localVal = parseInt(localCountStr, 10);
         const previewGroups = !isNaN(localVal) && localVal > 0 ? getConstructionGroups(localVal) : null;
         const displayGroups = previewGroups ?? groups;
-        const showInput = !readOnly;
+        const showInput = !readOnly && editingCount;
         return (
           <div className="mx-auto max-w-4xl px-6 pt-6">
             <div className={`rounded-xl border px-5 py-4 flex flex-col gap-3 ${
@@ -354,19 +357,31 @@ export default function BuildingDifficultyPage() {
                   </p>
                 </div>
                 {displayGroups && (
-                  <div className="flex items-center gap-6 shrink-0">
-                    <div className="text-center">
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Mayoría</p>
-                      <p className="text-3xl font-black tabular-nums text-zinc-900">{displayGroups.mayoria}</p>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="flex items-center gap-6">
+                      <div className="text-center">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Mayoría</p>
+                        <p className="text-3xl font-black tabular-nums text-zinc-900">{displayGroups.mayoria}</p>
+                      </div>
+                      <div className="text-center border-x border-zinc-200 px-6">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Gran Parte</p>
+                        <p className="text-3xl font-black tabular-nums text-zinc-900">{displayGroups.gran_parte}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Máx</p>
+                        <p className="text-3xl font-black tabular-nums text-zinc-900">{displayGroups.max}</p>
+                      </div>
                     </div>
-                    <div className="text-center border-x border-zinc-200 px-6">
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Gran Parte</p>
-                      <p className="text-3xl font-black tabular-nums text-zinc-900">{displayGroups.gran_parte}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Máx</p>
-                      <p className="text-3xl font-black tabular-nums text-zinc-900">{displayGroups.max}</p>
-                    </div>
+                    {athleteCount != null && !editingCount && !readOnly && (
+                      <button
+                        type="button"
+                        onClick={() => setEditingCount(true)}
+                        className="p-1.5 rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 transition-colors"
+                        title="Editar conteo"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </div>
                 )}
                 {!displayGroups && !showInput && (
