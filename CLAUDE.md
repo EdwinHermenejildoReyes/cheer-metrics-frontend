@@ -43,9 +43,9 @@ uv add <package>
 
 | App | Responsibility |
 |-----|---------------|
-| `apps.core` | Custom User model (email-based, no username), `UserRole` choices (judge/athlete/coach), `CookieJWTAuthentication` class, `BaseModel`, `EmailService`, `PlatformSettings` (singleton branding colors, `.load()` returns pk=1) |
+| `apps.core` | Custom User model (email-based, no username), `UserRole` choices (`org_admin/judge/athlete/coach`), `CookieJWTAuthentication` class, `BaseModel`, `PlatformSettings` (singleton branding colors, `.load()` returns pk=1) |
 | `apps.api` | All DRF ViewSets, serializers, permission classes, and URL routers (single entry point for all endpoints) |
-| `apps.competitions` | Domain models: Organization, Competition, Division, Gym, Team, Registration, ScoreSheet, JudgeAssignment, Deduction; also contains all scoring constants (`FIELD_MAXIMA`, `DEDUCTION_AMOUNTS`, `SCORING_SYSTEM_CONFIG`) |
+| `apps.competitions` | Domain models: Organization, Competition, Division, Gym, Team, Registration, ScoreSheet, JudgeAssignment, Deduction, FanPackage, GymInvoice, RegistrationToken; all scoring constants (`FIELD_MAXIMA`, `DEDUCTION_AMOUNTS`, `SCORING_SYSTEM_CONFIG`) |
 | `apps.athletes` | Athlete model, TeamMembership, age calculation and eligible age-group logic |
 
 ### Key Patterns
@@ -60,6 +60,14 @@ uv add <package>
 
 **Permission classes** — `apps.api.permissions` defines `IsOwnerOrAdmin` (allows admins or the object's `created_by` user) and `IsActiveJudgeForCompetition`. Judge access is determined by `JudgeAssignment.access_from` / `access_until` timestamps when set; falls back to `Competition.is_active` when both are null. The canonical logic is `_is_judge_access_active()` in `apps/api/permissions.py`.
 
+**Sheet mode** — `Competition.sheet_mode` (`grupal` | `individual`) controls which judge sheet model is used. `grupal` uses one combined ScoreSheet per registration; `individual` splits scoring across specialized `SheetType` roles (`building_difficulty`, `building_execution`, `tumbling_difficulty`, `tumbling_execution`, `deductions_only`, `safety_rules`). The `JudgeAssignment.sheet_type` field ties a judge to a specific `SheetType` choice. When adding new sheet types, update both `SheetType` choices in `apps/competitions/models.py` and the corresponding frontend routes.
+
+**ScoreSheet auto-creation** — A post-save signal in `apps/competitions/signals.py` automatically calls `ScoreSheet.objects.get_or_create(registration=instance)` whenever a `Registration` transitions to `confirmed` status. Never create ScoreSheets manually for confirmed registrations.
+
+**Billing** — `Competition.team_fee` (flat per team), `Division.athlete_fee` (per athlete), and `Competition.require_payment` (blocks score saving if `GymInvoice.paid` is false) form the billing model. `GymInvoice.generate(competition, gym)` computes line items from memberships and team registrations. Frontend billing pages: `/competitions/[id]/billing` (all gyms) and `/competitions/[id]/billing/[gymId]` (single gym invoice).
+
+**Public registration wizard** — `/registro?token=...` is a public multi-step form (no auth) that lets coaches self-register a team. It validates a `RegistrationToken` via `GET /api/v1/wizard/validate/?token=...` then creates gym, team, and athlete records through the `wizard/` endpoints. Admins issue tokens from `/competitions/[id]/tokens` (managed via `registration-tokens/` API).
+
 **Scoring config** — `apps.competitions.models` is the canonical source for scoring: `FIELD_MAXIMA` (max per field), `DEDUCTION_AMOUNTS` (unit penalty per type), and `SCORING_SYSTEM_CONFIG` (which fields are active for each `ScoringSystem`). `Division.suggest_scoring_system(skill_level, age_group, category)` maps a division's attributes to a `ScoringSystem` choice. The frontend mirrors this in `src/lib/scoringConfig.ts` — keep both in sync when changing scoring rules.
 
 **ScoreSheet computed properties** — `ScoreSheet` stores raw field values. All totals are computed properties: `building_total`, `tumbling_total`, `overall_total`, `avg_creativity`, `avg_showmanship`, `cross_sheet_total`, `raw_score`, `scaled_score`, `total_deductions`, `final_score`, `percentage`. Creativity and showmanship are averaged across all three judges, not summed — their effective max contribution to the total is 2.00 each regardless of how many judges scored them. The scoring formula is: `final_score = (raw_score + bonus) × multiplier − total_deductions`.
@@ -72,9 +80,10 @@ uv add <package>
 
 ```bash
 python manage.py import_inscripcion <file> --competition <id> [--fotos-zip <path>] [--dry-run]
+python manage.py mark_all_paid --competition <id>   # mark all GymInvoices as paid
 ```
 
-Also triggerable from the frontend page at `/competitions/[id]/import`. Each error row is skipped and accumulated in the result; the import never aborts mid-file unless the competition is not found.
+`tools/generate_inscripcion_template.py` generates a blank CSV template for the import format. Also triggerable from the frontend page at `/competitions/[id]/import`. Each error row is skipped and accumulated in the result; the import never aborts mid-file unless the competition is not found.
 
 **Scheduler / rest validator** — `apps/competitions/scheduler.py` checks that athletes competing in multiple teams have at least `MIN_REST_GAP = 3` performance slots between appearances. Returns `RestConflict` dataclass instances. The public `/schedule` page (outside the dashboard group) renders the running order and surfaces these conflicts.
 
@@ -117,13 +126,15 @@ NEXT_PUBLIC_WEB_URL=http://localhost:3000/
 
 **State management** — Redux Toolkit for global state. Currently only auth state is implemented (`src/store/auth/slices.ts`). Prefer repositories + local state for simple reads; use Redux for cross-cutting state (auth, complex competition flow).
 
-**Branding** — `src/contexts/BrandingContext.tsx` provides organization colors and logo, consumed by layout components.
+**Branding** — `src/contexts/BrandingContext.tsx` provides organization colors and logo; `src/contexts/PlatformSettingsContext.tsx` provides global platform palette (`PlatformSettings`). Both are consumed by layout components and loaded in the root layout.
 
 **Route groups** — `src/app/(dashboard)/` is the protected layout group for all authenticated pages. Public routes (`/login`, `/register`, `/pending`) live outside this group.
 
-**Score sheets** — Deep route: `/competitions/[id]/divisions/[divisionId]/sheets/[regId]/{building,tumbling,overall,partner-stunt,deducciones,rangos,iasf-building,iasf-tumbling,iasf-overall}`. Each sheet type is its own page but shares the scoring config from `src/lib/scoringConfig.ts`. Print views for each sheet type live in `src/components/print/`.
+**Score sheets** — Deep route: `/competitions/[id]/divisions/[divisionId]/sheets/[regId]/<type>`. Group-mode types: `building`, `tumbling`, `overall`, `partner-stunt`, `deducciones`, `rangos`, `iasf-building`, `iasf-tumbling`, `iasf-overall`. Individual-mode split-judge types: `building-difficulty`, `building-execution`, `tumbling-difficulty`, `tumbling-execution`, `safety-rules`, `deductions-only`. Each type is its own page sharing `src/lib/scoringConfig.ts`. Print views live in `src/components/print/`.
 
-**Public routes** — `/` (landing with `HeroCarousel`, `HeroImage` model) and `/schedule` (competition running order, public) live outside `(dashboard)/` and require no authentication.
+**Backstage** — `/competitions/[id]/backstage` is a dashboard-only page for performance check-in: it shows all confirmed registrations with athlete count and performance order, letting staff verify team size against `Registration.athlete_count`.
+
+**Public routes** — `/` (landing with `HeroCarousel`), `/schedule` (running order), `/registro` (self-registration wizard, token-gated), and `/results/[regId]` (public score result for a registration) live outside `(dashboard)/` and require no authentication.
 
 **Server vs. Client Components** — Prefer Server Components by default; use `"use client"` only when interactivity or browser APIs are required.
 
