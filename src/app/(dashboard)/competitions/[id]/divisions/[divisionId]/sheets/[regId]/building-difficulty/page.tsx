@@ -186,23 +186,22 @@ export default function BuildingDifficultyPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Ref always reflects the latest athleteCount without being a closure dependency
-  const athleteCountRef = useRef<number | null>(athleteCount);
+  // Refs always reflect latest values without being closure dependencies
+  const athleteCountRef  = useRef<number | null>(athleteCount);
+  const editingCountRef  = useRef(editingCount);
   athleteCountRef.current = athleteCount;
+  editingCountRef.current = editingCount;
 
-  // Poll every 5s; stops itself once the count is set. Starts only once on mount.
+  // Poll every 5s; updates when the server value differs and the judge isn't actively editing
   useEffect(() => {
     const interval = setInterval(async () => {
-      if (athleteCountRef.current != null) {
-        clearInterval(interval);
-        return;
-      }
       try {
         const regRes = await competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' });
         const reg = regRes.data.results.find(r => r.id === registrationId);
-        if (reg?.athlete_count != null) {
-          setAthleteCount(reg.athlete_count);
-          setLocalCountStr(String(reg.athlete_count));
+        const fetched = reg?.athlete_count ?? null;
+        if (fetched !== athleteCountRef.current && !editingCountRef.current) {
+          setAthleteCount(fetched);
+          if (fetched != null) { setLocalCountStr(String(fetched)); setEditingCount(false); }
         }
       } catch { /* noop */ }
     }, 5000);
