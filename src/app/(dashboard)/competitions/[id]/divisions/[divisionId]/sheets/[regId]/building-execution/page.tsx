@@ -185,6 +185,32 @@ export default function BuildingExecutionPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const athleteCountRef = useRef<number | null>(athleteCount);
+  athleteCountRef.current = athleteCount;
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const regRes = await competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' });
+        const reg = regRes.data.results.find(r => r.id === registrationId);
+        const fetched = reg?.athlete_count ?? null;
+        if (fetched !== athleteCountRef.current) setAthleteCount(fetched);
+      } catch { /* noop */ }
+    }, 5000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [divId, registrationId]);
+
+  useEffect(() => {
+    const ch = new BroadcastChannel('cheer-metrics:athlete-count');
+    ch.onmessage = (e: MessageEvent<{ registrationId: number; count: number | null }>) => {
+      if (e.data.registrationId === registrationId && e.data.count != null)
+        setAthleteCount(e.data.count);
+    };
+    return () => ch.close();
+  }, [registrationId]);
+
+
   const handleSave = async () => {
     setSaving(true);
     try {
