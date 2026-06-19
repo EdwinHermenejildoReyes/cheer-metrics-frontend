@@ -14,7 +14,7 @@ import { useJudge } from '@/hooks/useJudge';
 import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
 import type { BuildingConfig } from '@/lib/scoringConfig';
-import type { Division, DivisionCategory, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
+import type { Division, DivisionCategory, Registration, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 
 function fmt(n: number) { return n.toFixed(2); }
@@ -64,6 +64,8 @@ export default function BuildingDifficultyPage() {
   const [athleteCount,   setAthleteCount]   = useState<number | null>(null);
   const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
   const [requirePayment, setRequirePayment] = useState(false);
+  const [localCountStr,  setLocalCountStr]  = useState('');
+  const [savingCount,    setSavingCount]    = useState(false);
 
   // ── Stunts difficulty ─────────────────────────────────────────────────────
   const [stuntsRango,   setStuntsRango]   = useState<number>(0);
@@ -123,6 +125,7 @@ export default function BuildingDifficultyPage() {
       if (reg) {
         setTeamName(reg.team_name);
         setAthleteCount(reg.athlete_count ?? null);
+        setLocalCountStr(reg.athlete_count != null ? String(reg.athlete_count) : '');
         setUnpaidAthletes(reg.unpaid_athletes);
         setRequirePayment(reg.competition_require_payment);
       }
@@ -233,6 +236,24 @@ export default function BuildingDifficultyPage() {
     }
   };
 
+  const handleSaveAthleteCount = async () => {
+    const val = localCountStr === '' ? null : parseInt(localCountStr, 10);
+    if (localCountStr !== '' && (isNaN(val as number) || (val as number) < 1)) {
+      toast.error('Ingresa un número válido de atletas');
+      return;
+    }
+    setSavingCount(true);
+    try {
+      await competitionsRepository.updateRegistration(registrationId, { athlete_count: val } as Partial<Registration>);
+      setAthleteCount(val);
+      toast.success('Conteo guardado');
+    } catch {
+      toast.error('No se pudo guardar el conteo');
+    } finally {
+      setSavingCount(false);
+    }
+  };
+
   if (loading) return <PageSpinner />;
 
   const diffTotal = parseFloat((stuntsRango + stuntsDriversTotal + pyramidsDiff + (bCfg.hasTosses ? tossesDiff : 0)).toFixed(2));
@@ -277,40 +298,103 @@ export default function BuildingDifficultyPage() {
       {/* ── Construction table banner ─────────────────────────────────── */}
       {(() => {
         const groups = athleteCount ? getConstructionGroups(athleteCount) : null;
+        const localVal = parseInt(localCountStr, 10);
+        const previewGroups = !groups && !isNaN(localVal) && localVal > 0 ? getConstructionGroups(localVal) : null;
+        const showInput = !groups && !readOnly;
         return (
-          <div className={`mx-auto max-w-4xl px-6 pt-6`}>
-            <div className={`rounded-xl border px-5 py-4 flex items-center justify-between gap-4 ${
-              groups ? 'border-zinc-200 bg-white' : 'border-dashed border-zinc-300 bg-zinc-50'
+          <div className="mx-auto max-w-4xl px-6 pt-6">
+            <div className={`rounded-xl border px-5 py-4 flex flex-col gap-3 ${
+              groups || previewGroups ? 'border-zinc-200 bg-white' : 'border-dashed border-zinc-300 bg-zinc-50'
             }`}>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Tabla de cantidad en construcción</p>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Tabla de cantidad en construcción</p>
+                  {groups ? (
+                    <p className="text-xs text-zinc-500">Basado en <span className="font-semibold text-zinc-800">{athleteCount} atletas</span> confirmados</p>
+                  ) : showInput ? (
+                    <p className="text-xs text-zinc-400">Ingresa el número de atletas en pista</p>
+                  ) : (
+                    <p className="text-xs text-zinc-400">
+                      {athleteCount ? `${athleteCount} atletas — fuera del rango de tabla (10–30)` : 'Sin conteo de atletas'}
+                    </p>
+                  )}
+                </div>
                 {groups ? (
-                  <p className="text-xs text-zinc-500">Basado en <span className="font-semibold text-zinc-800">{athleteCount} atletas</span> confirmados en backstage</p>
-                ) : (
-                  <p className="text-xs text-zinc-400">
-                    {athleteCount
-                      ? `${athleteCount} atletas — fuera del rango de tabla (10–30)`
-                      : 'Sin conteo de atletas — ingresa el número en la página de Backstage'}
-                  </p>
+                  <div className="flex items-center gap-6 shrink-0">
+                    <div className="text-center">
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Mayoría</p>
+                      <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.mayoria}</p>
+                    </div>
+                    <div className="text-center border-x border-zinc-200 px-6">
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Gran Parte</p>
+                      <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.gran_parte}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Máx</p>
+                      <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.max}</p>
+                    </div>
+                  </div>
+                ) : !showInput && (
+                  <span className="text-xs text-zinc-300 italic shrink-0">—</span>
                 )}
               </div>
-              {groups ? (
-                <div className="flex items-center gap-6 shrink-0">
-                  <div className="text-center">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Mayoría</p>
-                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.mayoria}</p>
+              {showInput && (
+                <>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { const cur = parseInt(localCountStr || '0', 10); if (cur > 1) setLocalCountStr(String(cur - 1)); }}
+                        className="w-8 h-8 rounded-lg border border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-100 font-bold text-lg flex items-center justify-center transition-colors"
+                      >−</button>
+                      <input
+                        type="number"
+                        min="1"
+                        max="99"
+                        value={localCountStr}
+                        placeholder="0"
+                        onChange={e => setLocalCountStr(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') handleSaveAthleteCount(); }}
+                        className="w-16 h-8 rounded-lg border border-zinc-300 bg-white text-center text-sm font-bold tabular-nums text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => { const cur = parseInt(localCountStr || '0', 10); setLocalCountStr(String(isNaN(cur) ? 1 : cur + 1)); }}
+                        className="w-8 h-8 rounded-lg border border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-100 font-bold text-lg flex items-center justify-center transition-colors"
+                      >+</button>
+                      <span className="text-xs text-zinc-400">atletas</span>
+                    </div>
+                    {localCountStr && (
+                      <button
+                        type="button"
+                        onClick={handleSaveAthleteCount}
+                        disabled={savingCount}
+                        className="ml-auto rounded-lg bg-zinc-900 hover:bg-zinc-700 text-white px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50"
+                      >
+                        {savingCount ? 'Guardando...' : 'Guardar'}
+                      </button>
+                    )}
                   </div>
-                  <div className="text-center border-x border-zinc-200 px-6">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Gran Parte</p>
-                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.gran_parte}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Máx</p>
-                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.max}</p>
-                  </div>
-                </div>
-              ) : (
-                <span className="text-xs text-zinc-300 italic shrink-0">—</span>
+                  {previewGroups && (
+                    <div className="grid grid-cols-3 gap-2 rounded-lg border border-zinc-100 bg-zinc-50 p-3">
+                      <div className="text-center">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Mayoría</p>
+                        <p className="text-2xl font-black text-zinc-900 tabular-nums">{previewGroups.mayoria}</p>
+                        <p className="text-[9px] text-zinc-400">grupos</p>
+                      </div>
+                      <div className="text-center border-x border-zinc-200">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Gran parte</p>
+                        <p className="text-2xl font-black text-zinc-900 tabular-nums">{previewGroups.gran_parte}</p>
+                        <p className="text-[9px] text-zinc-400">grupos</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Máximo</p>
+                        <p className="text-2xl font-black text-zinc-900 tabular-nums">{previewGroups.max}</p>
+                        <p className="text-[9px] text-zinc-400">grupos</p>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
