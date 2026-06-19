@@ -338,42 +338,38 @@ export default function BuildingDifficultyPage() {
       {(() => {
         const groups = athleteCount ? getConstructionGroups(athleteCount) : null;
         const localVal = parseInt(localCountStr, 10);
-        const previewGroups = !groups && !isNaN(localVal) && localVal > 0 ? getConstructionGroups(localVal) : null;
-        const showInput = !groups && !readOnly;
+        const previewGroups = !isNaN(localVal) && localVal > 0 ? getConstructionGroups(localVal) : null;
+        const displayGroups = previewGroups ?? groups;
+        const showInput = !readOnly;
         return (
           <div className="mx-auto max-w-4xl px-6 pt-6">
             <div className={`rounded-xl border px-5 py-4 flex flex-col gap-3 ${
-              groups || previewGroups ? 'border-zinc-200 bg-white' : 'border-dashed border-zinc-300 bg-zinc-50'
+              displayGroups ? 'border-zinc-200 bg-white' : 'border-dashed border-zinc-300 bg-zinc-50'
             }`}>
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Tabla de cantidad en construcción</p>
-                  {groups ? (
-                    <p className="text-xs text-zinc-500">Basado en <span className="font-semibold text-zinc-800">{athleteCount} atletas</span> confirmados</p>
-                  ) : showInput ? (
-                    <p className="text-xs text-zinc-400">Ingresa el número de atletas en pista</p>
-                  ) : (
-                    <p className="text-xs text-zinc-400">
-                      {athleteCount ? `${athleteCount} atletas — fuera del rango de tabla (10–30)` : 'Sin conteo de atletas'}
-                    </p>
-                  )}
+                  <p className="text-xs text-zinc-400">
+                    {showInput ? 'Ingresa o corrige el número de atletas en pista' : athleteCount ? `${athleteCount} atletas confirmados` : 'Sin conteo de atletas'}
+                  </p>
                 </div>
-                {groups ? (
+                {displayGroups && (
                   <div className="flex items-center gap-6 shrink-0">
                     <div className="text-center">
                       <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Mayoría</p>
-                      <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.mayoria}</p>
+                      <p className="text-3xl font-black tabular-nums text-zinc-900">{displayGroups.mayoria}</p>
                     </div>
                     <div className="text-center border-x border-zinc-200 px-6">
                       <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Gran Parte</p>
-                      <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.gran_parte}</p>
+                      <p className="text-3xl font-black tabular-nums text-zinc-900">{displayGroups.gran_parte}</p>
                     </div>
                     <div className="text-center">
                       <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Máx</p>
-                      <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.max}</p>
+                      <p className="text-3xl font-black tabular-nums text-zinc-900">{displayGroups.max}</p>
                     </div>
                   </div>
-                ) : !showInput && (
+                )}
+                {!displayGroups && !showInput && (
                   <span className="text-xs text-zinc-300 italic shrink-0">—</span>
                 )}
               </div>
@@ -414,25 +410,6 @@ export default function BuildingDifficultyPage() {
                       </button>
                     )}
                   </div>
-                  {previewGroups && (
-                    <div className="grid grid-cols-3 gap-2 rounded-lg border border-zinc-100 bg-zinc-50 p-3">
-                      <div className="text-center">
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Mayoría</p>
-                        <p className="text-2xl font-black text-zinc-900 tabular-nums">{previewGroups.mayoria}</p>
-                        <p className="text-[9px] text-zinc-400">grupos</p>
-                      </div>
-                      <div className="text-center border-x border-zinc-200">
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Gran parte</p>
-                        <p className="text-2xl font-black text-zinc-900 tabular-nums">{previewGroups.gran_parte}</p>
-                        <p className="text-[9px] text-zinc-400">grupos</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Máximo</p>
-                        <p className="text-2xl font-black text-zinc-900 tabular-nums">{previewGroups.max}</p>
-                        <p className="text-[9px] text-zinc-400">grupos</p>
-                      </div>
-                    </div>
-                  )}
                 </>
               )}
             </div>
