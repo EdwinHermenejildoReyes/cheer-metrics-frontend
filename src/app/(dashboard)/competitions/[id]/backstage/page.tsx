@@ -65,6 +65,9 @@ export default function BackstagePage() {
     setSaving(regId);
     try {
       await competitionsRepository.updateRegistration(regId, { athlete_count: val } as Partial<Registration>);
+      const ch = new BroadcastChannel('cheer-metrics:athlete-count');
+      ch.postMessage({ registrationId: regId, count: val });
+      ch.close();
       toast.success('Conteo guardado');
       await load();
     } catch {

@@ -409,6 +409,34 @@ export default function BuildingSheetPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Poll every 5s until athlete_count is set, then stop automatically
+  useEffect(() => {
+    if (athleteCount != null) return;
+    const interval = setInterval(async () => {
+      try {
+        const regRes = await competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' });
+        const reg = regRes.data.results.find(r => r.id === registrationId);
+        if (reg?.athlete_count != null) {
+          setAthleteCount(reg.athlete_count);
+          setLocalCountStr(String(reg.athlete_count));
+        }
+      } catch { /* noop */ }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [athleteCount, registrationId, divId]);
+
+  // Real-time cross-tab/window updates via BroadcastChannel
+  useEffect(() => {
+    const ch = new BroadcastChannel('cheer-metrics:athlete-count');
+    ch.onmessage = (e: MessageEvent<{ registrationId: number; count: number | null }>) => {
+      if (e.data.registrationId === registrationId && e.data.count != null) {
+        setAthleteCount(e.data.count);
+        setLocalCountStr(String(e.data.count));
+      }
+    };
+    return () => ch.close();
+  }, [registrationId]);
+
   // Continuously check if protest window expires while page is open
   useEffect(() => {
     if (protestExpired) return;
@@ -489,6 +517,9 @@ export default function BuildingSheetPage() {
     try {
       await competitionsRepository.updateRegistration(registrationId, { athlete_count: val } as Partial<Registration>);
       setAthleteCount(val);
+      const ch = new BroadcastChannel('cheer-metrics:athlete-count');
+      ch.postMessage({ registrationId, count: val });
+      ch.close();
       toast.success('Conteo guardado');
     } catch {
       toast.error('No se pudo guardar el conteo');
