@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Eye } from 'lucide-react';
 import { toast } from 'sonner';
@@ -184,10 +184,17 @@ export default function BuildingDifficultyPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Poll every 5s until athlete_count is set, then stop automatically
+  // Ref always reflects the latest athleteCount without being a closure dependency
+  const athleteCountRef = useRef<number | null>(athleteCount);
+  athleteCountRef.current = athleteCount;
+
+  // Poll every 5s; stops itself once the count is set. Starts only once on mount.
   useEffect(() => {
-    if (athleteCount != null) return;
     const interval = setInterval(async () => {
+      if (athleteCountRef.current != null) {
+        clearInterval(interval);
+        return;
+      }
       try {
         const regRes = await competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' });
         const reg = regRes.data.results.find(r => r.id === registrationId);
@@ -198,9 +205,10 @@ export default function BuildingDifficultyPage() {
       } catch { /* noop */ }
     }, 5000);
     return () => clearInterval(interval);
-  }, [athleteCount, registrationId, divId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [divId, registrationId]);
 
-  // Real-time cross-tab/window updates via BroadcastChannel
+  // Real-time cross-tab updates via BroadcastChannel (same browser, non-incognito tabs only)
   useEffect(() => {
     const ch = new BroadcastChannel('cheer-metrics:athlete-count');
     ch.onmessage = (e: MessageEvent<{ registrationId: number; count: number | null }>) => {
