@@ -370,7 +370,10 @@ export default function CompetitionDetailPage() {
                     <td className="px-5 py-3.5">
                       <Badge variant="violet">{SKILL_LEVEL_LABELS[div.skill_level]}</Badge>
                     </td>
-                    <td className="px-5 py-3.5 text-zinc-600">{CATEGORY_LABELS[div.category]}</td>
+                    <td className="px-5 py-3.5 text-zinc-600">
+                      {CATEGORY_LABELS[div.category]}
+                      {div.is_non_tumbling && <span className="ml-1.5 rounded-full bg-yellow-100 text-yellow-800 px-1.5 py-0.5 text-[10px] font-medium">NT</span>}
+                    </td>
                     <td className="px-5 py-3.5 text-xs text-zinc-500">
                       {SCORING_SYSTEM_LABELS[(div.scoring_system || div.suggested_scoring_system) as ScoringSystem] ?? '–'}
                     </td>

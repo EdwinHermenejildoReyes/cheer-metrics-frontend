@@ -19,6 +19,7 @@ import type { Division, DivisionCategory, Registration, ScoreSheet, UnpaidAthlet
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 import type { BuildingPrintData } from '@/components/print/BuildingSheetPrintView';
 import { InfoButton } from '@/components/ui/InfoButton';
+import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 
 // ── Execution categories (same for all scoring systems) ──────────────────────
 const EXEC_CATS      = ['Flyer', 'Base/Spotter', 'Transición', 'Sincronización'];
@@ -446,6 +447,42 @@ export default function BuildingSheetPage() {
     return () => ch.close();
   }, [registrationId]);
 
+  // Admin polling — refresh score data every 5 s in read-only mode
+  useEffect(() => {
+    if (!readOnly || loading) return;
+    const interval = setInterval(async () => {
+      try {
+        const sheetRes = await competitionsRepository.listScoreSheets({ registration: String(registrationId) });
+        if (sheetRes.data.results.length === 0) return;
+        const sheet = sheetRes.data.results[0];
+        setExistingSheet(sheet);
+        if (sheet.notes) {
+          try {
+            const p = JSON.parse(sheet.notes);
+            setStuntsNotes(p.stunts ?? '');
+            setPyramidsNotes(p.pyramids ?? '');
+            setTossesNotes(p.tosses ?? '');
+            const s = p._scores ?? {};
+            if (s.stuntsRango       != null) setStuntsRango(s.stuntsRango);
+            if (Array.isArray(s.stuntsSkills))    setStuntsSkills(s.stuntsSkills);
+            if (s.stuntsPartMax     != null) setStuntsPartMax(s.stuntsPartMax);
+            if (Array.isArray(s.stuntsExecDeds))  setStuntsExecDeds(s.stuntsExecDeds);
+            if (Array.isArray(s.pyramidsExecDeds)) setPyramidsExecDeds(s.pyramidsExecDeds);
+            if (Array.isArray(s.tossesExecDeds))  setTossesExecDeds(s.tossesExecDeds);
+            if (s.pyramidsRangeIdx  != null) setPyramidsRangeIdx(s.pyramidsRangeIdx);
+            if (s.pyramidsFine      != null) setPyramidsFine(s.pyramidsFine);
+            if (s.pyramidsDrivers   != null) setPyramidsDrivers(s.pyramidsDrivers);
+          } catch { /* noop */ }
+        }
+        if (sheet.tosses_difficulty != null) setTossesDiff(parseFloat(sheet.tosses_difficulty) || 0);
+        if (sheet.creativity_building  != null) setCreativityBuilding(parseFloat(sheet.creativity_building)  || 0);
+        if (sheet.showmanship_building != null) setShowmanshipBuilding(parseFloat(sheet.showmanship_building) || 0);
+      } catch { /* noop */ }
+    }, 5000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly, loading, registrationId, bCfg]);
+
   // Continuously check if protest window expires while page is open
   useEffect(() => {
     if (protestExpired) return;
@@ -462,8 +499,20 @@ export default function BuildingSheetPage() {
     return () => clearInterval(id);
   }, [existingSheet, protestExpired]);
 
+  // Prevents auto-save from firing while load() is populating initial form values
+  const initialValuesSettled = useRef(false);
+  useEffect(() => {
+    if (!loading) {
+      const t = setTimeout(() => { initialValuesSettled.current = true; }, 500);
+      return () => clearTimeout(t);
+    }
+  }, [loading]);
+
+  // Stable ref so auto-save effect can call the latest handleSave without it as a dep
+  const handleSaveRef = useRef<(silent?: boolean) => Promise<void>>(async () => {});
+
   // ── Save ──────────────────────────────────────────────────────────────────
-  const handleSave = async () => {
+  const handleSave = async (silent = false) => {
     setSaving(true);
     try {
       const payload: Partial<ScoreSheet> = {
@@ -508,13 +557,24 @@ export default function BuildingSheetPage() {
         saved = res.data;
       }
       setExistingSheet(saved);
-      toast.success('Planilla guardada');
+      if (!silent) toast.success('Planilla guardada');
     } catch (err) {
       toastApiError(err);
     } finally {
       setSaving(false);
     }
   };
+
+  // Keep ref current so auto-save always calls the latest closure
+  handleSaveRef.current = handleSave;
+
+  // Auto-save 2 s after the last change (judge mode only)
+  useEffect(() => {
+    if (readOnly || !initialValuesSettled.current) return;
+    const timer = setTimeout(() => { handleSaveRef.current(true); }, 2000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly, stuntsRango, stuntsSkills, stuntsPartMax, stuntsExecDeds, pyramidsExecDeds, tossesExecDeds, pyramidsRangeIdx, pyramidsFine, pyramidsDrivers, tossesDiff, creativityBuilding, showmanshipBuilding, stuntsNotes, pyramidsNotes, tossesNotes]);
 
   const handleSaveAthleteCount = async () => {
     const val = localCountStr === '' ? null : parseInt(localCountStr, 10);
@@ -627,6 +687,9 @@ export default function BuildingSheetPage() {
       )}
 
       <div className={`print:hidden max-w-6xl mx-auto px-6 py-8 flex flex-col gap-14${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
+
+        {/* ── Skill reference panel ────────────────────────────────────── */}
+        <SkillReferencePanel skillLevel={division?.skill_level} sheetType="building" />
 
         {/* ── Construction table banner ────────────────────────────────── */}
         {(() => {

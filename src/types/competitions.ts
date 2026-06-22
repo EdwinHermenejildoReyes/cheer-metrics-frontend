@@ -2,7 +2,8 @@ export type SheetType =
   | 'building' | 'tumbling' | 'rangos' | 'overall' | 'partner_stunt' | 'deducciones'
   | 'building_difficulty' | 'building_execution'
   | 'tumbling_difficulty' | 'tumbling_execution'
-  | 'deductions_only' | 'safety_rules';
+  | 'deductions_only' | 'safety_rules'
+  | 'building_combined' | 'tumbling_combined' | 'deductions_combined';
 
 export const SHEET_TYPE_LABELS: Record<SheetType, string> = {
   building:             'Building (Elevaciones)',
@@ -17,6 +18,9 @@ export const SHEET_TYPE_LABELS: Record<SheetType, string> = {
   tumbling_execution:   'Ejecución — Gimnasia',
   deductions_only:      'Deducciones (Caídas/Tiempo)',
   safety_rules:         'Reglas y Seguridad',
+  building_combined:    'Elevaciones (Dif. + Ejec.)',
+  tumbling_combined:    'Gimnasia (Dif. + Ejec.)',
+  deductions_combined:  'Reglas y Deducciones',
 };
 
 export interface JudgeAssignment {
@@ -40,16 +44,22 @@ export const GRUPAL_SHEET_TYPES: SheetType[] = [
   'building', 'tumbling', 'overall', 'rangos', 'deducciones', 'deductions_only', 'safety_rules',
 ];
 export const INDIVIDUAL_SHEET_TYPES: SheetType[] = [
-  'partner_stunt', 'building_difficulty', 'building_execution', 'tumbling_difficulty', 'tumbling_execution',
+  'partner_stunt',
+  'building_difficulty', 'building_execution', 'building_combined',
+  'tumbling_difficulty', 'tumbling_execution', 'tumbling_combined',
+  'overall',
+  'deductions_only', 'safety_rules', 'deductions_combined',
+  'rangos',
 ];
 
 export type Regulation = 'IASF' | 'ICU' | 'AMBAS';
 export type AgeGroup = 'tiny' | 'mini' | 'youth' | 'junior' | 'senior' | 'open';
 export type SkillLevel =
-  | 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'L6' | 'L7'
+  | 'L1' | 'L2' | 'L3' | 'L4' | 'L4_2' | 'L5' | 'L6' | 'L7'
   | 'novice' | 'novice_plus' | 'prep' | 'escolar'
   | 'escolar_l3' | 'escolar_l4' | 'escolar_l5' | 'escolar_l6' | 'escolar_l7'
-  | 'elite' | 'icc' | 'iasf_cat' | 'star';
+  | 'elite' | 'icc' | 'iasf_cat' | 'star'
+  | 'group_stunt' | 'future_flyer' | 'best_cheerleader' | 'paracheer' | 'cheer_parents';
 export type DivisionCategory = 'all_girl' | 'coed' | 'all_male' | 'non_tumbling' | 'mixed';
 export type RegistrationStatus = 'pending' | 'confirmed' | 'withdrawn';
 
@@ -119,6 +129,7 @@ export interface Division {
   age_group: AgeGroup;
   skill_level: SkillLevel;
   category: DivisionCategory;
+  is_non_tumbling: boolean;
   scoring_system: ScoringSystem | '';
   suggested_scoring_system: ScoringSystem;
   athlete_fee: string;
@@ -293,13 +304,18 @@ export const AGE_GROUP_LABELS: Record<AgeGroup, string> = {
 };
 
 export const SKILL_LEVEL_LABELS: Record<SkillLevel, string> = {
-  L1: 'Level 1', L2: 'Level 2', L3: 'Level 3', L4: 'Level 4',
+  L1: 'Level 1', L2: 'Level 2', L3: 'Level 3', L4: 'Level 4', L4_2: 'Level 4.2',
   L5: 'Level 5', L6: 'Level 6', L7: 'Level 7',
   novice: 'All Star Novice', novice_plus: 'Novice Plus',
   escolar_l3: 'Escolar N3', escolar_l4: 'Escolar N4', escolar_l5: 'Escolar N5',
   escolar_l6: 'Escolar N6', escolar_l7: 'Escolar N7',
   prep: 'Prep', escolar: 'Escolar', elite: 'Elite',
   icc: 'ICC', iasf_cat: 'IASF', star: 'Star',
+  group_stunt: 'Group Stunt / Partner Stunt',
+  future_flyer: 'Future Flyer',
+  best_cheerleader: 'Best Cheerleader',
+  paracheer: 'Paracheer',
+  cheer_parents: 'Padres Showoff',
 };
 
 export const CATEGORY_LABELS: Record<DivisionCategory, string> = {

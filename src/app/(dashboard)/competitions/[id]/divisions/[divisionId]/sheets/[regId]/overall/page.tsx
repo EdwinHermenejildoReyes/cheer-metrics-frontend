@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Save, CheckCircle2, Eye, Lock } from 'lucide-react';
 import { InfoButton } from '@/components/ui/InfoButton';
@@ -226,6 +226,33 @@ export default function OverallSheetPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Admin polling — refresh score data every 5 s in read-only mode
+  useEffect(() => {
+    if (!readOnly || loading) return;
+    const interval = setInterval(async () => {
+      try {
+        const sheetRes = await competitionsRepository.listScoreSheets({ registration: String(registrationId) });
+        if (sheetRes.data.results.length === 0) return;
+        const sheet = sheetRes.data.results[0];
+        setExistingSheet(sheet);
+        if (sheet.notes) {
+          try {
+            const p = JSON.parse(sheet.notes);
+            setFormationsNotes(p.formations ?? '');
+            setDanceNotes(p.dance ?? '');
+          } catch { /* noop */ }
+        }
+        if (sheet.formations_score    != null) setFormationsScore(parseFloat(sheet.formations_score)    || 0);
+        if (sheet.dance_difficulty    != null) setDanceDifficulty(parseFloat(sheet.dance_difficulty)    || 0);
+        if (sheet.dance_execution     != null) setDanceExecution(parseFloat(sheet.dance_execution)      || 0);
+        if (sheet.creativity_overall  != null) setCreativityOverall(parseFloat(sheet.creativity_overall)  || 0);
+        if (sheet.showmanship_overall != null) setShowmanshipOverall(parseFloat(sheet.showmanship_overall) || 0);
+      } catch { /* noop */ }
+    }, 5000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly, loading, registrationId]);
+
   // Continuously check if protest window expires while page is open
   useEffect(() => {
     if (protestExpired) return;
@@ -242,8 +269,20 @@ export default function OverallSheetPage() {
     return () => clearInterval(id);
   }, [existingSheet, protestExpired]);
 
+  // Prevents auto-save from firing while load() is populating initial form values
+  const initialValuesSettled = useRef(false);
+  useEffect(() => {
+    if (!loading) {
+      const t = setTimeout(() => { initialValuesSettled.current = true; }, 500);
+      return () => clearTimeout(t);
+    }
+  }, [loading]);
+
+  // Stable ref so auto-save effect can call the latest handleSave without it as a dep
+  const handleSaveRef = useRef<(silent?: boolean) => Promise<void>>(async () => {});
+
   // ── Save ──────────────────────────────────────────────────────────────────
-  const handleSave = async () => {
+  const handleSave = async (silent = false) => {
     setSaving(true);
     try {
       const payload: Partial<ScoreSheet> = {
@@ -271,13 +310,24 @@ export default function OverallSheetPage() {
         saved = res.data;
       }
       setExistingSheet(saved);
-      toast.success('Planilla guardada');
+      if (!silent) toast.success('Planilla guardada');
     } catch (err) {
       toastApiError(err);
     } finally {
       setSaving(false);
     }
   };
+
+  // Keep ref current so auto-save always calls the latest closure
+  handleSaveRef.current = handleSave;
+
+  // Auto-save 2 s after the last change (judge mode only)
+  useEffect(() => {
+    if (readOnly || !initialValuesSettled.current) return;
+    const timer = setTimeout(() => { handleSaveRef.current(true); }, 2000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly, formationsScore, danceDifficulty, danceExecution, creativityOverall, showmanshipOverall, formationsNotes, danceNotes]);
 
   if (loading) return <PageSpinner />;
 

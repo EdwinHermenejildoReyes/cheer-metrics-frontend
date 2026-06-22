@@ -2,6 +2,13 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '@/core/rootReducer';
 import type { SheetType } from '@/types/competitions';
 
+// Roles combinados: un juez con el tipo compuesto puede ver todas las planillas del array.
+const COMPOUND_SHEET_MAP: Partial<Record<SheetType, SheetType[]>> = {
+  building_combined:   ['building_difficulty', 'building_execution'],
+  tumbling_combined:   ['tumbling_difficulty',  'tumbling_execution'],
+  deductions_combined: ['deductions_only',       'safety_rules'],
+};
+
 export function useJudge() {
   const user = useSelector((s: RootState) => s.auth.user);
   const assignments = user?.judge_assignments ?? [];
@@ -21,12 +28,14 @@ export function useJudge() {
 
   const canViewSheet = (competitionId: number, sheetType: SheetType): boolean => {
     if (!isJudge) return true;
-    return assignments.some(
-      (a) =>
-        a.competition === competitionId &&
-        a.sheet_type === sheetType &&
-        a.is_access_active,
-    );
+    return assignments.some((a) => {
+      if (a.competition !== competitionId || !a.is_access_active) return false;
+      // Exact match
+      if (a.sheet_type === sheetType) return true;
+      // Compound role: check if it expands to include the requested sheetType
+      const expanded = COMPOUND_SHEET_MAP[a.sheet_type as SheetType];
+      return expanded?.includes(sheetType) ?? false;
+    });
   };
 
   const canViewCompetition = (competitionId: number): boolean => {

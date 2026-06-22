@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Eye } from 'lucide-react';
 import { InfoButton } from '@/components/ui/InfoButton';
@@ -257,7 +257,42 @@ export default function IasfOverallSheetPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const handleSave = async () => {
+  // Admin polling — refresh score data every 5 s in read-only mode
+  useEffect(() => {
+    if (!readOnly || loading) return;
+    const interval = setInterval(async () => {
+      try {
+        const sheetRes = await competitionsRepository.listScoreSheets({ registration: String(registrationId) });
+        if (sheetRes.data.results.length === 0) return;
+        const sheet = sheetRes.data.results[0];
+        setExistingSheet(sheet);
+        setScores({
+          creativity_overall:  sheet.creativity_overall  ? parseFloat(sheet.creativity_overall)  : 0,
+          formations_score:    sheet.formations_score    ? parseFloat(sheet.formations_score)    : 0,
+          dance_difficulty:    sheet.dance_difficulty    ? parseFloat(sheet.dance_difficulty)    : 0,
+          dance_execution:     sheet.dance_execution     ? parseFloat(sheet.dance_execution)     : 0,
+          showmanship_overall: sheet.showmanship_overall ? parseFloat(sheet.showmanship_overall) : 0,
+        });
+        if (sheet.notes) setNotes(sheet.notes);
+      } catch { /* noop */ }
+    }, 5000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly, loading, registrationId]);
+
+  // Prevents auto-save from firing while load() is populating initial form values
+  const initialValuesSettled = useRef(false);
+  useEffect(() => {
+    if (!loading) {
+      const t = setTimeout(() => { initialValuesSettled.current = true; }, 500);
+      return () => clearTimeout(t);
+    }
+  }, [loading]);
+
+  // Stable ref so auto-save effect can call the latest handleSave without it as a dep
+  const handleSaveRef = useRef<(silent?: boolean) => Promise<void>>(async () => {});
+
+  const handleSave = async (silent = false) => {
     setSaving(true);
     try {
       const payload: Partial<ScoreSheet> = {
@@ -280,13 +315,24 @@ export default function IasfOverallSheetPage() {
         saved = res.data;
       }
       setExistingSheet(saved);
-      toast.success('Planilla guardada');
+      if (!silent) toast.success('Planilla guardada');
     } catch (err) {
       toastApiError(err);
     } finally {
       setSaving(false);
     }
   };
+
+  // Keep ref current so auto-save always calls the latest closure
+  handleSaveRef.current = handleSave;
+
+  // Auto-save 2 s after the last change (judge mode only)
+  useEffect(() => {
+    if (readOnly || !initialValuesSettled.current) return;
+    const timer = setTimeout(() => { handleSaveRef.current(true); }, 2000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly, scores, notes]);
 
   if (loading) return <PageSpinner />;
 

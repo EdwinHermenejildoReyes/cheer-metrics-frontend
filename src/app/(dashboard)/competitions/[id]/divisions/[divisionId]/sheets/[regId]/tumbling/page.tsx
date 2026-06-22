@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Eye, Lock } from 'lucide-react';
 import { InfoButton } from '@/components/ui/InfoButton';
+import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
@@ -16,7 +17,7 @@ import { useJudge } from '@/hooks/useJudge';
 import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
 import type { TumblingConfig } from '@/lib/scoringConfig';
-import type { ScoreSheet, UnpaidAthlete } from '@/types/competitions';
+import type { Division, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 import type { TumblingPrintData } from '@/components/print/TumblingSheetPrintView';
 
@@ -297,6 +298,7 @@ export default function TumblingSheetPage() {
 
   const [teamName,       setTeamName]       = useState<string>('');
   const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
+  const [division,       setDivision]       = useState<Division | null>(null);
   const [loading,        setLoading]        = useState(true);
   const [saving,         setSaving]         = useState(false);
   const [tCfg,           setTCfg]           = useState<TumblingConfig>(DEFAULT_TUMBLING_CONFIG);
@@ -375,6 +377,7 @@ export default function TumblingSheetPage() {
       const sysConfig = getScoringConfig(divRes.data);
       const tcfg = sysConfig.tumbling;
       setTCfg(tcfg);
+      setDivision(divRes.data);
 
       // Config-based defaults
       if (tcfg.standingHasDiff && tcfg.standingRango.length > 0) setStandingRango(tcfg.standingRango[0].value);
@@ -474,6 +477,39 @@ export default function TumblingSheetPage() {
     return () => ch.close();
   }, [registrationId]);
 
+  // Admin polling — refresh score data every 5 s in read-only mode
+  useEffect(() => {
+    if (!readOnly || loading) return;
+    const interval = setInterval(async () => {
+      try {
+        const sheetRes = await competitionsRepository.listScoreSheets({ registration: String(registrationId) });
+        if (sheetRes.data.results.length === 0) return;
+        const sheet = sheetRes.data.results[0];
+        setExistingSheet(sheet);
+        if (sheet.notes) {
+          try {
+            const p = JSON.parse(sheet.notes);
+            setStandingNotes(p.standing ?? '');
+            setRunningNotes(p.running ?? '');
+            setJumpsNotes(p.jumps ?? '');
+            const s = p._scores ?? {};
+            if (Array.isArray(s.standingExecDeds)) setStandingExecDeds(s.standingExecDeds);
+            if (Array.isArray(s.runningExecDeds))  setRunningExecDeds(s.runningExecDeds);
+            if (Array.isArray(s.jumpsExecDeds))    setJumpsExecDeds(s.jumpsExecDeds);
+          } catch { /* noop */ }
+        }
+        if (sheet.standing_difficulty != null) setStandingRango(parseFloat(sheet.standing_difficulty) || 0);
+        if (sheet.standing_drivers    != null) setStandingHabilidad(parseFloat(sheet.standing_drivers) || 0);
+        if (sheet.running_difficulty  != null) setRunningRango(parseFloat(sheet.running_difficulty) || 0);
+        if (sheet.running_drivers     != null) setRunningHabilidad(parseFloat(sheet.running_drivers) || 0);
+        if (sheet.jumps_difficulty    != null) setJumpsDiff(parseFloat(sheet.jumps_difficulty) || 0);
+        if (sheet.creativity_tumbling  != null) setCreativityTumbling(parseFloat(sheet.creativity_tumbling)  || 0);
+        if (sheet.showmanship_tumbling != null) setShowmanshipTumbling(parseFloat(sheet.showmanship_tumbling) || 0);
+      } catch { /* noop */ }
+    }, 5000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly, loading, registrationId, tCfg]);
 
   // Continuously check if protest window expires while page is open
   useEffect(() => {
@@ -491,8 +527,20 @@ export default function TumblingSheetPage() {
     return () => clearInterval(id);
   }, [existingSheet, protestExpired]);
 
+  // Prevents auto-save from firing while load() is populating initial form values
+  const initialValuesSettled = useRef(false);
+  useEffect(() => {
+    if (!loading) {
+      const t = setTimeout(() => { initialValuesSettled.current = true; }, 500);
+      return () => clearTimeout(t);
+    }
+  }, [loading]);
+
+  // Stable ref so auto-save effect can call the latest handleSave without it as a dep
+  const handleSaveRef = useRef<(silent?: boolean) => Promise<void>>(async () => {});
+
   // ── Save ──────────────────────────────────────────────────────────────────
-  const handleSave = async () => {
+  const handleSave = async (silent = false) => {
     setSaving(true);
     try {
       const payload: Partial<ScoreSheet> = {
@@ -532,13 +580,24 @@ export default function TumblingSheetPage() {
         saved = res.data;
       }
       setExistingSheet(saved);
-      toast.success('Planilla guardada');
+      if (!silent) toast.success('Planilla guardada');
     } catch (err) {
       toastApiError(err);
     } finally {
       setSaving(false);
     }
   };
+
+  // Keep ref current so auto-save always calls the latest closure
+  handleSaveRef.current = handleSave;
+
+  // Auto-save 2 s after the last change (judge mode only)
+  useEffect(() => {
+    if (readOnly || !initialValuesSettled.current) return;
+    const timer = setTimeout(() => { handleSaveRef.current(true); }, 2000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly, standingRango, standingHabilidad, standingExecDeds, runningRango, runningHabilidad, runningExecDeds, jumpsDiff, jumpsExecDeds, creativityTumbling, showmanshipTumbling, standingNotes, runningNotes, jumpsNotes]);
 
   if (loading) return <PageSpinner />;
 
@@ -629,6 +688,9 @@ export default function TumblingSheetPage() {
       )}
 
       <div className={`print:hidden max-w-6xl mx-auto px-6 py-8 flex flex-col gap-14${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
+
+        {/* ── Skill reference panel ────────────────────────────────────── */}
+        <SkillReferencePanel skillLevel={division?.skill_level} sheetType="tumbling" />
 
         {/* ── Gym construction table banner ────────────────────────────── */}
         {(() => {

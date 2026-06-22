@@ -16,6 +16,7 @@ import { toastApiError } from '@/utils/apiErrors';
 import type { BuildingConfig } from '@/lib/scoringConfig';
 import type { Division, DivisionCategory, Registration, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
+import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 
 function fmt(n: number) { return n.toFixed(2); }
 
@@ -209,6 +210,54 @@ export default function BuildingDifficultyPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [divId, registrationId]);
 
+  // Refresh scoresheet every 5 s for read-only (admin) view so judges' saves appear in real time
+  useEffect(() => {
+    if (!readOnly || loading) return;
+    const interval = setInterval(async () => {
+      try {
+        const sheetRes = await competitionsRepository.listScoreSheets({ registration: String(registrationId) });
+        if (sheetRes.data.results.length === 0) return;
+        const sheet = sheetRes.data.results[0];
+        setExistingSheet(sheet);
+        if (sheet.stunts_difficulty) {
+          const v = parseFloat(sheet.stunts_difficulty);
+          if (bCfg.stuntsRango.some(r => r.value === v)) setStuntsRango(v);
+        }
+        if (sheet.pyramids_difficulty) {
+          const v = parseFloat(sheet.pyramids_difficulty);
+          const idx = bCfg.pyramidRango.findIndex(r => v >= r.low && v <= r.high);
+          if (idx >= 0) { setPyramidsRangeIdx(idx); setPyramidsFine(parseFloat((v - bCfg.pyramidRango[idx].low).toFixed(1))); }
+        }
+        if (sheet.tosses_difficulty) {
+          const v = parseFloat(sheet.tosses_difficulty);
+          if (bCfg.tossDiffOpts.some(o => o.value === v)) setTossesDiff(v);
+        }
+        if (sheet.pyramids_drivers) {
+          const v = parseFloat(sheet.pyramids_drivers);
+          if (bCfg.pyramidDriversOpts.some(o => o.value === v)) setPyramidsDrivers(v);
+        }
+        if (sheet.creativity_building) setCreativityBuilding(Math.min(2.0, Math.max(1.5, parseFloat(sheet.creativity_building))));
+        if (sheet.showmanship_building) setShowmanshipBuilding(Math.min(bCfg.showmanshipMax, Math.max(1.0, parseFloat(sheet.showmanship_building))));
+        if (sheet.notes) {
+          try {
+            const p = JSON.parse(sheet.notes);
+            setStuntsNotes(p.bd_stunts ?? '');
+            setPyramidsNotes(p.bd_pyramids ?? '');
+            setTossesNotes(p.bd_tosses ?? '');
+            const s = p._scores ?? {};
+            if (s.bd_stuntsRango !== undefined && bCfg.stuntsRango.some(r => r.value === s.bd_stuntsRango)) setStuntsRango(s.bd_stuntsRango);
+            if (Array.isArray(s.bd_stuntsSkills)) setStuntsSkills(Array(5).fill(null).map((_, i) => s.bd_stuntsSkills[i] ?? null));
+            if (s.bd_stuntsPartMax !== undefined && s.bd_stuntsPartMax !== null && bCfg.stuntsPartMaxOpts.some(o => o.value === s.bd_stuntsPartMax)) setStuntsPartMax(s.bd_stuntsPartMax);
+            if (s.bd_pyramidsRangeIdx !== undefined) setPyramidsRangeIdx(s.bd_pyramidsRangeIdx);
+            if (s.bd_pyramidsFine !== undefined) setPyramidsFine(s.bd_pyramidsFine);
+          } catch { /* noop */ }
+        }
+      } catch { /* noop */ }
+    }, 5000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly, loading, registrationId, bCfg]);
+
   // Real-time cross-tab updates via BroadcastChannel (same browser, non-incognito tabs only)
   useEffect(() => {
     const ch = new BroadcastChannel('cheer-metrics:athlete-count');
@@ -221,8 +270,20 @@ export default function BuildingDifficultyPage() {
     return () => ch.close();
   }, [registrationId]);
 
+  // Prevents auto-save from firing while load() is populating initial form values
+  const initialValuesSettled = useRef(false);
+  useEffect(() => {
+    if (!loading) {
+      const t = setTimeout(() => { initialValuesSettled.current = true; }, 500);
+      return () => clearTimeout(t);
+    }
+  }, [loading]);
+
+  // Stable ref so auto-save effect can call the latest handleSave without it as a dep
+  const handleSaveRef = useRef<(silent?: boolean) => Promise<void>>(async () => {});
+
   // ── Save ──────────────────────────────────────────────────────────────────
-  const handleSave = async () => {
+  const handleSave = async (silent = false) => {
     setSaving(true);
     try {
       const notesPayload = (() => {
@@ -265,13 +326,24 @@ export default function BuildingDifficultyPage() {
         saved = res.data;
       }
       setExistingSheet(saved);
-      toast.success('Planilla guardada');
+      if (!silent) toast.success('Planilla guardada');
     } catch (err) {
       toastApiError(err);
     } finally {
       setSaving(false);
     }
   };
+
+  // Keep ref current so auto-save always calls the latest closure
+  handleSaveRef.current = handleSave;
+
+  // Auto-save 2 s after the last change (judge mode only)
+  useEffect(() => {
+    if (readOnly || !initialValuesSettled.current) return;
+    const timer = setTimeout(() => { handleSaveRef.current(true); }, 2000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly, stuntsRango, stuntsSkills, stuntsPartMax, pyramidsRangeIdx, pyramidsFine, pyramidsDrivers, tossesDiff, creativityBuilding, showmanshipBuilding, stuntsNotes, pyramidsNotes, tossesNotes]);
 
   const handleSaveAthleteCount = async () => {
     const val = localCountStr === '' ? null : parseInt(localCountStr, 10);
@@ -432,6 +504,8 @@ export default function BuildingDifficultyPage() {
       })()}
 
       <div className={`max-w-4xl mx-auto px-6 py-8 flex flex-col gap-16${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
+
+        <SkillReferencePanel skillLevel={division?.skill_level} sheetType="building" />
 
         {/* ── STUNTS DIFFICULTY ────────────────────────────────────────── */}
         {bCfg.hasStunts && bCfg.stuntsHasDiff && (

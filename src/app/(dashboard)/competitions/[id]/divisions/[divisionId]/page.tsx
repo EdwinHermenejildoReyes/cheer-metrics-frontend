@@ -160,6 +160,7 @@ export default function DivisionDetailPage() {
               <Badge variant="default">{AGE_GROUP_LABELS[division.age_group]}</Badge>
               <Badge variant="violet">{SKILL_LEVEL_LABELS[division.skill_level]}</Badge>
               <Badge variant="info">{CATEGORY_LABELS[division.category]}</Badge>
+              {division.is_non_tumbling && <Badge variant="warning">Non Tumbling</Badge>}
               {activeScoringSystem && (
                 <Badge variant="success">{SCORING_SYSTEM_LABELS[activeScoringSystem]}</Badge>
               )}
@@ -327,7 +328,7 @@ export default function DivisionDetailPage() {
                           <Flag className="h-3.5 w-3.5 text-red-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'rangos') && isGrupalMode && (
+                      {canViewSheet(competitionId, 'rangos') && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -375,6 +376,16 @@ export default function DivisionDetailPage() {
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/tumbling-execution`)}
                         >
                           <Zap className="h-3.5 w-3.5 text-green-400" />
+                        </Button>
+                      )}
+                      {canViewSheet(competitionId, 'overall') && !isGrupalMode && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Overall (General)"
+                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/overall`)}
+                        >
+                          <Layers className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
                       {canViewSheet(competitionId, 'deductions_only') && !isGrupalMode && (

@@ -45,7 +45,7 @@ uv add <package>
 |-----|---------------|
 | `apps.core` | Custom User model (email-based, no username), `UserRole` choices (`org_admin/judge/athlete/coach`), `CookieJWTAuthentication` class, `BaseModel`, `PlatformSettings` (singleton branding colors, `.load()` returns pk=1) |
 | `apps.api` | All DRF ViewSets, serializers, permission classes, and URL routers (single entry point for all endpoints) |
-| `apps.competitions` | Domain models: Organization, Competition, Division, Gym, Team, Registration, ScoreSheet, JudgeAssignment, Deduction, FanPackage, GymInvoice, RegistrationToken; all scoring constants (`FIELD_MAXIMA`, `DEDUCTION_AMOUNTS`, `SCORING_SYSTEM_CONFIG`) |
+| `apps.competitions` | Domain models: Organization, Competition, Division, Gym, Team, Registration, RegistrationStaff, ScoreSheet, JudgeAssignment, Deduction, FanPackage, FanPackageLine, GymInvoice, AthleteInvoiceLine, TeamInvoiceLine, HeroImage, RegistrationToken; all scoring constants (`FIELD_MAXIMA`, `DEDUCTION_AMOUNTS`, `SCORING_SYSTEM_CONFIG`) |
 | `apps.athletes` | Athlete model, TeamMembership, age calculation and eligible age-group logic |
 
 ### Key Patterns
@@ -58,13 +58,15 @@ uv add <package>
 
 **API** — All endpoints are under `/api/v1/`. Djoser handles `/api/v1/auth/` (register, password reset). Custom views (not Djoser) handle `/api/v1/auth/login/`, `/api/v1/auth/token/refresh/`, and `/api/v1/auth/logout/` for cookie management. Default DRF pagination: 25 items/page with `DjangoFilterBackend`.
 
-**Permission classes** — `apps.api.permissions` defines `IsOwnerOrAdmin` (allows admins or the object's `created_by` user) and `IsActiveJudgeForCompetition`. Judge access is determined by `JudgeAssignment.access_from` / `access_until` timestamps when set; falls back to `Competition.is_active` when both are null. The canonical logic is `_is_judge_access_active()` in `apps/api/permissions.py`.
+**Permission classes** — `apps.api.permissions` defines four classes: `IsApproved` (rejects unapproved accounts — applied as default on most ViewSets), `IsStaffOrOrgAdmin` (allows `is_staff=True` or `role=org_admin`), `IsOwnerOrAdmin` (allows admins or the object's `created_by` user), and `IsActiveJudgeForCompetition`. Judge access is determined by `JudgeAssignment.access_from` / `access_until` timestamps when set; falls back to `Competition.is_active` when both are null. The canonical logic is `_is_judge_access_active()` in `apps/api/permissions.py`.
 
-**Sheet mode** — `Competition.sheet_mode` (`grupal` | `individual`) controls which judge sheet model is used. `grupal` uses one combined ScoreSheet per registration; `individual` splits scoring across specialized `SheetType` roles (`building_difficulty`, `building_execution`, `tumbling_difficulty`, `tumbling_execution`, `deductions_only`, `safety_rules`). The `JudgeAssignment.sheet_type` field ties a judge to a specific `SheetType` choice. When adding new sheet types, update both `SheetType` choices in `apps/competitions/models.py` and the corresponding frontend routes.
+**Multi-tenancy** — `User.organization` is a FK to `Organization`. The `_org_id(user)` helper in `apps/api/views.py` returns `None` for `is_staff` users (they see all data) and `user.organization_id` for everyone else; ViewSet querysets filter by this. When adding new ViewSets, apply the same `_org_id` scoping to `get_queryset()`.
+
+**Sheet mode** — `Competition.sheet_mode` (`grupal` | `individual`) controls which judge sheet tabs are shown. `grupal` shows `building`, `tumbling`, `overall`, `rangos`, `deducciones`, `deductions_only`, and `safety_rules`; `individual` shows `partner_stunt`, `building_difficulty`, `building_execution`, `tumbling_difficulty`, and `tumbling_execution`. These groupings are defined in `src/types/competitions.ts` as `GRUPAL_SHEET_TYPES` / `INDIVIDUAL_SHEET_TYPES`. The `JudgeAssignment.sheet_type` field ties a judge to a specific `SheetType` choice. When adding new sheet types, update both `SheetType` choices in `apps/competitions/models.py` and both frontend constants.
 
 **ScoreSheet auto-creation** — A post-save signal in `apps/competitions/signals.py` automatically calls `ScoreSheet.objects.get_or_create(registration=instance)` whenever a `Registration` transitions to `confirmed` status. Never create ScoreSheets manually for confirmed registrations.
 
-**Billing** — `Competition.team_fee` (flat per team), `Division.athlete_fee` (per athlete), and `Competition.require_payment` (blocks score saving if `GymInvoice.paid` is false) form the billing model. `GymInvoice.generate(competition, gym)` computes line items from memberships and team registrations. Frontend billing pages: `/competitions/[id]/billing` (all gyms) and `/competitions/[id]/billing/[gymId]` (single gym invoice).
+**Billing** — `Competition.team_fee` (flat per team), `Division.athlete_fee` (per athlete), `Competition.multi_team_discount` (per-athlete discount for athletes competing in 2+ teams), and `Competition.require_payment` (blocks score saving if `GymInvoice.paid` is false) form the billing model. `GymInvoice.generate(competition, gym)` computes line items (`AthleteInvoiceLine`, `TeamInvoiceLine`) from memberships and team registrations. Frontend billing pages: `/competitions/[id]/billing` (all gyms) and `/competitions/[id]/billing/[gymId]` (single gym invoice).
 
 **Public registration wizard** — `/registro?token=...` is a public multi-step form (no auth) that lets coaches self-register a team. It validates a `RegistrationToken` via `GET /api/v1/wizard/validate/?token=...` then creates gym, team, and athlete records through the `wizard/` endpoints. Admins issue tokens from `/competitions/[id]/tokens` (managed via `registration-tokens/` API).
 
@@ -83,7 +85,7 @@ python manage.py import_inscripcion <file> --competition <id> [--fotos-zip <path
 python manage.py mark_all_paid --competition <id>   # mark all GymInvoices as paid
 ```
 
-`tools/generate_inscripcion_template.py` generates a blank CSV template for the import format. Also triggerable from the frontend page at `/competitions/[id]/import`. Each error row is skipped and accumulated in the result; the import never aborts mid-file unless the competition is not found.
+`tools/generate_inscripcion_template.py` generates a blank CSV template for the import format; a pre-built copy lives at `templates/plantilla_inscripcion.csv` in the repo root. Also triggerable from the frontend page at `/competitions/[id]/import`. Each error row is skipped and accumulated in the result; the import never aborts mid-file unless the competition is not found.
 
 **Scheduler / rest validator** — `apps/competitions/scheduler.py` checks that athletes competing in multiple teams have at least `MIN_REST_GAP = 3` performance slots between appearances. Returns `RestConflict` dataclass instances. The public `/schedule` page (outside the dashboard group) renders the running order and surfaces these conflicts.
 
@@ -124,7 +126,13 @@ NEXT_PUBLIC_WEB_URL=http://localhost:3000/
 
 **Repository layer** — `src/repositories/` wraps all API calls (one file per domain). Add new API methods here, not directly in components.
 
-**State management** — Redux Toolkit for global state. Currently only auth state is implemented (`src/store/auth/slices.ts`). Prefer repositories + local state for simple reads; use Redux for cross-cutting state (auth, complex competition flow).
+**State management** — Redux Toolkit + Redux Saga for global state. The saga middleware is wired in `src/core/store.ts` with `src/core/rootSaga.ts` (currently a stub `yield all([])`). Currently only auth state is implemented (`src/store/auth/slices.ts`). Prefer repositories + local state for simple reads; use Redux for cross-cutting state (auth, complex competition flow).
+
+**Domain types** — `src/types/` is the canonical frontend type source: `competitions.ts` defines `SheetType`, `JudgeAssignment`, `SheetMode`, the `GRUPAL_SHEET_TYPES` / `INDIVIDUAL_SHEET_TYPES` grouping constants, and all enum-like union types (`AgeGroup`, `SkillLevel`, `DeductionType`, etc.); `athletes.ts` defines `Athlete` and `TeamMembership`; `settings.ts` defines `PlatformSettings`. Import types from here rather than redefining them.
+
+**Judge access (frontend)** — `src/hooks/useJudge.ts` combines Redux auth state and `judge_assignments` into convenience helpers: `isAdmin`, `isJudge`, `canViewSheet(competitionId, sheetType)`, `canViewCompetition(competitionId)`, `sheetTypesForCompetition(competitionId)`. Use this hook instead of reading assignments directly from the Redux store.
+
+**Construction tables** — `src/lib/constructionTable.ts` encodes the UCA Ecuador "Tabla de Cantidad en Construcción" rules: `getConstructionGroups(athleteCount)` returns building group thresholds, `getGymGroups(athleteCount)` returns gymnastics group thresholds, and `getCoedStyleGroups(maleCount, skillLevel)` returns Coed-specific style groups. Score sheet pages use these to display the applicable limits to judges.
 
 **Branding** — `src/contexts/BrandingContext.tsx` provides organization colors and logo; `src/contexts/PlatformSettingsContext.tsx` provides global platform palette (`PlatformSettings`). Both are consumed by layout components and loaded in the root layout.
 
@@ -172,3 +180,7 @@ Mailpit (dev email) :8026
 
 - The backend exposes a pure REST API; Django renders no frontend pages.
 - Cookie-based JWT means CSRF protection must be active for mutating endpoints (SameSite=Lax).
+
+## Reference Docs
+
+`docs/regulatory-analysis.md` and `docs/scoring-analysis.md` in the repo root contain detailed UCA Ecuador / IASF rule analysis. Consult them before modifying scoring logic or adding new skill levels / scoring systems.

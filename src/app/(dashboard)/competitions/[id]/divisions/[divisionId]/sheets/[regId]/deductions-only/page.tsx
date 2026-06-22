@@ -109,6 +109,20 @@ export default function DeductionsOnlyPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Admin polling — refresh sheet data every 5 s in read-only mode
+  useEffect(() => {
+    if (!readOnly || loading) return;
+    const interval = setInterval(async () => {
+      try {
+        const sheetRes = await competitionsRepository.listScoreSheets({ registration: String(registrationId) });
+        if (sheetRes.data.results.length === 0) return;
+        setSheet(sheetRes.data.results[0]);
+      } catch { /* noop */ }
+    }, 5000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly, loading, registrationId]);
+
   const handlePlace = (type: DeductionType, zoneKey: string) => {
     setPending({ type, time: zoneKey, count: 1, notes: '', hitZero: false });
     setArmedType(null);

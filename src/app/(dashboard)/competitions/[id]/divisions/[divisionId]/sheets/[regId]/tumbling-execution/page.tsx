@@ -13,8 +13,9 @@ import { getGymGroups } from '@/lib/constructionTable';
 import { useJudge } from '@/hooks/useJudge';
 import { toastApiError } from '@/utils/apiErrors';
 import type { TumblingConfig } from '@/lib/scoringConfig';
-import type { ScoreSheet, UnpaidAthlete } from '@/types/competitions';
+import type { Division, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
+import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 
 const EXEC_DED_OPTS   = [0.05, 0.10, 0.20, 0.30];
 const EXEC_DED_LABELS = ['Mínimos', 'Menores', 'Múltiples', 'Generalizados'];
@@ -123,6 +124,7 @@ export default function TumblingExecutionPage() {
 
   const [teamName,       setTeamName]       = useState('');
   const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
+  const [division,       setDivision]       = useState<Division | null>(null);
   const [loading,        setLoading]        = useState(true);
   const [saving,         setSaving]         = useState(false);
   const [tCfg,           setTCfg]           = useState<TumblingConfig>(DEFAULT_TUMBLING_CONFIG);
@@ -161,6 +163,7 @@ export default function TumblingExecutionPage() {
       if (reg) { setTeamName(reg.team_name); setAthleteCount(reg.athlete_count ?? null); setUnpaidAthletes(reg.unpaid_athletes); setRequirePayment(reg.competition_require_payment); }
       const tcfg = getScoringConfig(divRes.data).tumbling;
       setTCfg(tcfg);
+      setDivision(divRes.data);
       if (sheetRes.data.results.length > 0) {
         const sheet = sheetRes.data.results[0];
         setExistingSheet(sheet);
@@ -208,8 +211,46 @@ export default function TumblingExecutionPage() {
     return () => ch.close();
   }, [registrationId]);
 
+  // Admin polling — refresh score data every 5 s in read-only mode
+  useEffect(() => {
+    if (!readOnly || loading) return;
+    const interval = setInterval(async () => {
+      try {
+        const sheetRes = await competitionsRepository.listScoreSheets({ registration: String(registrationId) });
+        if (sheetRes.data.results.length === 0) return;
+        const sheet = sheetRes.data.results[0];
+        setExistingSheet(sheet);
+        if (sheet.notes) {
+          try {
+            const p = JSON.parse(sheet.notes);
+            setStandingNotes(p.te_standing ?? '');
+            setRunningNotes(p.te_running ?? '');
+            setJumpsNotes(p.te_jumps ?? '');
+            const s = p._scores ?? {};
+            if (Array.isArray(s.te_standingExecDeds)) setStandingExecDeds(s.te_standingExecDeds);
+            if (Array.isArray(s.te_runningExecDeds))  setRunningExecDeds(s.te_runningExecDeds);
+            if (Array.isArray(s.te_jumpsExecDeds))    setJumpsExecDeds(s.te_jumpsExecDeds);
+          } catch { /* noop */ }
+        }
+      } catch { /* noop */ }
+    }, 5000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly, loading, registrationId, tCfg]);
 
-  const handleSave = async () => {
+  // Prevents auto-save from firing while load() is populating initial form values
+  const initialValuesSettled = useRef(false);
+  useEffect(() => {
+    if (!loading) {
+      const t = setTimeout(() => { initialValuesSettled.current = true; }, 500);
+      return () => clearTimeout(t);
+    }
+  }, [loading]);
+
+  // Stable ref so auto-save effect can call the latest handleSave without it as a dep
+  const handleSaveRef = useRef<(silent?: boolean) => Promise<void>>(async () => {});
+
+  const handleSave = async (silent = false) => {
     setSaving(true);
     try {
       const notesPayload = (() => {
@@ -239,11 +280,22 @@ export default function TumblingExecutionPage() {
         saved = res.data;
       }
       setExistingSheet(saved);
-      toast.success('Planilla guardada');
+      if (!silent) toast.success('Planilla guardada');
     } catch (err) {
       toastApiError(err);
     } finally { setSaving(false); }
   };
+
+  // Keep ref current so auto-save always calls the latest closure
+  handleSaveRef.current = handleSave;
+
+  // Auto-save 2 s after the last change (judge mode only)
+  useEffect(() => {
+    if (readOnly || !initialValuesSettled.current) return;
+    const timer = setTimeout(() => { handleSaveRef.current(true); }, 2000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly, standingExecDeds, runningExecDeds, jumpsExecDeds, standingNotes, runningNotes, jumpsNotes]);
 
   if (loading) return <PageSpinner />;
 
@@ -322,6 +374,8 @@ export default function TumblingExecutionPage() {
       })()}
 
       <div className={`max-w-5xl mx-auto px-6 py-8 flex flex-col gap-10${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
+
+        <SkillReferencePanel skillLevel={division?.skill_level} sheetType="tumbling" />
 
         {tCfg.hasStanding && (
           <section className="flex flex-col gap-3">
