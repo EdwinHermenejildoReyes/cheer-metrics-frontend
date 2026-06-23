@@ -5,7 +5,7 @@ import { BookOpen, ChevronDown } from 'lucide-react';
 import { getSkillTables } from '@/lib/skillTables';
 import type { SkillTableType } from '@/lib/skillTables';
 import { BuildingSkillTable } from './BuildingSkillTable';
-import { TumblingSkillTable } from './TumblingSkillTable';
+import { TumblingSkillTable, TossTable } from './TumblingSkillTable';
 
 interface Props {
   skillLevel: string | undefined;
@@ -18,8 +18,8 @@ const LEVEL_LABELS: Record<string, string> = {
 };
 
 const SHEET_LABELS: Record<SkillTableType, string> = {
-  building: 'Elevaciones',
-  tumbling: 'Gimnasia y Lanzamientos',
+  building: 'Elevaciones y Lanzamientos',
+  tumbling: 'Gimnasia',
 };
 
 function storageKey(sheetType: SkillTableType) {
@@ -102,10 +102,17 @@ export function SkillReferencePanel({ skillLevel, sheetType }: Props) {
 
           <div className="px-5 py-4">
             {sheetType === 'building' && tables.building && (
-              <BuildingSkillTable data={tables.building} />
+              <>
+                <BuildingSkillTable data={tables.building} />
+                {tables.tosses && (
+                  <div className="mt-6">
+                    <TossTable data={tables.tosses} />
+                  </div>
+                )}
+              </>
             )}
             {sheetType === 'tumbling' && (
-              <TumblingSkillTable gym={tables.gym} tosses={tables.tosses} />
+              <TumblingSkillTable gym={tables.gym} tosses={null} />
             )}
           </div>
         </div>

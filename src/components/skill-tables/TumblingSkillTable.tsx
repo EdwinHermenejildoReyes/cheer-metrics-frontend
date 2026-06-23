@@ -4,7 +4,7 @@ import type { GymTableData, GymSubTable, TossTableData } from '@/lib/skillTables
 
 // ── Tosses sub-component ──────────────────────────────────────────────────────
 
-function TossTable({ data }: { data: TossTableData }) {
+export function TossTable({ data }: { data: TossTableData }) {
   const hasTosses = data.sinGiro.length > 0 || data.conGiro.length > 0;
 
   return (
