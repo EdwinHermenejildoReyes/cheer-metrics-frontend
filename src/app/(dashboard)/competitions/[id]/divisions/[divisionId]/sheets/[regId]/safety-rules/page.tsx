@@ -20,6 +20,7 @@ import {
 } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 import { getConstructionGroups } from '@/lib/constructionTable';
+import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 
 const ILLEGAL: DeductionType[] = ['pi', 'eap', 'rg', 'gfn', 'bfn', 'seg'];
 const ADMIN:   DeductionType[] = ['ad', 'div'];
@@ -162,6 +163,7 @@ export default function SafetyRulesPage() {
 
   const [teamName,       setTeamName]       = useState('');
   const [sheet,          setSheet]          = useState<ScoreSheet | null>(null);
+  const [skillLevel,     setSkillLevel]     = useState<string | undefined>(undefined);
   const [loading,        setLoading]        = useState(true);
   const [athleteCount,   setAthleteCount]   = useState<number | null>(null);
   const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
@@ -171,12 +173,14 @@ export default function SafetyRulesPage() {
 
   const load = useCallback(async () => {
     try {
-      const [sheetRes, regRes] = await Promise.all([
+      const [sheetRes, regRes, divRes] = await Promise.all([
         competitionsRepository.listScoreSheets({ registration: String(registrationId) }),
         competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' }),
+        competitionsRepository.getDivision(divId),
       ]);
       const reg = regRes.data.results.find(r => r.id === registrationId);
       if (reg) { setTeamName(reg.team_name); setAthleteCount(reg.athlete_count ?? null); setUnpaidAthletes(reg.unpaid_athletes); setRequirePayment(reg.competition_require_payment); }
+      setSkillLevel(divRes.data.skill_level);
       if (sheetRes.data.results.length > 0) {
         const s = sheetRes.data.results[0];
         setSheet(s);
@@ -328,6 +332,9 @@ export default function SafetyRulesPage() {
       })()}
 
       <div className={`max-w-4xl mx-auto px-4 py-6 print:hidden${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
+
+        <SkillReferencePanel skillLevel={skillLevel} sheetType="building" />
+        <SkillReferencePanel skillLevel={skillLevel} sheetType="tumbling" />
 
         {!sheet && (
           <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 mb-6">

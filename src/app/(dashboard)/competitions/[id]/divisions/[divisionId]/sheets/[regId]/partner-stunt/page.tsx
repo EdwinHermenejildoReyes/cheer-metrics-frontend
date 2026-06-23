@@ -15,6 +15,7 @@ import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
 import type { ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
+import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 
 // ── Per-category config (regulation: UCA National Experience 2025) ────────────
 
@@ -240,6 +241,7 @@ export default function PartnerStuntSheetPage() {
 
   const [teamName,       setTeamName]       = useState<string>('');
   const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
+  const [skillLevel,     setSkillLevel]     = useState<string | undefined>(undefined);
   const [loading,        setLoading]        = useState(true);
   const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
   const [requirePayment, setRequirePayment] = useState(false);
@@ -264,9 +266,10 @@ export default function PartnerStuntSheetPage() {
 
   const load = useCallback(async () => {
     try {
-      const [sheetRes, regRes] = await Promise.all([
+      const [sheetRes, regRes, divRes] = await Promise.all([
         competitionsRepository.listScoreSheets({ registration: String(registrationId) }),
         competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' }),
+        competitionsRepository.getDivision(divId),
       ]);
 
       const reg = regRes.data.results.find(r => r.id === registrationId);
@@ -275,6 +278,7 @@ export default function PartnerStuntSheetPage() {
         setUnpaidAthletes(reg.unpaid_athletes);
         setRequirePayment(reg.competition_require_payment);
       }
+      setSkillLevel(divRes.data.skill_level);
 
       if (sheetRes.data.results.length > 0) {
         const sheet = sheetRes.data.results[0];
@@ -439,6 +443,8 @@ export default function PartnerStuntSheetPage() {
       />
 
       <div className={`print:hidden max-w-2xl mx-auto px-6 py-8 flex flex-col gap-6${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
+
+        <SkillReferencePanel skillLevel={skillLevel} sheetType="building" />
 
         {/* ── Overview bar ─────────────────────────────────────────────── */}
         <div className="rounded-xl bg-white border border-zinc-200 p-4 flex items-center gap-4">

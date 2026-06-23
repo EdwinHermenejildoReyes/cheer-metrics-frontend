@@ -15,6 +15,7 @@ import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
 import type { ScoreSheet, ScoringSystem, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
+import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 
 // ── Formations scale (2.0 → 1.0 in steps of −0.1) ───────────────────────────
 const FORMATIONS_VALUES = [2.0, 1.9, 1.8, 1.7, 1.6, 1.5, 1.4, 1.3, 1.2, 1.1, 1.0];
@@ -135,6 +136,7 @@ export default function OverallSheetPage() {
   const [teamName,       setTeamName]       = useState<string>('');
   const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
   const [scoringSystem,  setScoringSystem]  = useState<ScoringSystem | ''>('');
+  const [skillLevel,     setSkillLevel]     = useState<string | undefined>(undefined);
   const [loading,        setLoading]        = useState(true);
   const [saving,         setSaving]         = useState(false);
   const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
@@ -170,6 +172,7 @@ export default function OverallSheetPage() {
 
       const div = divRes.data;
       setScoringSystem((div.scoring_system || div.suggested_scoring_system) as ScoringSystem);
+      setSkillLevel(div.skill_level);
 
       const reg = regRes.data.results.find((r) => r.id === registrationId);
       if (reg) {
@@ -411,6 +414,9 @@ export default function OverallSheetPage() {
       )}
 
       <div className={`print:hidden max-w-6xl mx-auto px-6 py-8 flex flex-col gap-14${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
+
+        <SkillReferencePanel skillLevel={skillLevel} sheetType="building" />
+        <SkillReferencePanel skillLevel={skillLevel} sheetType="tumbling" />
 
         {/* ── DOS COLUMNAS: Formaciones | Baile ────────────────────────── */}
         <div className="grid grid-cols-2 gap-5 items-start">

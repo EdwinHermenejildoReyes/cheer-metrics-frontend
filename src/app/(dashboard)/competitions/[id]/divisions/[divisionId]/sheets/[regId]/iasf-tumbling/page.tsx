@@ -14,6 +14,7 @@ import { useJudge } from '@/hooks/useJudge';
 import { toastApiError } from '@/utils/apiErrors';
 import type { ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
+import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 
 // ── IASF World: Tumbling categories ───────────────────────────────────────────
 
@@ -205,6 +206,7 @@ export default function IasfTumblingSheetPage() {
 
   const [teamName,       setTeamName]       = useState<string>('');
   const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
+  const [skillLevel,     setSkillLevel]     = useState<string | undefined>(undefined);
   const [loading,        setLoading]        = useState(true);
   const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
   const [requirePayment, setRequirePayment] = useState(false);
@@ -224,9 +226,10 @@ export default function IasfTumblingSheetPage() {
 
   const load = useCallback(async () => {
     try {
-      const [sheetRes, regRes] = await Promise.all([
+      const [sheetRes, regRes, divRes] = await Promise.all([
         competitionsRepository.listScoreSheets({ registration: String(registrationId) }),
         competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' }),
+        competitionsRepository.getDivision(divId),
       ]);
       const reg = regRes.data.results.find(r => r.id === registrationId);
       if (reg) {
@@ -234,6 +237,7 @@ export default function IasfTumblingSheetPage() {
         setUnpaidAthletes(reg.unpaid_athletes);
         setRequirePayment(reg.competition_require_payment);
       }
+      setSkillLevel(divRes.data.skill_level);
       if (sheetRes.data.results.length > 0) {
         const sheet = sheetRes.data.results[0];
         setExistingSheet(sheet);
@@ -394,6 +398,7 @@ export default function IasfTumblingSheetPage() {
       />
 
       <div className={`print:hidden max-w-2xl mx-auto px-6 py-8 flex flex-col gap-6${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
+        <SkillReferencePanel skillLevel={skillLevel} sheetType="tumbling" />
         <div className="rounded-xl bg-white border border-zinc-200 p-4 flex items-center gap-4">
           <div className="flex-1">
             <div className="flex items-center justify-between text-xs text-zinc-500 mb-1.5">

@@ -11,6 +11,7 @@ import type { BuildingConfig, TumblingConfig } from '@/lib/scoringConfig';
 import type { ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 import { useBranding } from '@/contexts/BrandingContext';
+import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 
 function fmt(n: number) { return n.toFixed(2); }
 
@@ -27,6 +28,7 @@ export default function RangosSheetPage() {
   const [performanceOrder,   setPerformanceOrder]   = useState<number | null>(null);
   const [divisionName,       setDivisionName]       = useState('');
   const [competitionName,    setCompetitionName]    = useState('');
+  const [skillLevel,         setSkillLevel]         = useState<string | undefined>(undefined);
   const [existingSheet,      setExistingSheet]      = useState<ScoreSheet | null>(null);
   const [loading,            setLoading]            = useState(true);
   const [exporting,          setExporting]          = useState(false);
@@ -99,6 +101,7 @@ export default function RangosSheetPage() {
       }
       setDivisionName(divRes.data.name);
       setCompetitionName(divRes.data.competition_name);
+      setSkillLevel(divRes.data.skill_level);
 
       const sysConfig = getScoringConfig(divRes.data);
       const bcfg = sysConfig.building;
@@ -403,6 +406,7 @@ export default function RangosSheetPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-8 print:px-0 print:py-0 pointer-events-none select-none">
+        <SkillReferencePanel skillLevel={skillLevel} sheetType="building" />
         <div className="grid grid-cols-2 gap-8 print:gap-4 items-start">
 
         {/* ══ CONSTRUCCIONES ════════════════════════════════════════════════ */}
