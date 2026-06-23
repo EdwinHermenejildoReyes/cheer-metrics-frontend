@@ -19,12 +19,23 @@ import {
   CATEGORY_LABELS,
   SCORING_SYSTEM_LABELS,
   REGISTRATION_STATUS_LABELS,
+  SHEET_TYPE_LABELS,
   type Division,
   type Registration,
   type ScoreSheet,
   type RegistrationStatus,
   type ScoringSystem,
+  type SheetType,
 } from '@/types/competitions';
+
+function getSheetSlug(sheetType: SheetType, iasfWorld: boolean): string {
+  if (iasfWorld) {
+    if (sheetType === 'building') return 'iasf-building';
+    if (sheetType === 'tumbling') return 'iasf-tumbling';
+    if (sheetType === 'overall')  return 'iasf-overall';
+  }
+  return sheetType.replace(/_/g, '-');
+}
 
 
 const STATUS_VARIANT: Record<RegistrationStatus, 'default' | 'success' | 'warning' | 'danger'> = {
@@ -40,7 +51,7 @@ export default function DivisionDetailPage() {
   const competitionId = Number(id);
   const divId = Number(divisionId);
 
-  const { isJudge, isCompetitionActive, canViewSheet } = useJudge();
+  const { isJudge, isCompetitionActive, canViewSheet, sheetTypesForCompetition } = useJudge();
 
   useEffect(() => {
     if (isJudge && !isCompetitionActive(competitionId)) {
@@ -142,6 +153,7 @@ export default function DivisionDetailPage() {
   const activeScoringSystem = (division.scoring_system || division.suggested_scoring_system) as ScoringSystem;
   const isIasfWorld = activeScoringSystem === 'iasf_world_l6_7';
   const isGrupalMode = (division.competition_sheet_mode ?? 'grupal') !== 'individual';
+  const judgeSheetTypes = sheetTypesForCompetition(competitionId);
 
   return (
     <div className="flex flex-col gap-6 p-8">
@@ -214,7 +226,17 @@ export default function DivisionDetailPage() {
                   {/* Row */}
                   <div
                     className="flex items-center gap-4 px-5 py-3.5 cursor-pointer hover:bg-zinc-50"
-                    onClick={() => setExpandedRow(isExpanded ? null : reg.id)}
+                    onClick={() => {
+                      if (isJudge) {
+                        if (judgeSheetTypes.length === 1) {
+                          router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/${getSheetSlug(judgeSheetTypes[0], isIasfWorld)}`);
+                        } else if (judgeSheetTypes.length > 1) {
+                          setExpandedRow(isExpanded ? null : reg.id);
+                        }
+                      } else {
+                        setExpandedRow(isExpanded ? null : reg.id);
+                      }
+                    }}
                   >
                     <span className="w-6 text-center text-sm font-medium text-zinc-400">{idx + 1}</span>
                     <div className="flex-1 min-w-0">
@@ -434,8 +456,8 @@ export default function DivisionDetailPage() {
                     </div>
                   </div>
 
-                  {/* Expanded: score breakdown + deductions */}
-                  {isExpanded && sheet && (
+                  {/* Expanded: score breakdown (admin only) */}
+                  {isExpanded && !isJudge && sheet && (
                     <div className="border-t border-zinc-100 bg-zinc-50 px-5 py-4 flex flex-col gap-4">
                       {/* Section totals */}
                       <div>
@@ -542,6 +564,24 @@ export default function DivisionDetailPage() {
                           <span>Puntaje final</span>
                           <span className="tabular-nums">{parseFloat(sheet.final_score).toFixed(2)}</span>
                         </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Expanded: sheet picker (judges with multiple assignments) */}
+                  {isExpanded && isJudge && judgeSheetTypes.length > 1 && (
+                    <div className="border-t border-zinc-100 bg-zinc-50 px-5 py-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-3">Ir a planilla</p>
+                      <div className="flex flex-wrap gap-2">
+                        {judgeSheetTypes.map((sheetType) => (
+                          <button
+                            key={sheetType}
+                            onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/${getSheetSlug(sheetType, isIasfWorld)}`)}
+                            className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:border-zinc-400 hover:bg-zinc-100 transition-colors"
+                          >
+                            {SHEET_TYPE_LABELS[sheetType]}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   )}
