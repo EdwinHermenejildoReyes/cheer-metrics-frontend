@@ -688,9 +688,6 @@ export default function BuildingSheetPage() {
 
       <div className={`print:hidden max-w-6xl mx-auto px-6 py-8 flex flex-col gap-14${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
 
-        {/* ── Skill reference panel ────────────────────────────────────── */}
-        <SkillReferencePanel skillLevel={division?.skill_level} sheetType="building" />
-
         {/* ── Construction table banner ────────────────────────────────── */}
         {(() => {
           const groups = athleteCount ? getConstructionGroups(athleteCount) : null;
@@ -785,6 +782,9 @@ export default function BuildingSheetPage() {
             </div>
           );
         })()}
+
+        {/* ── Skill reference panel ────────────────────────────────────── */}
+        <SkillReferencePanel skillLevel={division?.skill_level} sheetType="building" />
 
         {/* ── STUNTS ──────────────────────────────────────────────────── */}
         <section className="flex flex-col gap-3">

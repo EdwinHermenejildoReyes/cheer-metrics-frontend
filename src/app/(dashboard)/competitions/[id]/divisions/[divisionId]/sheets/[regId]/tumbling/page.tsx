@@ -689,9 +689,6 @@ export default function TumblingSheetPage() {
 
       <div className={`print:hidden max-w-6xl mx-auto px-6 py-8 flex flex-col gap-14${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
 
-        {/* ── Skill reference panel ────────────────────────────────────── */}
-        <SkillReferencePanel skillLevel={division?.skill_level} sheetType="tumbling" />
-
         {/* ── Gym construction table banner ────────────────────────────── */}
         {(() => {
           const groups = athleteCount ? getGymGroups(athleteCount) : null;
@@ -734,6 +731,9 @@ export default function TumblingSheetPage() {
             </div>
           );
         })()}
+
+        {/* ── Skill reference panel ────────────────────────────────────── */}
+        <SkillReferencePanel skillLevel={division?.skill_level} sheetType="tumbling" />
 
         {/* ── GIMNASIA ESTÁTICA ────────────────────────────────────────── */}
         {tCfg.hasStanding && (
