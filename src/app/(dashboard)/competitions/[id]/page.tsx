@@ -21,6 +21,7 @@ import {
   SKILL_LEVEL_LABELS,
   CATEGORY_LABELS,
   SCORING_SYSTEM_LABELS,
+  SCORING_FAMILY_LABELS,
   SHEET_TYPE_LABELS,
   GRUPAL_SHEET_TYPES,
   INDIVIDUAL_SHEET_TYPES,
@@ -267,7 +268,10 @@ export default function CompetitionDetailPage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-semibold text-zinc-900">{competition.name}</h1>
-              <Badge variant="info">{competition.regulation}</Badge>
+              {competition.scoring_family && (
+                <Badge variant="info">{SCORING_FAMILY_LABELS[competition.scoring_family]}</Badge>
+              )}
+              <Badge variant="default">{competition.regulation}</Badge>
             </div>
             <p className="text-sm text-zinc-500 mt-0.5">
               {new Date(competition.date + 'T00:00:00').toLocaleDateString('es-EC', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}

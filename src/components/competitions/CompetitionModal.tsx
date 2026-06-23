@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
@@ -11,17 +11,17 @@ import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import competitionsRepository from '@/repositories/competitionsRepository';
-import type { Competition, Organization } from '@/types/competitions';
+import { SCORING_FAMILY_REGULATION, type Competition, type Organization, type ScoringFamily } from '@/types/competitions';
 
 const schema = z.object({
-  name: z.string().min(2, 'Mínimo 2 caracteres'),
-  date: z.string().min(1, 'Requerido'),
-  venue: z.string().min(2, 'Requerido'),
-  city: z.string().min(2, 'Requerido'),
-  regulation: z.enum(['IASF', 'ICU', 'AMBAS']),
-  service_type: z.enum(['full', 'registration_only', 'judging_only']),
-  notes: z.string().optional(),
-  organization: z.string().optional(),
+  name:           z.string().min(2, 'Mínimo 2 caracteres'),
+  date:           z.string().min(1, 'Requerido'),
+  venue:          z.string().min(2, 'Requerido'),
+  city:           z.string().min(2, 'Requerido'),
+  scoring_family: z.enum(['united', 'iasf_567', 'icu', 'partner_stunt', 'future_flyer', 'best_cheer']),
+  service_type:   z.enum(['full', 'registration_only', 'judging_only']),
+  notes:          z.string().optional(),
+  organization:   z.string().optional(),
   require_payment: z.boolean().optional(),
 });
 
@@ -34,10 +34,13 @@ interface Props {
   initial?: Competition;
 }
 
-const REGULATION_OPTIONS = [
-  { value: 'IASF', label: 'IASF' },
-  { value: 'ICU', label: 'ICU' },
-  { value: 'AMBAS', label: 'AMBAS' },
+const SCORING_FAMILY_OPTIONS = [
+  { value: 'united',        label: 'United' },
+  { value: 'iasf_567',      label: 'IASF (N5, N6, N7)' },
+  { value: 'icu',           label: 'ICU' },
+  { value: 'partner_stunt', label: 'Partner / Group Stunts' },
+  { value: 'future_flyer',  label: 'Future Flyer' },
+  { value: 'best_cheer',    label: 'Best Cheerleader' },
 ];
 
 const SERVICE_TYPE_OPTIONS = [
@@ -46,16 +49,25 @@ const SERVICE_TYPE_OPTIONS = [
   { value: 'judging_only',      label: 'Solo Jueceo' },
 ];
 
+const DEFAULT_VALUES: Partial<FormValues> = {
+  scoring_family: 'united',
+  service_type: 'full',
+  name: '', date: '', venue: '', city: '', notes: '', organization: '',
+};
+
 export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
   const isEdit = !!initial;
   const [orgs, setOrgs] = useState<Organization[]>([]);
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormValues>({
+  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: initial
-      ? { ...initial, organization: initial.organization ? String(initial.organization) : '' }
-      : { regulation: 'IASF', service_type: 'full' as const },
+      ? { ...initial, scoring_family: (initial.scoring_family ?? 'united') as ScoringFamily, organization: initial.organization ? String(initial.organization) : '' }
+      : DEFAULT_VALUES,
   });
+
+  const scoringFamily = useWatch({ control, name: 'scoring_family' });
+  const derivedRegulation = scoringFamily ? SCORING_FAMILY_REGULATION[scoringFamily] : null;
 
   useEffect(() => {
     competitionsRepository.listOrganizations({ page_size: '100' }).then((res) => {
@@ -67,8 +79,8 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
     if (open) {
       reset(
         initial
-          ? { ...initial, organization: initial.organization ? String(initial.organization) : '' }
-          : { regulation: 'IASF', service_type: 'full' as const, name: '', date: '', venue: '', city: '', notes: '', organization: '' },
+          ? { ...initial, scoring_family: (initial.scoring_family ?? 'united') as ScoringFamily, organization: initial.organization ? String(initial.organization) : '' }
+          : DEFAULT_VALUES,
       );
     }
   }, [open, initial, reset]);
@@ -99,16 +111,27 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
     <Modal open={open} onClose={onClose} title={isEdit ? 'Editar competencia' : 'Nueva competencia'}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <Input label="Nombre" id="name" placeholder="Copa Nacional 2025" error={errors.name?.message} {...register('name')} />
-        <div className="grid grid-cols-2 gap-3">
-          <Input label="Fecha" id="date" type="date" error={errors.date?.message} {...register('date')} />
+        <Input label="Fecha" id="date" type="date" error={errors.date?.message} {...register('date')} />
+
+        {/* Sistema de calificación + Reglamento derivado */}
+        <div>
           <Select
-            label="Reglamento"
-            id="regulation"
-            options={REGULATION_OPTIONS}
-            error={errors.regulation?.message}
-            {...register('regulation')}
+            label="Sistema de Calificación"
+            id="scoring_family"
+            options={SCORING_FAMILY_OPTIONS}
+            error={errors.scoring_family?.message}
+            {...register('scoring_family')}
           />
+          {derivedRegulation && (
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-zinc-500">
+              Reglamento:
+              <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                {derivedRegulation}
+              </span>
+            </p>
+          )}
         </div>
+
         <Select
           label="Módulos"
           id="service_type"

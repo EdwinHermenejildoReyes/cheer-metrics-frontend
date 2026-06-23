@@ -40,6 +40,31 @@ export interface JudgeAssignment {
 
 export type SheetMode = 'grupal' | 'individual';
 export type ServiceType = 'full' | 'registration_only' | 'judging_only';
+export type ScoringFamily =
+  | 'united'
+  | 'iasf_567'
+  | 'icu'
+  | 'partner_stunt'
+  | 'future_flyer'
+  | 'best_cheer';
+
+export const SCORING_FAMILY_LABELS: Record<ScoringFamily, string> = {
+  united:        'United',
+  iasf_567:      'IASF (N5, N6, N7)',
+  icu:           'ICU',
+  partner_stunt: 'Partner / Group Stunts',
+  future_flyer:  'Future Flyer',
+  best_cheer:    'Best Cheerleader',
+};
+
+export const SCORING_FAMILY_REGULATION: Record<ScoringFamily, string> = {
+  united:        'IASF',
+  iasf_567:      'IASF',
+  icu:           'ICU',
+  partner_stunt: 'IASF',
+  future_flyer:  'IASF',
+  best_cheer:    'IASF',
+};
 
 export const GRUPAL_SHEET_TYPES: SheetType[] = [
   'building', 'tumbling', 'overall', 'rangos', 'deducciones', 'deductions_only', 'safety_rules',
@@ -111,6 +136,7 @@ export interface Competition {
   end_datetime: string | null;
   venue: string;
   city: string;
+  scoring_family: ScoringFamily | null;
   regulation: Regulation;
   sheet_mode: SheetMode;
   service_type: ServiceType;
