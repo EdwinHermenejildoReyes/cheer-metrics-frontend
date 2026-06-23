@@ -420,7 +420,7 @@ export const SCORING_SYSTEM_FIELDS: Record<ScoringSystem, ScoreFieldKey[]> = {
   tiny_novice:   ['jumps_execution', ..._OVERALL, ..._CROSS],
   mini_novice:   ['stunts_execution', 'pyramids_execution', 'jumps_execution', ..._OVERALL, ..._CROSS],
   novice_plus:   ['stunts_execution', 'pyramids_execution', 'standing_execution', 'running_execution', 'jumps_execution', ..._OVERALL, ..._CROSS],
-  prep:          [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
+  prep:          [..._BUILDING_BASE, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   escolar:       [..._BUILDING_BASE, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   escolar_ab:    [
     ..._BUILDING_BASE_AB,
@@ -469,8 +469,8 @@ export const FIELD_MAXIMA: Record<ScoreFieldKey, number> = {
   jumps_difficulty:     2,
   jumps_execution:      2,
   formations_score:     2,
-  dance_difficulty:     1.5,
-  dance_execution:      1.5,
+  dance_difficulty:     1,
+  dance_execution:      1,
   // per-judge max = 2.0; effective contribution = average → max 2.0
   creativity_building:  2,
   creativity_tumbling:  2,
