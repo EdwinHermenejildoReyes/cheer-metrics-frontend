@@ -20,6 +20,7 @@ const schema = z.object({
   city: z.string().min(2, 'Requerido'),
   regulation: z.enum(['IASF', 'ICU', 'AMBAS']),
   sheet_mode: z.enum(['grupal', 'individual']),
+  service_type: z.enum(['full', 'registration_only', 'judging_only']),
   notes: z.string().optional(),
   organization: z.string().optional(),
   require_payment: z.boolean().optional(),
@@ -45,6 +46,12 @@ const SHEET_MODE_OPTIONS = [
   { value: 'individual', label: 'Planillas Individuales' },
 ];
 
+const SERVICE_TYPE_OPTIONS = [
+  { value: 'full',              label: 'Inscripción + Jueceo' },
+  { value: 'registration_only', label: 'Solo Inscripción' },
+  { value: 'judging_only',      label: 'Solo Jueceo' },
+];
+
 export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
   const isEdit = !!initial;
   const [orgs, setOrgs] = useState<Organization[]>([]);
@@ -53,7 +60,7 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
     resolver: zodResolver(schema),
     defaultValues: initial
       ? { ...initial, organization: initial.organization ? String(initial.organization) : '' }
-      : { regulation: 'IASF', sheet_mode: 'grupal' as const },
+      : { regulation: 'IASF', sheet_mode: 'grupal' as const, service_type: 'full' as const },
   });
 
   useEffect(() => {
@@ -67,7 +74,7 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
       reset(
         initial
           ? { ...initial, organization: initial.organization ? String(initial.organization) : '' }
-          : { regulation: 'IASF', sheet_mode: 'grupal' as const, name: '', date: '', venue: '', city: '', notes: '', organization: '' },
+          : { regulation: 'IASF', sheet_mode: 'grupal' as const, service_type: 'full' as const, name: '', date: '', venue: '', city: '', notes: '', organization: '' },
       );
     }
   }, [open, initial, reset]);
@@ -108,13 +115,22 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
             {...register('regulation')}
           />
         </div>
-        <Select
-          label="Tipo de planillas"
-          id="sheet_mode"
-          options={SHEET_MODE_OPTIONS}
-          error={errors.sheet_mode?.message}
-          {...register('sheet_mode')}
-        />
+        <div className="grid grid-cols-2 gap-3">
+          <Select
+            label="Tipo de planillas"
+            id="sheet_mode"
+            options={SHEET_MODE_OPTIONS}
+            error={errors.sheet_mode?.message}
+            {...register('sheet_mode')}
+          />
+          <Select
+            label="Módulos"
+            id="service_type"
+            options={SERVICE_TYPE_OPTIONS}
+            error={errors.service_type?.message}
+            {...register('service_type')}
+          />
+        </div>
         <Input label="Sede" id="venue" placeholder="Coliseo Mayor" error={errors.venue?.message} {...register('venue')} />
         <Input label="Ciudad" id="city" placeholder="Quito" error={errors.city?.message} {...register('city')} />
         <Select

@@ -70,6 +70,9 @@ export default function CompetitionDetailPage() {
 
   const { isJudge, isCompetitionActive } = useJudge();
 
+  const hasJudging      = competition?.service_type !== 'registration_only';
+  const hasRegistration = competition?.service_type !== 'judging_only';
+
   const availableSheetTypes = competition?.sheet_mode === 'individual'
     ? INDIVIDUAL_SHEET_TYPES
     : GRUPAL_SHEET_TYPES;
@@ -302,22 +305,26 @@ export default function CompetitionDetailPage() {
                 <Upload className="h-3.5 w-3.5" />
                 Importar inscripción
               </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => router.push(`/competitions/${competitionId}/billing`)}
-              >
-                <Receipt className="h-3.5 w-3.5" />
-                Facturación
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setTokensModalOpen(true)}
-              >
-                <LinkIcon className="h-3.5 w-3.5" />
-                Links de inscripción
-              </Button>
+              {hasRegistration && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => router.push(`/competitions/${competitionId}/billing`)}
+                >
+                  <Receipt className="h-3.5 w-3.5" />
+                  Facturación
+                </Button>
+              )}
+              {hasRegistration && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setTokensModalOpen(true)}
+                >
+                  <LinkIcon className="h-3.5 w-3.5" />
+                  Links de inscripción
+                </Button>
+              )}
               <Button variant="secondary" size="sm" onClick={() => setCompModalOpen(true)}>
                 <Pencil className="h-3.5 w-3.5" />
                 Editar
@@ -483,8 +490,8 @@ export default function CompetitionDetailPage() {
         </div>
       )}
 
-      {/* ── Panel de jueces (solo admin) ───────────────────────────────── */}
-      {!isJudge && (
+      {/* ── Panel de jueces (solo admin, solo si tiene jueceo) ─────────── */}
+      {!isJudge && hasJudging && (
         <div className="print:hidden flex flex-col gap-3">
           <button
             type="button"

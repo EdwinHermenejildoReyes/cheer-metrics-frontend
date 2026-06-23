@@ -39,6 +39,7 @@ export interface JudgeAssignment {
 }
 
 export type SheetMode = 'grupal' | 'individual';
+export type ServiceType = 'full' | 'registration_only' | 'judging_only';
 
 export const GRUPAL_SHEET_TYPES: SheetType[] = [
   'building', 'tumbling', 'overall', 'rangos', 'deducciones', 'deductions_only', 'safety_rules',
@@ -112,6 +113,7 @@ export interface Competition {
   city: string;
   regulation: Regulation;
   sheet_mode: SheetMode;
+  service_type: ServiceType;
   notes: string;
   is_enable: boolean;
   is_active: boolean;
@@ -125,6 +127,7 @@ export interface Division {
   competition: number;
   competition_name: string;
   competition_sheet_mode: 'grupal' | 'individual';
+  competition_service_type: ServiceType;
   name: string;
   age_group: AgeGroup;
   skill_level: SkillLevel;

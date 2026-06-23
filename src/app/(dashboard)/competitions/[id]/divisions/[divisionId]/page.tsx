@@ -196,6 +196,8 @@ export default function DivisionDetailPage() {
   const activeScoringSystem = (division.scoring_system || division.suggested_scoring_system) as ScoringSystem;
   const isIasfWorld = activeScoringSystem === 'iasf_world_l6_7';
   const isGrupalMode = (division.competition_sheet_mode ?? 'grupal') !== 'individual';
+  const hasJudging = division.competition_service_type !== 'registration_only';
+  const hasRegistration = division.competition_service_type !== 'judging_only';
   const judgeSheetTypes = sheetTypesForCompetition(competitionId);
   const judgeVisibleSheets = judgeSheetTypes.filter((sheetType) => {
     if (sheetType === 'rangos') return true;
@@ -257,7 +259,7 @@ export default function DivisionDetailPage() {
               <Trophy className="h-4 w-4" />
               Ver ranking
             </Button>
-            {!isJudge && (
+            {!isJudge && hasRegistration && (
               <Button size="sm" onClick={() => { setEditingReg(undefined); setRegModalOpen(true); }}>
                 <Plus className="h-4 w-4" />
                 Inscribir equipo
@@ -282,13 +284,13 @@ export default function DivisionDetailPage() {
                   <div
                     className="flex items-center gap-4 px-5 py-3.5 cursor-pointer hover:bg-zinc-50"
                     onClick={() => {
-                      if (isJudge) {
+                      if (isJudge && hasJudging) {
                         if (judgeVisibleSheets.length === 1) {
                           router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/${getSheetSlug(judgeVisibleSheets[0], isIasfWorld)}`);
                         } else if (judgeVisibleSheets.length > 1) {
                           setExpandedRow(isExpanded ? null : reg.id);
                         }
-                      } else {
+                      } else if (!isJudge) {
                         setExpandedRow(isExpanded ? null : reg.id);
                       }
                     }}
@@ -315,7 +317,7 @@ export default function DivisionDetailPage() {
                       <span className="text-xs text-zinc-400">Sin puntaje</span>
                     )}
                     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                      {!isJudge && (
+                      {!isJudge && hasJudging && (
                         <Button
                           size="sm"
                           variant={sheet ? 'secondary' : 'primary'}
@@ -325,7 +327,7 @@ export default function DivisionDetailPage() {
                           {sheet ? 'Editar' : 'Calificar'}
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'building') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                      {hasJudging && canViewSheet(competitionId, 'building') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -335,7 +337,7 @@ export default function DivisionDetailPage() {
                           <ChevronsUp className="h-3.5 w-3.5 text-blue-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'building') && isGrupalMode && isIasfWorld && (
+                      {hasJudging && canViewSheet(competitionId, 'building') && isGrupalMode && isIasfWorld && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -345,7 +347,7 @@ export default function DivisionDetailPage() {
                           <ChevronsUp className="h-3.5 w-3.5 text-blue-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'tumbling') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                      {hasJudging && canViewSheet(competitionId, 'tumbling') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -355,7 +357,7 @@ export default function DivisionDetailPage() {
                           <RotateCw className="h-3.5 w-3.5 text-green-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'tumbling') && isGrupalMode && isIasfWorld && (
+                      {hasJudging && canViewSheet(competitionId, 'tumbling') && isGrupalMode && isIasfWorld && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -365,7 +367,7 @@ export default function DivisionDetailPage() {
                           <RotateCw className="h-3.5 w-3.5 text-green-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'overall') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                      {hasJudging && canViewSheet(competitionId, 'overall') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -375,7 +377,7 @@ export default function DivisionDetailPage() {
                           <Star className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'overall') && isGrupalMode && isIasfWorld && (
+                      {hasJudging && canViewSheet(competitionId, 'overall') && isGrupalMode && isIasfWorld && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -385,7 +387,7 @@ export default function DivisionDetailPage() {
                           <Star className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'partner_stunt') && isGrupalMode && activeScoringSystem === 'partner_stunt' && (
+                      {hasJudging && canViewSheet(competitionId, 'partner_stunt') && isGrupalMode && activeScoringSystem === 'partner_stunt' && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -395,7 +397,7 @@ export default function DivisionDetailPage() {
                           <Users2 className="h-3.5 w-3.5 text-orange-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'deducciones') && isGrupalMode && (
+                      {hasJudging && canViewSheet(competitionId, 'deducciones') && isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -405,7 +407,7 @@ export default function DivisionDetailPage() {
                           <CircleMinus className="h-3.5 w-3.5 text-red-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'rangos') && (
+                      {hasJudging && canViewSheet(competitionId, 'rangos') && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -415,7 +417,7 @@ export default function DivisionDetailPage() {
                           <Gauge className="h-3.5 w-3.5 text-amber-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'building_difficulty') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(competitionId, 'building_difficulty') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -425,7 +427,7 @@ export default function DivisionDetailPage() {
                           <TrendingUp className="h-3.5 w-3.5 text-blue-700" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'building_execution') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(competitionId, 'building_execution') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -435,7 +437,7 @@ export default function DivisionDetailPage() {
                           <BadgeCheck className="h-3.5 w-3.5 text-blue-400" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'tumbling_difficulty') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(competitionId, 'tumbling_difficulty') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -445,7 +447,7 @@ export default function DivisionDetailPage() {
                           <TrendingUp className="h-3.5 w-3.5 text-green-700" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'tumbling_execution') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(competitionId, 'tumbling_execution') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -455,7 +457,7 @@ export default function DivisionDetailPage() {
                           <Sparkles className="h-3.5 w-3.5 text-green-400" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'overall') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(competitionId, 'overall') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -465,7 +467,7 @@ export default function DivisionDetailPage() {
                           <Star className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'deductions_only') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(competitionId, 'deductions_only') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -475,7 +477,7 @@ export default function DivisionDetailPage() {
                           <Timer className="h-3.5 w-3.5 text-orange-500" />
                         </Button>
                       )}
-                      {canViewSheet(competitionId, 'safety_rules') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(competitionId, 'safety_rules') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -511,8 +513,8 @@ export default function DivisionDetailPage() {
                     </div>
                   </div>
 
-                  {/* Expanded: score breakdown (admin only) */}
-                  {isExpanded && !isJudge && sheet && (
+                  {/* Expanded: score breakdown (admin only, when judging enabled) */}
+                  {isExpanded && !isJudge && hasJudging && sheet && (
                     <div className="border-t border-zinc-100 bg-zinc-50 px-5 py-4 flex flex-col gap-4">
                       {/* Section totals */}
                       <div>
@@ -623,8 +625,8 @@ export default function DivisionDetailPage() {
                     </div>
                   )}
 
-                  {/* Expanded: sheet picker (judges with multiple assignments) */}
-                  {isExpanded && isJudge && judgeVisibleSheets.length > 1 && (
+                  {/* Expanded: sheet picker (judges with multiple assignments, when judging enabled) */}
+                  {isExpanded && isJudge && hasJudging && judgeVisibleSheets.length > 1 && (
                     <div className="border-t border-zinc-100 bg-zinc-50 px-5 py-4">
                       <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-3">Ir a planilla</p>
                       <div className="flex flex-wrap gap-2">
