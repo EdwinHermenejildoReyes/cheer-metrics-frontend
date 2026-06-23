@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, ClipboardList, Activity, Layers, Users, Target, Flag, Link2, BarChart3, Zap, Shield, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, Link2, ChevronsUp, RotateCw, Star, CircleMinus, Gauge, Users2, TrendingUp, BadgeCheck, Sparkles, Timer, ShieldCheck, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +36,49 @@ function getSheetSlug(sheetType: SheetType, iasfWorld: boolean): string {
   }
   return sheetType.replace(/_/g, '-');
 }
+
+const SHEET_TYPE_ICONS: Record<SheetType, LucideIcon> = {
+  building:            ChevronsUp,
+  tumbling:            RotateCw,
+  overall:             Star,
+  partner_stunt:       Users2,
+  deducciones:         CircleMinus,
+  rangos:              Gauge,
+  building_difficulty: TrendingUp,
+  building_execution:  BadgeCheck,
+  tumbling_difficulty: TrendingUp,
+  tumbling_execution:  Sparkles,
+  deductions_only:     Timer,
+  safety_rules:        ShieldCheck,
+  building_combined:   ChevronsUp,
+  tumbling_combined:   RotateCw,
+  deductions_combined: ShieldCheck,
+};
+
+const SHEET_TYPE_ORDER: SheetType[] = [
+  'building', 'tumbling', 'overall', 'partner_stunt', 'deducciones', 'rangos',
+  'building_difficulty', 'building_execution', 'tumbling_difficulty', 'tumbling_execution',
+  'deductions_only', 'safety_rules',
+  'building_combined', 'tumbling_combined', 'deductions_combined',
+];
+
+const SHEET_TYPE_COLORS: Record<SheetType, string> = {
+  building:            'text-blue-500',
+  tumbling:            'text-green-500',
+  overall:             'text-purple-500',
+  partner_stunt:       'text-orange-500',
+  deducciones:         'text-red-500',
+  rangos:              'text-amber-500',
+  building_difficulty: 'text-blue-700',
+  building_execution:  'text-blue-400',
+  tumbling_difficulty: 'text-green-700',
+  tumbling_execution:  'text-green-400',
+  deductions_only:     'text-orange-500',
+  safety_rules:        'text-amber-500',
+  building_combined:   'text-blue-500',
+  tumbling_combined:   'text-green-500',
+  deductions_combined: 'text-amber-500',
+};
 
 
 const STATUS_VARIANT: Record<RegistrationStatus, 'default' | 'success' | 'warning' | 'danger'> = {
@@ -154,6 +197,18 @@ export default function DivisionDetailPage() {
   const isIasfWorld = activeScoringSystem === 'iasf_world_l6_7';
   const isGrupalMode = (division.competition_sheet_mode ?? 'grupal') !== 'individual';
   const judgeSheetTypes = sheetTypesForCompetition(competitionId);
+  const judgeVisibleSheets = judgeSheetTypes.filter((sheetType) => {
+    if (sheetType === 'rangos') return true;
+    if (isGrupalMode) {
+      if (sheetType === 'partner_stunt') return activeScoringSystem === 'partner_stunt';
+      if (['building', 'tumbling', 'overall'].includes(sheetType)) return activeScoringSystem !== 'partner_stunt';
+      if (['building_difficulty', 'building_execution', 'tumbling_difficulty', 'tumbling_execution', 'deductions_only', 'safety_rules'].includes(sheetType)) return false;
+      return true; // deducciones
+    } else {
+      if (['building', 'tumbling', 'partner_stunt', 'deducciones'].includes(sheetType)) return false;
+      return true; // building_difficulty/execution, tumbling_difficulty/execution, overall, deductions_only, safety_rules
+    }
+  }).sort((a, b) => SHEET_TYPE_ORDER.indexOf(a) - SHEET_TYPE_ORDER.indexOf(b));
 
   return (
     <div className="flex flex-col gap-6 p-8">
@@ -228,9 +283,9 @@ export default function DivisionDetailPage() {
                     className="flex items-center gap-4 px-5 py-3.5 cursor-pointer hover:bg-zinc-50"
                     onClick={() => {
                       if (isJudge) {
-                        if (judgeSheetTypes.length === 1) {
-                          router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/${getSheetSlug(judgeSheetTypes[0], isIasfWorld)}`);
-                        } else if (judgeSheetTypes.length > 1) {
+                        if (judgeVisibleSheets.length === 1) {
+                          router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/${getSheetSlug(judgeVisibleSheets[0], isIasfWorld)}`);
+                        } else if (judgeVisibleSheets.length > 1) {
                           setExpandedRow(isExpanded ? null : reg.id);
                         }
                       } else {
@@ -277,7 +332,7 @@ export default function DivisionDetailPage() {
                           title="Planilla Building"
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/building`)}
                         >
-                          <ClipboardList className="h-3.5 w-3.5 text-blue-500" />
+                          <ChevronsUp className="h-3.5 w-3.5 text-blue-500" />
                         </Button>
                       )}
                       {canViewSheet(competitionId, 'building') && isGrupalMode && isIasfWorld && (
@@ -287,7 +342,7 @@ export default function DivisionDetailPage() {
                           title="IASF World — Elevaciones"
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/iasf-building`)}
                         >
-                          <ClipboardList className="h-3.5 w-3.5 text-blue-500" />
+                          <ChevronsUp className="h-3.5 w-3.5 text-blue-500" />
                         </Button>
                       )}
                       {canViewSheet(competitionId, 'tumbling') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
@@ -297,7 +352,7 @@ export default function DivisionDetailPage() {
                           title="Planilla Tumbling"
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/tumbling`)}
                         >
-                          <Activity className="h-3.5 w-3.5 text-green-500" />
+                          <RotateCw className="h-3.5 w-3.5 text-green-500" />
                         </Button>
                       )}
                       {canViewSheet(competitionId, 'tumbling') && isGrupalMode && isIasfWorld && (
@@ -307,7 +362,7 @@ export default function DivisionDetailPage() {
                           title="IASF World — Gimnasia"
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/iasf-tumbling`)}
                         >
-                          <Activity className="h-3.5 w-3.5 text-green-500" />
+                          <RotateCw className="h-3.5 w-3.5 text-green-500" />
                         </Button>
                       )}
                       {canViewSheet(competitionId, 'overall') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
@@ -317,7 +372,7 @@ export default function DivisionDetailPage() {
                           title="Planilla Overall"
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/overall`)}
                         >
-                          <Layers className="h-3.5 w-3.5 text-purple-500" />
+                          <Star className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
                       {canViewSheet(competitionId, 'overall') && isGrupalMode && isIasfWorld && (
@@ -327,7 +382,7 @@ export default function DivisionDetailPage() {
                           title="IASF World — General"
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/iasf-overall`)}
                         >
-                          <Layers className="h-3.5 w-3.5 text-purple-500" />
+                          <Star className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
                       {canViewSheet(competitionId, 'partner_stunt') && isGrupalMode && activeScoringSystem === 'partner_stunt' && (
@@ -337,7 +392,7 @@ export default function DivisionDetailPage() {
                           title="Planilla Partner Stunt"
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/partner-stunt`)}
                         >
-                          <Users className="h-3.5 w-3.5 text-orange-500" />
+                          <Users2 className="h-3.5 w-3.5 text-orange-500" />
                         </Button>
                       )}
                       {canViewSheet(competitionId, 'deducciones') && isGrupalMode && (
@@ -347,7 +402,7 @@ export default function DivisionDetailPage() {
                           title="Planilla Deducciones"
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/deducciones`)}
                         >
-                          <Flag className="h-3.5 w-3.5 text-red-500" />
+                          <CircleMinus className="h-3.5 w-3.5 text-red-500" />
                         </Button>
                       )}
                       {canViewSheet(competitionId, 'rangos') && (
@@ -357,7 +412,7 @@ export default function DivisionDetailPage() {
                           title="Planilla Rangos (Dificultad)"
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/rangos`)}
                         >
-                          <Target className="h-3.5 w-3.5 text-amber-500" />
+                          <Gauge className="h-3.5 w-3.5 text-amber-500" />
                         </Button>
                       )}
                       {canViewSheet(competitionId, 'building_difficulty') && !isGrupalMode && (
@@ -367,7 +422,7 @@ export default function DivisionDetailPage() {
                           title="Dificultad — Elevaciones"
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/building-difficulty`)}
                         >
-                          <BarChart3 className="h-3.5 w-3.5 text-blue-700" />
+                          <TrendingUp className="h-3.5 w-3.5 text-blue-700" />
                         </Button>
                       )}
                       {canViewSheet(competitionId, 'building_execution') && !isGrupalMode && (
@@ -377,7 +432,7 @@ export default function DivisionDetailPage() {
                           title="Ejecución — Elevaciones"
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/building-execution`)}
                         >
-                          <Zap className="h-3.5 w-3.5 text-blue-400" />
+                          <BadgeCheck className="h-3.5 w-3.5 text-blue-400" />
                         </Button>
                       )}
                       {canViewSheet(competitionId, 'tumbling_difficulty') && !isGrupalMode && (
@@ -387,7 +442,7 @@ export default function DivisionDetailPage() {
                           title="Dificultad — Gimnasia"
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/tumbling-difficulty`)}
                         >
-                          <BarChart3 className="h-3.5 w-3.5 text-green-700" />
+                          <TrendingUp className="h-3.5 w-3.5 text-green-700" />
                         </Button>
                       )}
                       {canViewSheet(competitionId, 'tumbling_execution') && !isGrupalMode && (
@@ -397,7 +452,7 @@ export default function DivisionDetailPage() {
                           title="Ejecución — Gimnasia"
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/tumbling-execution`)}
                         >
-                          <Zap className="h-3.5 w-3.5 text-green-400" />
+                          <Sparkles className="h-3.5 w-3.5 text-green-400" />
                         </Button>
                       )}
                       {canViewSheet(competitionId, 'overall') && !isGrupalMode && (
@@ -407,7 +462,7 @@ export default function DivisionDetailPage() {
                           title="Overall (General)"
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/overall`)}
                         >
-                          <Layers className="h-3.5 w-3.5 text-purple-500" />
+                          <Star className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
                       {canViewSheet(competitionId, 'deductions_only') && !isGrupalMode && (
@@ -417,7 +472,7 @@ export default function DivisionDetailPage() {
                           title="Deducciones (Caídas/Tiempo)"
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/deductions-only`)}
                         >
-                          <AlertTriangle className="h-3.5 w-3.5 text-orange-500" />
+                          <Timer className="h-3.5 w-3.5 text-orange-500" />
                         </Button>
                       )}
                       {canViewSheet(competitionId, 'safety_rules') && !isGrupalMode && (
@@ -427,7 +482,7 @@ export default function DivisionDetailPage() {
                           title="Reglas y Seguridad"
                           onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/safety-rules`)}
                         >
-                          <Shield className="h-3.5 w-3.5 text-amber-500" />
+                          <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
                         </Button>
                       )}
                       {sheet && (
@@ -569,19 +624,23 @@ export default function DivisionDetailPage() {
                   )}
 
                   {/* Expanded: sheet picker (judges with multiple assignments) */}
-                  {isExpanded && isJudge && judgeSheetTypes.length > 1 && (
+                  {isExpanded && isJudge && judgeVisibleSheets.length > 1 && (
                     <div className="border-t border-zinc-100 bg-zinc-50 px-5 py-4">
                       <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-3">Ir a planilla</p>
                       <div className="flex flex-wrap gap-2">
-                        {judgeSheetTypes.map((sheetType) => (
-                          <button
-                            key={sheetType}
-                            onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/${getSheetSlug(sheetType, isIasfWorld)}`)}
-                            className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:border-zinc-400 hover:bg-zinc-100 transition-colors"
-                          >
-                            {SHEET_TYPE_LABELS[sheetType]}
-                          </button>
-                        ))}
+                        {judgeVisibleSheets.map((sheetType) => {
+                          const Icon = SHEET_TYPE_ICONS[sheetType];
+                          return (
+                            <button
+                              key={sheetType}
+                              onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/${getSheetSlug(sheetType, isIasfWorld)}`)}
+                              className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:border-zinc-400 hover:bg-zinc-100 transition-colors"
+                            >
+                              <Icon className={`h-3.5 w-3.5 ${SHEET_TYPE_COLORS[sheetType]}`} />
+                              {SHEET_TYPE_LABELS[sheetType]}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
