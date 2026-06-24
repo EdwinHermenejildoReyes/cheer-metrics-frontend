@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   ArrowLeft,
@@ -20,6 +20,7 @@ import competitionsRepository, {
   type ImportInscripcionResult,
 } from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
+import type { ServiceType } from '@/types/competitions';
 
 // ── Drag-drop zone ────────────────────────────────────────────────────────────
 
@@ -101,7 +102,7 @@ function DropZone({ label, accept, file, onChange, icon, hint }: DropZoneProps) 
 
 // ── Results panel ─────────────────────────────────────────────────────────────
 
-function ResultsPanel({ result }: { result: ImportInscripcionResult }) {
+function ResultsPanel({ result, isJudging }: { result: ImportInscripcionResult; isJudging: boolean }) {
   const isAborted = result.aborted;
   const hasErrors = result.errors.length > 0;
 
@@ -132,31 +133,45 @@ function ResultsPanel({ result }: { result: ImportInscripcionResult }) {
                 ? `Importación completada con ${result.errors.length} fila${result.errors.length !== 1 ? 's' : ''} con error`
                 : 'Importación completada sin errores'}
             </p>
-            <p className={`text-sm ${hasErrors ? 'text-amber-600' : 'text-green-600'}`}>
-              Gimnasio: <strong>{result.gym_name || '—'}</strong>
-              {result.sent_date ? ` · Fecha envío: ${result.sent_date}` : ''}
-            </p>
           </div>
         </div>
       )}
 
       {/* Stats grid */}
       {!isAborted && (
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-          {[
-            { label: 'Atletas creados',     value: result.athletes_created },
-            { label: 'Atletas actualizados',value: result.athletes_updated },
-            { label: 'Divisiones creadas',  value: result.divisions_created },
-            { label: 'Inscripciones',       value: result.registrations_created },
-            { label: 'Membresías',          value: result.memberships_created },
-            { label: 'Fotos asignadas',     value: result.photos_matched },
-            { label: 'Filas procesadas',    value: result.rows_ok },
-          ].map(({ label, value }) => (
-            <div key={label} className="flex flex-col items-center rounded-xl border border-zinc-200 bg-white py-4">
-              <span className="text-2xl font-semibold text-zinc-900">{value}</span>
-              <span className="mt-0.5 text-center text-[11px] text-zinc-500 leading-tight px-2">{label}</span>
-            </div>
-          ))}
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+          {isJudging ? (
+            <>
+              {[
+                { label: 'Equipos inscritos',    value: result.registrations_created },
+                { label: 'Divisiones creadas',   value: result.divisions_created },
+                { label: 'Filas procesadas',     value: result.rows_ok },
+                { label: 'Filas omitidas',       value: result.rows_skipped },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex flex-col items-center rounded-xl border border-zinc-200 bg-white py-4">
+                  <span className="text-2xl font-semibold text-zinc-900">{value}</span>
+                  <span className="mt-0.5 text-center text-[11px] text-zinc-500 leading-tight px-2">{label}</span>
+                </div>
+              ))}
+            </>
+          ) : (
+            <>
+              {[
+                { label: 'Atletas creados',      value: result.athletes_created },
+                { label: 'Atletas actualizados', value: result.athletes_updated },
+                { label: 'Divisiones creadas',   value: result.divisions_created },
+                { label: 'Inscripciones',        value: result.registrations_created },
+                { label: 'Membresías',           value: result.memberships_created },
+                { label: 'Fotos asignadas',      value: result.photos_matched },
+                { label: 'Filas procesadas',     value: result.rows_ok },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex flex-col items-center rounded-xl border border-zinc-200 bg-white py-4">
+                  <span className="text-2xl font-semibold text-zinc-900">{value}</span>
+                  <span className="mt-0.5 text-center text-[11px] text-zinc-500 leading-tight px-2">{label}</span>
+                </div>
+              ))}
+            </>
+          )}
         </div>
       )}
 
@@ -194,36 +209,51 @@ function ResultsPanel({ result }: { result: ImportInscripcionResult }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function ImportInscripcionPage() {
+export default function ImportPage() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
   const competitionId = Number(id);
   const { isJudge } = useJudge();
 
-  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [serviceType, setServiceType] = useState<ServiceType | null>(null);
+  const [xlsxFile, setXlsxFile] = useState<File | null>(null);
   const [fotosZip, setFotosZip] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ImportInscripcionResult | null>(null);
+
+  useEffect(() => {
+    competitionsRepository.getCompetition(competitionId).then((res) => {
+      setServiceType(res.data.service_type);
+    }).catch(() => {});
+  }, [competitionId]);
 
   if (isJudge) {
     router.replace(`/competitions/${competitionId}`);
     return null;
   }
 
+  const isJudging = serviceType === 'judging_only';
+
   const handleImport = async () => {
-    if (!csvFile) {
-      toast.error('Selecciona el archivo de inscripción primero.');
+    if (!xlsxFile) {
+      toast.error('Selecciona el archivo primero.');
       return;
     }
 
     const formData = new FormData();
-    formData.append('csv_file', csvFile);
-    if (fotosZip) formData.append('fotos_zip', fotosZip);
+    if (isJudging) {
+      formData.append('xlsx_file', xlsxFile);
+    } else {
+      formData.append('csv_file', xlsxFile);
+      if (fotosZip) formData.append('fotos_zip', fotosZip);
+    }
 
     setLoading(true);
     setResult(null);
     try {
-      const res = await competitionsRepository.importInscripcion(competitionId, formData);
+      const res = isJudging
+        ? await competitionsRepository.importJudging(competitionId, formData)
+        : await competitionsRepository.importInscripcion(competitionId, formData);
       setResult(res.data);
       if (res.data.aborted) {
         toast.error('Importación abortada. Revisa el resultado.');
@@ -253,85 +283,112 @@ export default function ImportInscripcionPage() {
           <ArrowLeft className="h-4 w-4" />
         </button>
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900">Importar inscripción</h1>
+          <h1 className="text-xl font-semibold text-zinc-900">
+            {isJudging ? 'Importar equipos (jueceo)' : 'Importar inscripción'}
+          </h1>
           <p className="text-sm text-zinc-500">
-            Carga la planilla CSV de un gimnasio para registrar atletas, equipos e inscripciones automáticamente.
+            {isJudging
+              ? 'Carga el Excel de jueceo para registrar equipos y divisiones automáticamente.'
+              : 'Carga la planilla CSV de un gimnasio para registrar atletas, equipos e inscripciones automáticamente.'}
           </p>
         </div>
       </div>
 
       {/* Template download */}
-      <div className="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 px-5 py-4">
-        <div>
-          <p className="text-sm font-medium text-zinc-900">Plantilla de inscripción</p>
-          <p className="text-xs text-zinc-500 mt-0.5">
-            Archivo Excel con listas desplegables para evitar errores de tipeo. Envíalo a los gimnasios.
-          </p>
+      {!isJudging && (
+        <div className="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 px-5 py-4">
+          <div>
+            <p className="text-sm font-medium text-zinc-900">Plantilla de inscripción</p>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              Archivo Excel con listas desplegables para evitar errores de tipeo. Envíalo a los gimnasios.
+            </p>
+          </div>
+          <a href="/plantilla_inscripcion2026.xlsx" download>
+            <Button variant="secondary" size="sm">
+              <Download className="h-3.5 w-3.5" />
+              Descargar plantilla (.xlsx)
+            </Button>
+          </a>
         </div>
-        <a href="/plantilla_inscripcion2026.xlsx" download>
-          <Button variant="secondary" size="sm">
-            <Download className="h-3.5 w-3.5" />
-            Descargar plantilla (.xlsx)
-          </Button>
-        </a>
-      </div>
+      )}
 
       {/* Upload zones */}
       <div className="flex flex-col gap-4">
         <div>
           <p className="mb-2 text-sm font-medium text-zinc-700">
-            Planilla de inscripción <span className="text-red-500">*</span>
+            {isJudging ? 'Archivo de jueceo' : 'Planilla de inscripción'}{' '}
+            <span className="text-red-500">*</span>
           </p>
           <DropZone
-            label="Archivo de inscripción (.xlsx o .csv)"
+            label={isJudging ? 'Archivo de jueceo (.xlsx)' : 'Archivo de inscripción (.xlsx o .csv)'}
             accept=".xlsx,.csv"
-            file={csvFile}
-            onChange={setCsvFile}
+            file={xlsxFile}
+            onChange={setXlsxFile}
             icon={<FileText className="h-8 w-8" />}
-            hint="Formato: plantilla_inscripcion2026.xlsx"
+            hint={isJudging ? 'Formato: nombre equipo, gimnasio, categoría, división, NIVEL, PANEL, atletas, WhatsApp, correo' : 'Formato: plantilla_inscripcion2026.xlsx'}
           />
         </div>
 
-        <div>
-          <p className="mb-2 text-sm font-medium text-zinc-700">
-            Fotos de atletas{' '}
-            <span className="text-xs font-normal text-zinc-400">(opcional — ZIP con fotos nombradas por cédula)</span>
-          </p>
-          <DropZone
-            label="Archivo ZIP con fotos"
-            accept=".zip"
-            file={fotosZip}
-            onChange={setFotosZip}
-            icon={<FileArchive className="h-8 w-8" />}
-            hint="Cada foto nombrada como {cédula}.jpg — ej: 1712345678.jpg"
-          />
-        </div>
+        {!isJudging && (
+          <div>
+            <p className="mb-2 text-sm font-medium text-zinc-700">
+              Fotos de atletas{' '}
+              <span className="text-xs font-normal text-zinc-400">(opcional — ZIP con fotos nombradas por cédula)</span>
+            </p>
+            <DropZone
+              label="Archivo ZIP con fotos"
+              accept=".zip"
+              file={fotosZip}
+              onChange={setFotosZip}
+              icon={<FileArchive className="h-8 w-8" />}
+              hint="Cada foto nombrada como {cédula}.jpg — ej: 1712345678.jpg"
+            />
+          </div>
+        )}
       </div>
 
       {/* Instructions */}
       <div className="rounded-xl border border-zinc-200 bg-white px-5 py-4 text-sm text-zinc-600">
-        <p className="font-medium text-zinc-800 mb-2">Antes de importar, verifica que:</p>
-        <ul className="list-disc list-inside space-y-1 text-xs text-zinc-500">
-          <li>Usa la plantilla <strong>.xlsx</strong> — tiene listas desplegables que evitan errores de tipeo.</li>
-          <li>El campo <strong>nivel</strong> acepta: L1–L7, prep, escolar, novice, novice_plus, elite, icc, star.</li>
-          <li>El campo <strong>categoria</strong> acepta: all_girl, coed, all_male, non_tumbling.</li>
-          <li>El campo <strong>grupo_etario</strong> acepta: tiny, mini, youth, junior, senior, open.</li>
-          <li>El campo <strong>genero</strong> acepta: F o M.</li>
-          <li>Los atletas ya existentes se actualizarán por cédula; no se crearán duplicados.</li>
-        </ul>
+        {isJudging ? (
+          <>
+            <p className="font-medium text-zinc-800 mb-2">Columnas requeridas en el Excel:</p>
+            <ul className="list-disc list-inside space-y-1 text-xs text-zinc-500">
+              <li><strong>nombre equipo</strong> — nombre del equipo.</li>
+              <li><strong>gimnasio</strong> — nombre del gimnasio (se crea si no existe).</li>
+              <li><strong>categoría</strong> — grupo etario: tiny, mini, youth, junior, senior, open.</li>
+              <li><strong>división</strong> — prep, novice, elite (o nombre de la división).</li>
+              <li><strong>NIVEL</strong> — 1–7 o prep, novice, elite (requerido para divisiones de nivel variable).</li>
+              <li><strong>PANEL</strong> o <strong>AG/COED</strong> — all_girl, coed, all_male, non_tumbling.</li>
+              <li><strong>NUMERO ATLETAS</strong> — cantidad de atletas.</li>
+              <li><strong>WHATSAPP</strong> y <strong>CORREO</strong> — contacto del coach (opcionales).</li>
+            </ul>
+          </>
+        ) : (
+          <>
+            <p className="font-medium text-zinc-800 mb-2">Antes de importar, verifica que:</p>
+            <ul className="list-disc list-inside space-y-1 text-xs text-zinc-500">
+              <li>Usa la plantilla <strong>.xlsx</strong> — tiene listas desplegables que evitan errores de tipeo.</li>
+              <li>El campo <strong>nivel</strong> acepta: L1–L7, prep, escolar, novice, novice_plus, elite, icc, star.</li>
+              <li>El campo <strong>categoria</strong> acepta: all_girl, coed, all_male, non_tumbling.</li>
+              <li>El campo <strong>grupo_etario</strong> acepta: tiny, mini, youth, junior, senior, open.</li>
+              <li>El campo <strong>genero</strong> acepta: F o M.</li>
+              <li>Los atletas ya existentes se actualizarán por cédula; no se crearán duplicados.</li>
+            </ul>
+          </>
+        )}
       </div>
 
       {/* Action */}
       <div className="flex justify-end">
-        <Button onClick={handleImport} loading={loading} disabled={!csvFile || loading}>
+        <Button onClick={handleImport} loading={loading} disabled={!xlsxFile || loading}>
           {loading
             ? <><Loader2 className="h-4 w-4 animate-spin" />Importando…</>
-            : <><Upload className="h-4 w-4" />Importar inscripción</>}
+            : <><Upload className="h-4 w-4" />{isJudging ? 'Importar equipos' : 'Importar inscripción'}</>}
         </Button>
       </div>
 
       {/* Results */}
-      {result && <ResultsPanel result={result} />}
+      {result && <ResultsPanel result={result} isJudging={isJudging} />}
     </div>
   );
 }

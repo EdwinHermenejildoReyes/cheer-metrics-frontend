@@ -264,6 +264,12 @@ class CompetitionsRepository {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
 
+  // Judging import (team-level Excel, no athlete data)
+  importJudging = (competitionId: number, formData: FormData) =>
+    api.post<ImportInscripcionResult>(`/competitions/${competitionId}/import-judging/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
   // Hero images (public list, admin write)
   listHeroImages = () =>
     api.get<PaginatedResponse<HeroImage>>('/hero-images/', { params: { page_size: '50' } });
