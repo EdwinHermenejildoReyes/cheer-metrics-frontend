@@ -306,22 +306,12 @@ export default function ImportPage() {
               : 'Archivo Excel con listas desplegables para evitar errores de tipeo. Envíalo a los gimnasios.'}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {isJudging && (
-            <a href="/prueba_jueceo_50equipos.xlsx" download>
-              <Button variant="secondary" size="sm">
-                <Download className="h-3.5 w-3.5" />
-                Datos de prueba (50 equipos)
-              </Button>
-            </a>
-          )}
-          <a href={isJudging ? '/plantilla_jueceo2026.xlsx' : '/plantilla_inscripcion2026.xlsx'} download>
-            <Button variant="secondary" size="sm">
-              <Download className="h-3.5 w-3.5" />
-              Descargar plantilla (.xlsx)
-            </Button>
-          </a>
-        </div>
+        <a href={isJudging ? '/plantilla_jueceo2026.xlsx' : '/plantilla_inscripcion2026.xlsx'} download>
+          <Button variant="secondary" size="sm">
+            <Download className="h-3.5 w-3.5" />
+            Descargar plantilla (.xlsx)
+          </Button>
+        </a>
       </div>
 
       {/* Upload zones */}
