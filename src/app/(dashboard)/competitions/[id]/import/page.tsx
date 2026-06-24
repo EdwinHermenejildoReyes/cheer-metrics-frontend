@@ -295,22 +295,24 @@ export default function ImportPage() {
       </div>
 
       {/* Template download */}
-      {!isJudging && (
-        <div className="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 px-5 py-4">
-          <div>
-            <p className="text-sm font-medium text-zinc-900">Plantilla de inscripción</p>
-            <p className="text-xs text-zinc-500 mt-0.5">
-              Archivo Excel con listas desplegables para evitar errores de tipeo. Envíalo a los gimnasios.
-            </p>
-          </div>
-          <a href="/plantilla_inscripcion2026.xlsx" download>
-            <Button variant="secondary" size="sm">
-              <Download className="h-3.5 w-3.5" />
-              Descargar plantilla (.xlsx)
-            </Button>
-          </a>
+      <div className="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 px-5 py-4">
+        <div>
+          <p className="text-sm font-medium text-zinc-900">
+            {isJudging ? 'Plantilla de jueceo' : 'Plantilla de inscripción'}
+          </p>
+          <p className="text-xs text-zinc-500 mt-0.5">
+            {isJudging
+              ? 'Excel con columnas requeridas y 5 filas de ejemplo. Completa y sube este archivo.'
+              : 'Archivo Excel con listas desplegables para evitar errores de tipeo. Envíalo a los gimnasios.'}
+          </p>
         </div>
-      )}
+        <a href={isJudging ? '/plantilla_jueceo2026.xlsx' : '/plantilla_inscripcion2026.xlsx'} download>
+          <Button variant="secondary" size="sm">
+            <Download className="h-3.5 w-3.5" />
+            Descargar plantilla (.xlsx)
+          </Button>
+        </a>
+      </div>
 
       {/* Upload zones */}
       <div className="flex flex-col gap-4">
