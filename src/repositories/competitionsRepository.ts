@@ -10,8 +10,30 @@ export interface PublicResultDeduction {
   notes: string;
 }
 
+export interface PublicRankingEntry {
+  registration_id: number;
+  team_name: string;
+  gym_name: string;
+  performance_order: number | null;
+  has_score: boolean;
+  final_score: string | null;
+  percentage: string | null;
+  total_deductions: string | null;
+  rank: number | null;
+}
+
+export interface PublicDivisionRanking {
+  division_id: number;
+  division_name: string;
+  competition_name: string;
+  competition_date: string;
+  organization: { name: string; logo: string | null; primary_color: string; text_on_primary: string } | null;
+  entries: PublicRankingEntry[];
+}
+
 export interface PublicResult {
   registration_id: number;
+  division_id: number;
   performance_order: number | null;
   team_name: string;
   gym_name: string;
@@ -257,6 +279,10 @@ class CompetitionsRepository {
   // Public result (no auth) — for coach protest review link
   getPublicResult = (registrationId: number) =>
     api.get<PublicResult>(`/registrations/${registrationId}/public-result/`, { withCredentials: false });
+
+  // Public division ranking (no auth)
+  getPublicDivisionRankings = (divisionId: number) =>
+    api.get<PublicDivisionRanking>(`/divisions/${divisionId}/public-rankings/`, { withCredentials: false });
 
   // Inscripción import
   importInscripcion = (competitionId: number, formData: FormData) =>
