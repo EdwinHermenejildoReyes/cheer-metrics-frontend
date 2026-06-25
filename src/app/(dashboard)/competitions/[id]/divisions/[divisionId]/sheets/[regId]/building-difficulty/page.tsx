@@ -407,6 +407,7 @@ export default function BuildingDifficultyPage() {
         </div>
       )}
       <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
+      <SkillReferencePanel skillLevel={division?.skill_level} sheetType="building" />
 
       {/* ── Construction table banner ─────────────────────────────────── */}
       {(() => {
@@ -505,7 +506,6 @@ export default function BuildingDifficultyPage() {
 
       <div className={`max-w-4xl mx-auto px-6 py-8 flex flex-col gap-16${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
 
-        <SkillReferencePanel skillLevel={division?.skill_level} sheetType="building" />
 
         {/* ── STUNTS DIFFICULTY ────────────────────────────────────────── */}
         {bCfg.hasStunts && bCfg.stuntsHasDiff && (

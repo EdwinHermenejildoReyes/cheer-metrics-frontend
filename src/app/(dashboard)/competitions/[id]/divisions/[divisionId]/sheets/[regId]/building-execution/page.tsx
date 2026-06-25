@@ -339,6 +339,7 @@ export default function BuildingExecutionPage() {
         </div>
       )}
       <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
+      <SkillReferencePanel skillLevel={division?.skill_level} sheetType="building" />
 
       {/* ── Construction table banner ─────────────────────────────────── */}
       {(() => {
@@ -385,7 +386,6 @@ export default function BuildingExecutionPage() {
 
       <div className={`max-w-5xl mx-auto px-6 py-8 flex flex-col gap-10${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
 
-        <SkillReferencePanel skillLevel={division?.skill_level} sheetType="building" />
 
         {bCfg.hasStunts && (
           <section className="flex flex-col gap-3">

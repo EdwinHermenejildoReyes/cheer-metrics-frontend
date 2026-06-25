@@ -10,8 +10,8 @@ import { getScoringConfig, DEFAULT_BUILDING_CONFIG, DEFAULT_TUMBLING_CONFIG } fr
 import type { BuildingConfig, TumblingConfig } from '@/lib/scoringConfig';
 import type { ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
-import { useBranding } from '@/contexts/BrandingContext';
 import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
+import { useBranding } from '@/contexts/BrandingContext';
 
 function fmt(n: number) { return n.toFixed(2); }
 
@@ -358,6 +358,7 @@ export default function RangosSheetPage() {
         </button>
       </div>
       <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
+      <SkillReferencePanel skillLevel={skillLevel} sheetType="building" />
       {protestStartedAt && <ProtestTimer startedAt={protestStartedAt} />}
 
       {/* ── Print-only branded header ────────────────────────────────────── */}
@@ -406,7 +407,6 @@ export default function RangosSheetPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-8 print:px-0 print:py-0 pointer-events-none select-none">
-        <SkillReferencePanel skillLevel={skillLevel} sheetType="building" />
         <div className="grid grid-cols-2 gap-8 print:gap-4 items-start">
 
         {/* ══ CONSTRUCCIONES ════════════════════════════════════════════════ */}

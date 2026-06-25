@@ -402,7 +402,7 @@ export default function DeduccionesSheetPage() {
             {/* ══════════════════════════════════════════════════════════════
                 SECCIÓN 1 — Caídas, Tiempos y Pista
                 ══════════════════════════════════════════════════════════════ */}
-            <div className="grid grid-cols-[200px_1fr_152px] gap-4 items-start">
+            <div className="grid grid-cols-[200px_1fr] gap-4 items-start">
 
               {/* ═══ LEFT — Caídas + Tiempos palette (direct-add) ═══════════ */}
               <div className="flex flex-col gap-3 sticky top-20">
@@ -470,9 +470,7 @@ export default function DeduccionesSheetPage() {
                             )}
                             <div className="flex items-center gap-2 min-w-0">
                               <span className="text-sm font-black shrink-0 text-zinc-900">{DEDUCTION_CODES[type]}</span>
-                              <span className="text-[9px] truncate text-zinc-400">
-                                {DEDUCTION_TYPE_LABELS[type].split(' ').slice(0, 2).join(' ')}
-                              </span>
+                              <span className="text-[9px] text-zinc-400 leading-tight">{DEDUCTION_TYPE_LABELS[type]}</span>
                             </div>
                             <span className="text-[10px] font-bold tabular-nums shrink-0 ml-1 text-red-600">
                               −{DEDUCTION_AMOUNTS[type]}
@@ -637,34 +635,6 @@ export default function DeduccionesSheetPage() {
                 </div>
               </div>
 
-              {/* ═══ RIGHT — Reference (Caídas + Tiempo) ════════════════════ */}
-              <div className="flex flex-col gap-2 sticky top-20">
-                <p className="text-sm font-bold uppercase tracking-widest text-zinc-700 px-1">Referencia</p>
-                {[
-                  { title: 'CAÍDAS', types: FALLS, color: 'red'    as ColorKey },
-                  { title: 'TIEMPO', types: TIME,  color: 'orange' as ColorKey },
-                ].map(({ title, types, color }) => (
-                  <div key={title} className="rounded-lg border border-zinc-100 bg-white overflow-hidden">
-                    <div className={`px-2.5 py-1 text-[8px] font-bold uppercase tracking-widest ${color === 'red' ? 'bg-red-50 text-red-500' : 'bg-orange-50 text-orange-500'}`}>
-                      {title}
-                    </div>
-                    <div className="divide-y divide-zinc-50">
-                      {types.map(type => (
-                        <div key={type} className="flex items-center justify-between px-2.5 py-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-black text-zinc-800 w-9">{DEDUCTION_CODES[type]}</span>
-                            <span className="text-[8px] text-zinc-400 leading-tight">
-                              {DEDUCTION_TYPE_LABELS[type].split(' ').slice(0, 2).join(' ')}
-                            </span>
-                          </div>
-                          <span className="text-[10px] font-bold tabular-nums text-red-500">−{DEDUCTION_AMOUNTS[type]}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
             </div>
 
             {/* ══════════════════════════════════════════════════════════════
@@ -725,7 +695,7 @@ export default function DeduccionesSheetPage() {
                               )}
                               <div className="flex items-center gap-2 min-w-0">
                                 <span className="text-sm font-black shrink-0 text-zinc-900">{DEDUCTION_CODES[type]}</span>
-                                <span className="text-[9px] truncate text-zinc-400">{DEDUCTION_TYPE_LABELS[type].split(' ').slice(0, 3).join(' ')}</span>
+                                <span className="text-[9px] text-zinc-400 leading-tight">{DEDUCTION_TYPE_LABELS[type]}</span>
                               </div>
                               <span className={`text-[10px] font-bold tabular-nums shrink-0 ml-1 ${isBusy ? 'text-zinc-400' : 'text-red-600'}`}>
                                 −{DEDUCTION_AMOUNTS[type]}

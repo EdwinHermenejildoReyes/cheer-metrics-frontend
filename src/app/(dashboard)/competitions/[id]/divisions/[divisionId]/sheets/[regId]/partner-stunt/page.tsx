@@ -15,7 +15,6 @@ import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
 import type { ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
-import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 
 // ── Per-category config (regulation: UCA National Experience 2025) ────────────
 
@@ -444,7 +443,6 @@ export default function PartnerStuntSheetPage() {
 
       <div className={`print:hidden max-w-2xl mx-auto px-6 py-8 flex flex-col gap-6${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
 
-        <SkillReferencePanel skillLevel={skillLevel} sheetType="building" />
 
         {/* ── Overview bar ─────────────────────────────────────────────── */}
         <div className="rounded-xl bg-white border border-zinc-200 p-4 flex items-center gap-4">

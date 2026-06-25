@@ -19,7 +19,6 @@ import {
   type UnpaidAthlete,
 } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
-import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 
 const FALLS: DeductionType[] = ['x', 'ca', 'csa', 'ec', 'cc', 'csc'];
 const TIME:  DeductionType[] = ['tiempo', 'tiempo_grave'];
@@ -58,8 +57,6 @@ function formatRoutineTime(rt: string): string {
   return `${INTERVAL_DISPLAY[interval] ?? interval} / ${zone}`;
 }
 
-interface Pending { type: DeductionType; time: string; count: number; notes: string; hitZero: boolean; }
-
 export default function DeductionsOnlyPage() {
   const router = useRouter();
   const { id, divisionId, regId } = useParams<{ id: string; divisionId: string; regId: string }>();
@@ -80,29 +77,23 @@ export default function DeductionsOnlyPage() {
 
   const [teamName,       setTeamName]       = useState('');
   const [sheet,          setSheet]          = useState<ScoreSheet | null>(null);
-  const [skillLevel,     setSkillLevel]     = useState<string | undefined>(undefined);
   const [loading,        setLoading]        = useState(true);
   const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
   const [requirePayment, setRequirePayment] = useState(false);
   const [deleting,       setDeleting]       = useState<number | null>(null);
-  const [saving,         setSaving]         = useState(false);
-
-  const [armedType,   setArmedType]   = useState<DeductionType | null>(null);
-  const [hoveredZone, setHoveredZone] = useState<string | null>(null);
-  const [pending,     setPending]     = useState<Pending | null>(null);
+  const [savingZone,     setSavingZone]     = useState<string | null>(null);
+  const [savingDirect,   setSavingDirect]   = useState<Set<DeductionType>>(new Set());
+  const [hoveredZone,    setHoveredZone]    = useState<string | null>(null);
   const dragTypeRef = useRef<DeductionType | null>(null);
-  const [savingDirect, setSavingDirect] = useState<Set<DeductionType>>(new Set());
 
   const load = useCallback(async () => {
     try {
-      const [sheetRes, regRes, divRes] = await Promise.all([
+      const [sheetRes, regRes] = await Promise.all([
         competitionsRepository.listScoreSheets({ registration: String(registrationId) }),
         competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' }),
-        competitionsRepository.getDivision(divId),
       ]);
       const reg = regRes.data.results.find(r => r.id === registrationId);
       if (reg) { setTeamName(reg.team_name); setUnpaidAthletes(reg.unpaid_athletes); setRequirePayment(reg.competition_require_payment); }
-      setSkillLevel(divRes.data.skill_level);
       if (sheetRes.data.results.length > 0) {
         const s = sheetRes.data.results[0];
         setSheet(s);
@@ -113,7 +104,6 @@ export default function DeductionsOnlyPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Admin polling — refresh sheet data every 5 s in read-only mode
   useEffect(() => {
     if (!readOnly || loading) return;
     const interval = setInterval(async () => {
@@ -127,32 +117,37 @@ export default function DeductionsOnlyPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readOnly, loading, registrationId]);
 
-  const handlePlace = (type: DeductionType, zoneKey: string) => {
-    setPending({ type, time: zoneKey, count: 1, notes: '', hitZero: false });
-    setArmedType(null);
-    dragTypeRef.current = null;
-  };
-
-  const handleConfirm = async () => {
-    if (!sheet || !pending) return;
-    setSaving(true);
+  // ── Place fall in zone — merges with existing same type+zone ─────────────
+  const handlePlace = async (type: DeductionType, fullZoneKey: string, currentDeductions: Deduction[]) => {
+    if (!sheet || savingZone) return;
+    setSavingZone(fullZoneKey);
     try {
-      await competitionsRepository.createDeduction({ score_sheet: sheet.id, deduction_type: pending.type, count: pending.count, routine_time: pending.time, hit_zero: pending.hitZero, notes: pending.notes });
-      toast.success('Descuento registrado');
-      setPending(null);
+      const existing = currentDeductions.find(d => d.deduction_type === type && d.routine_time === fullZoneKey);
+      if (existing) {
+        await competitionsRepository.updateDeduction(existing.id, { count: existing.count + 1 });
+      } else {
+        await competitionsRepository.createDeduction({ score_sheet: sheet.id, deduction_type: type, count: 1, routine_time: fullZoneKey, hit_zero: false, notes: '' });
+      }
       await load();
-    } catch { toast.error('No se pudo registrar el descuento'); } finally { setSaving(false); }
+    } catch {
+      toast.error('No se pudo registrar el descuento');
+    } finally {
+      setSavingZone(null);
+    }
   };
 
-  const handleDirectAdd = async (type: DeductionType, currentDeductions: Deduction[]) => {
+  // ── Direct add — always creates a new record (TIME) ───────────────────────
+  const handleDirectAdd = async (type: DeductionType) => {
     if (!sheet || savingDirect.has(type)) return;
     setSavingDirect(prev => new Set(prev).add(type));
     try {
-      const existing = currentDeductions.find(d => d.deduction_type === type && (!d.routine_time || d.routine_time === ''));
-      if (existing) { await competitionsRepository.updateDeduction(existing.id, { count: existing.count + 1 }); }
-      else { await competitionsRepository.createDeduction({ score_sheet: sheet.id, deduction_type: type, count: 1, routine_time: '', hit_zero: false, notes: '' }); }
+      await competitionsRepository.createDeduction({ score_sheet: sheet.id, deduction_type: type, count: 1, routine_time: '', hit_zero: false, notes: '' });
       await load();
-    } catch { toast.error('No se pudo registrar el descuento'); } finally { setSavingDirect(prev => { const next = new Set(prev); next.delete(type); return next; }); }
+    } catch {
+      toast.error('No se pudo registrar el descuento');
+    } finally {
+      setSavingDirect(prev => { const next = new Set(prev); next.delete(type); return next; });
+    }
   };
 
   const handleDelete = async (ded: Deduction) => {
@@ -162,14 +157,14 @@ export default function DeductionsOnlyPage() {
 
   if (loading) return <PageSpinner />;
 
-  const deductions  = sheet?.deductions ?? [];
-  const myDeds      = deductions.filter(d => [...FALLS, ...TIME].includes(d.deduction_type as DeductionType));
-  const totalDed    = myDeds.reduce((s, d) => s + parseFloat(d.total_amount), 0);
+  const deductions = sheet?.deductions ?? [];
+  const myDeds     = deductions.filter(d => [...FALLS, ...TIME].includes(d.deduction_type as DeductionType));
+  const totalDed   = myDeds.reduce((s, d) => s + parseFloat(d.total_amount), 0);
+
   const dedsByZone: Record<string, Deduction[]> = {};
   for (const d of myDeds) { const k = d.routine_time || 'sin tiempo'; if (!dedsByZone[k]) dedsByZone[k] = []; dedsByZone[k].push(d); }
-  const previewTotal = pending ? (pending.count * parseFloat(DEDUCTION_AMOUNTS[pending.type])).toFixed(2) : '0.00';
+
   const zoneKey = (interval: string, z: string) => `${interval} / ${z}`;
-  const rowHasPending = (interval: string) => pending !== null && TRACK_ZONES.some(z => pending.time === zoneKey(interval, z.key));
 
   return (
     <div className="min-h-screen bg-zinc-50 pb-20">
@@ -192,6 +187,7 @@ export default function DeductionsOnlyPage() {
           </div>
         )}
       </div>
+
       {readOnly && (
         <div className="print:hidden bg-amber-50 border-b border-amber-200 px-6 py-2 flex items-center gap-2">
           <Eye className="w-4 h-4 text-amber-600 shrink-0" />
@@ -202,9 +198,6 @@ export default function DeductionsOnlyPage() {
 
       <div className={`max-w-6xl mx-auto px-4 py-6 print:hidden${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
 
-        <SkillReferencePanel skillLevel={skillLevel} sheetType="building" />
-        <SkillReferencePanel skillLevel={skillLevel} sheetType="tumbling" />
-
         {!sheet && (
           <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 mb-6">
             <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
@@ -214,79 +207,79 @@ export default function DeductionsOnlyPage() {
 
         {sheet && (
           <>
-            {armedType && !pending && (
-              <div className="flex items-center justify-between rounded-xl px-4 py-3 mb-4 shadow-sm" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }}>
-                <div className="flex items-center gap-3">
-                  <span className="text-lg font-black">{DEDUCTION_CODES[armedType]}</span>
-                  <div>
-                    <p className="text-sm font-semibold">{DEDUCTION_TYPE_LABELS[armedType]}</p>
-                    <p className="text-xs opacity-70">Toca una celda de la pista para registrar</p>
-                  </div>
-                </div>
-                <button onClick={() => setArmedType(null)} className="rounded-lg p-1.5 hover:bg-white/20 transition-colors"><X className="h-4 w-4" /></button>
-              </div>
-            )}
+            <div className="grid grid-cols-[200px_1fr] gap-4 items-start">
 
-            <div className="grid grid-cols-[200px_1fr_152px] gap-4 items-start">
-              {/* LEFT palette — FALLS only (grid) + TIME (direct) */}
+              {/* ═══ LEFT — Caídas + Tiempos palette ═══════════════════════════ */}
               <div className="flex flex-col gap-3 sticky top-20">
                 {[
-                  { key: 'CAÍDAS',  types: FALLS, isFallGroup: true  },
-                  { key: 'TIEMPO',  types: TIME,  isFallGroup: false },
-                ].map(({ key, types, isFallGroup }) => {
-                  const color: ColorKey = key === 'CAÍDAS' ? 'red' : 'orange';
-                  return (
-                    <div key={key} className="flex flex-col gap-1">
-                      <div className={`text-[9px] font-bold uppercase tracking-widest px-1 flex items-center gap-1 ${color === 'red' ? 'text-red-500' : 'text-orange-500'}`}>
-                        {key === 'CAÍDAS' ? 'Caídas' : 'Tiempo'}
-                        <span className="font-normal normal-case tracking-normal opacity-60">{isFallGroup ? '→ pista' : '→ lista'}</span>
-                        <InfoButton title={`Deducciones — ${key}`} size="lg">
-                          <table className="w-full text-xs border-collapse">
-                            <thead><tr className="bg-zinc-50">
-                              <th className="text-left px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600">Código</th>
-                              <th className="text-left px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600">Descripción</th>
-                              <th className="text-center px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600 w-16">Monto</th>
-                            </tr></thead>
-                            <tbody>
-                              {types.map(t => (
-                                <tr key={t} className="even:bg-zinc-50">
-                                  <td className="px-3 py-1.5 border border-zinc-200 font-black text-zinc-900">{DEDUCTION_CODES[t]}</td>
-                                  <td className="px-3 py-1.5 border border-zinc-200 text-zinc-600">{DEDUCTION_TYPE_LABELS[t]}</td>
-                                  <td className="px-3 py-1.5 border border-zinc-200 text-center text-red-600 font-semibold tabular-nums">−{DEDUCTION_AMOUNTS[t]}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </InfoButton>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        {types.map(type => {
-                          const isArmed = armedType === type;
-                          const isBusy  = savingDirect.has(type);
-                          const ck      = colorFor(type);
-                          return (
-                            <div key={type} draggable={isFallGroup}
-                              onDragStart={isFallGroup ? e => { e.dataTransfer.setData('deduction-type', type); dragTypeRef.current = type; setArmedType(type); } : undefined}
-                              onDragEnd={isFallGroup ? () => { setTimeout(() => { if (!pending) setArmedType(null); }, 50); } : undefined}
-                              onClick={() => { if (isFallGroup) setArmedType(prev => prev === type ? null : type); else handleDirectAdd(type, deductions); }}
-                              className={`relative flex items-center justify-between rounded-lg px-3 py-2 border transition-all select-none ${isFallGroup ? 'cursor-grab active:cursor-grabbing' : isBusy ? 'cursor-wait' : 'cursor-pointer'} ${isArmed ? `${PILL_COLORS[ck]} border-transparent shadow-md scale-[1.02]` : isBusy ? 'bg-zinc-100 border-zinc-200 opacity-60' : 'bg-white border-zinc-200 hover:border-zinc-400 hover:shadow-sm'}`}
-                            >
-                              {!isFallGroup && (() => { const cnt = deductions.find(d => d.deduction_type === type && !d.routine_time)?.count ?? 0; return cnt > 0 ? <span className="absolute -top-2 -right-2 z-10 min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-1 shadow-sm leading-none">{cnt}</span> : null; })()}
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className={`text-sm font-black shrink-0 ${isArmed ? 'text-white' : 'text-zinc-900'}`}>{DEDUCTION_CODES[type]}</span>
-                                <span className={`text-[9px] truncate ${isArmed ? 'text-white/75' : 'text-zinc-400'}`}>{DEDUCTION_TYPE_LABELS[type].split(' ').slice(0, 2).join(' ')}</span>
-                              </div>
-                              <span className={`text-[10px] font-bold tabular-nums shrink-0 ml-1 ${isArmed ? 'text-white/90' : 'text-red-600'}`}>−{DEDUCTION_AMOUNTS[type]}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
+                  { key: 'CAÍDAS', types: FALLS, color: 'red'    as ColorKey, label: 'Caídas'  },
+                  { key: 'TIEMPO', types: TIME,  color: 'orange' as ColorKey, label: 'Tiempo'  },
+                ].map(({ key, types, color, label }) => (
+                  <div key={key} className="flex flex-col gap-1">
+                    <div className={`text-[9px] font-bold uppercase tracking-widest px-1 flex items-center gap-1 ${color === 'red' ? 'text-red-500' : 'text-orange-500'}`}>
+                      {label}
+                      <span className="font-normal normal-case tracking-normal opacity-60">{key === 'CAÍDAS' ? '→ pista' : '→ lista'}</span>
+                      <InfoButton title={`Deducciones — ${label}`} size="lg">
+                        <table className="w-full text-xs border-collapse">
+                          <thead><tr className="bg-zinc-50">
+                            <th className="text-left px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600">Código</th>
+                            <th className="text-left px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600">Descripción</th>
+                            <th className="text-center px-3 py-1.5 border border-zinc-200 font-medium text-zinc-600 w-16">Monto</th>
+                          </tr></thead>
+                          <tbody>
+                            {types.map(t => (
+                              <tr key={t} className="even:bg-zinc-50">
+                                <td className="px-3 py-1.5 border border-zinc-200 font-black text-zinc-900">{DEDUCTION_CODES[t]}</td>
+                                <td className="px-3 py-1.5 border border-zinc-200 text-zinc-600">{DEDUCTION_TYPE_LABELS[t]}</td>
+                                <td className="px-3 py-1.5 border border-zinc-200 text-center text-red-600 font-semibold tabular-nums">−{DEDUCTION_AMOUNTS[t]}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </InfoButton>
                     </div>
-                  );
-                })}
+                    <div className="flex flex-col gap-1">
+                      {types.map(type => {
+                        const isBusy     = savingDirect.has(type);
+                        const ck         = colorFor(type);
+                        const isDragGroup = key === 'CAÍDAS';
+                        const cnt = deductions
+                          .filter(d => d.deduction_type === type)
+                          .reduce((s, d) => s + d.count, 0);
+                        return (
+                          <div
+                            key={type}
+                            draggable={isDragGroup}
+                            onDragStart={isDragGroup ? (e) => { e.dataTransfer.setData('deduction-type', type); dragTypeRef.current = type; } : undefined}
+                            onDragEnd={isDragGroup ? () => { dragTypeRef.current = null; } : undefined}
+                            onClick={isDragGroup ? undefined : () => handleDirectAdd(type)}
+                            className={`relative flex items-center justify-between rounded-lg px-3 py-2 border transition-all select-none ${
+                              isBusy
+                                ? 'cursor-wait bg-zinc-100 border-zinc-200 opacity-60'
+                                : isDragGroup
+                                ? 'cursor-grab active:cursor-grabbing bg-white border-zinc-200 hover:border-zinc-400 hover:shadow-sm'
+                                : 'cursor-pointer bg-white border-zinc-200 hover:border-zinc-400 hover:shadow-sm'
+                            }`}
+                          >
+                            {cnt > 0 && (
+                              <span className={`absolute -top-2 -right-2 z-10 min-w-[18px] h-[18px] rounded-full text-white text-[10px] font-bold flex items-center justify-center px-1 shadow-sm leading-none ${PILL_COLORS[ck]}`}>
+                                {cnt}
+                              </span>
+                            )}
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-sm font-black shrink-0 text-zinc-900">{DEDUCTION_CODES[type]}</span>
+                              <span className="text-[9px] text-zinc-400 leading-tight">{DEDUCTION_TYPE_LABELS[type]}</span>
+                            </div>
+                            <span className="text-[10px] font-bold tabular-nums shrink-0 ml-1 text-red-600">−{DEDUCTION_AMOUNTS[type]}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
 
-              {/* CENTER — pista */}
+              {/* ═══ CENTER — Pista ══════════════════════════════════════════════ */}
               <div className="flex flex-col rounded-xl border border-zinc-200 bg-white overflow-hidden shadow-sm">
                 <div className="flex items-stretch border-b border-zinc-200 bg-zinc-50">
                   <div className="w-20 shrink-0 flex items-center justify-center px-2 border-r border-zinc-200"><p className="text-[10px] font-bold uppercase tracking-widest text-zinc-700">Tiempo</p></div>
@@ -301,106 +294,99 @@ export default function DeductionsOnlyPage() {
                 </div>
 
                 <div className="divide-y divide-zinc-200">
-                  {TRACK_INTERVALS.map(({ key, label, start, end }) => {
-                    const hasPending = rowHasPending(key);
-                    const isArmedRow = !!armedType && !pending;
+                  {TRACK_INTERVALS.map(({ key, start, end }) => {
                     const isMidpoint = key === '1 a 1:15' || key === '2:00 a 2:15';
                     return (
-                      <div key={key} className={isMidpoint ? 'bg-zinc-50/60' : ''}>
-                        <div className={`flex items-stretch min-h-[90px] ${hasPending ? 'bg-blue-50/40' : ''}`}>
-                          <div className={`flex flex-col items-end justify-center shrink-0 w-20 px-2.5 py-2 self-stretch border-r ${isMidpoint ? 'border-zinc-400 bg-zinc-100' : 'border-zinc-200'}`}>
-                            <span className={`text-[12px] font-mono font-bold tabular-nums leading-snug text-right ${isMidpoint ? 'text-zinc-700' : 'text-zinc-500'}`}>{start}</span>
-                            <span className="text-[9px] font-mono text-zinc-300 leading-none">a</span>
-                            <span className={`text-[12px] font-mono font-bold tabular-nums leading-snug text-right ${isMidpoint ? 'text-zinc-700' : 'text-zinc-500'}`}>{end}</span>
-                          </div>
-                          <div className="flex-1 grid grid-cols-3 grid-rows-3 divide-x divide-y divide-zinc-100">
-                            {TRACK_ZONES.map((zone, zi) => {
-                              const fullKey    = zoneKey(key, zone.key);
-                              const isHovered  = hoveredZone === fullKey;
-                              const isPending  = pending?.time === fullKey;
-                              const zoneDeds   = dedsByZone[fullKey] ?? [];
-                              const isRowLabel = zi % 3 === 0;
-                              const rowIdx     = Math.floor(zi / 3);
-                              return (
-                                <div key={zone.key}
-                                  className={`relative flex flex-col items-center justify-center gap-1 p-1 transition-colors min-h-[30px] ${isPending ? 'bg-blue-100' : isHovered && isArmedRow ? 'bg-zinc-100' : ''} ${isArmedRow ? 'cursor-crosshair' : ''}`}
-                                  onDragOver={e => { e.preventDefault(); setHoveredZone(fullKey); }}
-                                  onDragLeave={() => setHoveredZone(null)}
-                                  onDrop={e => { e.preventDefault(); const type = (e.dataTransfer.getData('deduction-type') || dragTypeRef.current) as DeductionType | null; if (type && FALLS.includes(type)) handlePlace(type, fullKey); setHoveredZone(null); }}
-                                  onClick={() => { if (armedType && FALLS.includes(armedType) && !pending) handlePlace(armedType, fullKey); }}
-                                >
-                                  {isRowLabel && <span className="absolute left-1 top-1 text-[8px] font-bold uppercase tracking-widest text-zinc-300">{ZONE_ROWS[rowIdx].label[0]}</span>}
-                                  {zoneDeds.length > 0 && (
-                                    <div className="relative z-10 flex flex-wrap gap-1 justify-center">
-                                      {zoneDeds.map(ded => {
-                                        const ck = colorFor(ded.deduction_type as DeductionType);
-                                        return (
-                                          <div key={ded.id} title={`${DEDUCTION_TYPE_LABELS[ded.deduction_type as DeductionType]}${ded.count > 1 ? ` ×${ded.count}` : ''} = −${ded.total_amount}`}
-                                            className={`group/chip flex items-center gap-0.5 rounded px-1.5 py-0.5 border text-[10px] font-bold cursor-pointer transition-all hover:scale-105 ${BADGE_COLORS[ck]}`}
-                                            onClick={async e => { e.stopPropagation(); if (await confirm({ title: 'Eliminar descuento', message: `¿Eliminar ${DEDUCTION_CODES[ded.deduction_type as DeductionType]} (−${ded.total_amount})?`, confirmLabel: 'Eliminar' })) handleDelete(ded); }}
-                                          >
-                                            {DEDUCTION_CODES[ded.deduction_type as DeductionType]}
-                                            {ded.count > 1 && <span className="font-normal opacity-70">×{ded.count}</span>}
-                                            <X className="h-2 w-2 opacity-0 group-hover/chip:opacity-60 transition-opacity" />
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  )}
-                                  {isHovered && isArmedRow && zoneDeds.length === 0 && (
-                                    <span className={`relative z-10 rounded px-1.5 py-0.5 text-[10px] font-bold border opacity-60 ${armedType ? BADGE_COLORS[colorFor(armedType)] : ''}`}>
-                                      {armedType ? DEDUCTION_CODES[armedType] : ''}
-                                    </span>
-                                  )}
-                                  {zoneDeds.length === 0 && !isHovered && <div className="w-1 h-1 rounded-full bg-zinc-150 opacity-40" />}
-                                </div>
-                              );
-                            })}
-                          </div>
-                          <div className={`flex flex-col items-start justify-center shrink-0 w-20 px-2.5 py-2 self-stretch border-l ${isMidpoint ? 'border-zinc-400 bg-zinc-100' : 'border-zinc-200'}`}>
-                            <span className={`text-[12px] font-mono font-bold tabular-nums leading-snug ${isMidpoint ? 'text-zinc-700' : 'text-zinc-500'}`}>{start}</span>
-                            <span className="text-[9px] font-mono text-zinc-300 leading-none">a</span>
-                            <span className={`text-[12px] font-mono font-bold tabular-nums leading-snug ${isMidpoint ? 'text-zinc-700' : 'text-zinc-500'}`}>{end}</span>
-                          </div>
+                      <div key={key} className={`flex items-stretch min-h-[90px] ${isMidpoint ? 'bg-zinc-50/60' : ''}`}>
+
+                        {/* Left time label */}
+                        <div className={`flex flex-col items-end justify-center shrink-0 w-20 px-2.5 py-2 self-stretch border-r ${isMidpoint ? 'border-zinc-400 bg-zinc-100' : 'border-zinc-200'}`}>
+                          <span className={`text-[12px] font-mono font-bold tabular-nums leading-snug text-right ${isMidpoint ? 'text-zinc-700' : 'text-zinc-500'}`}>{start}</span>
+                          <span className="text-[9px] font-mono text-zinc-300 leading-none">a</span>
+                          <span className={`text-[12px] font-mono font-bold tabular-nums leading-snug text-right ${isMidpoint ? 'text-zinc-700' : 'text-zinc-500'}`}>{end}</span>
                         </div>
 
-                        {hasPending && pending && (
-                          <div className="border-y border-blue-200 bg-blue-50 px-4 py-3">
-                            <div className="flex items-start gap-3">
-                              <span className={`rounded-lg px-2.5 py-1 text-sm font-black shrink-0 ${PILL_COLORS[colorFor(pending.type)]}`}>{DEDUCTION_CODES[pending.type]}</span>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                  <span className="text-xs font-semibold text-zinc-700">{DEDUCTION_TYPE_LABELS[pending.type]}</span>
-                                  <span className="text-xs text-zinc-400">{pending.time}</span>
-                                  <span className="text-xs font-bold text-red-600">−{previewTotal}</span>
-                                </div>
-                                <div className="flex items-center gap-3 flex-wrap">
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-[10px] text-zinc-500">Cantidad:</span>
-                                    <div className="flex items-center gap-1">
-                                      <button type="button" onClick={() => setPending(p => p ? { ...p, count: Math.max(1, p.count - 1) } : p)} className="w-6 h-6 rounded border border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-100 text-sm font-bold flex items-center justify-center">−</button>
-                                      <span className="w-5 text-center text-sm font-bold tabular-nums">{pending.count}</span>
-                                      <button type="button" onClick={() => setPending(p => p ? { ...p, count: p.count + 1 } : p)} className="w-6 h-6 rounded border border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-100 text-sm font-bold flex items-center justify-center">+</button>
-                                    </div>
+                        {/* 3×3 zone grid */}
+                        <div className="flex-1 grid grid-cols-3 grid-rows-3 divide-x divide-y divide-zinc-100">
+                          {TRACK_ZONES.map((zone, zi) => {
+                            const fullKey   = zoneKey(key, zone.key);
+                            const isSaving  = savingZone === fullKey;
+                            const isHovered = hoveredZone === fullKey;
+                            const zoneDeds  = dedsByZone[fullKey] ?? [];
+                            const isRowLabel = zi % 3 === 0;
+                            const rowIdx    = Math.floor(zi / 3);
+                            return (
+                              <div
+                                key={zone.key}
+                                className={`relative flex flex-col items-center justify-center gap-1 p-1 transition-colors min-h-[30px] ${
+                                  isSaving  ? 'bg-green-50' :
+                                  isHovered ? 'bg-blue-50 ring-1 ring-inset ring-blue-300' :
+                                  'hover:bg-zinc-50'
+                                }`}
+                                onDragOver={(e) => { e.preventDefault(); setHoveredZone(fullKey); }}
+                                onDragLeave={() => setHoveredZone(null)}
+                                onDrop={(e) => {
+                                  e.preventDefault();
+                                  setHoveredZone(null);
+                                  const type = (e.dataTransfer.getData('deduction-type') || dragTypeRef.current) as DeductionType | null;
+                                  if (type && FALLS.includes(type)) handlePlace(type, fullKey, deductions);
+                                }}
+                              >
+                                {isRowLabel && (
+                                  <span className={`absolute left-1 top-1 text-[8px] font-bold uppercase tracking-widest ${
+                                    rowIdx === 0 ? 'text-zinc-300' : rowIdx === 1 ? 'text-zinc-200' : 'text-zinc-300'
+                                  }`}>{ZONE_ROWS[rowIdx].label[0]}</span>
+                                )}
+
+                                {isSaving && <span className="text-[9px] text-green-500 font-medium">…</span>}
+
+                                {!isSaving && isHovered && zoneDeds.length === 0 && (
+                                  <span className="text-[9px] text-blue-400 font-medium">+</span>
+                                )}
+
+                                {!isSaving && zoneDeds.length > 0 && (
+                                  <div className="relative z-10 flex flex-wrap gap-1 justify-center">
+                                    {zoneDeds.map(ded => {
+                                      const ck = colorFor(ded.deduction_type as DeductionType);
+                                      return (
+                                        <div
+                                          key={ded.id}
+                                          title={`${DEDUCTION_TYPE_LABELS[ded.deduction_type as DeductionType]} × ${ded.count} = −${ded.total_amount}`}
+                                          className={`group/chip flex items-center gap-0.5 rounded px-1.5 py-0.5 border text-[10px] font-bold cursor-pointer transition-all hover:scale-105 ${BADGE_COLORS[ck]}`}
+                                          onClick={async (e) => {
+                                            e.stopPropagation();
+                                            if (await confirm({ title: 'Eliminar descuento', message: `¿Eliminar ${DEDUCTION_CODES[ded.deduction_type as DeductionType]} — ${DEDUCTION_TYPE_LABELS[ded.deduction_type as DeductionType]} ×${ded.count} (−${ded.total_amount})?`, confirmLabel: 'Eliminar' }))
+                                              handleDelete(ded);
+                                          }}
+                                        >
+                                          {DEDUCTION_CODES[ded.deduction_type as DeductionType]}
+                                          {ded.count > 1 && <span className="font-normal opacity-70">×{ded.count}</span>}
+                                          <X className="h-2 w-2 opacity-0 group-hover/chip:opacity-60 transition-opacity" />
+                                        </div>
+                                      );
+                                    })}
                                   </div>
-                                  <input type="text" placeholder="Nota (opcional)" value={pending.notes} onChange={e => setPending(p => p ? { ...p, notes: e.target.value } : p)} className="flex-1 min-w-32 h-7 rounded-lg border border-zinc-300 bg-white px-2.5 text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                                  <label className="flex items-center gap-1 text-[10px] cursor-pointer select-none">
-                                    <input type="checkbox" checked={pending.hitZero} onChange={e => setPending(p => p ? { ...p, hitZero: e.target.checked } : p)} className="rounded border-zinc-300" />
-                                    <span className="font-bold text-red-700 uppercase tracking-wide">Hit Zero</span>
-                                  </label>
-                                </div>
+                                )}
+
+                                {!isSaving && !isHovered && zoneDeds.length === 0 && (
+                                  <div className="w-1 h-1 rounded-full bg-zinc-200 opacity-40" />
+                                )}
                               </div>
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <button type="button" onClick={() => setPending(null)} className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors">Cancelar</button>
-                                <button type="button" onClick={handleConfirm} disabled={saving} className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50">{saving ? '...' : `Agregar −${previewTotal}`}</button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
+                            );
+                          })}
+                        </div>
+
+                        {/* Right time label */}
+                        <div className={`flex flex-col items-start justify-center shrink-0 w-20 px-2.5 py-2 self-stretch border-l ${isMidpoint ? 'border-zinc-400 bg-zinc-100' : 'border-zinc-200'}`}>
+                          <span className={`text-[12px] font-mono font-bold tabular-nums leading-snug ${isMidpoint ? 'text-zinc-700' : 'text-zinc-500'}`}>{start}</span>
+                          <span className="text-[9px] font-mono text-zinc-300 leading-none">a</span>
+                          <span className={`text-[12px] font-mono font-bold tabular-nums leading-snug ${isMidpoint ? 'text-zinc-700' : 'text-zinc-500'}`}>{end}</span>
+                        </div>
                       </div>
                     );
                   })}
 
+                  {/* Sin tiempo row — TIME direct-adds */}
                   {dedsByZone['sin tiempo'] && (
                     <div className="flex items-center gap-2 px-3 py-2 bg-zinc-50 border-t border-zinc-200">
                       <span className="text-[10px] text-zinc-400 w-20 text-right pr-2 shrink-0">Sin tiempo</span>
@@ -408,8 +394,14 @@ export default function DeductionsOnlyPage() {
                         {dedsByZone['sin tiempo'].map(ded => {
                           const ck = colorFor(ded.deduction_type as DeductionType);
                           return (
-                            <div key={ded.id} className={`flex items-center gap-1 rounded-md px-2 py-0.5 border text-xs font-bold cursor-pointer hover:scale-105 transition-all ${BADGE_COLORS[ck]}`}
-                              onClick={async () => { if (await confirm({ title: 'Eliminar descuento', message: `¿Eliminar ${DEDUCTION_CODES[ded.deduction_type as DeductionType]} (−${ded.total_amount})?`, confirmLabel: 'Eliminar' })) handleDelete(ded); }}>
+                            <div
+                              key={ded.id}
+                              className={`flex items-center gap-1 rounded-md px-2 py-0.5 border text-xs font-bold cursor-pointer hover:scale-105 transition-all ${BADGE_COLORS[ck]}`}
+                              onClick={async () => {
+                                if (await confirm({ title: 'Eliminar descuento', message: `¿Eliminar ${DEDUCTION_CODES[ded.deduction_type as DeductionType]} (−${ded.total_amount})?`, confirmLabel: 'Eliminar' }))
+                                  handleDelete(ded);
+                              }}
+                            >
                               {DEDUCTION_CODES[ded.deduction_type as DeductionType]}
                               {ded.count > 1 && <span className="font-normal opacity-70">×{ded.count}</span>}
                               <X className="h-2.5 w-2.5 opacity-40" />
@@ -420,62 +412,56 @@ export default function DeductionsOnlyPage() {
                     </div>
                   )}
                 </div>
+
                 <div className="px-4 py-2 border-t border-zinc-100 bg-zinc-50">
-                  <p className="text-[9px] text-zinc-400 text-center">Caídas → pista · Tiempo → lista · Clic en badge para eliminar</p>
+                  <p className="text-[9px] text-zinc-400 text-center">
+                    Arrastra una caída desde la paleta izquierda hasta la celda · Clic en chip para eliminar · F = Frente · C = Centro · T = Fondo
+                  </p>
                 </div>
               </div>
 
-              {/* RIGHT — reference */}
-              <div className="flex flex-col gap-2 sticky top-20">
-                <p className="text-sm font-bold uppercase tracking-widest text-zinc-700 px-1">Referencia</p>
-                {[
-                  { title: 'CAÍDAS', types: FALLS, color: 'red' as ColorKey },
-                  { title: 'TIEMPO', types: TIME,  color: 'orange' as ColorKey },
-                ].map(({ title, types, color }) => (
-                  <div key={title} className="rounded-lg border border-zinc-100 bg-white overflow-hidden">
-                    <div className={`px-2.5 py-1 text-[8px] font-bold uppercase tracking-widest ${color === 'red' ? 'bg-red-50 text-red-500' : 'bg-orange-50 text-orange-500'}`}>{title}</div>
-                    <div className="divide-y divide-zinc-50">
-                      {types.map(type => (
-                        <div key={type} className="flex items-center justify-between px-2.5 py-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-black text-zinc-800 w-9">{DEDUCTION_CODES[type]}</span>
-                            <span className="text-[8px] text-zinc-400 leading-tight">{DEDUCTION_TYPE_LABELS[type].split(' ').slice(0, 2).join(' ')}</span>
-                          </div>
-                          <span className="text-[10px] font-bold tabular-nums text-red-500">−{DEDUCTION_AMOUNTS[type]}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
 
-            {/* Deductions list */}
+            {/* ── Deductions list ───────────────────────────────────────────── */}
             <div className="mt-6 flex flex-col gap-3">
-              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Descuentos registrados{myDeds.length > 0 && ` (${myDeds.length})`}</h2>
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">
+                Descuentos registrados{myDeds.length > 0 && ` (${myDeds.length})`}
+              </h2>
               {myDeds.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-5 py-8 text-center">
-                  <p className="text-sm text-zinc-400">Sin descuentos — arrastra o selecciona un tipo y toca la pista</p>
+                  <p className="text-sm text-zinc-400">Sin descuentos — arrastra una caída a la pista o toca un tiempo en el panel izquierdo</p>
                 </div>
               ) : (
                 <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-                  <div className="grid grid-cols-[7rem_4.5rem_1fr_5rem_2.5rem] gap-0 border-b border-zinc-200 bg-zinc-50 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-                    <span>Tiempo / Zona</span><span>Código</span><span>Descripción</span><span className="text-right">Monto</span><span />
+                  <div className="grid grid-cols-[11rem_6.5rem_1fr_5rem_2.5rem] gap-0 border-b border-zinc-200 bg-zinc-50 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                    <span>Tiempo / Zona</span><span className="text-center">Código</span><span>Descripción</span><span className="text-right">Monto</span><span />
                   </div>
                   <div className="divide-y divide-zinc-100">
                     {[...myDeds].sort((a, b) => (a.routine_time || 'z').localeCompare(b.routine_time || 'z')).map(ded => {
                       const ck = colorFor(ded.deduction_type as DeductionType);
                       return (
-                        <div key={ded.id} className="grid grid-cols-[7rem_4.5rem_1fr_5rem_2.5rem] gap-0 items-center px-3 py-2.5">
-                          <span className="text-xs tabular-nums text-zinc-500 font-mono leading-tight">{formatRoutineTime(ded.routine_time)}</span>
-                          <span className={`inline-flex items-center justify-center self-center rounded-md px-2 py-0.5 text-xs font-black w-fit ${BADGE_COLORS[ck]}`}>{DEDUCTION_CODES[ded.deduction_type as DeductionType]}</span>
+                        <div key={ded.id} className="grid grid-cols-[11rem_6.5rem_1fr_5rem_2.5rem] gap-0 items-center px-3 py-2.5">
+                          <span className="text-xs tabular-nums text-zinc-500 font-mono whitespace-nowrap">{formatRoutineTime(ded.routine_time)}</span>
+                          <div className="flex justify-center">
+                            <span className={`inline-flex items-center justify-center rounded-md px-2 py-0.5 text-xs font-black ${BADGE_COLORS[ck]}`}>{DEDUCTION_CODES[ded.deduction_type as DeductionType]}</span>
+                          </div>
                           <div className="min-w-0 pr-2">
-                            <p className="text-xs text-zinc-700 truncate">{ded.notes || DEDUCTION_TYPE_LABELS[ded.deduction_type as DeductionType]}</p>
+                            <p className="text-xs text-zinc-700">{ded.notes || DEDUCTION_TYPE_LABELS[ded.deduction_type as DeductionType]}</p>
                             {ded.count > 1 && <p className="text-[10px] text-zinc-400">{ded.count} × −{ded.unit_amount}</p>}
                             {ded.hit_zero && <p className="text-[10px] font-bold text-red-600 uppercase tracking-wide">Hit Zero</p>}
                           </div>
-                          <span className="text-sm font-bold tabular-nums text-red-600 text-right">−{ded.total_amount}</span>
-                          <button type="button" onClick={() => handleDelete(ded)} disabled={deleting === ded.id} className="flex items-center justify-center rounded-lg p-1 text-zinc-300 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-40"><Trash2 className="h-3.5 w-3.5" /></button>
+                          <span className="text-sm font-bold tabular-nums text-red-600 text-right">−{fmt(ded.total_amount)}</span>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (await confirm({ title: 'Eliminar descuento', message: `¿Eliminar ${DEDUCTION_CODES[ded.deduction_type as DeductionType]} (−${ded.total_amount})?`, confirmLabel: 'Eliminar' }))
+                                handleDelete(ded);
+                            }}
+                            disabled={deleting === ded.id}
+                            className="flex items-center justify-center rounded-lg p-1 text-zinc-300 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-40"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                       );
                     })}

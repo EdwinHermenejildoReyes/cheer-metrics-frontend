@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Trash2, AlertCircle, Eye } from 'lucide-react';
 import { InfoButton } from '@/components/ui/InfoButton';
@@ -19,8 +19,6 @@ import {
   type UnpaidAthlete,
 } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
-import { getConstructionGroups } from '@/lib/constructionTable';
-import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 
 const ILLEGAL: DeductionType[] = ['pi', 'eap', 'rg', 'gfn', 'bfn', 'seg'];
 const ADMIN:   DeductionType[] = ['ad', 'div'];
@@ -68,19 +66,21 @@ function DeductionCard({ ded, onDelete, isDeleting, confirm }: {
   confirm: ReturnType<typeof useConfirm>;
 }) {
   const ck = ILLEGAL.includes(ded.deduction_type as DeductionType) ? 'amber' as const : 'zinc' as const;
-  const [regla,   setRegla]   = useState(ded.notes);
-  const [tiempo,  setTiempo]  = useState(ded.routine_time);
-  const [saving,  setSaving]  = useState(false);
+  const [regla,       setRegla]       = useState(ded.notes);
+  const [tiempo,      setTiempo]      = useState(ded.routine_time);
+  const [descripcion, setDescripcion] = useState(ded.description);
+  const [saving,      setSaving]      = useState(false);
 
-  const saveAnnotation = async (nextRegla: string, nextTiempo: string) => {
-    if (nextRegla === ded.notes && nextTiempo === ded.routine_time) return;
+  const saveAnnotation = async (nextRegla: string, nextTiempo: string, nextDesc: string) => {
+    if (nextRegla === ded.notes && nextTiempo === ded.routine_time && nextDesc === ded.description) return;
     setSaving(true);
     try {
-      await competitionsRepository.updateDeduction(ded.id, { notes: nextRegla, routine_time: nextTiempo });
+      await competitionsRepository.updateDeduction(ded.id, { notes: nextRegla, routine_time: nextTiempo, description: nextDesc });
     } catch {
       toast.error('No se pudo guardar la anotación');
       setRegla(ded.notes);
       setTiempo(ded.routine_time);
+      setDescripcion(ded.description);
     } finally { setSaving(false); }
   };
 
@@ -113,31 +113,40 @@ function DeductionCard({ ded, onDelete, isDeleting, confirm }: {
         </button>
       </div>
 
-      {/* ── Annotation row ── */}
-      <div className="flex items-center gap-2 border-t border-zinc-100 bg-zinc-50 px-3 py-2">
-        <div className="flex items-center gap-1 shrink-0">
-          <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 w-10">Regla</span>
+      {/* ── Annotation rows ── */}
+      <div className="border-t border-zinc-100 bg-zinc-50 px-3 py-2 flex flex-col gap-1.5">
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 w-10 shrink-0">Regla</span>
+          <input
+            type="text"
+            value={regla}
+            onChange={e => setRegla(e.target.value)}
+            onBlur={() => { const n = normalizeTime(tiempo); if (n !== tiempo) setTiempo(n); saveAnnotation(regla, n, descripcion); }}
+            placeholder="Ej. Art. 3.2.1"
+            className="flex-1 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-800 placeholder:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-400 min-w-0"
+          />
+          <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 w-11 text-right shrink-0">Tiempo</span>
+          <input
+            type="text"
+            value={tiempo}
+            onChange={e => setTiempo(filterTimeChars(e.target.value))}
+            onBlur={() => { const n = normalizeTime(tiempo); if (n !== tiempo) setTiempo(n); saveAnnotation(regla, n, descripcion); }}
+            placeholder="00:00"
+            className="w-16 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-800 placeholder:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-400 text-center"
+          />
+          {saving && <span className="text-[9px] text-zinc-400 shrink-0">guardando…</span>}
         </div>
-        <input
-          type="text"
-          value={regla}
-          onChange={e => setRegla(e.target.value)}
-          onBlur={() => { const n = normalizeTime(tiempo); if (n !== tiempo) setTiempo(n); saveAnnotation(regla, n); }}
-          placeholder="Ej. Art. 3.2.1"
-          className="flex-1 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-800 placeholder:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-400 min-w-0"
-        />
-        <div className="flex items-center gap-1 shrink-0">
-          <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 w-11 text-right">Tiempo</span>
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 w-10 shrink-0">Desc.</span>
+          <input
+            type="text"
+            value={descripcion}
+            onChange={e => setDescripcion(e.target.value)}
+            onBlur={() => { const n = normalizeTime(tiempo); saveAnnotation(regla, n, descripcion); }}
+            placeholder="Descripción del hecho"
+            className="flex-1 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-800 placeholder:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-400 min-w-0"
+          />
         </div>
-        <input
-          type="text"
-          value={tiempo}
-          onChange={e => setTiempo(filterTimeChars(e.target.value))}
-          onBlur={() => { const n = normalizeTime(tiempo); if (n !== tiempo) setTiempo(n); saveAnnotation(regla, n); }}
-          placeholder="00:00"
-          className="w-16 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-800 placeholder:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-400 text-center"
-        />
-        {saving && <span className="text-[9px] text-zinc-400 shrink-0">guardando…</span>}
       </div>
     </div>
   );
@@ -163,9 +172,7 @@ export default function SafetyRulesPage() {
 
   const [teamName,       setTeamName]       = useState('');
   const [sheet,          setSheet]          = useState<ScoreSheet | null>(null);
-  const [skillLevel,     setSkillLevel]     = useState<string | undefined>(undefined);
   const [loading,        setLoading]        = useState(true);
-  const [athleteCount,   setAthleteCount]   = useState<number | null>(null);
   const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
   const [requirePayment, setRequirePayment] = useState(false);
   const [deleting,       setDeleting]       = useState<number | null>(null);
@@ -173,14 +180,12 @@ export default function SafetyRulesPage() {
 
   const load = useCallback(async () => {
     try {
-      const [sheetRes, regRes, divRes] = await Promise.all([
+      const [sheetRes, regRes] = await Promise.all([
         competitionsRepository.listScoreSheets({ registration: String(registrationId) }),
         competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' }),
-        competitionsRepository.getDivision(divId),
       ]);
       const reg = regRes.data.results.find(r => r.id === registrationId);
-      if (reg) { setTeamName(reg.team_name); setAthleteCount(reg.athlete_count ?? null); setUnpaidAthletes(reg.unpaid_athletes); setRequirePayment(reg.competition_require_payment); }
-      setSkillLevel(divRes.data.skill_level);
+      if (reg) { setTeamName(reg.team_name); setUnpaidAthletes(reg.unpaid_athletes); setRequirePayment(reg.competition_require_payment); }
       if (sheetRes.data.results.length > 0) {
         const s = sheetRes.data.results[0];
         setSheet(s);
@@ -190,31 +195,6 @@ export default function SafetyRulesPage() {
   }, [registrationId, divId]);
 
   useEffect(() => { load(); }, [load]);
-
-  const athleteCountRef = useRef<number | null>(athleteCount);
-  athleteCountRef.current = athleteCount;
-
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const regRes = await competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' });
-        const reg = regRes.data.results.find(r => r.id === registrationId);
-        const fetched = reg?.athlete_count ?? null;
-        if (fetched !== athleteCountRef.current) setAthleteCount(fetched);
-      } catch { /* noop */ }
-    }, 5000);
-    return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [divId, registrationId]);
-
-  useEffect(() => {
-    const ch = new BroadcastChannel('cheer-metrics:athlete-count');
-    ch.onmessage = (e: MessageEvent<{ registrationId: number; count: number | null }>) => {
-      if (e.data.registrationId === registrationId && e.data.count != null)
-        setAthleteCount(e.data.count);
-    };
-    return () => ch.close();
-  }, [registrationId]);
 
   // Admin polling — refresh sheet data every 5 s in read-only mode
   useEffect(() => {
@@ -230,13 +210,11 @@ export default function SafetyRulesPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readOnly, loading, registrationId]);
 
-  const handleDirectAdd = async (type: DeductionType, currentDeductions: Deduction[]) => {
+  const handleDirectAdd = async (type: DeductionType) => {
     if (!sheet || savingDirect.has(type)) return;
     setSavingDirect(prev => new Set(prev).add(type));
     try {
-      const existing = currentDeductions.find(d => d.deduction_type === type && (!d.routine_time || d.routine_time === ''));
-      if (existing) { await competitionsRepository.updateDeduction(existing.id, { count: existing.count + 1 }); }
-      else { await competitionsRepository.createDeduction({ score_sheet: sheet.id, deduction_type: type, count: 1, routine_time: '', hit_zero: false, notes: '' }); }
+      await competitionsRepository.createDeduction({ score_sheet: sheet.id, deduction_type: type, count: 1, routine_time: '', hit_zero: false, notes: '' });
       await load();
     } catch { toast.error('No se pudo registrar el descuento'); } finally {
       setSavingDirect(prev => { const next = new Set(prev); next.delete(type); return next; });
@@ -288,53 +266,8 @@ export default function SafetyRulesPage() {
       )}
       <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
 
-      {/* ── Construction table banner ─────────────────────────────────── */}
-      {(() => {
-        const groups = athleteCount ? getConstructionGroups(athleteCount) : null;
-        return (
-          <div className="mx-auto max-w-4xl px-4 pt-6 print:hidden">
-            <div className={`rounded-xl border px-5 py-4 flex items-center justify-between gap-4 ${
-              groups ? 'border-zinc-200 bg-white' : 'border-dashed border-zinc-300 bg-zinc-50'
-            }`}>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Tabla de cantidad en construcción</p>
-                {groups ? (
-                  <p className="text-xs text-zinc-500">Basado en <span className="font-semibold text-zinc-800">{athleteCount} atletas</span> confirmados en backstage</p>
-                ) : (
-                  <p className="text-xs text-zinc-400">
-                    {athleteCount
-                      ? `${athleteCount} atletas — fuera del rango de tabla (10–30)`
-                      : 'Sin conteo de atletas — ingresa el número en la página de Backstage'}
-                  </p>
-                )}
-              </div>
-              {groups ? (
-                <div className="flex items-center gap-6 shrink-0">
-                  <div className="text-center">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Mayoría</p>
-                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.mayoria}</p>
-                  </div>
-                  <div className="text-center border-x border-zinc-200 px-6">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Gran Parte</p>
-                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.gran_parte}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Máx</p>
-                    <p className="text-3xl font-black tabular-nums text-zinc-900">{groups.max}</p>
-                  </div>
-                </div>
-              ) : (
-                <span className="text-xs text-zinc-300 italic shrink-0">—</span>
-              )}
-            </div>
-          </div>
-        );
-      })()}
-
       <div className={`max-w-4xl mx-auto px-4 py-6 print:hidden${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
 
-        <SkillReferencePanel skillLevel={skillLevel} sheetType="building" />
-        <SkillReferencePanel skillLevel={skillLevel} sheetType="tumbling" />
 
         {!sheet && (
           <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 mb-6">
@@ -380,11 +313,11 @@ export default function SafetyRulesPage() {
                     {types.map(type => {
                       const isBusy = savingDirect.has(type);
                       const ck     = colorFor(type);
-                      const cnt    = deductions.find(d => d.deduction_type === type && !d.routine_time)?.count ?? 0;
+                      const cnt    = myDeds.filter(d => d.deduction_type === type).length;
                       return (
                         <div
                           key={type}
-                          onClick={() => handleDirectAdd(type, deductions)}
+                          onClick={() => handleDirectAdd(type)}
                           className={`relative flex items-center justify-between rounded-lg px-3 py-2 border transition-all select-none ${isBusy ? 'cursor-wait bg-zinc-100 border-zinc-200 opacity-60' : 'cursor-pointer bg-white border-zinc-200 hover:border-zinc-400 hover:shadow-sm'}`}
                         >
                           {cnt > 0 && (
@@ -394,7 +327,7 @@ export default function SafetyRulesPage() {
                           )}
                           <div className="flex items-center gap-2 min-w-0">
                             <span className="text-sm font-black shrink-0 text-zinc-900">{DEDUCTION_CODES[type]}</span>
-                            <span className="text-[9px] truncate text-zinc-400">{DEDUCTION_TYPE_LABELS[type].split(' ').slice(0, 3).join(' ')}</span>
+                            <span className="text-[9px] text-zinc-400 leading-tight">{DEDUCTION_TYPE_LABELS[type]}</span>
                           </div>
                           <span className="text-[10px] font-bold tabular-nums shrink-0 ml-1 text-red-600">−{DEDUCTION_AMOUNTS[type]}</span>
                         </div>
@@ -436,7 +369,7 @@ export default function SafetyRulesPage() {
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3">
-                    {myDeds.map(ded => (
+                    {[...myDeds].sort((a, b) => b.id - a.id).map(ded => (
                       <DeductionCard
                         key={ded.id}
                         ded={ded}

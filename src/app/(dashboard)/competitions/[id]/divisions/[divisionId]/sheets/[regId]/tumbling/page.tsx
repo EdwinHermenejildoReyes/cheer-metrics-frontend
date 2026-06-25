@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Eye, Lock } from 'lucide-react';
 import { InfoButton } from '@/components/ui/InfoButton';
-import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageSpinner } from '@/components/ui/spinner';
@@ -19,6 +18,7 @@ import { toastApiError } from '@/utils/apiErrors';
 import type { TumblingConfig } from '@/lib/scoringConfig';
 import type { Division, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
+import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 import type { TumblingPrintData } from '@/components/print/TumblingSheetPrintView';
 
 // ── Execution categories (same for all scoring systems) ──────────────────────
@@ -651,6 +651,7 @@ export default function TumblingSheetPage() {
         </div>
       )}
       <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
+      <SkillReferencePanel skillLevel={division?.skill_level} sheetType="tumbling" />
 
       {!loading && (
         <TumblingSheetPrintView
@@ -733,7 +734,6 @@ export default function TumblingSheetPage() {
         })()}
 
         {/* ── Skill reference panel ────────────────────────────────────── */}
-        <SkillReferencePanel skillLevel={division?.skill_level} sheetType="tumbling" />
 
         {/* ── GIMNASIA ESTÁTICA ────────────────────────────────────────── */}
         {tCfg.hasStanding && (

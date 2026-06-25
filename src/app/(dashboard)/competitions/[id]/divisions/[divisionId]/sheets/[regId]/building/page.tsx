@@ -17,9 +17,9 @@ import { toastApiError } from '@/utils/apiErrors';
 import type { BuildingConfig } from '@/lib/scoringConfig';
 import type { Division, DivisionCategory, Registration, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
+import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 import type { BuildingPrintData } from '@/components/print/BuildingSheetPrintView';
 import { InfoButton } from '@/components/ui/InfoButton';
-import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 
 // ── Execution categories (same for all scoring systems) ──────────────────────
 const EXEC_CATS      = ['Flyer', 'Base/Spotter', 'Transición', 'Sincronización'];
@@ -649,6 +649,7 @@ export default function BuildingSheetPage() {
         </div>
       )}
       <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
+      <SkillReferencePanel skillLevel={division?.skill_level} sheetType="building" />
 
       {/* Print-only view (hidden in browser, visible when printing) */}
       {!loading && (
@@ -784,7 +785,6 @@ export default function BuildingSheetPage() {
         })()}
 
         {/* ── Skill reference panel ────────────────────────────────────── */}
-        <SkillReferencePanel skillLevel={division?.skill_level} sheetType="building" />
 
         {/* ── STUNTS ──────────────────────────────────────────────────── */}
         <section className="flex flex-col gap-3">
