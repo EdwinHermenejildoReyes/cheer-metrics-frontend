@@ -415,9 +415,6 @@ export default function OverallSheetPage() {
 
       <div className={`print:hidden max-w-6xl mx-auto px-6 py-8 flex flex-col gap-14${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
 
-        <SkillReferencePanel skillLevel={skillLevel} sheetType="building" />
-        <SkillReferencePanel skillLevel={skillLevel} sheetType="tumbling" />
-
         {/* ── DOS COLUMNAS: Formaciones | Baile ────────────────────────── */}
         <div className="grid grid-cols-2 gap-5 items-start">
 
