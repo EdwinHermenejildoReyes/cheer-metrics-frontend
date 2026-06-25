@@ -218,6 +218,7 @@ export interface Deduction {
   routine_time: string;
   hit_zero: boolean;
   notes: string;
+  description: string;
 }
 
 export interface ScoreSheet {

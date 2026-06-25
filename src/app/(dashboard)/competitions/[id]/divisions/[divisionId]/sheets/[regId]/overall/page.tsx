@@ -15,7 +15,6 @@ import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
 import type { ScoreSheet, ScoringSystem, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
-import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 
 // ── Formations scale (2.0 → 1.0 in steps of −0.1) ───────────────────────────
 const FORMATIONS_VALUES = [2.0, 1.9, 1.8, 1.7, 1.6, 1.5, 1.4, 1.3, 1.2, 1.1, 1.0];
@@ -67,7 +66,7 @@ function DanceLevelSelector({
 }) {
   return (
     <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-black/20" style={{ backgroundColor: 'var(--plt-surface)' }}>
+      <div className="px-4 py-2.5 border-b border-black/20" style={{ backgroundColor: 'var(--plt-primary)' }}>
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-semibold uppercase tracking-wide text-white">{label}</span>
           {info && (
@@ -272,11 +271,12 @@ export default function OverallSheetPage() {
     return () => clearInterval(id);
   }, [existingSheet, protestExpired]);
 
-  // Prevents auto-save from firing while load() is populating initial form values
-  const initialValuesSettled = useRef(false);
+  // Prevents auto-save from firing while load() is populating initial form values.
+  // Using useState (not useRef) so transitioning to true re-triggers the auto-save effect.
+  const [hasSettled, setHasSettled] = useState(false);
   useEffect(() => {
     if (!loading) {
-      const t = setTimeout(() => { initialValuesSettled.current = true; }, 500);
+      const t = setTimeout(() => setHasSettled(true), 500);
       return () => clearTimeout(t);
     }
   }, [loading]);
@@ -326,11 +326,10 @@ export default function OverallSheetPage() {
 
   // Auto-save 2 s after the last change (judge mode only)
   useEffect(() => {
-    if (readOnly || !initialValuesSettled.current) return;
+    if (readOnly || !hasSettled) return;
     const timer = setTimeout(() => { handleSaveRef.current(true); }, 2000);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readOnly, formationsScore, danceDifficulty, danceExecution, creativityOverall, showmanshipOverall, formationsNotes, danceNotes]);
+  }, [readOnly, hasSettled, formationsScore, danceDifficulty, danceExecution, creativityOverall, showmanshipOverall, formationsNotes, danceNotes]);
 
   if (loading) return <PageSpinner />;
 
