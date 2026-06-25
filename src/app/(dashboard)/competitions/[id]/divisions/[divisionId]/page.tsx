@@ -672,28 +672,60 @@ export default function DivisionDetailPage() {
                   <th className="px-5 py-3 text-right">%</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100">
-                {ranked.map(({ reg, sheet }, pos) => (
-                  <tr key={reg.id} className={pos === 0 ? 'bg-amber-50' : ''}>
-                    <td className="px-5 py-3.5 font-medium text-zinc-900">
-                      {pos === 0 ? '🥇' : pos === 1 ? '🥈' : pos === 2 ? '🥉' : `${pos + 1}°`}
-                    </td>
-                    <td className="px-5 py-3.5 font-medium text-zinc-900">{reg.team_name}</td>
-                    <td className="px-5 py-3.5 text-zinc-500">{reg.gym_name}</td>
-                    <td className="px-5 py-3.5 text-right tabular-nums text-zinc-600">
-                      {parseFloat(sheet.raw_score).toFixed(2)}
-                    </td>
-                    <td className="px-5 py-3.5 text-right tabular-nums text-red-600">
-                      -{parseFloat(sheet.total_deductions).toFixed(2)}
-                    </td>
-                    <td className="px-5 py-3.5 text-right tabular-nums font-semibold text-zinc-900">
-                      {parseFloat(sheet.final_score).toFixed(2)}
-                    </td>
-                    <td className="px-5 py-3.5 text-right tabular-nums text-zinc-500">
-                      {sheet.percentage}%
-                    </td>
-                  </tr>
-                ))}
+              <tbody>
+                {ranked.map(({ reg, sheet }, pos) => {
+                  const f = (v: string | null | undefined) => v ? parseFloat(v) : 0;
+                  const breakdown = [
+                    f(sheet.stunts_difficulty)   > 0 && { label: 'Dif. Elevaciones',  value: f(sheet.stunts_difficulty) },
+                    f(sheet.pyramids_difficulty) > 0 && { label: 'Dif. Pirámides',    value: f(sheet.pyramids_difficulty) },
+                    f(sheet.tosses_difficulty)   > 0 && { label: 'Dif. Lanzamientos', value: f(sheet.tosses_difficulty) },
+                    f(sheet.standing_difficulty) > 0 && { label: 'Dif. Piso',         value: f(sheet.standing_difficulty) },
+                    f(sheet.running_difficulty)  > 0 && { label: 'Dif. Carrera',      value: f(sheet.running_difficulty) },
+                    f(sheet.jumps_difficulty)    > 0 && { label: 'Dif. Saltos',       value: f(sheet.jumps_difficulty) },
+                    f(sheet.formations_score)    > 0 && { label: 'Formaciones',        value: f(sheet.formations_score) },
+                    f(sheet.avg_creativity)      > 0 && { label: 'Creatividad',        value: f(sheet.avg_creativity) },
+                    f(sheet.avg_showmanship)     > 0 && { label: 'Showmanship',        value: f(sheet.avg_showmanship) },
+                  ].filter(Boolean) as { label: string; value: number }[];
+                  const rowBg = pos === 0 ? 'bg-amber-50' : '';
+                  return (
+                    <>
+                      <tr key={reg.id} className={`border-t border-zinc-100 ${rowBg}`}>
+                        <td className="px-5 pt-3.5 pb-1 font-medium text-zinc-900">
+                          {pos === 0 ? '🥇' : pos === 1 ? '🥈' : pos === 2 ? '🥉' : `${pos + 1}°`}
+                        </td>
+                        <td className="px-5 pt-3.5 pb-1 font-medium text-zinc-900">{reg.team_name}</td>
+                        <td className="px-5 pt-3.5 pb-1 text-zinc-500">{reg.gym_name}</td>
+                        <td className="px-5 pt-3.5 pb-1 text-right tabular-nums text-zinc-600">
+                          {parseFloat(sheet.raw_score).toFixed(2)}
+                        </td>
+                        <td className="px-5 pt-3.5 pb-1 text-right tabular-nums text-red-600">
+                          -{parseFloat(sheet.total_deductions).toFixed(2)}
+                        </td>
+                        <td className="px-5 pt-3.5 pb-1 text-right tabular-nums font-semibold text-zinc-900">
+                          {parseFloat(sheet.final_score).toFixed(2)}
+                        </td>
+                        <td className="px-5 pt-3.5 pb-1 text-right tabular-nums text-zinc-500">
+                          {sheet.percentage}%
+                        </td>
+                      </tr>
+                      {breakdown.length > 0 && (
+                        <tr key={`${reg.id}-breakdown`} className={rowBg}>
+                          <td colSpan={7} className="px-5 pb-3 pt-0">
+                            <div className="flex flex-wrap gap-1.5">
+                              {breakdown.map(({ label, value }) => (
+                                <span key={label}
+                                  className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-2.5 py-0.5 text-[11px]">
+                                  <span className="text-zinc-400">{label}</span>
+                                  <span className="font-semibold tabular-nums text-zinc-800">{value.toFixed(2)}</span>
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  );
+                })}
               </tbody>
             </table>
           </div>
