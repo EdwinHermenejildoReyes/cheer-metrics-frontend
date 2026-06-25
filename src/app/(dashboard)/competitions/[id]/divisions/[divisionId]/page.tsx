@@ -653,21 +653,225 @@ export default function DivisionDetailPage() {
         )}
       </div>
 
-      {/* Rankings */}
-      {ranked.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <h2 className="text-base font-semibold text-zinc-900">
-            Resultados <span className="font-normal text-zinc-400">({ranked.length} calificados)</span>
-          </h2>
-          {(() => {
-            const f = (v: string | null | undefined) => v ? parseFloat(v) : 0;
-            const hasBuilding    = ranked.some(({ sheet }) => f(sheet.building_total)    > 0);
-            const hasTumbling    = ranked.some(({ sheet }) => f(sheet.tumbling_total)    > 0);
-            const hasOverall     = ranked.some(({ sheet }) => f(sheet.overall_total)     > 0);
-            const hasCreativity  = ranked.some(({ sheet }) => f(sheet.avg_creativity)    > 0);
-            const hasShowmanship = ranked.some(({ sheet }) => f(sheet.avg_showmanship)   > 0);
-            const hasPartner     = ranked.some(({ sheet }) => f(sheet.partner_stunt_total) > 0);
-            return (
+      {/* Section 1 + Section 2: Results */}
+      {ranked.length > 0 && (() => {
+        const f = (v: string | null | undefined) => v ? parseFloat(v) : 0;
+
+        const hasBuilding    = ranked.some(({ sheet }) => f(sheet.building_total)      > 0);
+        const hasTumbling    = ranked.some(({ sheet }) => f(sheet.tumbling_total)      > 0);
+        const hasOverall     = ranked.some(({ sheet }) => f(sheet.overall_total)       > 0);
+        const hasCreativity  = ranked.some(({ sheet }) => f(sheet.avg_creativity)      > 0);
+        const hasShowmanship = ranked.some(({ sheet }) => f(sheet.avg_showmanship)     > 0);
+        const hasPartner     = ranked.some(({ sheet }) => f(sheet.partner_stunt_total) > 0);
+
+        const hasBuildingDetail = ranked.some(({ sheet }) =>
+          f(sheet.stunts_difficulty) > 0 || f(sheet.pyramids_difficulty) > 0 || f(sheet.tosses_difficulty) > 0
+        );
+        const hasTumblingDetail = ranked.some(({ sheet }) =>
+          f(sheet.standing_difficulty) > 0 || f(sheet.running_difficulty) > 0 || f(sheet.jumps_difficulty) > 0
+        );
+        const hasOverallDetail = ranked.some(({ sheet }) =>
+          f(sheet.formations_score) > 0 || f(sheet.dance_difficulty) > 0
+        );
+        const hasPyrDrivers   = ranked.some(({ sheet }) => f(sheet.pyramids_drivers)  > 0);
+        const hasStandDrivers = ranked.some(({ sheet }) => f(sheet.standing_drivers)  > 0);
+        const hasRunDrivers   = ranked.some(({ sheet }) => f(sheet.running_drivers)   > 0);
+
+        const thBase = 'px-3 py-1 text-right text-xs font-medium text-zinc-400 bg-zinc-50 border-b border-zinc-200';
+        const thGroup = 'px-3 py-1.5 text-center text-xs font-semibold uppercase tracking-wide bg-zinc-50 border-b border-zinc-100';
+        const thSpan = 'px-3 py-2 text-xs font-semibold uppercase tracking-wide bg-zinc-50 border-b border-zinc-200 align-bottom';
+        const tdBase = 'px-3 py-2.5 text-right tabular-nums text-zinc-600';
+        const tdTotal = 'px-3 py-2.5 text-right tabular-nums font-medium text-zinc-800 bg-zinc-50';
+        const sep = 'border-l border-zinc-200';
+
+        return (
+          <div className="flex flex-col gap-6">
+
+            {/* SECTION 1: Desglose por planilla */}
+            {(hasBuildingDetail || hasTumblingDetail || hasOverallDetail) && (
+              <div className="flex flex-col gap-4">
+                <h2 className="text-base font-semibold text-zinc-900">
+                  Desglose por planilla <span className="font-normal text-zinc-400">({ranked.length} calificados)</span>
+                </h2>
+
+                {/* Building breakdown */}
+                {hasBuildingDetail && (
+                  <div className="flex flex-col gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-500 flex items-center gap-1.5">
+                      <ChevronsUp className="h-3 w-3" /> Planilla — Elevaciones
+                    </p>
+                    <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+                      <table className="w-full text-sm whitespace-nowrap">
+                        <thead>
+                          <tr>
+                            <th rowSpan={2} className={`${thSpan} text-left pr-4 pl-3`}>Equipo</th>
+                            <th colSpan={4} className={`${thGroup} ${sep}`}>Stunt / Elevaciones</th>
+                            <th colSpan={hasPyrDrivers ? 4 : 3} className={`${thGroup} ${sep}`}>Pirámides</th>
+                            <th colSpan={3} className={`${thGroup} ${sep}`}>Lanzamientos</th>
+                            <th rowSpan={2} className={`${thSpan} text-right font-bold text-blue-700 ${sep}`}>Subtotal</th>
+                            <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Cre.</th>
+                            <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Show.</th>
+                          </tr>
+                          <tr>
+                            <th className={`${thBase} ${sep}`}>Dif</th>
+                            <th className={thBase}>Ejec</th>
+                            <th className={thBase}>Dr</th>
+                            <th className={`${thBase} font-semibold text-zinc-500`}>Σ</th>
+                            <th className={`${thBase} ${sep}`}>Dif</th>
+                            <th className={thBase}>Ejec</th>
+                            {hasPyrDrivers && <th className={thBase}>Dr</th>}
+                            <th className={`${thBase} font-semibold text-zinc-500`}>Σ</th>
+                            <th className={`${thBase} ${sep}`}>Dif</th>
+                            <th className={thBase}>Ejec</th>
+                            <th className={`${thBase} font-semibold text-zinc-500`}>Σ</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-100">
+                          {ranked.map(({ reg, sheet }, pos) => {
+                            const stuntsT = f(sheet.stunts_difficulty) + f(sheet.stunts_execution) + f(sheet.stunts_drivers);
+                            const pyrT    = f(sheet.pyramids_difficulty) + f(sheet.pyramids_execution) + f(sheet.pyramids_drivers);
+                            const tossesT = f(sheet.tosses_difficulty) + f(sheet.tosses_execution);
+                            const sub     = stuntsT + pyrT + tossesT;
+                            return (
+                              <tr key={reg.id} className={pos === 0 ? 'bg-amber-50' : ''}>
+                                <td className="px-3 py-2.5 font-medium text-zinc-900 pr-4">{reg.team_name}</td>
+                                <td className={`${tdBase} ${sep}`}>{f(sheet.stunts_difficulty).toFixed(2)}</td>
+                                <td className={tdBase}>{f(sheet.stunts_execution).toFixed(2)}</td>
+                                <td className={tdBase}>{f(sheet.stunts_drivers).toFixed(2)}</td>
+                                <td className={tdTotal}>{stuntsT.toFixed(2)}</td>
+                                <td className={`${tdBase} ${sep}`}>{f(sheet.pyramids_difficulty).toFixed(2)}</td>
+                                <td className={tdBase}>{f(sheet.pyramids_execution).toFixed(2)}</td>
+                                {hasPyrDrivers && <td className={tdBase}>{f(sheet.pyramids_drivers).toFixed(2)}</td>}
+                                <td className={tdTotal}>{pyrT.toFixed(2)}</td>
+                                <td className={`${tdBase} ${sep}`}>{f(sheet.tosses_difficulty).toFixed(2)}</td>
+                                <td className={tdBase}>{f(sheet.tosses_execution).toFixed(2)}</td>
+                                <td className={tdTotal}>{tossesT.toFixed(2)}</td>
+                                <td className={`px-3 py-2.5 text-right tabular-nums font-semibold text-blue-700 ${sep}`}>{sub.toFixed(2)}</td>
+                                <td className={`${tdBase} ${sep}`}>{f(sheet.creativity_building).toFixed(2)}</td>
+                                <td className={`${tdBase} ${sep}`}>{f(sheet.showmanship_building).toFixed(2)}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tumbling breakdown */}
+                {hasTumblingDetail && (
+                  <div className="flex flex-col gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-green-500 flex items-center gap-1.5">
+                      <RotateCw className="h-3 w-3" /> Planilla — Gimnasia
+                    </p>
+                    <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+                      <table className="w-full text-sm whitespace-nowrap">
+                        <thead>
+                          <tr>
+                            <th rowSpan={2} className={`${thSpan} text-left pr-4 pl-3`}>Equipo</th>
+                            <th colSpan={hasStandDrivers ? 4 : 3} className={`${thGroup} ${sep}`}>Parado</th>
+                            <th colSpan={hasRunDrivers ? 4 : 3} className={`${thGroup} ${sep}`}>Corriendo</th>
+                            <th colSpan={3} className={`${thGroup} ${sep}`}>Saltos</th>
+                            <th rowSpan={2} className={`${thSpan} text-right font-bold text-green-700 ${sep}`}>Subtotal</th>
+                            <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Cre.</th>
+                            <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Show.</th>
+                          </tr>
+                          <tr>
+                            <th className={`${thBase} ${sep}`}>Dif</th>
+                            <th className={thBase}>Ejec</th>
+                            {hasStandDrivers && <th className={thBase}>Dr</th>}
+                            <th className={`${thBase} font-semibold text-zinc-500`}>Σ</th>
+                            <th className={`${thBase} ${sep}`}>Dif</th>
+                            <th className={thBase}>Ejec</th>
+                            {hasRunDrivers && <th className={thBase}>Dr</th>}
+                            <th className={`${thBase} font-semibold text-zinc-500`}>Σ</th>
+                            <th className={`${thBase} ${sep}`}>Dif</th>
+                            <th className={thBase}>Ejec</th>
+                            <th className={`${thBase} font-semibold text-zinc-500`}>Σ</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-100">
+                          {ranked.map(({ reg, sheet }, pos) => {
+                            const standT = f(sheet.standing_difficulty) + f(sheet.standing_execution) + f(sheet.standing_drivers);
+                            const runT   = f(sheet.running_difficulty) + f(sheet.running_execution) + f(sheet.running_drivers);
+                            const jumpT  = f(sheet.jumps_difficulty) + f(sheet.jumps_execution);
+                            const sub    = standT + runT + jumpT;
+                            return (
+                              <tr key={reg.id} className={pos === 0 ? 'bg-amber-50' : ''}>
+                                <td className="px-3 py-2.5 font-medium text-zinc-900 pr-4">{reg.team_name}</td>
+                                <td className={`${tdBase} ${sep}`}>{f(sheet.standing_difficulty).toFixed(2)}</td>
+                                <td className={tdBase}>{f(sheet.standing_execution).toFixed(2)}</td>
+                                {hasStandDrivers && <td className={tdBase}>{f(sheet.standing_drivers).toFixed(2)}</td>}
+                                <td className={tdTotal}>{standT.toFixed(2)}</td>
+                                <td className={`${tdBase} ${sep}`}>{f(sheet.running_difficulty).toFixed(2)}</td>
+                                <td className={tdBase}>{f(sheet.running_execution).toFixed(2)}</td>
+                                {hasRunDrivers && <td className={tdBase}>{f(sheet.running_drivers).toFixed(2)}</td>}
+                                <td className={tdTotal}>{runT.toFixed(2)}</td>
+                                <td className={`${tdBase} ${sep}`}>{f(sheet.jumps_difficulty).toFixed(2)}</td>
+                                <td className={tdBase}>{f(sheet.jumps_execution).toFixed(2)}</td>
+                                <td className={tdTotal}>{jumpT.toFixed(2)}</td>
+                                <td className={`px-3 py-2.5 text-right tabular-nums font-semibold text-green-700 ${sep}`}>{sub.toFixed(2)}</td>
+                                <td className={`${tdBase} ${sep}`}>{f(sheet.creativity_tumbling).toFixed(2)}</td>
+                                <td className={`${tdBase} ${sep}`}>{f(sheet.showmanship_tumbling).toFixed(2)}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Overall breakdown */}
+                {hasOverallDetail && (
+                  <div className="flex flex-col gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-purple-500 flex items-center gap-1.5">
+                      <Star className="h-3 w-3" /> Planilla — General
+                    </p>
+                    <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+                      <table className="w-full text-sm whitespace-nowrap">
+                        <thead>
+                          <tr>
+                            <th rowSpan={2} className={`${thSpan} text-left pr-4 pl-3`}>Equipo</th>
+                            <th colSpan={2} className={`${thGroup} ${sep}`}>Danza</th>
+                            <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Formaciones</th>
+                            <th rowSpan={2} className={`${thSpan} text-right font-bold text-purple-700 ${sep}`}>Subtotal</th>
+                            <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Cre.</th>
+                            <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Show.</th>
+                          </tr>
+                          <tr>
+                            <th className={`${thBase} ${sep}`}>Dif</th>
+                            <th className={thBase}>Ejec</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-100">
+                          {ranked.map(({ reg, sheet }, pos) => {
+                            const sub = f(sheet.dance_difficulty) + f(sheet.dance_execution) + f(sheet.formations_score);
+                            return (
+                              <tr key={reg.id} className={pos === 0 ? 'bg-amber-50' : ''}>
+                                <td className="px-3 py-2.5 font-medium text-zinc-900 pr-4">{reg.team_name}</td>
+                                <td className={`${tdBase} ${sep}`}>{f(sheet.dance_difficulty).toFixed(2)}</td>
+                                <td className={tdBase}>{f(sheet.dance_execution).toFixed(2)}</td>
+                                <td className={`${tdBase} ${sep}`}>{f(sheet.formations_score).toFixed(2)}</td>
+                                <td className={`px-3 py-2.5 text-right tabular-nums font-semibold text-purple-700 ${sep}`}>{sub.toFixed(2)}</td>
+                                <td className={`${tdBase} ${sep}`}>{f(sheet.creativity_overall).toFixed(2)}</td>
+                                <td className={`${tdBase} ${sep}`}>{f(sheet.showmanship_overall).toFixed(2)}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* SECTION 2: Ranking final */}
+            <div className="flex flex-col gap-3">
+              <h2 className="text-base font-semibold text-zinc-900">
+                Resultados <span className="font-normal text-zinc-400">({ranked.length} calificados)</span>
+              </h2>
               <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
                 <table className="w-full text-sm">
                   <thead>
@@ -714,10 +918,11 @@ export default function DivisionDetailPage() {
                   </tbody>
                 </table>
               </div>
-            );
-          })()}
-        </div>
-      )}
+            </div>
+
+          </div>
+        );
+      })()}
 
       <RegistrationModal
         open={regModalOpen}
