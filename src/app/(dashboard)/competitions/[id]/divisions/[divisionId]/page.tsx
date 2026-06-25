@@ -708,9 +708,10 @@ export default function DivisionDetailPage() {
                             <th colSpan={4} className={`${thGroup} ${sep}`}>Stunt / Elevaciones</th>
                             <th colSpan={hasPyrDrivers ? 4 : 3} className={`${thGroup} ${sep}`}>Pirámides</th>
                             <th colSpan={3} className={`${thGroup} ${sep}`}>Lanzamientos</th>
-                            <th rowSpan={2} className={`${thSpan} text-right font-bold text-blue-700 ${sep}`}>Subtotal</th>
                             <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Cre.</th>
                             <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Show.</th>
+                            <th rowSpan={2} className={`${thSpan} text-right font-bold text-blue-700 ${sep}`}>Subtotal</th>
+                            <th rowSpan={2} className={`${thSpan} text-right font-bold text-zinc-800 ${sep}`}>Total</th>
                           </tr>
                           <tr>
                             <th className={`${thBase} ${sep}`}>Dif</th>
@@ -731,7 +732,9 @@ export default function DivisionDetailPage() {
                             const stuntsT = f(sheet.stunts_difficulty) + f(sheet.stunts_execution) + f(sheet.stunts_drivers);
                             const pyrT    = f(sheet.pyramids_difficulty) + f(sheet.pyramids_execution) + f(sheet.pyramids_drivers);
                             const tossesT = f(sheet.tosses_difficulty) + f(sheet.tosses_execution);
-                            const sub     = stuntsT + pyrT + tossesT;
+                            const sub     = f(sheet.building_total);
+                            const cre     = f(sheet.creativity_building);
+                            const show    = f(sheet.showmanship_building);
                             return (
                               <tr key={reg.id} className={pos === 0 ? 'bg-amber-50' : ''}>
                                 <td className="px-3 py-2.5 font-medium text-zinc-900 pr-4">{reg.team_name}</td>
@@ -746,9 +749,10 @@ export default function DivisionDetailPage() {
                                 <td className={`${tdBase} ${sep}`}>{f(sheet.tosses_difficulty).toFixed(2)}</td>
                                 <td className={tdBase}>{f(sheet.tosses_execution).toFixed(2)}</td>
                                 <td className={tdTotal}>{tossesT.toFixed(2)}</td>
+                                <td className={`${tdBase} ${sep}`}>{cre.toFixed(2)}</td>
+                                <td className={`${tdBase} ${sep}`}>{show.toFixed(2)}</td>
                                 <td className={`px-3 py-2.5 text-right tabular-nums font-semibold text-blue-700 ${sep}`}>{sub.toFixed(2)}</td>
-                                <td className={`${tdBase} ${sep}`}>{f(sheet.creativity_building).toFixed(2)}</td>
-                                <td className={`${tdBase} ${sep}`}>{f(sheet.showmanship_building).toFixed(2)}</td>
+                                <td className={`px-3 py-2.5 text-right tabular-nums font-bold text-zinc-900 ${sep}`}>{(sub + cre + show).toFixed(2)}</td>
                               </tr>
                             );
                           })}
@@ -772,9 +776,10 @@ export default function DivisionDetailPage() {
                             <th colSpan={hasStandDrivers ? 4 : 3} className={`${thGroup} ${sep}`}>Parado</th>
                             <th colSpan={hasRunDrivers ? 4 : 3} className={`${thGroup} ${sep}`}>Corriendo</th>
                             <th colSpan={3} className={`${thGroup} ${sep}`}>Saltos</th>
-                            <th rowSpan={2} className={`${thSpan} text-right font-bold text-green-700 ${sep}`}>Subtotal</th>
                             <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Cre.</th>
                             <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Show.</th>
+                            <th rowSpan={2} className={`${thSpan} text-right font-bold text-green-700 ${sep}`}>Subtotal</th>
+                            <th rowSpan={2} className={`${thSpan} text-right font-bold text-zinc-800 ${sep}`}>Total</th>
                           </tr>
                           <tr>
                             <th className={`${thBase} ${sep}`}>Dif</th>
@@ -795,7 +800,9 @@ export default function DivisionDetailPage() {
                             const standT = f(sheet.standing_difficulty) + f(sheet.standing_execution) + f(sheet.standing_drivers);
                             const runT   = f(sheet.running_difficulty) + f(sheet.running_execution) + f(sheet.running_drivers);
                             const jumpT  = f(sheet.jumps_difficulty) + f(sheet.jumps_execution);
-                            const sub    = standT + runT + jumpT;
+                            const sub    = f(sheet.tumbling_total);
+                            const cre    = f(sheet.creativity_tumbling);
+                            const show   = f(sheet.showmanship_tumbling);
                             return (
                               <tr key={reg.id} className={pos === 0 ? 'bg-amber-50' : ''}>
                                 <td className="px-3 py-2.5 font-medium text-zinc-900 pr-4">{reg.team_name}</td>
@@ -810,9 +817,10 @@ export default function DivisionDetailPage() {
                                 <td className={`${tdBase} ${sep}`}>{f(sheet.jumps_difficulty).toFixed(2)}</td>
                                 <td className={tdBase}>{f(sheet.jumps_execution).toFixed(2)}</td>
                                 <td className={tdTotal}>{jumpT.toFixed(2)}</td>
+                                <td className={`${tdBase} ${sep}`}>{cre.toFixed(2)}</td>
+                                <td className={`${tdBase} ${sep}`}>{show.toFixed(2)}</td>
                                 <td className={`px-3 py-2.5 text-right tabular-nums font-semibold text-green-700 ${sep}`}>{sub.toFixed(2)}</td>
-                                <td className={`${tdBase} ${sep}`}>{f(sheet.creativity_tumbling).toFixed(2)}</td>
-                                <td className={`${tdBase} ${sep}`}>{f(sheet.showmanship_tumbling).toFixed(2)}</td>
+                                <td className={`px-3 py-2.5 text-right tabular-nums font-bold text-zinc-900 ${sep}`}>{(sub + cre + show).toFixed(2)}</td>
                               </tr>
                             );
                           })}
@@ -835,9 +843,10 @@ export default function DivisionDetailPage() {
                             <th rowSpan={2} className={`${thSpan} text-left pr-4 pl-3`}>Equipo</th>
                             <th colSpan={2} className={`${thGroup} ${sep}`}>Danza</th>
                             <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Formaciones</th>
-                            <th rowSpan={2} className={`${thSpan} text-right font-bold text-purple-700 ${sep}`}>Subtotal</th>
                             <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Cre.</th>
                             <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Show.</th>
+                            <th rowSpan={2} className={`${thSpan} text-right font-bold text-purple-700 ${sep}`}>Subtotal</th>
+                            <th rowSpan={2} className={`${thSpan} text-right font-bold text-zinc-800 ${sep}`}>Total</th>
                           </tr>
                           <tr>
                             <th className={`${thBase} ${sep}`}>Dif</th>
@@ -846,16 +855,19 @@ export default function DivisionDetailPage() {
                         </thead>
                         <tbody className="divide-y divide-zinc-100">
                           {ranked.map(({ reg, sheet }, pos) => {
-                            const sub = f(sheet.dance_difficulty) + f(sheet.dance_execution) + f(sheet.formations_score);
+                            const sub  = f(sheet.overall_total);
+                            const cre  = f(sheet.creativity_overall);
+                            const show = f(sheet.showmanship_overall);
                             return (
                               <tr key={reg.id} className={pos === 0 ? 'bg-amber-50' : ''}>
                                 <td className="px-3 py-2.5 font-medium text-zinc-900 pr-4">{reg.team_name}</td>
                                 <td className={`${tdBase} ${sep}`}>{f(sheet.dance_difficulty).toFixed(2)}</td>
                                 <td className={tdBase}>{f(sheet.dance_execution).toFixed(2)}</td>
                                 <td className={`${tdBase} ${sep}`}>{f(sheet.formations_score).toFixed(2)}</td>
+                                <td className={`${tdBase} ${sep}`}>{cre.toFixed(2)}</td>
+                                <td className={`${tdBase} ${sep}`}>{show.toFixed(2)}</td>
                                 <td className={`px-3 py-2.5 text-right tabular-nums font-semibold text-purple-700 ${sep}`}>{sub.toFixed(2)}</td>
-                                <td className={`${tdBase} ${sep}`}>{f(sheet.creativity_overall).toFixed(2)}</td>
-                                <td className={`${tdBase} ${sep}`}>{f(sheet.showmanship_overall).toFixed(2)}</td>
+                                <td className={`px-3 py-2.5 text-right tabular-nums font-bold text-zinc-900 ${sep}`}>{(sub + cre + show).toFixed(2)}</td>
                               </tr>
                             );
                           })}
@@ -864,6 +876,96 @@ export default function DivisionDetailPage() {
                     </div>
                   </div>
                 )}
+
+                {/* Deductions breakdown */}
+                {(() => {
+                  const CAIDAS = ['x', 'ca', 'csa', 'ec', 'cc', 'csc'];
+                  const TIEMPO = ['tiempo', 'tiempo_grave'];
+                  const hasDedDetail = ranked.some(({ sheet }) =>
+                    sheet.deductions.some(d => [...CAIDAS, ...TIEMPO].includes(d.deduction_type))
+                  );
+                  if (!hasDedDetail) return null;
+                  const sumT = (deds: typeof ranked[0]['sheet']['deductions'], types: string[]) =>
+                    deds.filter(d => types.includes(d.deduction_type)).reduce((s, d) => s + parseFloat(d.total_amount), 0);
+                  return (
+                    <div className="flex flex-col gap-2">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-red-500 flex items-center gap-1.5">
+                        <CircleMinus className="h-3 w-3" /> Planilla — Descuentos (Caídas / Tiempo)
+                      </p>
+                      <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+                        <table className="w-full text-sm whitespace-nowrap">
+                          <thead>
+                            <tr className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium uppercase tracking-wide text-zinc-500">
+                              <th className="px-3 py-2 text-left">Equipo</th>
+                              <th className="px-3 py-2 text-right">Caídas</th>
+                              <th className="px-3 py-2 text-right">Tiempo</th>
+                              <th className="px-3 py-2 text-right font-bold text-red-600">Total Desc.</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-zinc-100">
+                            {ranked.map(({ reg, sheet }, pos) => {
+                              const caidas = sumT(sheet.deductions, CAIDAS);
+                              const tiempo = sumT(sheet.deductions, TIEMPO);
+                              return (
+                                <tr key={reg.id} className={pos === 0 ? 'bg-amber-50' : ''}>
+                                  <td className="px-3 py-2.5 font-medium text-zinc-900">{reg.team_name}</td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums text-red-600">{caidas > 0 ? `-${caidas.toFixed(2)}` : '—'}</td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums text-red-600">{tiempo > 0 ? `-${tiempo.toFixed(2)}` : '—'}</td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums font-bold text-red-700">{(caidas + tiempo) > 0 ? `-(${(caidas + tiempo).toFixed(2)})` : '—'}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Safety rules breakdown */}
+                {(() => {
+                  const ILEGALES = ['pi', 'eap', 'rg', 'gfn', 'bfn', 'seg'];
+                  const ADMIN    = ['ad', 'div'];
+                  const hasSafetyDetail = ranked.some(({ sheet }) =>
+                    sheet.deductions.some(d => [...ILEGALES, ...ADMIN].includes(d.deduction_type))
+                  );
+                  if (!hasSafetyDetail) return null;
+                  const sumT = (deds: typeof ranked[0]['sheet']['deductions'], types: string[]) =>
+                    deds.filter(d => types.includes(d.deduction_type)).reduce((s, d) => s + parseFloat(d.total_amount), 0);
+                  return (
+                    <div className="flex flex-col gap-2">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-amber-500 flex items-center gap-1.5">
+                        <ShieldCheck className="h-3 w-3" /> Planilla — Reglas y Seguridad
+                      </p>
+                      <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+                        <table className="w-full text-sm whitespace-nowrap">
+                          <thead>
+                            <tr className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium uppercase tracking-wide text-zinc-500">
+                              <th className="px-3 py-2 text-left">Equipo</th>
+                              <th className="px-3 py-2 text-right">Ilegales</th>
+                              <th className="px-3 py-2 text-right">Admin</th>
+                              <th className="px-3 py-2 text-right font-bold text-red-600">Total Desc.</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-zinc-100">
+                            {ranked.map(({ reg, sheet }, pos) => {
+                              const ileg  = sumT(sheet.deductions, ILEGALES);
+                              const admin = sumT(sheet.deductions, ADMIN);
+                              return (
+                                <tr key={reg.id} className={pos === 0 ? 'bg-amber-50' : ''}>
+                                  <td className="px-3 py-2.5 font-medium text-zinc-900">{reg.team_name}</td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums text-red-600">{ileg > 0 ? `-${ileg.toFixed(2)}` : '—'}</td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums text-red-600">{admin > 0 ? `-${admin.toFixed(2)}` : '—'}</td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums font-bold text-red-700">{(ileg + admin) > 0 ? `-(${(ileg + admin).toFixed(2)})` : '—'}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             )}
 
