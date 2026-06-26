@@ -129,7 +129,7 @@ export default function BillingOverviewPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
-                        onClick={() => router.push(`/competitions/${inv.competition}/billing/${inv.id}`)}
+                        onClick={() => router.push(`/competitions/${inv.competition_public_id}/billing/${inv.id}`)}
                         className="text-purple-600 text-sm hover:underline"
                       >
                         Ver detalle

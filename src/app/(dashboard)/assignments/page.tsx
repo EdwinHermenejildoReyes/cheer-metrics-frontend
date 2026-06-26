@@ -11,6 +11,7 @@ import { SHEET_TYPE_LABELS, type JudgeAssignment } from '@/types/competitions';
 
 type AssignmentGroup = {
   competitionId: number;
+  competitionPublicId: string;
   competitionName: string;
   competitionDate: string;
   isActive: boolean;
@@ -76,11 +77,12 @@ export default function AssignmentsPage() {
   }, {});
 
   const groups: AssignmentGroup[] = Object.values(byCompetition).map(list => ({
-    competitionId:   list[0].competition,
-    competitionName: list[0].competition_name,
-    competitionDate: list[0].competition_date,
-    isActive:        isCompetitionActive(list[0].competition),
-    assignments:     list,
+    competitionId:       list[0].competition,
+    competitionPublicId: list[0].competition_public_id,
+    competitionName:     list[0].competition_name,
+    competitionDate:     list[0].competition_date,
+    isActive:            isCompetitionActive(list[0].competition),
+    assignments:         list,
   }));
 
   const active = groups.filter(g => g.isActive);
@@ -108,7 +110,7 @@ export default function AssignmentsPage() {
             <CompetitionCard
               key={group.competitionId}
               group={group}
-              onGo={() => router.push(`/competitions/${group.competitionId}`)}
+              onGo={() => router.push(`/competitions/${group.competitionPublicId}`)}
             />
           ))
         )}

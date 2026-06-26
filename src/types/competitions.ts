@@ -28,6 +28,7 @@ export interface JudgeAssignment {
   user: number;
   user_name: string;
   competition: number;
+  competition_public_id: string;
   competition_name: string;
   competition_date: string;
   competition_end_datetime: string | null;
@@ -577,6 +578,7 @@ export interface FanPackageLine {
 export interface GymInvoice {
   id: number;
   competition: number;
+  competition_public_id: string;
   competition_name: string;
   gym: number;
   gym_name: string;

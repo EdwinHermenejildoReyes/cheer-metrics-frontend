@@ -76,7 +76,7 @@ function CompBreakdownCard({ comp, regs, sheeted }: {
             {comp.venue && <><span className="text-zinc-300">·</span>{comp.venue}</>}
           </p>
         </div>
-        <Link href={`/competitions/${comp.id}`}>
+        <Link href={`/competitions/${comp.public_id}`}>
           <Button size="sm" variant="outline" className="shrink-0">
             Ver <ArrowRight className="w-3.5 h-3.5" />
           </Button>
@@ -117,7 +117,7 @@ function CompBreakdownCard({ comp, regs, sheeted }: {
 function UpcomingCard({ comp }: { comp: Competition }) {
   return (
     <Link
-      href={`/competitions/${comp.id}`}
+      href={`/competitions/${comp.public_id}`}
       className="flex items-center justify-between gap-3 rounded-xl border border-zinc-200 bg-white px-5 py-3.5 hover:bg-zinc-50 transition-colors group"
     >
       <div className="min-w-0">
