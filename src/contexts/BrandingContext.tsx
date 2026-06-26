@@ -20,11 +20,11 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   const [competitionOrg, setCompetitionOrg] = useState<Organization | null>(null);
   const [userOrg,        setUserOrg]        = useState<Organization | null>(null);
 
-  // Competition fetch cache (keyed by competition ID)
-  const compCache = useRef<Map<number, Organization | null>>(new Map());
+  // Competition fetch cache (keyed by competition UUID)
+  const compCache = useRef<Map<string, Organization | null>>(new Map());
   // User-org fetch cache (keyed by org ID)
   const orgCache  = useRef<Map<number, Organization | null>>(new Map());
-  const lastCompId = useRef<number | null>(null);
+  const lastCompId = useRef<string | null>(null);
 
   // Competition org takes precedence; fall back to user's org
   const organization = competitionOrg ?? userOrg;
@@ -47,8 +47,8 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
 
   // Load competition org when navigating into a competition route
   useEffect(() => {
-    const match  = pathname.match(/^\/competitions\/(\d+)/);
-    const compId = match ? Number(match[1]) : null;
+    const match  = pathname.match(/^\/competitions\/([0-9a-f-]{36})/);
+    const compId = match ? match[1] : null;
 
     if (compId === lastCompId.current) return;
     lastCompId.current = compId;

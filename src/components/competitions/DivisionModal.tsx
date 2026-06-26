@@ -237,7 +237,7 @@ export function DivisionModal({ open, onClose, onSaved, competitionId, initial }
     try {
       const payload = { ...values, competition: competitionId } as Partial<Division> & { competition: number };
       const res = isEdit
-        ? await competitionsRepository.updateDivision(initial!.id, payload)
+        ? await competitionsRepository.updateDivision(initial!.public_id, payload)
         : await competitionsRepository.createDivision(payload);
       toast.success(isEdit ? 'División actualizada' : 'División creada');
       onSaved(res.data);

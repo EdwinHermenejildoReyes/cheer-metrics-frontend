@@ -86,7 +86,7 @@ export default function CompetitionsPage() {
                 <tr
                   key={c.id}
                   className="cursor-pointer hover:bg-zinc-50 transition-colors"
-                  onClick={() => router.push(`/competitions/${c.id}`)}
+                  onClick={() => router.push(`/competitions/${c.public_id}`)}
                 >
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">

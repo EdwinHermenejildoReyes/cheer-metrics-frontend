@@ -35,7 +35,6 @@ import {
 export default function CompetitionDetailPage() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
-  const competitionId = Number(id);
 
   const [competition, setCompetition] = useState<Competition | null>(null);
   const [divisions, setDivisions] = useState<Division[]>([]);
@@ -83,33 +82,36 @@ export default function CompetitionDetailPage() {
     : availableSheetTypes[0];
 
   useEffect(() => {
-    if (isJudge && !isCompetitionActive(competitionId)) {
+    if (!competition) return;
+    if (isJudge && !isCompetitionActive(competition.id)) {
       toast.error('El evento ha finalizado.');
       router.replace('/competitions');
     }
-  }, [isJudge, competitionId, isCompetitionActive, router]);
+  }, [isJudge, competition, isCompetitionActive, router]);
 
   const load = useCallback(async () => {
     try {
-      const [compRes, divRes] = await Promise.all([
-        competitionsRepository.getCompetition(competitionId),
-        competitionsRepository.listDivisions({ competition: String(competitionId), page_size: '100' }),
-      ]);
+      const compRes = await competitionsRepository.getCompetition(id);
       setCompetition(compRes.data);
+      const divRes = await competitionsRepository.listDivisions({
+        competition: String(compRes.data.id),
+        page_size: '100',
+      });
       setDivisions(divRes.data.results);
     } finally {
       setLoading(false);
     }
-  }, [competitionId]);
+  }, [id]);
 
   const loadJudges = useCallback(async () => {
+    if (!competition) return;
     const [assignRes, usersRes] = await Promise.all([
-      competitionsRepository.listJudgeAssignments({ competition: String(competitionId), page_size: '100' }),
+      competitionsRepository.listJudgeAssignments({ competition: String(competition.id), page_size: '100' }),
       authRepository.listUsers(),
     ]);
     setAssignments(assignRes.data.results);
     setUsers(usersRes.data);
-  }, [competitionId]);
+  }, [competition]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -121,7 +123,7 @@ export default function CompetitionDetailPage() {
     setItineraryModalOpen(false);
     setAssigningOrders(true);
     try {
-      const res = await competitionsRepository.autoAssignOrders(competitionId);
+      const res = await competitionsRepository.autoAssignOrders(id);
       toast.success(res.data.message);
       await load();
     } catch {
@@ -134,21 +136,21 @@ export default function CompetitionDetailPage() {
   const loadConflicts = useCallback(async () => {
     setConflictsLoading(true);
     try {
-      const res = await competitionsRepository.getScheduleConflicts(competitionId);
+      const res = await competitionsRepository.getScheduleConflicts(id);
       setConflicts(res.data);
     } finally {
       setConflictsLoading(false);
     }
-  }, [competitionId]);
+  }, [id]);
 
   useEffect(() => {
     if (conflictsOpen) loadConflicts();
   }, [conflictsOpen, loadConflicts]);
 
   const loadTokens = useCallback(async () => {
-    const res = await publicRegistrationRepository.listTokens(competitionId);
+    const res = await publicRegistrationRepository.listTokens(id);
     setTokens(res.results ?? res);
-  }, [competitionId]);
+  }, [id]);
 
   useEffect(() => {
     if (tokensModalOpen) loadTokens();
@@ -159,7 +161,7 @@ export default function CompetitionDetailPage() {
     setCreatingToken(true);
     try {
       await publicRegistrationRepository.createToken({
-        competition: competitionId,
+        competition: competition!.id,
         expires_at: new Date(newTokenExpiry).toISOString(),
         max_uses: newTokenMaxUses ? Number(newTokenMaxUses) : null,
         notes: newTokenNotes,
@@ -208,7 +210,7 @@ export default function CompetitionDetailPage() {
     try {
       await competitionsRepository.createJudgeAssignment({
         user: Number(newJudgeUserId),
-        competition: competitionId,
+        competition: competition!.id,
         sheet_type: effectiveJudgeSheet,
         access_from: new Date(newJudgeFrom).toISOString(),
         access_until: new Date(newJudgeUntil).toISOString(),
@@ -296,7 +298,7 @@ export default function CompetitionDetailPage() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => router.push(`/competitions/${competitionId}/backstage`)}
+                onClick={() => router.push(`/competitions/${id}/backstage`)}
               >
                 <ClipboardList className="h-3.5 w-3.5" />
                 Backstage
@@ -304,7 +306,7 @@ export default function CompetitionDetailPage() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => router.push(`/competitions/${competitionId}/import`)}
+                onClick={() => router.push(`/competitions/${id}/import`)}
               >
                 <Upload className="h-3.5 w-3.5" />
                 Importar inscripción
@@ -313,7 +315,7 @@ export default function CompetitionDetailPage() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={() => router.push(`/competitions/${competitionId}/billing`)}
+                  onClick={() => router.push(`/competitions/${id}/billing`)}
                 >
                   <Receipt className="h-3.5 w-3.5" />
                   Facturación
@@ -374,7 +376,7 @@ export default function CompetitionDetailPage() {
                   <tr
                     key={div.id}
                     className="cursor-pointer hover:bg-zinc-50 transition-colors"
-                    onClick={() => router.push(`/competitions/${competitionId}/divisions/${div.id}`)}
+                    onClick={() => router.push(`/competitions/${id}/divisions/${div.public_id}`)}
                   >
                     <td className="px-5 py-3.5 font-medium text-zinc-900">{div.name}</td>
                     <td className="px-5 py-3.5 text-zinc-600">{AGE_GROUP_LABELS[div.age_group]}</td>
@@ -763,7 +765,7 @@ export default function CompetitionDetailPage() {
         open={divModalOpen}
         onClose={() => setDivModalOpen(false)}
         onSaved={handleDivSaved}
-        competitionId={competitionId}
+        competitionId={competition.id}
         initial={editingDivision}
       />
     </div>

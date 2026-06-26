@@ -209,19 +209,19 @@ function ScoreSelector({
 export default function IasfBuildingSheetPage() {
   const router  = useRouter();
   const { id, divisionId, regId } = useParams<{ id: string; divisionId: string; regId: string }>();
-  const competitionId  = Number(id);
-  const divId          = Number(divisionId);
-  const registrationId = Number(regId);
 
   const { isJudge, isCompetitionActive } = useJudge();
+  const [competitionIntId, setCompetitionIntId] = useState<number | null>(null);
+  const [regIntId, setRegIntId] = useState<number | null>(null);
   const readOnly = !isJudge;
 
   useEffect(() => {
-    if (isJudge && !isCompetitionActive(competitionId)) {
+
+    if (competitionIntId !== null && isJudge && !isCompetitionActive(competitionIntId)) {
       toast.error('El evento ha finalizado. Ya no puedes acceder a las planillas.');
-      router.replace(`/competitions/${competitionId}`);
+      router.replace(`/competitions/${id}`);
     }
-  }, [isJudge, competitionId, isCompetitionActive, router]);
+  }, [isJudge, competitionIntId, isCompetitionActive, router, id]);
 
   const [teamName,       setTeamName]       = useState<string>('');
   const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
@@ -247,12 +247,13 @@ export default function IasfBuildingSheetPage() {
   const load = useCallback(async () => {
     try {
       const [sheetRes, regRes, divRes] = await Promise.all([
-        competitionsRepository.listScoreSheets({ registration: String(registrationId) }),
-        competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' }),
-        competitionsRepository.getDivision(divId),
+        competitionsRepository.listScoreSheets({ registration__public_id: regId }),
+        competitionsRepository.listRegistrations({ division__public_id: divisionId, page_size: '100' }),
+        competitionsRepository.getDivision(divisionId),
       ]);
-      const reg = regRes.data.results.find(r => r.id === registrationId);
+      const reg = regRes.data.results.find(r => r.public_id === regId);
       if (reg) {
+        setRegIntId(reg.id);
         setTeamName(reg.team_name);
         setUnpaidAthletes(reg.unpaid_athletes);
         setRequirePayment(reg.competition_require_payment);
@@ -275,7 +276,7 @@ export default function IasfBuildingSheetPage() {
     } finally {
       setLoading(false);
     }
-  }, [registrationId, divId]);
+  }, [regId, divisionId]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -284,7 +285,7 @@ export default function IasfBuildingSheetPage() {
     if (!readOnly || loading) return;
     const interval = setInterval(async () => {
       try {
-        const sheetRes = await competitionsRepository.listScoreSheets({ registration: String(registrationId) });
+        const sheetRes = await competitionsRepository.listScoreSheets({ registration__public_id: regId });
         if (sheetRes.data.results.length === 0) return;
         const sheet = sheetRes.data.results[0];
         setExistingSheet(sheet);
@@ -301,7 +302,7 @@ export default function IasfBuildingSheetPage() {
     }, 5000);
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readOnly, loading, registrationId]);
+  }, [readOnly, loading, regId]);
 
   // Prevents auto-save from firing while load() is populating initial form values
   const initialValuesSettled = useRef(false);
@@ -333,7 +334,7 @@ export default function IasfBuildingSheetPage() {
         saved = res.data;
       } else {
         const res = await competitionsRepository.createScoreSheet({
-          registration: registrationId as unknown as number,
+          registration: regIntId!,
           ...payload,
         } as Partial<ScoreSheet>);
         saved = res.data;
@@ -364,14 +365,14 @@ export default function IasfBuildingSheetPage() {
     <div className="min-h-screen bg-zinc-50 pb-16">
       <div className="print:hidden sticky top-0 z-10 flex items-center justify-between gap-4 bg-white border-b border-zinc-200 px-6 py-3 shadow-sm">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}`)}
+          <button onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}`)}
             className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 transition-colors">
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div>
             <p className="text-[11px] uppercase tracking-wide text-zinc-400 font-medium">IASF World — Elevaciones</p>
             <p className="text-sm font-semibold text-zinc-900 leading-tight">
-              {teamName || `Inscripción #${registrationId}`}
+              {teamName || `Inscripción #${regId}`}
             </p>
           </div>
         </div>
@@ -389,7 +390,7 @@ export default function IasfBuildingSheetPage() {
               Solo lectura
             </span>
           ) : (
-            <Button onClick={handleSave} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
+            <Button onClick={() => handleSave()} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
               <Save className="h-4 w-4" />
               Guardar
             </Button>
@@ -407,7 +408,7 @@ export default function IasfBuildingSheetPage() {
       <IasfSheetPrintView
         data={{
           sheetTypeLabel:   'Elevaciones',
-          teamName:         teamName || `Inscripción #${registrationId}`,
+          teamName:         teamName || `Inscripción #${regId}`,
           categories:       CATEGORIES,
           maxTotal:         MAX_TOTAL,
           scores,

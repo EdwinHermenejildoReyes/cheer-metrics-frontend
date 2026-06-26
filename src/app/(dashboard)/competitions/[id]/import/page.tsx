@@ -212,7 +212,6 @@ function ResultsPanel({ result, isJudging }: { result: ImportInscripcionResult; 
 export default function ImportPage() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
-  const competitionId = Number(id);
   const { isJudge } = useJudge();
 
   const [serviceType, setServiceType] = useState<ServiceType | null>(null);
@@ -222,13 +221,13 @@ export default function ImportPage() {
   const [result, setResult] = useState<ImportInscripcionResult | null>(null);
 
   useEffect(() => {
-    competitionsRepository.getCompetition(competitionId).then((res) => {
+    competitionsRepository.getCompetition(id).then((res) => {
       setServiceType(res.data.service_type);
     }).catch(() => {});
-  }, [competitionId]);
+  }, [id]);
 
   if (isJudge) {
-    router.replace(`/competitions/${competitionId}`);
+    router.replace(`/competitions/${id}`);
     return null;
   }
 
@@ -252,8 +251,8 @@ export default function ImportPage() {
     setResult(null);
     try {
       const res = isJudging
-        ? await competitionsRepository.importJudging(competitionId, formData)
-        : await competitionsRepository.importInscripcion(competitionId, formData);
+        ? await competitionsRepository.importJudging(id, formData)
+        : await competitionsRepository.importInscripcion(id, formData);
       setResult(res.data);
       if (res.data.aborted) {
         toast.error('Importación abortada. Revisa el resultado.');
@@ -277,7 +276,7 @@ export default function ImportPage() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
-          onClick={() => router.push(`/competitions/${competitionId}`)}
+          onClick={() => router.push(`/competitions/${id}`)}
           className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-600"
         >
           <ArrowLeft className="h-4 w-4" />

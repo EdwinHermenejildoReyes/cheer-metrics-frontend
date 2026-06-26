@@ -40,7 +40,7 @@ export function GymModal({ open, onClose, onSaved, initial }: Props) {
   const onSubmit = async (values: FormValues) => {
     try {
       const res = isEdit
-        ? await competitionsRepository.updateGym(initial!.id, values)
+        ? await competitionsRepository.updateGym(initial!.public_id, values)
         : await competitionsRepository.createGym(values);
       toast.success(isEdit ? 'Gimnasio actualizado' : 'Gimnasio creado');
       onSaved(res.data);

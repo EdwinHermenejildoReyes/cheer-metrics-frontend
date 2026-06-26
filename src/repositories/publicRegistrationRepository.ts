@@ -104,8 +104,8 @@ const publicRegistrationRepository = {
     return api.post('wizard/athletes/', payload).then((r) => r.data);
   },
 
-  listTokens(competitionId: number) {
-    return api.get(`registration-tokens/?competition=${competitionId}`).then((r) => r.data);
+  listTokens(competitionPublicId: string) {
+    return api.get(`registration-tokens/?competition__public_id=${competitionPublicId}`).then((r) => r.data);
   },
 
   createToken(payload: { competition: number; expires_at: string; max_uses?: number | null; notes?: string }) {

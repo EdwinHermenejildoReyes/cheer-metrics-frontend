@@ -212,7 +212,7 @@ export default function PublicResultPage() {
   const [tab, setTab] = useState<Tab>('ranking');
 
   useEffect(() => {
-    if (!/^\d+$/.test(regId ?? '')) { setError(true); setLoading(false); return; }
+    if (!regId) { setError(true); setLoading(false); return; }
     fetch(`${BASE}registrations/${regId}/public-result/`)
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(setData)
@@ -222,14 +222,14 @@ export default function PublicResultPage() {
 
   // Fetch ranking when tab becomes 'ranking' and data is loaded
   useEffect(() => {
-    if (!data?.division_id) return;
+    if (!data?.division_public_id) return;
     setRankLoading(true);
-    fetch(`${BASE}divisions/${data.division_id}/public-rankings/`)
+    fetch(`${BASE}divisions/${data.division_public_id}/public-rankings/`)
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(setRanking)
       .catch(() => {})
       .finally(() => setRankLoading(false));
-  }, [data?.division_id]);
+  }, [data?.division_public_id]);
 
   const primary     = data?.organization?.primary_color   ?? '#18181b';
   const primaryText = data?.organization?.text_on_primary ?? '#ffffff';
@@ -359,6 +359,7 @@ export default function PublicResultPage() {
     routine_time: d.routine_time,
     hit_zero: d.hit_zero,
     notes: d.notes,
+    description: '',
   }));
 
   return (

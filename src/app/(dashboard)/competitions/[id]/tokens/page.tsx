@@ -21,7 +21,7 @@ interface RegToken {
 
 export default function TokensPage() {
   const { id } = useParams<{ id: string }>();
-  const competitionId = Number(id);
+  const [competitionIntId, setCompetitionIntId] = useState<number | null>(null);
 
   const [tokens, setTokens] = useState<RegToken[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,21 +33,27 @@ export default function TokensPage() {
 
   const loadTokens = useCallback(async () => {
     try {
-      const res = await publicRegistrationRepository.listTokens(competitionId);
+      const res = await publicRegistrationRepository.listTokens(id);
       setTokens(res.results ?? res);
     } finally {
       setLoading(false);
     }
-  }, [competitionId]);
+  }, [id]);
 
   useEffect(() => { loadTokens(); }, [loadTokens]);
 
+  useEffect(() => {
+    import('@/repositories/competitionsRepository').then(m =>
+      m.default.getCompetition(id).then(r => setCompetitionIntId(r.data.id))
+    );
+  }, [id]);
+
   const handleCreate = async () => {
-    if (!newExpiry) { toast.error('Indica la fecha de expiración.'); return; }
+    if (!newExpiry || competitionIntId === null) { toast.error('Indica la fecha de expiración.'); return; }
     setCreating(true);
     try {
       await publicRegistrationRepository.createToken({
-        competition: competitionId,
+        competition: competitionIntId,
         expires_at: new Date(newExpiry).toISOString(),
         max_uses: newMaxUses ? Number(newMaxUses) : null,
         notes: newNotes,

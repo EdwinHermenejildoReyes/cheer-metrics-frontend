@@ -63,7 +63,7 @@ export function RegistrationModal({ open, onClose, onSaved, divisionId, initial 
     try {
       const payload = { ...values, division: divisionId } as Partial<Registration> & { division: number };
       const res = isEdit
-        ? await competitionsRepository.updateRegistration(initial!.id, payload)
+        ? await competitionsRepository.updateRegistration(initial!.public_id, payload)
         : await competitionsRepository.createRegistration(payload);
       toast.success(isEdit ? 'Inscripción actualizada' : 'Equipo inscrito');
       onSaved(res.data);

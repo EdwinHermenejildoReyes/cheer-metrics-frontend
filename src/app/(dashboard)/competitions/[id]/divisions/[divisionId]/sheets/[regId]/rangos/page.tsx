@@ -19,9 +19,6 @@ function fmt(n: number) { return n.toFixed(2); }
 export default function RangosSheetPage() {
   const router = useRouter();
   const { id, divisionId, regId } = useParams<{ id: string; divisionId: string; regId: string }>();
-  const competitionId  = Number(id);
-  const divId          = Number(divisionId);
-  const registrationId = Number(regId);
 
   const [teamName,           setTeamName]           = useState<string>('');
   const [gymName,            setGymName]            = useState('');
@@ -86,12 +83,12 @@ export default function RangosSheetPage() {
   const load = useCallback(async () => {
     try {
       const [sheetRes, regRes, divRes] = await Promise.all([
-        competitionsRepository.listScoreSheets({ registration: String(registrationId) }),
-        competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' }),
-        competitionsRepository.getDivision(divId),
+        competitionsRepository.listScoreSheets({ registration__public_id: regId }),
+        competitionsRepository.listRegistrations({ division__public_id: divisionId, page_size: '100' }),
+        competitionsRepository.getDivision(divisionId),
       ]);
 
-      const reg = regRes.data.results.find((r) => r.id === registrationId);
+      const reg = regRes.data.results.find((r) => r.public_id === regId);
       if (reg) {
         setTeamName(reg.team_name);
         setGymName(reg.gym_name ?? '');
@@ -205,7 +202,7 @@ export default function RangosSheetPage() {
     } finally {
       setLoading(false);
     }
-  }, [registrationId, divId]);
+  }, [regId, divisionId]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -214,7 +211,7 @@ export default function RangosSheetPage() {
     if (loading) return;
     const interval = setInterval(async () => {
       try {
-        const sheetRes = await competitionsRepository.listScoreSheets({ registration: String(registrationId) });
+        const sheetRes = await competitionsRepository.listScoreSheets({ registration__public_id: regId });
         if (sheetRes.data.results.length === 0) return;
         const sheet = sheetRes.data.results[0];
         setExistingSheet(sheet);
@@ -284,7 +281,7 @@ export default function RangosSheetPage() {
     }, 5000);
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, registrationId, bCfg, tCfg]);
+  }, [loading, regId, bCfg, tCfg]);
 
   // ── Export PDF — records protest start on first export ────────────────────
   const handleExport = async () => {
@@ -336,7 +333,7 @@ export default function RangosSheetPage() {
       <div className="sticky top-0 z-10 flex items-center justify-between gap-4 bg-white border-b border-zinc-200 px-6 py-3 shadow-sm print:hidden">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}`)}
+            onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}`)}
             className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -344,7 +341,7 @@ export default function RangosSheetPage() {
           <div>
             <p className="text-[11px] uppercase tracking-wide text-zinc-400 font-medium">Planilla — Rangos (Dificultad)</p>
             <p className="text-sm font-semibold text-zinc-900 leading-tight">
-              {teamName || `Inscripción #${registrationId}`}
+              {teamName || `Inscripción #${regId}`}
             </p>
           </div>
         </div>
@@ -385,7 +382,7 @@ export default function RangosSheetPage() {
           </div>
           <div className="px-5 pb-4">
             <h1 className="text-xl font-bold leading-tight" style={{ color: 'var(--brand-primary-text)' }}>
-              {teamName || `Inscripción #${registrationId}`}
+              {teamName || `Inscripción #${regId}`}
             </h1>
             {gymName && <p className="text-xs opacity-70 mt-0.5">{gymName}</p>}
             <div className="flex flex-wrap gap-1.5 mt-2">

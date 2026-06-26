@@ -39,11 +39,9 @@ export default function BillingDetailPage() {
   const [addingFan, setAddingFan]   = useState(false);
 
   const load = async () => {
-    const [invRes, fpRes] = await Promise.all([
-      competitionsRepository.getGymInvoice(Number(gymId)),
-      competitionsRepository.listFanPackages(Number(id)),
-    ]);
+    const invRes = await competitionsRepository.getGymInvoice(Number(gymId));
     setInvoice(invRes.data);
+    const fpRes = await competitionsRepository.listFanPackages(invRes.data.competition);
     setFanPackages(fpRes.data.results);
     setLoading(false);
   };

@@ -57,7 +57,6 @@ function ScoredRow({ entry }: { entry: RankingEntry }) {
 export default function DivisionRankingsPage() {
   const router = useRouter();
   const { divisionId } = useParams<{ id: string; divisionId: string }>();
-  const divId = Number(divisionId);
 
   const [data, setData] = useState<DivisionRankings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,12 +65,12 @@ export default function DivisionRankingsPage() {
 
   const load = useCallback(async () => {
     try {
-      const res = await competitionsRepository.getDivisionRankings(divId);
+      const res = await competitionsRepository.getDivisionRankings(divisionId);
       setData(res.data);
     } finally {
       setLoading(false);
     }
-  }, [divId]);
+  }, [divisionId]);
 
   useEffect(() => { load(); }, [load]);
 

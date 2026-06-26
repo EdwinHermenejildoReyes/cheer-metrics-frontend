@@ -92,7 +92,7 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
         organization: values.organization ? Number(values.organization) : null,
       };
       const res = isEdit
-        ? await competitionsRepository.updateCompetition(initial!.id, payload)
+        ? await competitionsRepository.updateCompetition(initial!.public_id, payload)
         : await competitionsRepository.createCompetition(payload);
       toast.success(isEdit ? 'Competencia actualizada' : 'Competencia creada');
       onSaved(res.data);

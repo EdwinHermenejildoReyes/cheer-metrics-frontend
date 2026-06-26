@@ -34,6 +34,7 @@ export interface PublicDivisionRanking {
 export interface PublicResult {
   registration_id: number;
   division_id: number;
+  division_public_id: string;
   performance_order: number | null;
   team_name: string;
   gym_name: string;
@@ -178,29 +179,29 @@ class CompetitionsRepository {
   listCompetitions = (params?: Record<string, string>) =>
     api.get<PaginatedResponse<Competition>>('/competitions/', { params });
 
-  getCompetition = (id: number) =>
+  getCompetition = (id: string) =>
     api.get<Competition>(`/competitions/${id}/`);
 
   createCompetition = (data: Partial<Competition>) =>
     api.post<Competition>('/competitions/', data);
 
-  updateCompetition = (id: number, data: Partial<Competition>) =>
+  updateCompetition = (id: string, data: Partial<Competition>) =>
     api.patch<Competition>(`/competitions/${id}/`, data);
 
   // Divisions
   listDivisions = (params?: Record<string, string>) =>
     api.get<PaginatedResponse<Division>>('/divisions/', { params });
 
-  getDivision = (id: number) =>
+  getDivision = (id: string) =>
     api.get<Division>(`/divisions/${id}/`);
 
-  getDivisionRankings = (id: number) =>
+  getDivisionRankings = (id: string) =>
     api.get<DivisionRankings>(`/divisions/${id}/rankings/`);
 
   createDivision = (data: Partial<Division>) =>
     api.post<Division>('/divisions/', data);
 
-  updateDivision = (id: number, data: Partial<Division>) =>
+  updateDivision = (id: string, data: Partial<Division>) =>
     api.patch<Division>(`/divisions/${id}/`, data);
 
   // Gyms
@@ -210,7 +211,7 @@ class CompetitionsRepository {
   createGym = (data: Partial<Gym>) =>
     api.post<Gym>('/gyms/', data);
 
-  updateGym = (id: number, data: Partial<Gym>) =>
+  updateGym = (id: string, data: Partial<Gym>) =>
     api.patch<Gym>(`/gyms/${id}/`, data);
 
   // Teams
@@ -230,10 +231,10 @@ class CompetitionsRepository {
   createRegistration = (data: Partial<Registration>) =>
     api.post<Registration>('/registrations/', data);
 
-  updateRegistration = (id: number, data: Partial<Registration>) =>
+  updateRegistration = (id: string, data: Partial<Registration>) =>
     api.patch<Registration>(`/registrations/${id}/`, data);
 
-  deleteRegistration = (id: number) =>
+  deleteRegistration = (id: string) =>
     api.delete(`/registrations/${id}/`);
 
   // Score sheets
@@ -267,31 +268,31 @@ class CompetitionsRepository {
     api.delete(`/judge-assignments/${id}/`);
 
   // Schedule conflict check
-  getScheduleConflicts = (competitionId: number, minGap = 3) =>
+  getScheduleConflicts = (competitionId: string, minGap = 3) =>
     api.get<RestConflict[]>(`/competitions/${competitionId}/schedule-conflicts/`, {
       params: { min_gap: minGap },
     });
 
   // Auto-assign performance orders by category/level
-  autoAssignOrders = (competitionId: number) =>
+  autoAssignOrders = (competitionId: string) =>
     api.post<{ assigned: number; message: string }>(`/competitions/${competitionId}/auto-assign-orders/`);
 
   // Public result (no auth) — for coach protest review link
-  getPublicResult = (registrationId: number) =>
+  getPublicResult = (registrationId: string) =>
     api.get<PublicResult>(`/registrations/${registrationId}/public-result/`, { withCredentials: false });
 
   // Public division ranking (no auth)
-  getPublicDivisionRankings = (divisionId: number) =>
+  getPublicDivisionRankings = (divisionId: string) =>
     api.get<PublicDivisionRanking>(`/divisions/${divisionId}/public-rankings/`, { withCredentials: false });
 
   // Inscripción import
-  importInscripcion = (competitionId: number, formData: FormData) =>
+  importInscripcion = (competitionId: string, formData: FormData) =>
     api.post<ImportInscripcionResult>(`/competitions/${competitionId}/import-inscripcion/`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
 
   // Judging import (team-level Excel, no athlete data)
-  importJudging = (competitionId: number, formData: FormData) =>
+  importJudging = (competitionId: string, formData: FormData) =>
     api.post<ImportInscripcionResult>(`/competitions/${competitionId}/import-judging/`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
@@ -313,8 +314,12 @@ class CompetitionsRepository {
 
   // ── Billing ────────────────────────────────────────────────────────────────
 
-  listFanPackages = (competitionId: number) =>
-    api.get<{ results: FanPackage[] }>('/fan-packages/', { params: { competition: competitionId } });
+  listFanPackages = (competitionId: number | string) =>
+    api.get<{ results: FanPackage[] }>('/fan-packages/', {
+      params: typeof competitionId === 'string'
+        ? { competition__public_id: competitionId }
+        : { competition: competitionId },
+    });
 
   createFanPackage = (data: Partial<FanPackage>) =>
     api.post<FanPackage>('/fan-packages/', data);

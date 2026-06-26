@@ -91,19 +91,18 @@ export default function DivisionDetailPage() {
   const confirm = useConfirm();
   const router = useRouter();
   const { id, divisionId } = useParams<{ id: string; divisionId: string }>();
-  const competitionId = Number(id);
-  const divId = Number(divisionId);
 
   const { isJudge, isCompetitionActive, canViewSheet, sheetTypesForCompetition } = useJudge();
 
-  useEffect(() => {
-    if (isJudge && !isCompetitionActive(competitionId)) {
-      toast.error('El evento ha finalizado. Ya no puedes acceder a las planillas.');
-      router.replace(`/competitions/${competitionId}`);
-    }
-  }, [isJudge, competitionId, isCompetitionActive, router]);
-
   const [division, setDivision]       = useState<Division | null>(null);
+
+  useEffect(() => {
+    if (!division) return;
+    if (isJudge && !isCompetitionActive(division.competition)) {
+      toast.error('El evento ha finalizado. Ya no puedes acceder a las planillas.');
+      router.replace(`/competitions/${id}`);
+    }
+  }, [isJudge, division, isCompetitionActive, router, id]);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [scoreSheets, setScoreSheets]     = useState<Record<number, ScoreSheet>>({});
   const [loading, setLoading]             = useState(true);
@@ -118,27 +117,28 @@ export default function DivisionDetailPage() {
 
   const loadSheets = useCallback(async () => {
     const res = await competitionsRepository.listScoreSheets({
-      registration__division: String(divId),
+      registration__division__public_id: divisionId,
       page_size: '100',
     });
     const map: Record<number, ScoreSheet> = {};
     res.data.results.forEach((s) => { map[s.registration] = s; });
     setScoreSheets(map);
-  }, [divId]);
+  }, [divisionId]);
 
   const load = useCallback(async () => {
     try {
-      const [divRes, regRes] = await Promise.all([
-        competitionsRepository.getDivision(divId),
-        competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' }),
-      ]);
+      const divRes = await competitionsRepository.getDivision(divisionId);
       setDivision(divRes.data);
+      const regRes = await competitionsRepository.listRegistrations({
+        division: String(divRes.data.id),
+        page_size: '100',
+      });
       setRegistrations(regRes.data.results);
       await loadSheets();
     } finally {
       setLoading(false);
     }
-  }, [divId, loadSheets]);
+  }, [divisionId, loadSheets]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -160,7 +160,7 @@ export default function DivisionDetailPage() {
   const handleDeleteReg = async (reg: Registration) => {
     if (!await confirm({ title: 'Eliminar inscripción', message: `¿Seguro que deseas eliminar la inscripción de ${reg.team_name}? Esta acción no se puede deshacer.`, confirmLabel: 'Eliminar' })) return;
     try {
-      await competitionsRepository.deleteRegistration(reg.id);
+      await competitionsRepository.deleteRegistration(reg.public_id);
       setRegistrations((prev) => prev.filter((r) => r.id !== reg.id));
       toast.success('Inscripción eliminada');
     } catch {
@@ -198,7 +198,7 @@ export default function DivisionDetailPage() {
   const isGrupalMode = (division.competition_sheet_mode ?? 'grupal') !== 'individual';
   const hasJudging = division.competition_service_type !== 'registration_only';
   const hasRegistration = division.competition_service_type !== 'judging_only';
-  const judgeSheetTypes = sheetTypesForCompetition(competitionId);
+  const judgeSheetTypes = sheetTypesForCompetition(division.competition);
   const judgeVisibleSheets = judgeSheetTypes.filter((sheetType) => {
     if (sheetType === 'rangos') return true;
     if (isGrupalMode) {
@@ -218,7 +218,7 @@ export default function DivisionDetailPage() {
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <button
-            onClick={() => router.push(`/competitions/${competitionId}`)}
+            onClick={() => router.push(`/competitions/${id}`)}
             className="mt-0.5 rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-600"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -255,7 +255,7 @@ export default function DivisionDetailPage() {
             Inscripciones <span className="font-normal text-zinc-400">({registrations.length})</span>
           </h2>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/rankings`)}>
+            <Button size="sm" variant="outline" onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/rankings`)}>
               <Trophy className="h-4 w-4" />
               Ver ranking
             </Button>
@@ -286,7 +286,7 @@ export default function DivisionDetailPage() {
                     onClick={() => {
                       if (isJudge && hasJudging) {
                         if (judgeVisibleSheets.length === 1) {
-                          router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/${getSheetSlug(judgeVisibleSheets[0], isIasfWorld)}`);
+                          router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/${getSheetSlug(judgeVisibleSheets[0], isIasfWorld)}`);
                         } else if (judgeVisibleSheets.length > 1) {
                           setExpandedRow(isExpanded ? null : reg.id);
                         }
@@ -327,162 +327,162 @@ export default function DivisionDetailPage() {
                           {sheet ? 'Editar' : 'Calificar'}
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(competitionId, 'building') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                      {hasJudging && canViewSheet(division.competition,'building') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
                         <Button
                           size="icon"
                           variant="ghost"
                           title="Planilla Building"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/building`)}
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/building`)}
                         >
                           <ChevronsUp className="h-3.5 w-3.5 text-blue-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(competitionId, 'building') && isGrupalMode && isIasfWorld && (
+                      {hasJudging && canViewSheet(division.competition,'building') && isGrupalMode && isIasfWorld && (
                         <Button
                           size="icon"
                           variant="ghost"
                           title="IASF World — Elevaciones"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/iasf-building`)}
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/iasf-building`)}
                         >
                           <ChevronsUp className="h-3.5 w-3.5 text-blue-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(competitionId, 'tumbling') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                      {hasJudging && canViewSheet(division.competition,'tumbling') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
                         <Button
                           size="icon"
                           variant="ghost"
                           title="Planilla Tumbling"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/tumbling`)}
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/tumbling`)}
                         >
                           <RotateCw className="h-3.5 w-3.5 text-green-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(competitionId, 'tumbling') && isGrupalMode && isIasfWorld && (
+                      {hasJudging && canViewSheet(division.competition,'tumbling') && isGrupalMode && isIasfWorld && (
                         <Button
                           size="icon"
                           variant="ghost"
                           title="IASF World — Gimnasia"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/iasf-tumbling`)}
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/iasf-tumbling`)}
                         >
                           <RotateCw className="h-3.5 w-3.5 text-green-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(competitionId, 'overall') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                      {hasJudging && canViewSheet(division.competition,'overall') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
                         <Button
                           size="icon"
                           variant="ghost"
                           title="Planilla Overall"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/overall`)}
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/overall`)}
                         >
                           <Star className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(competitionId, 'overall') && isGrupalMode && isIasfWorld && (
+                      {hasJudging && canViewSheet(division.competition,'overall') && isGrupalMode && isIasfWorld && (
                         <Button
                           size="icon"
                           variant="ghost"
                           title="IASF World — General"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/iasf-overall`)}
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/iasf-overall`)}
                         >
                           <Star className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(competitionId, 'partner_stunt') && isGrupalMode && activeScoringSystem === 'partner_stunt' && (
+                      {hasJudging && canViewSheet(division.competition,'partner_stunt') && isGrupalMode && activeScoringSystem === 'partner_stunt' && (
                         <Button
                           size="icon"
                           variant="ghost"
                           title="Planilla Partner Stunt"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/partner-stunt`)}
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/partner-stunt`)}
                         >
                           <Users2 className="h-3.5 w-3.5 text-orange-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(competitionId, 'deducciones') && isGrupalMode && (
+                      {hasJudging && canViewSheet(division.competition,'deducciones') && isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
                           title="Planilla Deducciones"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/deducciones`)}
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/deducciones`)}
                         >
                           <CircleMinus className="h-3.5 w-3.5 text-red-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(competitionId, 'rangos') && (
+                      {hasJudging && canViewSheet(division.competition,'rangos') && (
                         <Button
                           size="icon"
                           variant="ghost"
                           title="Planilla Rangos (Dificultad)"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/rangos`)}
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/rangos`)}
                         >
                           <Gauge className="h-3.5 w-3.5 text-amber-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(competitionId, 'building_difficulty') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(division.competition,'building_difficulty') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
                           title="Dificultad — Elevaciones"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/building-difficulty`)}
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/building-difficulty`)}
                         >
                           <TrendingUp className="h-3.5 w-3.5 text-blue-700" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(competitionId, 'building_execution') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(division.competition,'building_execution') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
                           title="Ejecución — Elevaciones"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/building-execution`)}
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/building-execution`)}
                         >
                           <BadgeCheck className="h-3.5 w-3.5 text-blue-400" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(competitionId, 'tumbling_difficulty') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(division.competition,'tumbling_difficulty') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
                           title="Dificultad — Gimnasia"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/tumbling-difficulty`)}
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/tumbling-difficulty`)}
                         >
                           <TrendingUp className="h-3.5 w-3.5 text-green-700" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(competitionId, 'tumbling_execution') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(division.competition,'tumbling_execution') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
                           title="Ejecución — Gimnasia"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/tumbling-execution`)}
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/tumbling-execution`)}
                         >
                           <Sparkles className="h-3.5 w-3.5 text-green-400" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(competitionId, 'overall') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(division.competition,'overall') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
                           title="Overall (General)"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/overall`)}
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/overall`)}
                         >
                           <Star className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(competitionId, 'deductions_only') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(division.competition,'deductions_only') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
                           title="Deducciones (Caídas/Tiempo)"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/deductions-only`)}
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/deductions-only`)}
                         >
                           <Timer className="h-3.5 w-3.5 text-orange-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(competitionId, 'safety_rules') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(division.competition,'safety_rules') && !isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
                           title="Reglas y Seguridad"
-                          onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/safety-rules`)}
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/safety-rules`)}
                         >
                           <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
                         </Button>
@@ -493,7 +493,7 @@ export default function DivisionDetailPage() {
                           variant="ghost"
                           title="Copiar enlace básico para coach"
                           onClick={() => {
-                            const url = `${window.location.origin}/results/${reg.id}`;
+                            const url = `${window.location.origin}/results/${reg.public_id}`;
                             navigator.clipboard.writeText(url).then(() => toast.success('Enlace copiado'));
                           }}
                         >
@@ -635,7 +635,7 @@ export default function DivisionDetailPage() {
                           return (
                             <button
                               key={sheetType}
-                              onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}/sheets/${reg.id}/${getSheetSlug(sheetType, isIasfWorld)}`)}
+                              onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/${getSheetSlug(sheetType, isIasfWorld)}`)}
                               className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:border-zinc-400 hover:bg-zinc-100 transition-colors"
                             >
                               <Icon className={`h-3.5 w-3.5 ${SHEET_TYPE_COLORS[sheetType]}`} />
@@ -1030,7 +1030,7 @@ export default function DivisionDetailPage() {
         open={regModalOpen}
         onClose={() => setRegModalOpen(false)}
         onSaved={handleRegSaved}
-        divisionId={divId}
+        divisionId={division.id}
         initial={editingReg}
       />
       <ScoringSheetModal

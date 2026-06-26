@@ -41,20 +41,20 @@ function SectionTotal({ label, breakdown, total }: {
 export default function BuildingDifficultyPage() {
   const router = useRouter();
   const { id, divisionId, regId } = useParams<{ id: string; divisionId: string; regId: string }>();
-  const competitionId  = Number(id);
-  const divId          = Number(divisionId);
-  const registrationId = Number(regId);
 
   const { isJudge, isCompetitionActive } = useJudge();
+  const [competitionIntId, setCompetitionIntId] = useState<number | null>(null);
+  const [regIntId, setRegIntId] = useState<number | null>(null);
   const { organization } = useBranding();
   const readOnly = !isJudge;
 
   useEffect(() => {
-    if (isJudge && !isCompetitionActive(competitionId)) {
+
+    if (competitionIntId !== null && isJudge && !isCompetitionActive(competitionIntId)) {
       toast.error('El evento ha finalizado.');
-      router.replace(`/competitions/${competitionId}`);
+      router.replace(`/competitions/${id}`);
     }
-  }, [isJudge, competitionId, isCompetitionActive, router]);
+  }, [isJudge, competitionIntId, isCompetitionActive, router, id]);
 
   const [teamName,       setTeamName]       = useState('');
   const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
@@ -118,13 +118,14 @@ export default function BuildingDifficultyPage() {
   const load = useCallback(async () => {
     try {
       const [sheetRes, regRes, divRes] = await Promise.all([
-        competitionsRepository.listScoreSheets({ registration: String(registrationId) }),
-        competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' }),
-        competitionsRepository.getDivision(divId),
+        competitionsRepository.listScoreSheets({ registration__public_id: regId }),
+        competitionsRepository.listRegistrations({ division__public_id: divisionId, page_size: '100' }),
+        competitionsRepository.getDivision(divisionId),
       ]);
 
-      const reg = regRes.data.results.find(r => r.id === registrationId);
+      const reg = regRes.data.results.find(r => r.public_id === regId);
       if (reg) {
+        setRegIntId(reg.id);
         setTeamName(reg.team_name);
         setAthleteCount(reg.athlete_count ?? null);
         setLocalCountStr(reg.athlete_count != null ? String(reg.athlete_count) : '');
@@ -137,6 +138,7 @@ export default function BuildingDifficultyPage() {
       const cfg = sysConfig.building;
       setBCfg(cfg);
       setDivision(divRes.data);
+      setCompetitionIntId(divRes.data.competition);
 
       if (cfg.stuntsHasDiff && cfg.stuntsRango.length > 0) setStuntsRango(cfg.stuntsRango[0].value);
 
@@ -183,7 +185,7 @@ export default function BuildingDifficultyPage() {
     } finally {
       setLoading(false);
     }
-  }, [registrationId, divId]);
+  }, [regId, divisionId]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -197,8 +199,8 @@ export default function BuildingDifficultyPage() {
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        const regRes = await competitionsRepository.listRegistrations({ division: String(divId), page_size: '100' });
-        const reg = regRes.data.results.find(r => r.id === registrationId);
+        const regRes = await competitionsRepository.listRegistrations({ division__public_id: divisionId, page_size: '100' });
+        const reg = regRes.data.results.find(r => r.public_id === regId);
         const fetched = reg?.athlete_count ?? null;
         if (fetched !== athleteCountRef.current && !editingCountRef.current) {
           setAthleteCount(fetched);
@@ -208,14 +210,14 @@ export default function BuildingDifficultyPage() {
     }, 5000);
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [divId, registrationId]);
+  }, [divisionId, regId]);
 
   // Refresh scoresheet every 5 s for read-only (admin) view so judges' saves appear in real time
   useEffect(() => {
     if (!readOnly || loading) return;
     const interval = setInterval(async () => {
       try {
-        const sheetRes = await competitionsRepository.listScoreSheets({ registration: String(registrationId) });
+        const sheetRes = await competitionsRepository.listScoreSheets({ registration__public_id: regId });
         if (sheetRes.data.results.length === 0) return;
         const sheet = sheetRes.data.results[0];
         setExistingSheet(sheet);
@@ -256,19 +258,19 @@ export default function BuildingDifficultyPage() {
     }, 5000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readOnly, loading, registrationId, bCfg]);
+  }, [readOnly, loading, regId, bCfg]);
 
   // Real-time cross-tab updates via BroadcastChannel (same browser, non-incognito tabs only)
   useEffect(() => {
     const ch = new BroadcastChannel('cheer-metrics:athlete-count');
     ch.onmessage = (e: MessageEvent<{ registrationId: number; count: number | null }>) => {
-      if (e.data.registrationId === registrationId && e.data.count != null) {
+      if (e.data.registrationId === regIntId && e.data.count != null) {
         setAthleteCount(e.data.count);
         setLocalCountStr(String(e.data.count));
       }
     };
     return () => ch.close();
-  }, [registrationId]);
+  }, [regId]);
 
   // Prevents auto-save from firing while load() is populating initial form values
   const initialValuesSettled = useRef(false);
@@ -322,7 +324,7 @@ export default function BuildingDifficultyPage() {
         const res = await competitionsRepository.updateScoreSheet(existingSheet.id, payload);
         saved = res.data;
       } else {
-        const res = await competitionsRepository.createScoreSheet({ registration: registrationId as unknown as number, ...payload } as Partial<ScoreSheet>);
+        const res = await competitionsRepository.createScoreSheet({ registration: regIntId!, ...payload } as Partial<ScoreSheet>);
         saved = res.data;
       }
       setExistingSheet(saved);
@@ -353,11 +355,11 @@ export default function BuildingDifficultyPage() {
     }
     setSavingCount(true);
     try {
-      await competitionsRepository.updateRegistration(registrationId, { athlete_count: val } as Partial<Registration>);
+      await competitionsRepository.updateRegistration(regId, { athlete_count: val } as Partial<Registration>);
       setAthleteCount(val);
       setEditingCount(false);
       const ch = new BroadcastChannel('cheer-metrics:athlete-count');
-      ch.postMessage({ registrationId, count: val });
+      ch.postMessage({ registrationId: regIntId!, count: val });
       ch.close();
       toast.success('Conteo guardado');
     } catch {
@@ -377,12 +379,12 @@ export default function BuildingDifficultyPage() {
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="print:hidden sticky top-0 z-10 flex items-center justify-between gap-4 bg-white border-b border-zinc-200 px-6 py-3 shadow-sm">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push(`/competitions/${competitionId}/divisions/${divId}`)} className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 transition-colors">
+          <button onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}`)} className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 transition-colors">
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div>
             <p className="text-[11px] uppercase tracking-wide text-zinc-400 font-medium">Planilla — Dificultad Elevaciones</p>
-            <p className="text-sm font-semibold text-zinc-900 leading-tight">{teamName || `Inscripción #${registrationId}`}</p>
+            <p className="text-sm font-semibold text-zinc-900 leading-tight">{teamName || `Inscripción #${regId}`}</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -393,7 +395,7 @@ export default function BuildingDifficultyPage() {
           {readOnly ? (
             <span className="text-xs font-medium text-zinc-400 px-3 py-1.5 rounded-lg bg-zinc-100 border border-zinc-200">Solo lectura</span>
           ) : (
-            <Button onClick={handleSave} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0}>
+            <Button onClick={() => handleSave()} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0}>
               <Save className="h-4 w-4" />
               Guardar
             </Button>

@@ -35,12 +35,12 @@ export default function BillingListPage() {
   const [loading, setLoading]         = useState(true);
 
   const load = async () => {
-    const [compRes, invRes, gymRes] = await Promise.all([
-      competitionsRepository.getCompetition(Number(id)),
-      competitionsRepository.listGymInvoices({ competition: id, page_size: '200' }),
+    const compRes = await competitionsRepository.getCompetition(id);
+    setCompetition(compRes.data);
+    const [invRes, gymRes] = await Promise.all([
+      competitionsRepository.listGymInvoices({ competition__public_id: id, page_size: '200' }),
       competitionsRepository.listGyms({ page_size: '200' }),
     ]);
-    setCompetition(compRes.data);
     setInvoices(invRes.data.results);
     setGyms(gymRes.data.results);
     setLoading(false);
@@ -49,10 +49,10 @@ export default function BillingListPage() {
   useEffect(() => { load(); }, [id]);
 
   const handleGenerate = async () => {
-    if (!selectedGym) return;
+    if (!selectedGym || !competition) return;
     setGenerating(true);
     try {
-      await competitionsRepository.generateGymInvoice(Number(id), Number(selectedGym));
+      await competitionsRepository.generateGymInvoice(competition.id, Number(selectedGym));
       setSelectedGym('');
       await load();
     } finally {

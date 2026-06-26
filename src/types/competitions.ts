@@ -129,6 +129,7 @@ export interface Organization {
 
 export interface Competition {
   id: number;
+  public_id: string;
   organization: number | null;
   organization_detail: Organization | null;
   name: string;
@@ -150,6 +151,7 @@ export interface Competition {
 
 export interface Division {
   id: number;
+  public_id: string;
   competition: number;
   competition_name: string;
   competition_sheet_mode: 'grupal' | 'individual';
@@ -169,6 +171,7 @@ export interface Division {
 
 export interface Gym {
   id: number;
+  public_id: string;
   name: string;
   city: string;
   country: string;
@@ -193,6 +196,7 @@ export interface UnpaidAthlete {
 
 export interface Registration {
   id: number;
+  public_id: string;
   division: number;
   division_name: string;
   competition_name: string;

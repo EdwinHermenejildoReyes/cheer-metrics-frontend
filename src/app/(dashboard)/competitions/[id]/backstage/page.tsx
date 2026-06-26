@@ -16,7 +16,6 @@ interface RegWithDiv extends Registration {
 export default function BackstagePage() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
-  const competitionId = Number(id);
 
   const [loading,  setLoading]  = useState(true);
   const [saving,   setSaving]   = useState<number | null>(null);
@@ -27,8 +26,8 @@ export default function BackstagePage() {
   const load = useCallback(async () => {
     try {
       const [regsRes, divsRes] = await Promise.all([
-        competitionsRepository.listRegistrations({ competition: String(competitionId), page_size: '200' }),
-        competitionsRepository.listDivisions({ competition: String(competitionId), page_size: '100' }),
+        competitionsRepository.listRegistrations({ division__competition__public_id: id, page_size: '200' }),
+        competitionsRepository.listDivisions({ competition__public_id: id, page_size: '100' }),
       ]);
       const divMap: Record<number, Division> = {};
       for (const d of divsRes.data.results) divMap[d.id] = d;
@@ -51,22 +50,22 @@ export default function BackstagePage() {
     } finally {
       setLoading(false);
     }
-  }, [competitionId]);
+  }, [id]);
 
   useEffect(() => { load(); }, [load]);
 
-  const handleSave = async (regId: number) => {
-    const raw = counts[regId];
+  const handleSave = async (reg: Registration) => {
+    const raw = counts[reg.id];
     const val = raw === '' ? null : parseInt(raw, 10);
     if (raw !== '' && (isNaN(val as number) || (val as number) < 1)) {
       toast.error('Ingresa un número válido de atletas');
       return;
     }
-    setSaving(regId);
+    setSaving(reg.id);
     try {
-      await competitionsRepository.updateRegistration(regId, { athlete_count: val } as Partial<Registration>);
+      await competitionsRepository.updateRegistration(reg.public_id, { athlete_count: val } as Partial<Registration>);
       const ch = new BroadcastChannel('cheer-metrics:athlete-count');
-      ch.postMessage({ registrationId: regId, count: val });
+      ch.postMessage({ registrationId: reg.id, count: val });
       ch.close();
       toast.success('Conteo guardado');
       await load();
@@ -84,7 +83,7 @@ export default function BackstagePage() {
       {/* Header */}
       <div className="sticky top-0 z-20 bg-white border-b border-zinc-200 px-6 py-3 shadow-sm flex items-center gap-3">
         <button
-          onClick={() => router.push(`/competitions/${competitionId}`)}
+          onClick={() => router.push(`/competitions/${id}`)}
           className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -155,7 +154,7 @@ export default function BackstagePage() {
                         value={countStr}
                         placeholder="0"
                         onChange={e => setCounts(p => ({ ...p, [reg.id]: e.target.value }))}
-                        onKeyDown={e => { if (e.key === 'Enter') handleSave(reg.id); }}
+                        onKeyDown={e => { if (e.key === 'Enter') handleSave(reg); }}
                         className="w-16 h-8 rounded-lg border border-zinc-300 bg-white text-center text-sm font-bold tabular-nums text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400"
                       />
                       <button
@@ -172,7 +171,7 @@ export default function BackstagePage() {
                     {isDirty && (
                       <button
                         type="button"
-                        onClick={() => handleSave(reg.id)}
+                        onClick={() => handleSave(reg)}
                         disabled={isSaving}
                         className="ml-auto rounded-lg bg-zinc-900 hover:bg-zinc-700 text-white px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50"
                       >
