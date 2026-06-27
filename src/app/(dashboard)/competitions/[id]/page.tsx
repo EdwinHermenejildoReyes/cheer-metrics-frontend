@@ -2,9 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList, Receipt, Link as LinkIcon, Copy, Check, FileSpreadsheet, Printer } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList, Receipt, Link as LinkIcon, Copy, Check, Printer } from 'lucide-react';
 import { PrintButton } from '@/components/print/PrintButton';
-import { ItineraryPrintView } from '@/components/print/ItineraryPrintView';
 import { Modal } from '@/components/ui/modal';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,7 @@ import authRepository, { type SimpleUser } from '@/repositories/authRepository';
 import publicRegistrationRepository from '@/repositories/publicRegistrationRepository';
 import getEnvVars from '@/utils/getEnvVars';
 import { useJudge } from '@/hooks/useJudge';
-import { exportItinerary } from '@/lib/exportItinerary';
+import { printItineraryPdf } from '@/lib/exportItinerary';
 import { useBranding } from '@/contexts/BrandingContext';
 import {
   AGE_GROUP_LABELS,
@@ -65,24 +64,6 @@ export default function CompetitionDetailPage() {
   const [exportModalOpen, setExportModalOpen]   = useState(false);
   const [exportStartTime, setExportStartTime]   = useState('08:30');
   const [exportLoading, setExportLoading]       = useState(false);
-  const [printRegs, setPrintRegs]               = useState<import('@/types/competitions').Registration[]>([]);
-  const [triggerPrint, setTriggerPrint]         = useState(false);
-
-  // Fire window.print() only after React re-renders with the itinerary data
-  useEffect(() => {
-    if (!triggerPrint || printRegs.length === 0) return;
-    setTriggerPrint(false);
-    const style = document.createElement('style');
-    style.id = '__itinerary-print-hide__';
-    style.textContent = '@media print { .competition-main-content { display: none !important; } }';
-    document.head.appendChild(style);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        window.print();
-        style.remove();
-      });
-    });
-  }, [triggerPrint, printRegs.length]);
 
   // Registration tokens
   const [tokensModalOpen, setTokensModalOpen] = useState(false);
@@ -280,35 +261,16 @@ export default function CompetitionDetailPage() {
     setDivModalOpen(true);
   };
 
-  const fetchAllItineraryRegs = async () => {
-    const res = await competitionsRepository.listRegistrations({
-      division__competition__public_id: id,
-      page_size: '1000',
-      status: 'confirmed',
-    });
-    return res.data.results;
-  };
-
-  const handleExportExcel = async () => {
-    setExportLoading(true);
-    try {
-      const regs = await fetchAllItineraryRegs();
-      exportItinerary(competition!.name, exportStartTime, regs);
-      setExportModalOpen(false);
-    } catch {
-      toast.error('No se pudo generar el Excel.');
-    } finally {
-      setExportLoading(false);
-    }
-  };
-
   const handleExportPdf = async () => {
     setExportLoading(true);
     try {
-      const regs = await fetchAllItineraryRegs();
-      setPrintRegs(regs);
+      const res = await competitionsRepository.listRegistrations({
+        division__competition__public_id: id,
+        page_size: '1000',
+        status: 'confirmed',
+      });
+      printItineraryPdf(competition!, organization, res.data.results, exportStartTime);
       setExportModalOpen(false);
-      setTriggerPrint(true);
     } catch {
       toast.error('No se pudo generar el PDF.');
     } finally {
@@ -320,7 +282,7 @@ export default function CompetitionDetailPage() {
   if (!competition) return <div className="p-8 text-zinc-500">Competencia no encontrada.</div>;
 
   return (
-    <div className="flex flex-col gap-6 p-8 competition-main-content">
+    <div className="flex flex-col gap-6 p-8">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3">
@@ -354,7 +316,7 @@ export default function CompetitionDetailPage() {
                 size="sm"
                 onClick={() => setExportModalOpen(true)}
               >
-                <FileSpreadsheet className="h-3.5 w-3.5" />
+                <Printer className="h-3.5 w-3.5" />
                 Exportar itinerario
               </Button>
               <Button
@@ -856,29 +818,15 @@ export default function CompetitionDetailPage() {
           <p>Entre presentaciones: <strong>5 min</strong> · Duración máx.: <strong>2:30 min</strong></p>
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="secondary" size="sm" className="whitespace-nowrap" onClick={() => setExportModalOpen(false)}>
+          <Button variant="secondary" size="sm" onClick={() => setExportModalOpen(false)}>
             Cancelar
           </Button>
-          <Button variant="secondary" size="sm" className="whitespace-nowrap" onClick={handleExportPdf} loading={exportLoading}>
+          <Button size="sm" onClick={handleExportPdf} loading={exportLoading}>
             <Printer className="h-3.5 w-3.5" />
             Exportar PDF
           </Button>
-          <Button size="sm" className="whitespace-nowrap" onClick={handleExportExcel} loading={exportLoading}>
-            <FileSpreadsheet className="h-3.5 w-3.5" />
-            Descargar Excel
-          </Button>
         </div>
       </Modal>
-
-      {/* ── Print-only itinerary view ──────────────────────────────────── */}
-      {printRegs.length > 0 && (
-        <ItineraryPrintView
-          competition={competition}
-          organization={organization}
-          registrations={printRegs}
-          startTime={exportStartTime}
-        />
-      )}
 
       <CompetitionModal
         open={compModalOpen}
