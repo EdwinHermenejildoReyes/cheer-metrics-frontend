@@ -814,7 +814,7 @@ export default function CompetitionDetailPage() {
         open={exportModalOpen}
         onClose={() => setExportModalOpen(false)}
         title="Exportar itinerario"
-        size="sm"
+        size="md"
       >
         <p className="text-sm text-zinc-500 mb-4">
           Ingresa la hora de inicio del evento. Se calcularán automáticamente los tiempos de registro, foto, warm up, backstage y presentación para cada equipo.
