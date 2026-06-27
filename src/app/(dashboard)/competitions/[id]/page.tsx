@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList, Receipt, Link as LinkIcon, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList, Receipt, Link as LinkIcon, Copy, Check, FileSpreadsheet } from 'lucide-react';
 import { PrintButton } from '@/components/print/PrintButton';
 import { Modal } from '@/components/ui/modal';
 import { toast } from 'sonner';
@@ -16,6 +16,7 @@ import authRepository, { type SimpleUser } from '@/repositories/authRepository';
 import publicRegistrationRepository from '@/repositories/publicRegistrationRepository';
 import getEnvVars from '@/utils/getEnvVars';
 import { useJudge } from '@/hooks/useJudge';
+import { exportItinerary } from '@/lib/exportItinerary';
 import {
   AGE_GROUP_LABELS,
   SKILL_LEVEL_LABELS,
@@ -57,6 +58,11 @@ export default function CompetitionDetailPage() {
   const [conflictsLoading, setConflictsLoading] = useState(false);
   const [assigningOrders, setAssigningOrders] = useState(false);
   const [itineraryModalOpen, setItineraryModalOpen] = useState(false);
+
+  // Export itinerary modal
+  const [exportModalOpen, setExportModalOpen]   = useState(false);
+  const [exportStartTime, setExportStartTime]   = useState('08:30');
+  const [exportLoading, setExportLoading]       = useState(false);
 
   // Registration tokens
   const [tokensModalOpen, setTokensModalOpen] = useState(false);
@@ -253,6 +259,23 @@ export default function CompetitionDetailPage() {
     setDivModalOpen(true);
   };
 
+  const handleExportItinerary = async () => {
+    setExportLoading(true);
+    try {
+      const res = await competitionsRepository.listRegistrations({
+        division__competition__public_id: id,
+        page_size: '1000',
+        status: 'confirmed',
+      });
+      exportItinerary(competition!.name, exportStartTime, res.data.results);
+      setExportModalOpen(false);
+    } catch {
+      toast.error('No se pudo generar el itinerario.');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   if (loading) return <PageSpinner />;
   if (!competition) return <div className="p-8 text-zinc-500">Competencia no encontrada.</div>;
 
@@ -286,6 +309,14 @@ export default function CompetitionDetailPage() {
           <PrintButton />
           {!isJudge && (
             <>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setExportModalOpen(true)}
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5" />
+                Exportar itinerario
+              </Button>
               <Button
                 variant="secondary"
                 size="sm"
@@ -753,6 +784,46 @@ export default function CompetitionDetailPage() {
             ))}
           </div>
         )}
+      </Modal>
+
+      {/* ── Modal: exportar itinerario ─────────────────────────────────── */}
+      <Modal
+        open={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        title="Exportar itinerario"
+        size="sm"
+      >
+        <p className="text-sm text-zinc-500 mb-4">
+          Ingresa la hora de inicio del evento. Se calcularán automáticamente los tiempos de registro, foto, warm up, backstage y presentación para cada equipo.
+        </p>
+        <div className="mb-2">
+          <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide mb-1.5 block">
+            Hora de inicio del evento
+          </label>
+          <input
+            type="time"
+            value={exportStartTime}
+            onChange={(e) => setExportStartTime(e.target.value)}
+            className="h-9 rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+          />
+        </div>
+        <div className="mt-4 rounded-lg bg-zinc-50 border border-zinc-200 px-4 py-3 text-xs text-zinc-500 space-y-1 mb-5">
+          <p className="font-medium text-zinc-700 mb-1">Tiempos entre etapas</p>
+          <p>Registro → Foto: <strong>5 min</strong></p>
+          <p>Foto → Warm up: <strong>5 min</strong></p>
+          <p>Warm up → Backstage: <strong>6 min</strong></p>
+          <p>Backstage → Presentación: <strong>5 min</strong></p>
+          <p>Entre presentaciones: <strong>5 min</strong> · Duración máx.: <strong>2:30 min</strong></p>
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" size="sm" onClick={() => setExportModalOpen(false)}>
+            Cancelar
+          </Button>
+          <Button size="sm" onClick={handleExportItinerary} loading={exportLoading}>
+            <FileSpreadsheet className="h-3.5 w-3.5" />
+            Descargar Excel
+          </Button>
+        </div>
       </Modal>
 
       <CompetitionModal
