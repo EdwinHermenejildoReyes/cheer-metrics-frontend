@@ -8,8 +8,9 @@ const nextConfig: NextConfig = {
 
   images: {
     remotePatterns: [
-      { protocol: 'http', hostname: 'localhost',      port: '8006', pathname: '**' },
-      { protocol: 'http', hostname: '192.168.1.66',   port: '8006', pathname: '**' },
+      { protocol: 'http',  hostname: 'localhost',           port: '8006', pathname: '**' },
+      { protocol: 'http',  hostname: '192.168.1.66',        port: '8006', pathname: '**' },
+      { protocol: 'https', hostname: 'app.cheer-metrics.com',             pathname: '**' },
     ],
   },
 };
