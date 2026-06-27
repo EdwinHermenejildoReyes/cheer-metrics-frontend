@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList, Receipt, Link as LinkIcon, Copy, Check, FileSpreadsheet } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList, Receipt, Link as LinkIcon, Copy, Check, FileSpreadsheet, Printer } from 'lucide-react';
 import { PrintButton } from '@/components/print/PrintButton';
+import { ItineraryPrintView } from '@/components/print/ItineraryPrintView';
 import { Modal } from '@/components/ui/modal';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ import publicRegistrationRepository from '@/repositories/publicRegistrationRepos
 import getEnvVars from '@/utils/getEnvVars';
 import { useJudge } from '@/hooks/useJudge';
 import { exportItinerary } from '@/lib/exportItinerary';
+import { useBranding } from '@/contexts/BrandingContext';
 import {
   AGE_GROUP_LABELS,
   SKILL_LEVEL_LABELS,
@@ -63,6 +65,7 @@ export default function CompetitionDetailPage() {
   const [exportModalOpen, setExportModalOpen]   = useState(false);
   const [exportStartTime, setExportStartTime]   = useState('08:30');
   const [exportLoading, setExportLoading]       = useState(false);
+  const [printRegs, setPrintRegs]               = useState<import('@/types/competitions').Registration[]>([]);
 
   // Registration tokens
   const [tokensModalOpen, setTokensModalOpen] = useState(false);
@@ -75,6 +78,7 @@ export default function CompetitionDetailPage() {
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
   const { isJudge, isCompetitionActive } = useJudge();
+  const { organization } = useBranding();
 
   const hasJudging      = competition?.service_type !== 'registration_only';
   const hasRegistration = competition?.service_type !== 'judging_only';
@@ -259,18 +263,37 @@ export default function CompetitionDetailPage() {
     setDivModalOpen(true);
   };
 
-  const handleExportItinerary = async () => {
+  const fetchAllItineraryRegs = async () => {
+    const res = await competitionsRepository.listRegistrations({
+      division__competition__public_id: id,
+      page_size: '1000',
+      status: 'confirmed',
+    });
+    return res.data.results;
+  };
+
+  const handleExportExcel = async () => {
     setExportLoading(true);
     try {
-      const res = await competitionsRepository.listRegistrations({
-        division__competition__public_id: id,
-        page_size: '1000',
-        status: 'confirmed',
-      });
-      exportItinerary(competition!.name, exportStartTime, res.data.results);
+      const regs = await fetchAllItineraryRegs();
+      exportItinerary(competition!.name, exportStartTime, regs);
       setExportModalOpen(false);
     } catch {
-      toast.error('No se pudo generar el itinerario.');
+      toast.error('No se pudo generar el Excel.');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const handleExportPdf = async () => {
+    setExportLoading(true);
+    try {
+      const regs = await fetchAllItineraryRegs();
+      setPrintRegs(regs);
+      setExportModalOpen(false);
+      setTimeout(() => window.print(), 150);
+    } catch {
+      toast.error('No se pudo generar el PDF.');
     } finally {
       setExportLoading(false);
     }
@@ -819,12 +842,26 @@ export default function CompetitionDetailPage() {
           <Button variant="secondary" size="sm" onClick={() => setExportModalOpen(false)}>
             Cancelar
           </Button>
-          <Button size="sm" onClick={handleExportItinerary} loading={exportLoading}>
+          <Button variant="secondary" size="sm" onClick={handleExportPdf} loading={exportLoading}>
+            <Printer className="h-3.5 w-3.5" />
+            Exportar PDF
+          </Button>
+          <Button size="sm" onClick={handleExportExcel} loading={exportLoading}>
             <FileSpreadsheet className="h-3.5 w-3.5" />
             Descargar Excel
           </Button>
         </div>
       </Modal>
+
+      {/* ── Print-only itinerary view ──────────────────────────────────── */}
+      {printRegs.length > 0 && (
+        <ItineraryPrintView
+          competition={competition}
+          organization={organization}
+          registrations={printRegs}
+          startTime={exportStartTime}
+        />
+      )}
 
       <CompetitionModal
         open={compModalOpen}
