@@ -303,7 +303,7 @@ export default function CompetitionDetailPage() {
   if (!competition) return <div className="p-8 text-zinc-500">Competencia no encontrada.</div>;
 
   return (
-    <div className="flex flex-col gap-6 p-8">
+    <div className={`flex flex-col gap-6 p-8 ${printRegs.length > 0 ? 'print:hidden' : ''}`}>
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3">
@@ -839,14 +839,14 @@ export default function CompetitionDetailPage() {
           <p>Entre presentaciones: <strong>5 min</strong> · Duración máx.: <strong>2:30 min</strong></p>
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="secondary" size="sm" onClick={() => setExportModalOpen(false)}>
+          <Button variant="secondary" size="sm" className="whitespace-nowrap" onClick={() => setExportModalOpen(false)}>
             Cancelar
           </Button>
-          <Button variant="secondary" size="sm" onClick={handleExportPdf} loading={exportLoading}>
+          <Button variant="secondary" size="sm" className="whitespace-nowrap" onClick={handleExportPdf} loading={exportLoading}>
             <Printer className="h-3.5 w-3.5" />
             Exportar PDF
           </Button>
-          <Button size="sm" onClick={handleExportExcel} loading={exportLoading}>
+          <Button size="sm" className="whitespace-nowrap" onClick={handleExportExcel} loading={exportLoading}>
             <FileSpreadsheet className="h-3.5 w-3.5" />
             Descargar Excel
           </Button>
