@@ -62,14 +62,22 @@ export function buildItineraryRows(registrations: Registration[], startTimeHHMM:
 }
 
 export async function fetchItineraryRegistrations(
-  competitionsRepository: { listRegistrations: (p: Record<string, string>) => Promise<{ data: { results: Registration[] } }> },
+  competitionsRepository: { listRegistrations: (p: Record<string, string>) => Promise<{ data: { results: Registration[]; next: string | null } }> },
   competitionPublicId: string,
 ): Promise<Registration[]> {
-  const res = await competitionsRepository.listRegistrations({
-    division__competition__public_id: competitionPublicId,
-    page_size: '1000',
-  });
-  return res.data.results.filter((r) => r.performance_order != null);
+  const all: Registration[] = [];
+  let page = 1;
+  while (true) {
+    const res = await competitionsRepository.listRegistrations({
+      division__competition__public_id: competitionPublicId,
+      page_size: '200',
+      page: String(page),
+    });
+    all.push(...res.data.results);
+    if (!res.data.next) break;
+    page++;
+  }
+  return all.filter((r) => r.performance_order != null);
 }
 
 export function printItineraryPdf(

@@ -16,7 +16,7 @@ import authRepository, { type SimpleUser } from '@/repositories/authRepository';
 import publicRegistrationRepository from '@/repositories/publicRegistrationRepository';
 import getEnvVars from '@/utils/getEnvVars';
 import { useJudge } from '@/hooks/useJudge';
-import { printItineraryPdf } from '@/lib/exportItinerary';
+import { printItineraryPdf, fetchItineraryRegistrations } from '@/lib/exportItinerary';
 import { useBranding } from '@/contexts/BrandingContext';
 import {
   AGE_GROUP_LABELS,
@@ -264,11 +264,8 @@ export default function CompetitionDetailPage() {
   const handleExportPdf = async () => {
     setExportLoading(true);
     try {
-      const res = await competitionsRepository.listRegistrations({
-        division__competition__public_id: id,
-        page_size: '1000',
-      });
-      printItineraryPdf(competition!, organization, res.data.results, exportStartTime);
+      const regs = await fetchItineraryRegistrations(competitionsRepository, id);
+      printItineraryPdf(competition!, organization, regs, exportStartTime);
       setExportModalOpen(false);
     } catch {
       toast.error('No se pudo generar el PDF.');
