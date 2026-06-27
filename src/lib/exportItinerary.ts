@@ -61,6 +61,17 @@ export function buildItineraryRows(registrations: Registration[], startTimeHHMM:
   });
 }
 
+export async function fetchItineraryRegistrations(
+  competitionsRepository: { listRegistrations: (p: Record<string, string>) => Promise<{ data: { results: Registration[] } }> },
+  competitionPublicId: string,
+): Promise<Registration[]> {
+  const res = await competitionsRepository.listRegistrations({
+    division__competition__public_id: competitionPublicId,
+    page_size: '1000',
+  });
+  return res.data.results.filter((r) => r.performance_order != null);
+}
+
 export function printItineraryPdf(
   competition: { name: string; date: string; venue: string; city: string },
   organization: Organization | null | undefined,

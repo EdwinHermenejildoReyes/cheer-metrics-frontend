@@ -267,7 +267,6 @@ export default function CompetitionDetailPage() {
       const res = await competitionsRepository.listRegistrations({
         division__competition__public_id: id,
         page_size: '1000',
-        status: 'confirmed',
       });
       printItineraryPdf(competition!, organization, res.data.results, exportStartTime);
       setExportModalOpen(false);
