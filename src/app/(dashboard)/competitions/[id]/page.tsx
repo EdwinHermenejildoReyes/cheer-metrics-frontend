@@ -66,6 +66,23 @@ export default function CompetitionDetailPage() {
   const [exportStartTime, setExportStartTime]   = useState('08:30');
   const [exportLoading, setExportLoading]       = useState(false);
   const [printRegs, setPrintRegs]               = useState<import('@/types/competitions').Registration[]>([]);
+  const [triggerPrint, setTriggerPrint]         = useState(false);
+
+  // Fire window.print() only after React re-renders with the itinerary data
+  useEffect(() => {
+    if (!triggerPrint || printRegs.length === 0) return;
+    setTriggerPrint(false);
+    const style = document.createElement('style');
+    style.id = '__itinerary-print-hide__';
+    style.textContent = '@media print { .competition-main-content { display: none !important; } }';
+    document.head.appendChild(style);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.print();
+        style.remove();
+      });
+    });
+  }, [triggerPrint, printRegs.length]);
 
   // Registration tokens
   const [tokensModalOpen, setTokensModalOpen] = useState(false);
@@ -291,7 +308,7 @@ export default function CompetitionDetailPage() {
       const regs = await fetchAllItineraryRegs();
       setPrintRegs(regs);
       setExportModalOpen(false);
-      setTimeout(() => window.print(), 150);
+      setTriggerPrint(true);
     } catch {
       toast.error('No se pudo generar el PDF.');
     } finally {
@@ -303,7 +320,7 @@ export default function CompetitionDetailPage() {
   if (!competition) return <div className="p-8 text-zinc-500">Competencia no encontrada.</div>;
 
   return (
-    <div className={`flex flex-col gap-6 p-8 ${printRegs.length > 0 ? 'print:hidden' : ''}`}>
+    <div className="flex flex-col gap-6 p-8 competition-main-content">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3">
