@@ -188,10 +188,20 @@ export function printItineraryPdf(
 </body>
 </html>`;
 
-  const win = window.open('', '_blank', 'width=1000,height=750');
-  if (!win) { alert('Permite ventanas emergentes para exportar el PDF.'); return; }
-  win.document.write(html);
-  win.document.close();
-  win.focus();
-  setTimeout(() => { win.print(); }, 300);
+  const printEl = document.createElement('div');
+  printEl.id = 'cheer-itinerary-print';
+  printEl.innerHTML = html;
+  document.body.appendChild(printEl);
+
+  const style = document.createElement('style');
+  style.textContent = `@media print { body > *:not(#cheer-itinerary-print) { display: none !important; } #cheer-itinerary-print { display: block !important; } }`;
+  document.head.appendChild(style);
+
+  const cleanup = () => {
+    printEl.remove();
+    style.remove();
+    window.removeEventListener('afterprint', cleanup);
+  };
+  window.addEventListener('afterprint', cleanup);
+  window.print();
 }
