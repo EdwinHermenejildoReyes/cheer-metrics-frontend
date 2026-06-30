@@ -46,6 +46,7 @@ const COED_N5_N7: readonly [number, number, number][] = [
   [8,  9,  4],
   [10, 11, 5],
   [12, 13, 6],
+  [14, 16, 7],
 ];
 
 const COED_HIGH_LEVELS: readonly SkillLevel[] = ['L5', 'L6', 'L7'];
@@ -66,8 +67,8 @@ export function getCoedStyleGroups(
       return { grupos_estilo_coed: grupos };
     }
   }
-  // > 13 males: use maximum defined row
-  return { grupos_estilo_coed: 6 };
+  // > 16 males: use maximum defined row
+  return { grupos_estilo_coed: 7 };
 }
 
 // ── Gymnastics / Gimnasia-Saltos ──────────────────────────────────────────────
@@ -77,22 +78,23 @@ export function getCoedStyleGroups(
 export interface GymGroups {
   mayoria:    number;
   gran_parte: number;
+  max:        number;
 }
 
-// [minAthletes, maxAthletes, mayoria, gran_parte]
-const GYM_TABLE: readonly [number, number, number, number][] = [
-  [10, 15,  9, 10],
-  [16, 24, 11, 12],
-  [25, 30, 13, 14],
+// [minAthletes, maxAthletes, mayoria, gran_parte, max]
+const GYM_TABLE: readonly [number, number, number, number, number][] = [
+  [10, 15,  8,  9, 13],
+  [16, 24, 11, 12, 18],
+  [25, 30, 14, 15, 23],
 ];
 
 export function getGymGroups(athleteCount: number): GymGroups | null {
   if (athleteCount < 10) return null;
-  for (const [min, max, mayoria, gran_parte] of GYM_TABLE) {
+  for (const [min, max, mayoria, gran_parte, maxVal] of GYM_TABLE) {
     if (athleteCount >= min && athleteCount <= max) {
-      return { mayoria, gran_parte };
+      return { mayoria, gran_parte, max: maxVal };
     }
   }
   // > 30: use largest defined row
-  return { mayoria: 13, gran_parte: 14 };
+  return { mayoria: 14, gran_parte: 15, max: 23 };
 }
