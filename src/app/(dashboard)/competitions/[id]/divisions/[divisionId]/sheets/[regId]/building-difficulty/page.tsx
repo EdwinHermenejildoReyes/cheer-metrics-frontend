@@ -506,6 +506,52 @@ export default function BuildingDifficultyPage() {
         );
       })()}
 
+      {isCoed && (() => {
+        const sl = division?.skill_level;
+        const isHighCoed = sl === 'L5' || sl === 'L6' || sl === 'L7';
+        const isMidCoed  = sl === 'L3' || sl === 'L4';
+        if (!isHighCoed && !isMidCoed) return null;
+        return (
+          <div className="mx-auto max-w-4xl px-6 pt-2">
+            <div className="rounded-xl border border-violet-200 bg-violet-50 px-5 py-4 flex flex-col gap-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-violet-500">
+                Tabla de cantidad Coed — Estilo Coed
+              </p>
+              {isMidCoed ? (
+                <div className="flex items-center gap-4">
+                  <p className="text-xs text-violet-700">
+                    <strong>N3–N4:</strong> con 1 o más atletas masculinos → siempre
+                  </p>
+                  <div className="text-center">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-violet-400">Grupos Estilo Coed</p>
+                    <p className="text-3xl font-black tabular-nums text-violet-700">1</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="text-xs border-collapse w-auto">
+                    <thead>
+                      <tr className="bg-violet-100">
+                        <th className="px-4 py-2 text-left font-semibold text-violet-700 border border-violet-200 whitespace-nowrap">Atletas masculinos</th>
+                        <th className="px-4 py-2 text-center font-semibold text-violet-700 border border-violet-200 whitespace-nowrap">Grupos Estilo Coed</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {([[1,3,1],[4,5,2],[6,7,3],[8,9,4],[10,11,5],[12,13,6],[14,16,7]] as [number,number,number][]).map(([min,max,grp]) => (
+                        <tr key={min} className="even:bg-violet-50">
+                          <td className="px-4 py-1.5 border border-violet-200 text-violet-800">{min}–{max}</td>
+                          <td className="px-4 py-1.5 border border-violet-200 text-center font-bold text-violet-900">{grp}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       <div className={`max-w-4xl mx-auto px-6 py-8 flex flex-col gap-16${readOnly ? ' pointer-events-none select-none opacity-75' : ''}`}>
 
 
