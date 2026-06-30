@@ -232,6 +232,7 @@ export default function BuildingSheetPage() {
   const [localCountStr,   setLocalCountStr]   = useState('');
   const [savingCount,     setSavingCount]     = useState(false);
   const [editingCount,    setEditingCount]    = useState(false);
+  const [maleCountStr,    setMaleCountStr]    = useState('');
 
   // ── Stunts – difficulty ───────────────────────────────────────────────────
   const [stuntsRango,    setStuntsRango]    = useState<number>(0);
@@ -327,6 +328,7 @@ export default function BuildingSheetPage() {
         setAthleteCount(reg.athlete_count ?? null);
         setLocalCountStr(reg.athlete_count != null ? String(reg.athlete_count) : '');
         setEditingCount(reg.athlete_count == null);
+        setMaleCountStr(reg.male_athlete_count != null ? String(reg.male_athlete_count) : '');
         setUnpaidAthletes(reg.unpaid_athletes);
         setRequirePayment(reg.competition_require_payment);
       }
@@ -792,16 +794,32 @@ export default function BuildingSheetPage() {
           const isHighCoed = sl === 'L5' || sl === 'L6' || sl === 'L7';
           const isMidCoed  = sl === 'L3' || sl === 'L4';
           if (!isHighCoed && !isMidCoed) return null;
+          const COED_ROWS: [number, number, number][] = [[1,3,1],[4,5,2],[6,7,3],[8,9,4],[10,11,5],[12,13,6],[14,16,7]];
+          const maleVal = parseInt(maleCountStr, 10);
+          const hasMale = !isNaN(maleVal) && maleVal > 0;
+          const matched = hasMale
+            ? (COED_ROWS.find(([mn, mx]) => maleVal >= mn && maleVal <= mx) ?? (maleVal > 16 ? COED_ROWS[COED_ROWS.length - 1] : null))
+            : null;
           return (
             <div className="rounded-xl border border-violet-200 bg-white px-5 py-4 flex flex-col gap-3">
               <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-violet-500 mb-0.5">
+                <div className="flex flex-col gap-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-violet-500">
                     Tabla de cantidad Coed — Estilo Coed
                   </p>
-                  <p className="text-xs text-violet-400">
-                    {isMidCoed ? 'N3–N4: con 1 o más atletas masculinos' : 'N5–N7: según número de atletas masculinos'}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-violet-400">{isMidCoed ? 'N3–N4:' : 'N5–N7:'}</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="99"
+                      value={maleCountStr}
+                      placeholder="0"
+                      onChange={e => setMaleCountStr(e.target.value)}
+                      className="w-12 h-6 rounded border border-violet-200 bg-violet-50 text-center text-xs font-bold tabular-nums text-violet-900 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                    />
+                    <span className="text-xs text-violet-400">atletas masculinos</span>
+                  </div>
                 </div>
                 {isMidCoed ? (
                   <div className="text-center shrink-0">
@@ -818,12 +836,15 @@ export default function BuildingSheetPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {([[1,3,1],[4,5,2],[6,7,3],[8,9,4],[10,11,5],[12,13,6],[14,16,7]] as [number,number,number][]).map(([min,max,grp]) => (
-                          <tr key={min} className="even:bg-violet-50">
-                            <td className="px-3 py-1 border border-violet-200 text-violet-700 tabular-nums">{min}–{max}</td>
-                            <td className="px-3 py-1 border border-violet-200 text-center font-bold text-violet-900 tabular-nums">{grp}</td>
-                          </tr>
-                        ))}
+                        {COED_ROWS.map(([min, max, grp]) => {
+                          const active = matched?.[0] === min;
+                          return (
+                            <tr key={min} className={active ? 'bg-violet-600' : 'even:bg-violet-50'}>
+                              <td className={`px-3 py-1 border border-violet-200 tabular-nums ${active ? 'text-white font-bold' : 'text-violet-700'}`}>{min}–{max}</td>
+                              <td className={`px-3 py-1 border border-violet-200 text-center font-bold tabular-nums ${active ? 'text-white' : 'text-violet-900'}`}>{grp}</td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

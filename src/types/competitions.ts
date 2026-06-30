@@ -206,7 +206,8 @@ export interface Registration {
   gym_name: string;
   status: RegistrationStatus;
   performance_order: number | null;
-  athlete_count: number | null;
+  athlete_count:      number | null;
+  male_athlete_count: number | null;
   is_enable: boolean;
   competition_require_payment: boolean;
   unpaid_athletes: UnpaidAthlete[];
