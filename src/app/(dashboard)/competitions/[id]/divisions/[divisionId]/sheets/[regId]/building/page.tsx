@@ -233,6 +233,7 @@ export default function BuildingSheetPage() {
   const [savingCount,     setSavingCount]     = useState(false);
   const [editingCount,    setEditingCount]    = useState(false);
   const [maleCountStr,    setMaleCountStr]    = useState('');
+  const [maleCountEditable, setMaleCountEditable] = useState(true);
 
   // ── Stunts – difficulty ───────────────────────────────────────────────────
   const [stuntsRango,    setStuntsRango]    = useState<number>(0);
@@ -329,6 +330,7 @@ export default function BuildingSheetPage() {
         setLocalCountStr(reg.athlete_count != null ? String(reg.athlete_count) : '');
         setEditingCount(reg.athlete_count == null);
         setMaleCountStr(reg.male_athlete_count != null ? String(reg.male_athlete_count) : '');
+        setMaleCountEditable(reg.male_athlete_count == null);
         setUnpaidAthletes(reg.unpaid_athletes);
         setRequirePayment(reg.competition_require_payment);
       }
@@ -809,16 +811,30 @@ export default function BuildingSheetPage() {
                   </p>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-violet-400">{isMidCoed ? 'N3–N4:' : 'N5–N7:'}</span>
-                    <input
-                      type="number"
-                      min="1"
-                      max="99"
-                      value={maleCountStr}
-                      placeholder="0"
-                      onChange={e => setMaleCountStr(e.target.value)}
-                      className="w-12 h-6 rounded border border-violet-200 bg-violet-50 text-center text-xs font-bold tabular-nums text-violet-900 focus:outline-none focus:ring-1 focus:ring-violet-400"
-                    />
+                    {maleCountEditable ? (
+                      <input
+                        type="number"
+                        min="1"
+                        max="99"
+                        value={maleCountStr}
+                        placeholder="0"
+                        onChange={e => setMaleCountStr(e.target.value)}
+                        className="w-12 h-6 rounded border border-violet-200 bg-violet-50 text-center text-xs font-bold tabular-nums text-violet-900 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                      />
+                    ) : (
+                      <span className="text-xs font-bold tabular-nums text-violet-900">{maleCountStr}</span>
+                    )}
                     <span className="text-xs text-violet-400">atletas masculinos</span>
+                    {!maleCountEditable && !readOnly && (
+                      <button
+                        type="button"
+                        onClick={() => setMaleCountEditable(true)}
+                        className="p-1 rounded text-violet-300 hover:text-violet-600 hover:bg-violet-100 transition-colors"
+                        title="Editar conteo"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                    )}
                   </div>
                 </div>
                 {isMidCoed ? (
