@@ -793,40 +793,42 @@ export default function BuildingSheetPage() {
           const isMidCoed  = sl === 'L3' || sl === 'L4';
           if (!isHighCoed && !isMidCoed) return null;
           return (
-            <div className="rounded-xl border border-violet-200 bg-violet-50 px-5 py-4 mb-2">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-violet-500 mb-3">
-                Tabla de cantidad Coed — Estilo Coed
-              </p>
-              {isMidCoed ? (
-                <div className="flex items-center gap-4">
-                  <p className="text-xs text-violet-700">
-                    <strong>N3–N4:</strong> con 1 o más atletas masculinos → siempre
+            <div className="rounded-xl border border-violet-200 bg-white px-5 py-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-violet-500 mb-0.5">
+                    Tabla de cantidad Coed — Estilo Coed
                   </p>
-                  <div className="text-center">
+                  <p className="text-xs text-violet-400">
+                    {isMidCoed ? 'N3–N4: con 1 o más atletas masculinos' : 'N5–N7: según número de atletas masculinos'}
+                  </p>
+                </div>
+                {isMidCoed ? (
+                  <div className="text-center shrink-0">
                     <p className="text-[9px] font-bold uppercase tracking-widest text-violet-400">Grupos Estilo Coed</p>
                     <p className="text-3xl font-black tabular-nums text-violet-700">1</p>
                   </div>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="text-xs border-collapse w-auto">
-                    <thead>
-                      <tr className="bg-violet-100">
-                        <th className="px-4 py-2 text-left font-semibold text-violet-700 border border-violet-200 whitespace-nowrap">Atletas masculinos</th>
-                        <th className="px-4 py-2 text-center font-semibold text-violet-700 border border-violet-200 whitespace-nowrap">Grupos Estilo Coed</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[[1,3,1],[4,5,2],[6,7,3],[8,9,4],[10,11,5],[12,13,6],[14,16,7]].map(([min,max,grp]) => (
-                        <tr key={min} className="even:bg-violet-50">
-                          <td className="px-4 py-1.5 border border-violet-200 text-violet-800">{min}–{max}</td>
-                          <td className="px-4 py-1.5 border border-violet-200 text-center font-bold text-violet-900">{grp}</td>
+                ) : (
+                  <div className="shrink-0 overflow-x-auto">
+                    <table className="text-xs border-collapse">
+                      <thead>
+                        <tr>
+                          <th className="px-3 py-1.5 text-left border border-violet-200 whitespace-nowrap text-[9px] font-bold uppercase tracking-widest text-violet-400">Atletas masc.</th>
+                          <th className="px-3 py-1.5 text-center border border-violet-200 whitespace-nowrap text-[9px] font-bold uppercase tracking-widest text-violet-400">Grupos Coed</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                      </thead>
+                      <tbody>
+                        {([[1,3,1],[4,5,2],[6,7,3],[8,9,4],[10,11,5],[12,13,6],[14,16,7]] as [number,number,number][]).map(([min,max,grp]) => (
+                          <tr key={min} className="even:bg-violet-50">
+                            <td className="px-3 py-1 border border-violet-200 text-violet-700 tabular-nums">{min}–{max}</td>
+                            <td className="px-3 py-1 border border-violet-200 text-center font-bold text-violet-900 tabular-nums">{grp}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           );
         })()}
