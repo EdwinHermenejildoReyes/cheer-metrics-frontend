@@ -62,6 +62,14 @@ uv add <package>
 
 **Multi-tenancy** — `User.organization` is a FK to `Organization`. The `_org_id(user)` helper in `apps/api/views.py` returns `None` for `is_staff` users (they see all data) and `user.organization_id` for everyone else; ViewSet querysets filter by this. When adding new ViewSets, apply the same `_org_id` scoping to `get_queryset()`.
 
+**`ScoringFamily` / regulation** — `Competition.scoring_family` (`united`, `iasf_567`, `icu`, `partner_stunt`, `future_flyer`, `best_cheer`) is the high-level scoring family. `Competition.save()` automatically sets `Competition.regulation` (`IASF` | `ICU` | `AMBAS`) from `_SCORING_FAMILY_TO_REGULATION`. Set `scoring_family` and let the model derive `regulation`; don't set `regulation` directly.
+
+**`ServiceType`** — `Competition.service_type` (`full` | `registration_only` | `judging_only`) controls which modules are enabled for a competition. `full` enables both registration and judging; the others restrict access accordingly.
+
+**`public_id` UUID** — `Competition`, `Division`, `Gym`, and `Registration` each have a `public_id = UUIDField(unique=True)` auto-generated on creation. Public-facing API lookups (results, schedule, wizard) use `public_id` in URLs, not `pk`. Never expose `pk` in public routes.
+
+**`Division.is_non_tumbling`** — Boolean field independent of `DivisionCategory`. When `True`, `suggest_scoring_system()` returns `ELITE_NT` regardless of skill level. Used when a standard division (e.g., All Girl) competes without tumbling.
+
 **Sheet mode** — `Competition.sheet_mode` (`grupal` | `individual`) controls which judge sheet tabs are shown. `grupal` shows `building`, `tumbling`, `overall`, `rangos`, `deducciones`, `deductions_only`, and `safety_rules`; `individual` shows `partner_stunt`, `building_difficulty`, `building_execution`, `tumbling_difficulty`, and `tumbling_execution`. These groupings are defined in `src/types/competitions.ts` as `GRUPAL_SHEET_TYPES` / `INDIVIDUAL_SHEET_TYPES`. The `JudgeAssignment.sheet_type` field ties a judge to a specific `SheetType` choice. When adding new sheet types, update both `SheetType` choices in `apps/competitions/models.py` and both frontend constants.
 
 **ScoreSheet auto-creation** — A post-save signal in `apps/competitions/signals.py` automatically calls `ScoreSheet.objects.get_or_create(registration=instance)` whenever a `Registration` transitions to `confirmed` status. Never create ScoreSheets manually for confirmed registrations.
@@ -70,7 +78,7 @@ uv add <package>
 
 **Public registration wizard** — `/registro?token=...` is a public multi-step form (no auth) that lets coaches self-register a team. It validates a `RegistrationToken` via `GET /api/v1/wizard/validate/?token=...` then creates gym, team, and athlete records through the `wizard/` endpoints. Admins issue tokens from `/competitions/[id]/tokens` (managed via `registration-tokens/` API).
 
-**Scoring config** — `apps.competitions.models` is the canonical source for scoring: `FIELD_MAXIMA` (max per field), `DEDUCTION_AMOUNTS` (unit penalty per type), and `SCORING_SYSTEM_CONFIG` (which fields are active for each `ScoringSystem`). `Division.suggest_scoring_system(skill_level, age_group, category)` maps a division's attributes to a `ScoringSystem` choice. The frontend mirrors this in `src/lib/scoringConfig.ts` — keep both in sync when changing scoring rules.
+**Scoring config** — `apps.competitions.models` is the canonical source for scoring: `FIELD_MAXIMA` (default max per field), `DEDUCTION_AMOUNTS` (unit penalty per type), and `SCORING_SYSTEM_CONFIG` (fields + bonus + multiplier for each `ScoringSystem`). Each system config may include optional `field_maxima` and `avg_maxima` dicts to override the global defaults — notably `IASF_WORLD_L6_7` uses a 0–150 raw scale with its own per-field maxima, and `ESCOLAR_AB` has different building/cross-sheet maxima. Always check the system's config dict before assuming `FIELD_MAXIMA` applies. `Division.suggest_scoring_system(skill_level, age_group, category, is_non_tumbling=False)` maps a division's attributes to a `ScoringSystem` choice. The frontend mirrors this in `src/lib/scoringConfig.ts` — keep both in sync when changing scoring rules.
 
 **ScoreSheet computed properties** — `ScoreSheet` stores raw field values. All totals are computed properties: `building_total`, `tumbling_total`, `overall_total`, `avg_creativity`, `avg_showmanship`, `cross_sheet_total`, `raw_score`, `scaled_score`, `total_deductions`, `final_score`, `percentage`. Creativity and showmanship are averaged across all three judges, not summed — their effective max contribution to the total is 2.00 each regardless of how many judges scored them. The scoring formula is: `final_score = (raw_score + bonus) × multiplier − total_deductions`.
 
@@ -132,13 +140,21 @@ NEXT_PUBLIC_WEB_URL=http://localhost:3000/
 
 **Judge access (frontend)** — `src/hooks/useJudge.ts` combines Redux auth state and `judge_assignments` into convenience helpers: `isAdmin`, `isJudge`, `canViewSheet(competitionId, sheetType)`, `canViewCompetition(competitionId)`, `sheetTypesForCompetition(competitionId)`. Use this hook instead of reading assignments directly from the Redux store.
 
+**Middleware (auth guard)** — `src/proxy.ts` is the Next.js middleware. It checks for the `access` cookie on every non-public request and redirects to `/login` if absent. Public paths are `'/'`, `'/login'`, `'/register'`, `'/pending'`, `'/schedule'`, `/results/*`. It does not validate the JWT — the backend enforces that.
+
 **Construction tables** — `src/lib/constructionTable.ts` encodes the UCA Ecuador "Tabla de Cantidad en Construcción" rules: `getConstructionGroups(athleteCount)` returns building group thresholds, `getGymGroups(athleteCount)` returns gymnastics group thresholds, and `getCoedStyleGroups(maleCount, skillLevel)` returns Coed-specific style groups. Score sheet pages use these to display the applicable limits to judges.
+
+**Skill tables** — `src/lib/skillTables.ts` encodes the UCA/IASF legal skill lists by level and element type. Used by `src/components/skill-tables/SkillReferencePanel.tsx` (and `BuildingSkillTable`/`TumblingSkillTable`) to display the allowed skills to judges within a score sheet.
+
+**Itinerary export** — `src/lib/exportItinerary.ts` generates an XLSX file of the competition running order (schedule) for download. Uses the `xlsx` package.
 
 **Branding** — `src/contexts/BrandingContext.tsx` provides organization colors and logo; `src/contexts/PlatformSettingsContext.tsx` provides global platform palette (`PlatformSettings`). Both are consumed by layout components and loaded in the root layout.
 
 **Route groups** — `src/app/(dashboard)/` is the protected layout group for all authenticated pages. Public routes (`/login`, `/register`, `/pending`) live outside this group.
 
 **Score sheets** — Deep route: `/competitions/[id]/divisions/[divisionId]/sheets/[regId]/<type>`. Group-mode types: `building`, `tumbling`, `overall`, `partner-stunt`, `deducciones`, `rangos`, `iasf-building`, `iasf-tumbling`, `iasf-overall`. Individual-mode split-judge types: `building-difficulty`, `building-execution`, `tumbling-difficulty`, `tumbling-execution`, `safety-rules`, `deductions-only`. Each type is its own page sharing `src/lib/scoringConfig.ts`. Print views live in `src/components/print/`.
+
+**Rankings** — `/competitions/[id]/divisions/[divisionId]/rankings/` shows the final ranking table for a division, sorted by `final_score` descending.
 
 **Backstage** — `/competitions/[id]/backstage` is a dashboard-only page for performance check-in: it shows all confirmed registrations with athlete count and performance order, letting staff verify team size against `Registration.athlete_count`.
 
