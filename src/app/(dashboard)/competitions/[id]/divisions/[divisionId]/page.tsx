@@ -807,297 +807,153 @@ export default function DivisionDetailPage() {
         const hasStandDrivers = ranked.some(({ sheet }) => f(sheet.standing_drivers)  > 0);
         const hasRunDrivers   = ranked.some(({ sheet }) => f(sheet.running_drivers)   > 0);
 
-        const thBase = 'px-3 py-1 text-right text-xs font-medium text-zinc-400 bg-zinc-50 border-b border-zinc-200';
-        const thGroup = 'px-3 py-1.5 text-center text-xs font-semibold uppercase tracking-wide bg-zinc-50 border-b border-zinc-100';
         const thSpan = 'px-3 py-2 text-xs font-semibold uppercase tracking-wide bg-zinc-50 border-b border-zinc-200 align-bottom';
-        const tdBase = 'px-3 py-2.5 text-right tabular-nums text-zinc-600';
-        const tdTotal = 'px-3 py-2.5 text-right tabular-nums font-medium text-zinc-800 bg-zinc-50';
         const sep = 'border-l border-zinc-200';
 
         return (
           <div className="flex flex-col gap-6">
 
-            {/* SECTION 1: Desglose por planilla */}
-            {(hasBuildingDetail || hasTumblingDetail || hasOverallDetail) && (
-              <div className="flex flex-col gap-4">
-                <h2 className="text-base font-semibold text-zinc-900">
-                  Desglose por planilla <span className="font-normal text-zinc-400">({ranked.length} calificados)</span>
-                </h2>
+            {/* SECTION 1: Desglose por planilla — tabla unificada con detalle completo */}
+            {(hasBuildingDetail || hasTumblingDetail || hasOverallDetail) && (() => {
+              const CAIDAS   = ['x', 'ca', 'csa', 'ec', 'cc', 'csc'];
+              const TIEMPO   = ['tiempo', 'tiempo_grave'];
+              const ILEGALES = ['pi', 'eap', 'rg', 'gfn', 'bfn', 'seg'];
+              const ADMIN    = ['ad', 'div'];
+              const sumDed = (deds: typeof ranked[0]['sheet']['deductions'], types: string[]) =>
+                deds.filter(d => types.includes(d.deduction_type)).reduce((s, d) => s + parseFloat(d.total_amount), 0);
+              const hasDed    = ranked.some(({ sheet }) => sheet.deductions.some(d => [...CAIDAS, ...TIEMPO].includes(d.deduction_type)));
+              const hasSafety = ranked.some(({ sheet }) => sheet.deductions.some(d => [...ILEGALES, ...ADMIN].includes(d.deduction_type)));
 
-                {/* Building breakdown */}
-                {hasBuildingDetail && (
-                  <div className="flex flex-col gap-2">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-500 flex items-center gap-1.5">
-                      <ChevronsUp className="h-3 w-3" /> Planilla — Elevaciones
-                    </p>
-                    <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
-                      <table className="w-full text-sm whitespace-nowrap">
-                        <thead>
-                          <tr>
-                            <th rowSpan={2} className={`${thSpan} text-left pr-4 pl-3`}>Equipo</th>
-                            <th colSpan={4} className={`${thGroup} ${sep}`}>Stunt / Elevaciones</th>
-                            <th colSpan={hasPyrDrivers ? 4 : 3} className={`${thGroup} ${sep}`}>Pirámides</th>
-                            <th colSpan={3} className={`${thGroup} ${sep}`}>Lanzamientos</th>
-                            <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Cre.</th>
-                            <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Show.</th>
-                            <th rowSpan={2} className={`${thSpan} text-right font-bold text-blue-700 ${sep}`}>Subtotal</th>
-                            <th rowSpan={2} className={`${thSpan} text-right font-bold text-zinc-800 ${sep}`}>Total</th>
-                          </tr>
-                          <tr>
-                            <th className={`${thBase} ${sep}`}>Dif</th>
-                            <th className={thBase}>Ejec</th>
-                            <th className={thBase}>Dr</th>
-                            <th className={`${thBase} font-semibold text-zinc-500`}>Σ</th>
-                            <th className={`${thBase} ${sep}`}>Dif</th>
-                            <th className={thBase}>Ejec</th>
-                            {hasPyrDrivers && <th className={thBase}>Dr</th>}
-                            <th className={`${thBase} font-semibold text-zinc-500`}>Σ</th>
-                            <th className={`${thBase} ${sep}`}>Dif</th>
-                            <th className={thBase}>Ejec</th>
-                            <th className={`${thBase} font-semibold text-zinc-500`}>Σ</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-100">
-                          {ranked.map(({ reg, sheet }, pos) => {
-                            const stuntsT = f(sheet.stunts_difficulty) + f(sheet.stunts_execution) + f(sheet.stunts_drivers);
-                            const pyrT    = f(sheet.pyramids_difficulty) + f(sheet.pyramids_execution) + f(sheet.pyramids_drivers);
-                            const tossesT = f(sheet.tosses_difficulty) + f(sheet.tosses_execution);
-                            const sub     = f(sheet.building_total);
-                            const cre     = f(sheet.creativity_building);
-                            const show    = f(sheet.showmanship_building);
-                            return (
-                              <tr key={reg.id} className={pos === 0 ? 'bg-amber-50' : ''}>
-                                <td className="px-3 py-2.5 font-medium text-zinc-900 pr-4">{reg.team_name}</td>
-                                <td className={`${tdBase} ${sep}`}>{f(sheet.stunts_difficulty).toFixed(2)}</td>
-                                <td className={tdBase}>{f(sheet.stunts_execution).toFixed(2)}</td>
-                                <td className={tdBase}>{f(sheet.stunts_drivers).toFixed(2)}</td>
-                                <td className={tdTotal}>{stuntsT.toFixed(2)}</td>
-                                <td className={`${tdBase} ${sep}`}>{f(sheet.pyramids_difficulty).toFixed(2)}</td>
-                                <td className={tdBase}>{f(sheet.pyramids_execution).toFixed(2)}</td>
-                                {hasPyrDrivers && <td className={tdBase}>{f(sheet.pyramids_drivers).toFixed(2)}</td>}
-                                <td className={tdTotal}>{pyrT.toFixed(2)}</td>
-                                <td className={`${tdBase} ${sep}`}>{f(sheet.tosses_difficulty).toFixed(2)}</td>
-                                <td className={tdBase}>{f(sheet.tosses_execution).toFixed(2)}</td>
-                                <td className={tdTotal}>{tossesT.toFixed(2)}</td>
-                                <td className={`${tdBase} ${sep}`}>{cre.toFixed(2)}</td>
-                                <td className={`${tdBase} ${sep}`}>{show.toFixed(2)}</td>
-                                <td className={`px-3 py-2.5 text-right tabular-nums font-semibold text-blue-700 ${sep}`}>{sub.toFixed(2)}</td>
-                                <td className={`px-3 py-2.5 text-right tabular-nums font-bold text-zinc-900 ${sep}`}>{(sub + cre + show).toFixed(2)}</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
+              // Colspan calculado dinámicamente por sección
+              const pyrCols   = hasPyrDrivers   ? 4 : 3;
+              const standCols = hasStandDrivers ? 4 : 3;
+              const runCols   = hasRunDrivers   ? 4 : 3;
+              const elevCols  = 4 + pyrCols + 3 + 1;   // stunt(4)+pir(3-4)+lanz(3)+subtotal(1)
+              const gimCols   = standCols + runCols + 3 + 1; // parado+corr+saltos(3)+subtotal(1)
+              const genCols   = 4;                       // danza(2)+form(1)+subtotal(1)
 
-                {/* Tumbling breakdown */}
-                {hasTumblingDetail && (
-                  <div className="flex flex-col gap-2">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-green-500 flex items-center gap-1.5">
-                      <RotateCw className="h-3 w-3" /> Planilla — Gimnasia
-                    </p>
-                    <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
-                      <table className="w-full text-sm whitespace-nowrap">
-                        <thead>
-                          <tr>
-                            <th rowSpan={2} className={`${thSpan} text-left pr-4 pl-3`}>Equipo</th>
-                            <th colSpan={hasStandDrivers ? 4 : 3} className={`${thGroup} ${sep}`}>Parado</th>
-                            <th colSpan={hasRunDrivers ? 4 : 3} className={`${thGroup} ${sep}`}>Corriendo</th>
-                            <th colSpan={3} className={`${thGroup} ${sep}`}>Saltos</th>
-                            <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Cre.</th>
-                            <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Show.</th>
-                            <th rowSpan={2} className={`${thSpan} text-right font-bold text-green-700 ${sep}`}>Subtotal</th>
-                            <th rowSpan={2} className={`${thSpan} text-right font-bold text-zinc-800 ${sep}`}>Total</th>
-                          </tr>
-                          <tr>
-                            <th className={`${thBase} ${sep}`}>Dif</th>
-                            <th className={thBase}>Ejec</th>
-                            {hasStandDrivers && <th className={thBase}>Dr</th>}
-                            <th className={`${thBase} font-semibold text-zinc-500`}>Σ</th>
-                            <th className={`${thBase} ${sep}`}>Dif</th>
-                            <th className={thBase}>Ejec</th>
-                            {hasRunDrivers && <th className={thBase}>Dr</th>}
-                            <th className={`${thBase} font-semibold text-zinc-500`}>Σ</th>
-                            <th className={`${thBase} ${sep}`}>Dif</th>
-                            <th className={thBase}>Ejec</th>
-                            <th className={`${thBase} font-semibold text-zinc-500`}>Σ</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-100">
-                          {ranked.map(({ reg, sheet }, pos) => {
-                            const standT = f(sheet.standing_difficulty) + f(sheet.standing_execution) + f(sheet.standing_drivers);
-                            const runT   = f(sheet.running_difficulty) + f(sheet.running_execution) + f(sheet.running_drivers);
-                            const jumpT  = f(sheet.jumps_difficulty) + f(sheet.jumps_execution);
-                            const sub    = f(sheet.tumbling_total);
-                            const cre    = f(sheet.creativity_tumbling);
-                            const show   = f(sheet.showmanship_tumbling);
-                            return (
-                              <tr key={reg.id} className={pos === 0 ? 'bg-amber-50' : ''}>
-                                <td className="px-3 py-2.5 font-medium text-zinc-900 pr-4">{reg.team_name}</td>
-                                <td className={`${tdBase} ${sep}`}>{f(sheet.standing_difficulty).toFixed(2)}</td>
-                                <td className={tdBase}>{f(sheet.standing_execution).toFixed(2)}</td>
-                                {hasStandDrivers && <td className={tdBase}>{f(sheet.standing_drivers).toFixed(2)}</td>}
-                                <td className={tdTotal}>{standT.toFixed(2)}</td>
-                                <td className={`${tdBase} ${sep}`}>{f(sheet.running_difficulty).toFixed(2)}</td>
-                                <td className={tdBase}>{f(sheet.running_execution).toFixed(2)}</td>
-                                {hasRunDrivers && <td className={tdBase}>{f(sheet.running_drivers).toFixed(2)}</td>}
-                                <td className={tdTotal}>{runT.toFixed(2)}</td>
-                                <td className={`${tdBase} ${sep}`}>{f(sheet.jumps_difficulty).toFixed(2)}</td>
-                                <td className={tdBase}>{f(sheet.jumps_execution).toFixed(2)}</td>
-                                <td className={tdTotal}>{jumpT.toFixed(2)}</td>
-                                <td className={`${tdBase} ${sep}`}>{cre.toFixed(2)}</td>
-                                <td className={`${tdBase} ${sep}`}>{show.toFixed(2)}</td>
-                                <td className={`px-3 py-2.5 text-right tabular-nums font-semibold text-green-700 ${sep}`}>{sub.toFixed(2)}</td>
-                                <td className={`px-3 py-2.5 text-right tabular-nums font-bold text-zinc-900 ${sep}`}>{(sub + cre + show).toFixed(2)}</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
+              // th helpers
+              const thSec1 = (cs: number, label: string, cls: string) =>
+                <th colSpan={cs} className={`px-3 py-1.5 text-center text-xs font-bold uppercase tracking-wide border-b border-zinc-100 border-l border-zinc-200 ${cls}`}>{label}</th>;
+              const thGrp = (cs: number, label: string, cls: string) =>
+                <th colSpan={cs} className={`px-3 py-1 text-center text-xs font-semibold uppercase tracking-wide border-b border-zinc-100 border-l border-zinc-200 ${cls}`}>{label}</th>;
+              const thCol = (label: string, extra = '') =>
+                <th className={`px-2 py-1 text-right text-xs font-medium text-zinc-400 bg-zinc-50 border-b border-zinc-200 ${extra}`}>{label}</th>;
+              const thColSep = (label: string) => thCol(label, 'border-l border-zinc-200');
+              const thSubtot = (label: string, cls: string) =>
+                <th rowSpan={2} className={`px-3 py-1 text-right text-xs font-semibold border-b border-zinc-200 border-l border-zinc-200 align-bottom ${cls}`}>{label}</th>;
 
-                {/* Overall breakdown */}
-                {hasOverallDetail && (
-                  <div className="flex flex-col gap-2">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-purple-500 flex items-center gap-1.5">
-                      <Star className="h-3 w-3" /> Planilla — General
-                    </p>
-                    <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
-                      <table className="w-full text-sm whitespace-nowrap">
-                        <thead>
-                          <tr>
-                            <th rowSpan={2} className={`${thSpan} text-left pr-4 pl-3`}>Equipo</th>
-                            <th colSpan={2} className={`${thGroup} ${sep}`}>Danza</th>
-                            <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Formaciones</th>
-                            <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Cre.</th>
-                            <th rowSpan={2} className={`${thSpan} text-right ${sep}`}>Show.</th>
-                            <th rowSpan={2} className={`${thSpan} text-right font-bold text-purple-700 ${sep}`}>Subtotal</th>
-                            <th rowSpan={2} className={`${thSpan} text-right font-bold text-zinc-800 ${sep}`}>Total</th>
-                          </tr>
-                          <tr>
-                            <th className={`${thBase} ${sep}`}>Dif</th>
-                            <th className={thBase}>Ejec</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-100">
-                          {ranked.map(({ reg, sheet }, pos) => {
-                            const sub  = f(sheet.overall_total);
-                            const cre  = f(sheet.creativity_overall);
-                            const show = f(sheet.showmanship_overall);
-                            return (
-                              <tr key={reg.id} className={pos === 0 ? 'bg-amber-50' : ''}>
-                                <td className="px-3 py-2.5 font-medium text-zinc-900 pr-4">{reg.team_name}</td>
-                                <td className={`${tdBase} ${sep}`}>{f(sheet.dance_difficulty).toFixed(2)}</td>
-                                <td className={tdBase}>{f(sheet.dance_execution).toFixed(2)}</td>
-                                <td className={`${tdBase} ${sep}`}>{f(sheet.formations_score).toFixed(2)}</td>
-                                <td className={`${tdBase} ${sep}`}>{cre.toFixed(2)}</td>
-                                <td className={`${tdBase} ${sep}`}>{show.toFixed(2)}</td>
-                                <td className={`px-3 py-2.5 text-right tabular-nums font-semibold text-purple-700 ${sep}`}>{sub.toFixed(2)}</td>
-                                <td className={`px-3 py-2.5 text-right tabular-nums font-bold text-zinc-900 ${sep}`}>{(sub + cre + show).toFixed(2)}</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
+              // td helpers
+              const td  = (v: number) => <td className="px-2 py-2.5 text-right tabular-nums text-zinc-600">{v.toFixed(2)}</td>;
+              const tdS = (v: number) => <td className="px-2 py-2.5 text-right tabular-nums text-zinc-600 border-l border-zinc-200">{v.toFixed(2)}</td>;
+              const tdΣ = (v: number) => <td className="px-2 py-2.5 text-right tabular-nums font-medium text-zinc-800 bg-zinc-50">{v.toFixed(2)}</td>;
 
-                {/* Deductions breakdown */}
-                {(() => {
-                  const CAIDAS = ['x', 'ca', 'csa', 'ec', 'cc', 'csc'];
-                  const TIEMPO = ['tiempo', 'tiempo_grave'];
-                  const hasDedDetail = ranked.some(({ sheet }) =>
-                    sheet.deductions.some(d => [...CAIDAS, ...TIEMPO].includes(d.deduction_type))
-                  );
-                  if (!hasDedDetail) return null;
-                  const sumT = (deds: typeof ranked[0]['sheet']['deductions'], types: string[]) =>
-                    deds.filter(d => types.includes(d.deduction_type)).reduce((s, d) => s + parseFloat(d.total_amount), 0);
-                  return (
-                    <div className="flex flex-col gap-2">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-red-500 flex items-center gap-1.5">
-                        <CircleMinus className="h-3 w-3" /> Planilla — Descuentos (Caídas / Tiempo)
-                      </p>
-                      <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
-                        <table className="w-full text-sm whitespace-nowrap">
-                          <thead>
-                            <tr className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium uppercase tracking-wide text-zinc-500">
-                              <th className="px-3 py-2 text-left">Equipo</th>
-                              <th className="px-3 py-2 text-right">Caídas</th>
-                              <th className="px-3 py-2 text-right">Tiempo</th>
-                              <th className="px-3 py-2 text-right font-bold text-red-600">Total Desc.</th>
+              return (
+                <div className="flex flex-col gap-2">
+                  <h2 className="text-base font-semibold text-zinc-900">
+                    Desglose por planilla <span className="font-normal text-zinc-400">({ranked.length} calificados)</span>
+                  </h2>
+                  <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+                    <table className="w-full text-sm whitespace-nowrap">
+                      <thead>
+                        {/* ── Fila 1: secciones de planilla ── */}
+                        <tr>
+                          <th rowSpan={3} className={`${thSpan} text-left pl-3 pr-4`}>Equipo</th>
+                          {hasBuildingDetail  && thSec1(elevCols,  'Elevaciones', 'bg-blue-50 text-blue-700')}
+                          {hasTumblingDetail  && thSec1(gimCols,   'Gimnasia',    'bg-green-50 text-green-700')}
+                          {hasOverallDetail   && thSec1(genCols,   'General',     'bg-purple-50 text-purple-700')}
+                          {hasCreativity      && <th rowSpan={3} className={`${thSpan} text-right border-l border-zinc-200`}>Cre.<br/><span className="font-normal normal-case">(prom.)</span></th>}
+                          {hasShowmanship     && <th rowSpan={3} className={`${thSpan} text-right border-l border-zinc-200`}>Show.<br/><span className="font-normal normal-case">(prom.)</span></th>}
+                          {hasDed             && <th rowSpan={3} className={`${thSpan} text-right text-red-600 border-l border-zinc-200`}>Desc.</th>}
+                          {hasSafety          && <th rowSpan={3} className={`${thSpan} text-right text-amber-600 border-l border-zinc-200`}>Reglas</th>}
+                          <th rowSpan={3} className={`${thSpan} text-right font-bold text-zinc-900 border-l border-zinc-200`}>Total</th>
+                        </tr>
+                        {/* ── Fila 2: grupos dentro de cada sección ── */}
+                        <tr>
+                          {hasBuildingDetail && <>
+                            {thGrp(4,         'Stunt',            'bg-blue-50 text-blue-600')}
+                            {thGrp(pyrCols,   'Pirámides',        'bg-blue-50 text-blue-600')}
+                            {thGrp(3,         'Lanzamientos',     'bg-blue-50 text-blue-600')}
+                            {thSubtot('Sub.', 'text-blue-600 bg-blue-50')}
+                          </>}
+                          {hasTumblingDetail && <>
+                            {thGrp(standCols, 'Estática',         'bg-green-50 text-green-600')}
+                            {thGrp(runCols,   'Con Carrera',      'bg-green-50 text-green-600')}
+                            {thGrp(3,         'Saltos',           'bg-green-50 text-green-600')}
+                            {thSubtot('Sub.', 'text-green-600 bg-green-50')}
+                          </>}
+                          {hasOverallDetail && <>
+                            {thGrp(2,         'Danza',            'bg-purple-50 text-purple-600')}
+                            <th rowSpan={2} className="px-3 py-1 text-right text-xs font-semibold border-b border-zinc-200 border-l border-zinc-200 align-bottom bg-purple-50 text-purple-600">Form.</th>
+                            {thSubtot('Sub.', 'text-purple-600 bg-purple-50')}
+                          </>}
+                        </tr>
+                        {/* ── Fila 3: sub-columnas detalle ── */}
+                        <tr>
+                          {hasBuildingDetail && <>
+                            {thColSep('Dif')}{thCol('Ejec')}{thCol('Dr')}{thΣ()}
+                            {thColSep('Dif')}{thCol('Ejec')}{hasPyrDrivers && thCol('Dr')}{thΣ()}
+                            {thColSep('Dif')}{thCol('Ejec')}{thΣ()}
+                          </>}
+                          {hasTumblingDetail && <>
+                            {thColSep('Dif')}{thCol('Ejec')}{hasStandDrivers && thCol('Dr')}{thΣ()}
+                            {thColSep('Dif')}{thCol('Ejec')}{hasRunDrivers   && thCol('Dr')}{thΣ()}
+                            {thColSep('Dif')}{thCol('Ejec')}{thΣ()}
+                          </>}
+                          {hasOverallDetail && <>
+                            {thColSep('Dif')}{thCol('Ejec')}
+                          </>}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-100">
+                        {ranked.map(({ reg, sheet }, pos) => {
+                          const stuntsT = f(sheet.stunts_difficulty)  + f(sheet.stunts_execution)  + f(sheet.stunts_drivers);
+                          const pyrT    = f(sheet.pyramids_difficulty) + f(sheet.pyramids_execution) + f(sheet.pyramids_drivers);
+                          const tossesT = f(sheet.tosses_difficulty)   + f(sheet.tosses_execution);
+                          const standT  = f(sheet.standing_difficulty) + f(sheet.standing_execution) + f(sheet.standing_drivers);
+                          const runT    = f(sheet.running_difficulty)  + f(sheet.running_execution)  + f(sheet.running_drivers);
+                          const jumpT   = f(sheet.jumps_difficulty)    + f(sheet.jumps_execution);
+                          const desc    = sumDed(sheet.deductions, [...CAIDAS, ...TIEMPO]);
+                          const reglas  = sumDed(sheet.deductions, [...ILEGALES, ...ADMIN]);
+                          return (
+                            <tr key={reg.id} className={pos === 0 ? 'bg-amber-50' : ''}>
+                              <td className="px-3 py-2.5 font-medium text-zinc-900 pr-4">{reg.team_name}</td>
+                              {hasBuildingDetail && <>
+                                {tdS(f(sheet.stunts_difficulty))}{td(f(sheet.stunts_execution))}{td(f(sheet.stunts_drivers))}{tdΣ(stuntsT)}
+                                {tdS(f(sheet.pyramids_difficulty))}{td(f(sheet.pyramids_execution))}{hasPyrDrivers && td(f(sheet.pyramids_drivers))}{tdΣ(pyrT)}
+                                {tdS(f(sheet.tosses_difficulty))}{td(f(sheet.tosses_execution))}{tdΣ(tossesT)}
+                                <td className="px-2 py-2.5 text-right tabular-nums font-semibold text-blue-700 border-l border-zinc-200">{f(sheet.building_total).toFixed(2)}</td>
+                              </>}
+                              {hasTumblingDetail && <>
+                                {tdS(f(sheet.standing_difficulty))}{td(f(sheet.standing_execution))}{hasStandDrivers && td(f(sheet.standing_drivers))}{tdΣ(standT)}
+                                {tdS(f(sheet.running_difficulty))}{td(f(sheet.running_execution))}{hasRunDrivers && td(f(sheet.running_drivers))}{tdΣ(runT)}
+                                {tdS(f(sheet.jumps_difficulty))}{td(f(sheet.jumps_execution))}{tdΣ(jumpT)}
+                                <td className="px-2 py-2.5 text-right tabular-nums font-semibold text-green-700 border-l border-zinc-200">{f(sheet.tumbling_total).toFixed(2)}</td>
+                              </>}
+                              {hasOverallDetail && <>
+                                {tdS(f(sheet.dance_difficulty))}{td(f(sheet.dance_execution))}
+                                <td className="px-2 py-2.5 text-right tabular-nums text-zinc-600 border-l border-zinc-200">{f(sheet.formations_score).toFixed(2)}</td>
+                                <td className="px-2 py-2.5 text-right tabular-nums font-semibold text-purple-700 border-l border-zinc-200">{f(sheet.overall_total).toFixed(2)}</td>
+                              </>}
+                              {hasCreativity   && <td className="px-3 py-2.5 text-right tabular-nums text-zinc-600 border-l border-zinc-200">{f(sheet.avg_creativity).toFixed(2)}</td>}
+                              {hasShowmanship  && <td className="px-3 py-2.5 text-right tabular-nums text-zinc-600 border-l border-zinc-200">{f(sheet.avg_showmanship).toFixed(2)}</td>}
+                              {hasDed          && <td className="px-3 py-2.5 text-right tabular-nums font-medium text-red-600 border-l border-zinc-200">{desc   > 0 ? `-(${desc.toFixed(2)})`   : '—'}</td>}
+                              {hasSafety       && <td className="px-3 py-2.5 text-right tabular-nums font-medium text-amber-600 border-l border-zinc-200">{reglas > 0 ? `-(${reglas.toFixed(2)})` : '—'}</td>}
+                              <td className="px-3 py-2.5 text-right tabular-nums font-bold text-zinc-900 border-l border-zinc-200">{f(sheet.final_score).toFixed(2)}</td>
                             </tr>
-                          </thead>
-                          <tbody className="divide-y divide-zinc-100">
-                            {ranked.map(({ reg, sheet }, pos) => {
-                              const caidas = sumT(sheet.deductions, CAIDAS);
-                              const tiempo = sumT(sheet.deductions, TIEMPO);
-                              return (
-                                <tr key={reg.id} className={pos === 0 ? 'bg-amber-50' : ''}>
-                                  <td className="px-3 py-2.5 font-medium text-zinc-900">{reg.team_name}</td>
-                                  <td className="px-3 py-2.5 text-right tabular-nums text-red-600">{caidas > 0 ? `-${caidas.toFixed(2)}` : '—'}</td>
-                                  <td className="px-3 py-2.5 text-right tabular-nums text-red-600">{tiempo > 0 ? `-${tiempo.toFixed(2)}` : '—'}</td>
-                                  <td className="px-3 py-2.5 text-right tabular-nums font-bold text-red-700">{(caidas + tiempo) > 0 ? `-(${(caidas + tiempo).toFixed(2)})` : '—'}</td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  );
-                })()}
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
 
-                {/* Safety rules breakdown */}
-                {(() => {
-                  const ILEGALES = ['pi', 'eap', 'rg', 'gfn', 'bfn', 'seg'];
-                  const ADMIN    = ['ad', 'div'];
-                  const hasSafetyDetail = ranked.some(({ sheet }) =>
-                    sheet.deductions.some(d => [...ILEGALES, ...ADMIN].includes(d.deduction_type))
-                  );
-                  if (!hasSafetyDetail) return null;
-                  const sumT = (deds: typeof ranked[0]['sheet']['deductions'], types: string[]) =>
-                    deds.filter(d => types.includes(d.deduction_type)).reduce((s, d) => s + parseFloat(d.total_amount), 0);
-                  return (
-                    <div className="flex flex-col gap-2">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-amber-500 flex items-center gap-1.5">
-                        <ShieldCheck className="h-3 w-3" /> Planilla — Reglas y Seguridad
-                      </p>
-                      <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
-                        <table className="w-full text-sm whitespace-nowrap">
-                          <thead>
-                            <tr className="border-b border-zinc-200 bg-zinc-50 text-xs font-medium uppercase tracking-wide text-zinc-500">
-                              <th className="px-3 py-2 text-left">Equipo</th>
-                              <th className="px-3 py-2 text-right">Ilegales</th>
-                              <th className="px-3 py-2 text-right">Admin</th>
-                              <th className="px-3 py-2 text-right font-bold text-red-600">Total Desc.</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-zinc-100">
-                            {ranked.map(({ reg, sheet }, pos) => {
-                              const ileg  = sumT(sheet.deductions, ILEGALES);
-                              const admin = sumT(sheet.deductions, ADMIN);
-                              return (
-                                <tr key={reg.id} className={pos === 0 ? 'bg-amber-50' : ''}>
-                                  <td className="px-3 py-2.5 font-medium text-zinc-900">{reg.team_name}</td>
-                                  <td className="px-3 py-2.5 text-right tabular-nums text-red-600">{ileg > 0 ? `-${ileg.toFixed(2)}` : '—'}</td>
-                                  <td className="px-3 py-2.5 text-right tabular-nums text-red-600">{admin > 0 ? `-${admin.toFixed(2)}` : '—'}</td>
-                                  <td className="px-3 py-2.5 text-right tabular-nums font-bold text-red-700">{(ileg + admin) > 0 ? `-(${(ileg + admin).toFixed(2)})` : '—'}</td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
+              // helper inline para la fila 3 (Σ sin separador izquierdo)
+              function thΣ() {
+                return <th className="px-2 py-1 text-right text-xs font-semibold text-zinc-500 bg-zinc-50 border-b border-zinc-200">Σ</th>;
+              }
+            })()}
 
             {/* SECTION 2: Ranking final */}
             <div className="flex flex-col gap-3">
