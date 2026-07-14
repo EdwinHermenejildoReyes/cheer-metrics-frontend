@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Trophy, Building2, Users, LogOut, Landmark, UserCog, User as UserIcon, ClipboardList, LayoutDashboard, ImageIcon, Settings, Receipt, Monitor, Upload, Link2 } from 'lucide-react';
+import { Trophy, Building2, Users, LogOut, Landmark, UserCog, User as UserIcon, ClipboardList, LayoutDashboard, ImageIcon, Settings, Receipt, Monitor, Upload, Link2, Mail } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
@@ -22,6 +22,7 @@ const ADMIN_NAV = [
 ];
 
 const SETTINGS_NAV = [
+  { href: '/invitations',       label: 'Invitaciones',    icon: Mail },
   { href: '/hero-images',       label: 'Carrusel',        icon: ImageIcon },
   { href: '/settings/branding', label: 'Paleta de colores', icon: Settings },
 ];

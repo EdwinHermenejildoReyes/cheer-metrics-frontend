@@ -56,7 +56,7 @@ uv add <package>
 
 **User approval flow** — After registration users have `is_approved=False` and are redirected to `/pending`. An admin must approve them via `POST /api/v1/users/<id>/approve/` before they can access the app.
 
-**API** — All endpoints are under `/api/v1/`. Djoser handles `/api/v1/auth/` (register, password reset). Custom views (not Djoser) handle `/api/v1/auth/login/`, `/api/v1/auth/token/refresh/`, and `/api/v1/auth/logout/` for cookie management. Default DRF pagination: 25 items/page with `DjangoFilterBackend`.
+**API** — All endpoints are under `/api/v1/`. Djoser handles `/api/v1/auth/` (register, password reset). Custom views (not Djoser) handle `/api/v1/auth/login/`, `/api/v1/auth/token/refresh/`, and `/api/v1/auth/logout/` for cookie management. Default DRF pagination: 25 items/page (`page_size` query param, max 1000) with `DjangoFilterBackend`. Custom throttle scopes: `login` (10/min) applied to the login view, `wizard` (120/min) applied to all wizard endpoints.
 
 **Permission classes** — `apps.api.permissions` defines four classes: `IsApproved` (rejects unapproved accounts — applied as default on most ViewSets), `IsStaffOrOrgAdmin` (allows `is_staff=True` or `role=org_admin`), `IsOwnerOrAdmin` (allows admins or the object's `created_by` user), and `IsActiveJudgeForCompetition`. Judge access is determined by `JudgeAssignment.access_from` / `access_until` timestamps when set; falls back to `Competition.is_active` when both are null. The canonical logic is `_is_judge_access_active()` in `apps/api/permissions.py`.
 
@@ -158,6 +158,10 @@ NEXT_PUBLIC_WEB_URL=http://localhost:3000/
 
 **Backstage** — `/competitions/[id]/backstage` is a dashboard-only page for performance check-in: it shows all confirmed registrations with athlete count and performance order, letting staff verify team size against `Registration.athlete_count`.
 
+**Assignments** — `/assignments` is a judge-facing dashboard page that lists all `JudgeAssignment` records for the current user, grouped by competition, with quick links to each assigned score sheet type.
+
+**Billing (top-level)** — `/billing` is an admin-facing summary page across all competitions, distinct from the per-competition `/competitions/[id]/billing` and per-gym `/competitions/[id]/billing/[gymId]` pages.
+
 **Public routes** — `/` (landing with `HeroCarousel`), `/schedule` (running order), `/registro` (self-registration wizard, token-gated), and `/results/[regId]` (public score result for a registration) live outside `(dashboard)/` and require no authentication.
 
 **Server vs. Client Components** — Prefer Server Components by default; use `"use client"` only when interactivity or browser APIs are required.
@@ -195,7 +199,7 @@ Mailpit (dev email) :8026
 ```
 
 - The backend exposes a pure REST API; Django renders no frontend pages.
-- Cookie-based JWT means CSRF protection must be active for mutating endpoints (SameSite=Lax).
+- Cookie-based JWT means CSRF protection must be active for mutating endpoints (`JWT_COOKIE_SAMESITE = 'Strict'`).
 
 ## Reference Docs
 

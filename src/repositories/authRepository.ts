@@ -15,6 +15,38 @@ interface SignUpBody {
   organization?: number | null;
 }
 
+interface RegisterWithInvitationBody {
+  token: string;
+  first_name: string;
+  last_name: string;
+  password: string;
+  re_password: string;
+}
+
+export interface InvitationPayload {
+  email: string;
+  role: string;
+  organization?: number | null;
+}
+
+export interface Invitation {
+  id: number;
+  email: string;
+  role: string;
+  organization: number | null;
+  token: string;
+  accepted: boolean;
+  expires_at: string;
+  is_valid: boolean;
+  created_at: string;
+}
+
+export interface InvitationValidation {
+  email: string;
+  role: string;
+  organization: number | null;
+}
+
 interface ResetPasswordConfirmBody {
   uid: string;
   token: string;
@@ -58,6 +90,19 @@ class AuthRepository {
 
   resetPasswordConfirm = (body: ResetPasswordConfirmBody) =>
     api.post('/auth/users/reset_password_confirm/', body);
+
+  validateInvitation = (token: string) =>
+    api.get<InvitationValidation>(`/invitations/validate/?token=${token}`);
+
+  registerWithInvitation = (body: RegisterWithInvitationBody) =>
+    api.post('/auth/register/', body);
+
+  listInvitations = () => api.get<{ results: Invitation[] }>('/invitations/');
+
+  createInvitation = (body: InvitationPayload) =>
+    api.post<Invitation>('/invitations/', body);
+
+  deleteInvitation = (id: number) => api.delete(`/invitations/${id}/`);
 }
 
 export default new AuthRepository();
