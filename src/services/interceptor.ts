@@ -14,6 +14,7 @@ const shouldIntercept = (error: AxiosError): boolean => {
     url.includes('/auth/login/') ||
     url.includes('/auth/token/refresh/') ||
     url.includes('/auth/logout/') ||
+    url.includes('/auth/users/me/') ||
     url.includes('/settings/branding/') ||
     /\/auth\/users\/?$/.test(url)
   );
