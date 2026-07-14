@@ -44,8 +44,10 @@ export function RegistrationModal({ open, onClose, onSaved, divisionId, initial 
   });
 
   useEffect(() => {
-    competitionsRepository.listTeams({ page_size: '200' }).then((res) => setTeams(res.data.results));
-  }, []);
+    if (!isEdit) {
+      competitionsRepository.listTeams({ page_size: '200' }).then((res) => setTeams(res.data.results));
+    }
+  }, [isEdit]);
 
   useEffect(() => {
     if (open) {
@@ -76,15 +78,23 @@ export function RegistrationModal({ open, onClose, onSaved, divisionId, initial 
   return (
     <Modal open={open} onClose={onClose} title={isEdit ? 'Editar inscripción' : 'Inscribir equipo'}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-        <Select
-          label="Equipo"
-          id="team"
-          options={teamOptions}
-          placeholder="Seleccionar equipo..."
-          error={errors.team?.message}
-          disabled={isEdit}
-          {...register('team')}
-        />
+        {isEdit ? (
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-plt-text">Equipo</span>
+            <div className="flex h-9 items-center rounded-lg border border-plt-border bg-plt-surface px-3 text-sm text-plt-muted">
+              {initial!.team_name}
+            </div>
+          </div>
+        ) : (
+          <Select
+            label="Equipo"
+            id="team"
+            options={teamOptions}
+            placeholder="Seleccionar equipo..."
+            error={errors.team?.message}
+            {...register('team')}
+          />
+        )}
         <div className="grid grid-cols-2 gap-3">
           <Select
             label="Estado"

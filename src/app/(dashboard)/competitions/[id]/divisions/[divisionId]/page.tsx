@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, Link2, ChevronsUp, RotateCw, Star, CircleMinus, Gauge, Users2, TrendingUp, BadgeCheck, Sparkles, Timer, ShieldCheck, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, Link2, ChevronsUp, RotateCw, Star, CircleMinus, Gauge, Users2, TrendingUp, BadgeCheck, Sparkles, Timer, ShieldCheck, ChevronUp, ChevronDown, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -168,6 +168,27 @@ export default function DivisionDetailPage() {
     }
   };
 
+  const handleMoveReg = async (reg: Registration, direction: 'up' | 'down') => {
+    try {
+      await competitionsRepository.moveRegistration(reg.public_id, direction);
+      setRegistrations((prev) => {
+        const delta = direction === 'up' ? -1 : 1;
+        const updated = prev.map((r) => {
+          if (r.id === reg.id) return { ...r, performance_order: (r.performance_order ?? 0) + delta };
+          if (r.performance_order === (reg.performance_order ?? 0) + delta) return { ...r, performance_order: reg.performance_order };
+          return r;
+        });
+        return [...updated].sort((a, b) => {
+          if (a.performance_order == null) return 1;
+          if (b.performance_order == null) return -1;
+          return a.performance_order - b.performance_order;
+        });
+      });
+    } catch {
+      toast.error('No se pudo mover la inscripción');
+    }
+  };
+
   const handleScoreSaved = (sheet: ScoreSheet) => {
     setScoreSheets((prev) => ({ ...prev, [sheet.registration]: sheet }));
   };
@@ -295,7 +316,7 @@ export default function DivisionDetailPage() {
                       }
                     }}
                   >
-                    <span className="w-6 text-center text-sm font-medium text-zinc-400">{idx + 1}</span>
+                    <span className="w-6 text-center text-sm font-medium text-zinc-400">{reg.performance_order ?? idx + 1}</span>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-zinc-900 truncate">{reg.team_name}</p>
                       <p className="text-xs text-zinc-500">{reg.gym_name}</p>
@@ -303,9 +324,6 @@ export default function DivisionDetailPage() {
                     <Badge variant={STATUS_VARIANT[reg.status]}>
                       {REGISTRATION_STATUS_LABELS[reg.status]}
                     </Badge>
-                    {reg.performance_order && (
-                      <span className="text-xs text-zinc-400">Salida #{reg.performance_order}</span>
-                    )}
                     {sheet ? (
                       <div className="text-right">
                         <p className="text-sm font-semibold text-zinc-900 tabular-nums">
@@ -502,6 +520,12 @@ export default function DivisionDetailPage() {
                       )}
                       {!isJudge && (
                         <>
+                          <Button size="icon" variant="ghost" title="Mover arriba" disabled={idx === 0} onClick={() => handleMoveReg(reg, 'up')}>
+                            <ChevronUp className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="icon" variant="ghost" title="Mover abajo" disabled={idx === registrations.length - 1} onClick={() => handleMoveReg(reg, 'down')}>
+                            <ChevronDown className="h-3.5 w-3.5" />
+                          </Button>
                           <Button size="icon" variant="ghost" onClick={() => { setEditingReg(reg); setRegModalOpen(true); }}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>

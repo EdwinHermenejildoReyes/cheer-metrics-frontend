@@ -237,6 +237,9 @@ class CompetitionsRepository {
   deleteRegistration = (id: string) =>
     api.delete(`/registrations/${id}/`);
 
+  moveRegistration = (id: string, direction: 'up' | 'down') =>
+    api.post<Registration>(`/registrations/${id}/move/`, { direction });
+
   // Score sheets
   listScoreSheets = (params?: Record<string, string>) =>
     api.get<PaginatedResponse<ScoreSheet>>('/score-sheets/', { params });
