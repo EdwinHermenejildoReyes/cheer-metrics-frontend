@@ -208,6 +208,8 @@ export interface Registration {
   performance_order: number | null;
   athlete_count:      number | null;
   male_athlete_count: number | null;
+  contact_email: string | null;
+  contact_phone: string | null;
   is_enable: boolean;
   competition_require_payment: boolean;
   unpaid_athletes: UnpaidAthlete[];

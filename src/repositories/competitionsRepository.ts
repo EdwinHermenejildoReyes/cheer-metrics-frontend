@@ -240,6 +240,9 @@ class CompetitionsRepository {
   moveRegistration = (id: string, direction: 'up' | 'down') =>
     api.post<Registration>(`/registrations/${id}/move/`, { direction });
 
+  sendScoreReport = (id: string) =>
+    api.post<{ detail: string }>(`/registrations/${id}/send-report/`);
+
   // Score sheets
   listScoreSheets = (params?: Record<string, string>) =>
     api.get<PaginatedResponse<ScoreSheet>>('/score-sheets/', { params });

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, Link2, ChevronsUp, RotateCw, Star, CircleMinus, Gauge, Users2, TrendingUp, BadgeCheck, Sparkles, Timer, ShieldCheck, ChevronUp, ChevronDown, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, Link2, ChevronsUp, RotateCw, Star, CircleMinus, Gauge, Users2, TrendingUp, BadgeCheck, Sparkles, Timer, ShieldCheck, ChevronUp, ChevronDown, Mail, MessageCircle, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -195,6 +195,16 @@ export default function DivisionDetailPage() {
   };
 
   const handleDeductionSaved = () => { loadSheets(); };
+
+  const handleSendReport = async (reg: Registration) => {
+    try {
+      const res = await competitionsRepository.sendScoreReport(reg.public_id);
+      toast.success(res.data.detail);
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      toast.error(msg ?? 'No se pudo enviar el reporte');
+    }
+  };
 
   const handleDeleteDeduction = async (deductionId: number) => {
     try {
@@ -645,6 +655,32 @@ export default function DivisionDetailPage() {
                         <div className="flex justify-between font-semibold text-zinc-900 text-base">
                           <span>Puntaje final</span>
                           <span className="tabular-nums">{parseFloat(sheet.final_score).toFixed(2)}</span>
+                        </div>
+                      </div>
+
+                      {/* Contact / report */}
+                      <div className="border-t border-zinc-200 pt-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-2">Enviar reporte al coach</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {reg.contact_email ? (
+                            <Button size="sm" variant="outline" onClick={() => handleSendReport(reg)}>
+                              <Mail className="h-3.5 w-3.5" />
+                              {reg.contact_email}
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-zinc-400">Sin correo registrado</span>
+                          )}
+                          {reg.contact_phone && (
+                            <a
+                              href={`https://wa.me/${reg.contact_phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola Coach de ${reg.team_name}! 🏆\n\nTe compartimos el resultado de calificación en *${division?.competition_name ?? ''}*:\n\n📊 Puntaje final: *${parseFloat(sheet.final_score).toFixed(2)}* (${sheet.percentage}%)\n📋 División: ${division?.name ?? ''}\n\nVer desglose completo:\n${window.location.origin}/results/${reg.public_id}`)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:border-green-400 hover:text-green-700 transition-colors"
+                            >
+                              <MessageCircle className="h-3.5 w-3.5 text-green-600" />
+                              WhatsApp
+                            </a>
+                          )}
                         </div>
                       </div>
                     </div>
