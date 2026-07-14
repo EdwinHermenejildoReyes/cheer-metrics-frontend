@@ -9,6 +9,7 @@ import { Modal } from '@/components/ui/modal';
 import { Select } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/hooks/useConfirm';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import type { Registration, Team } from '@/types/competitions';
 
@@ -26,6 +27,7 @@ interface Props {
   onSaved: (registration: Registration) => void;
   divisionId: number;
   initial?: Registration;
+  registrations?: Registration[];
 }
 
 const STATUS_OPTIONS = [
@@ -34,8 +36,9 @@ const STATUS_OPTIONS = [
   { value: 'withdrawn', label: 'Retirada' },
 ];
 
-export function RegistrationModal({ open, onClose, onSaved, divisionId, initial }: Props) {
+export function RegistrationModal({ open, onClose, onSaved, divisionId, initial, registrations }: Props) {
   const isEdit = !!initial;
+  const confirm = useConfirm();
   const [teams, setTeams] = useState<Team[]>([]);
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormValues>({
@@ -63,6 +66,24 @@ export function RegistrationModal({ open, onClose, onSaved, divisionId, initial 
 
   const onSubmit = async (values: FormValues) => {
     try {
+      const newOrder = values.performance_order ?? null;
+      const oldOrder = initial?.performance_order ?? null;
+
+      if (isEdit && newOrder !== null && oldOrder !== null && newOrder !== oldOrder) {
+        const displaced = registrations?.find(
+          (r) => r.performance_order === newOrder && r.id !== initial!.id
+        );
+        const lines = [
+          `${initial!.team_name} pasará del puesto #${oldOrder} al #${newOrder}.`,
+          displaced
+            ? `${displaced.team_name} (actualmente #${newOrder}) pasará al #${oldOrder}.`
+            : null,
+        ].filter(Boolean).join('\n');
+
+        const ok = await confirm({ title: 'Cambiar orden de presentación', message: lines, confirmLabel: 'Confirmar', variant: 'warning' });
+        if (!ok) return;
+      }
+
       const payload = { ...values, division: divisionId } as Partial<Registration> & { division: number };
       const res = isEdit
         ? await competitionsRepository.updateRegistration(initial!.public_id, payload)

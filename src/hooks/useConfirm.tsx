@@ -83,7 +83,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
               {state.title && (
                 <h3 className="text-base font-semibold text-zinc-900 mb-1">{state.title}</h3>
               )}
-              <p className="text-sm text-zinc-500 leading-relaxed">{state.message}</p>
+              <p className="text-sm text-zinc-500 leading-relaxed whitespace-pre-line">{state.message}</p>
             </div>
 
             {/* Actions */}

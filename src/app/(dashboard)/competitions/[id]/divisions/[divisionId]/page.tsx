@@ -155,6 +155,7 @@ export default function DivisionDetailPage() {
         ? prev.map((r) => (r.id === saved.id ? saved : r))
         : [...prev, saved]
     );
+    load();
   };
 
   const handleDeleteReg = async (reg: Registration) => {
@@ -1056,6 +1057,7 @@ export default function DivisionDetailPage() {
         onSaved={handleRegSaved}
         divisionId={division.id}
         initial={editingReg}
+        registrations={registrations}
       />
       <ScoringSheetModal
         open={scoreModalOpen}
