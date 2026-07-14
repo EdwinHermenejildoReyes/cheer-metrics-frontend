@@ -243,6 +243,12 @@ class CompetitionsRepository {
   sendScoreReport = (id: string) =>
     api.post<{ detail: string }>(`/registrations/${id}/send-report/`);
 
+  sendWhatsappReport = (id: string) =>
+    api.post<{ detail: string }>(`/registrations/${id}/send-whatsapp/`);
+
+  downloadPdfReport = (id: string) =>
+    api.get(`/registrations/${id}/pdf-report/`, { responseType: 'blob' });
+
   // Score sheets
   listScoreSheets = (params?: Record<string, string>) =>
     api.get<PaginatedResponse<ScoreSheet>>('/score-sheets/', { params });

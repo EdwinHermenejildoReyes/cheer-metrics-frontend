@@ -97,7 +97,7 @@ python manage.py mark_all_paid --competition <id>   # mark all GymInvoices as pa
 
 **Scheduler / rest validator** — `apps/competitions/scheduler.py` checks that athletes competing in multiple teams have at least `MIN_REST_GAP = 3` performance slots between appearances. Returns `RestConflict` dataclass instances. The public `/schedule` page (outside the dashboard group) renders the running order and surfaces these conflicts.
 
-**Email (dev)** — Mailpit captures outbound email. UI at `http://localhost:8026`; SMTP on port `8025`.
+**Email (dev)** — Mailpit captures outbound email. UI at `http://localhost:8025`; SMTP on `mail:8025` (within Docker network).
 
 **Media files** — User-uploaded files are served by Nginx at `/media/`. Static files are served by Whitenoise.
 
