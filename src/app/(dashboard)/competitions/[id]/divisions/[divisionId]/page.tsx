@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, Link2, ChevronsUp, RotateCw, Star, CircleMinus, Gauge, Users2, TrendingUp, BadgeCheck, Sparkles, Timer, ShieldCheck, ChevronUp, ChevronDown, Mail, MessageCircle, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -116,7 +115,6 @@ export default function DivisionDetailPage() {
   const [deductionModalOpen, setDeductionModalOpen] = useState(false);
   const [deductionSheetId, setDeductionSheetId]     = useState<number | null>(null);
 
-  const [waPreview, setWaPreview] = useState<{ reg: Registration; sheet: ScoreSheet; url: string; msg: string } | null>(null);
 
   const loadSheets = useCallback(async () => {
     const res = await competitionsRepository.listScoreSheets({
@@ -224,7 +222,7 @@ export default function DivisionDetailPage() {
       `Descarga tu reporte en PDF:\n${pdfUrl}\n\n` +
       `Desglose completo:\n${window.location.origin}/results/${reg.public_id}`;
     const url = `https://wa.me/${coachPhone}?text=${encodeURIComponent(msg)}`;
-    setWaPreview({ reg, sheet, url, msg });
+    window.open(url, '_blank');
   };
 
   const handleSendWhatsApp = async (reg: Registration) => {
@@ -277,48 +275,6 @@ export default function DivisionDetailPage() {
 
   return (
     <div className="flex flex-col gap-6 p-8">
-
-      {/* WhatsApp preview modal */}
-      {waPreview && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4" onClick={() => setWaPreview(null)}>
-          <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            {/* Header */}
-            <div className="flex items-center gap-2 bg-[#25D366] px-5 py-4">
-              <MessageCircle className="h-5 w-5 text-white" />
-              <div className="flex-1">
-                <p className="text-white font-semibold text-sm">WhatsApp — {waPreview.reg.team_name}</p>
-                <p className="text-white/80 text-xs">{waPreview.reg.contact_phone}</p>
-              </div>
-              <button onClick={() => setWaPreview(null)} className="text-white/70 hover:text-white">
-                ✕
-              </button>
-            </div>
-
-            {/* Message preview */}
-            <div className="px-5 py-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-2">Mensaje que se enviará</p>
-              <div className="rounded-xl bg-[#dcf8c6] px-4 py-3 text-sm text-zinc-800 whitespace-pre-wrap leading-relaxed font-mono text-xs max-h-64 overflow-y-auto">
-                {waPreview.msg}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-2 px-5 pb-5">
-              <Button variant="outline" className="flex-1" onClick={() => setWaPreview(null)}>
-                Cancelar
-              </Button>
-              <Button
-                className="flex-1 bg-[#25D366] hover:bg-[#20bd5a] text-white"
-                onClick={() => { window.location.href = waPreview.url; }}
-              >
-                <MessageCircle className="h-4 w-4" />
-                Abrir en WhatsApp
-              </Button>
-            </div>
-          </div>
-        </div>,
-        document.body,
-      )}
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
