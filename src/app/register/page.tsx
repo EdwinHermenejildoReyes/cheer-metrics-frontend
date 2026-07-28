@@ -33,7 +33,7 @@ const schema = z
     path: ['re_password'],
   });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.input<typeof schema>;
 
 const ROLE_LABELS: Record<string, string> = {
   org_admin: 'Administrador de organización',
