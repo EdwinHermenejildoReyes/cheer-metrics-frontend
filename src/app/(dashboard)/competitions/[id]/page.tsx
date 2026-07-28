@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList, Receipt, Link as LinkIcon, Copy, Check, Printer } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList, Receipt, Link as LinkIcon, Copy, Check, Printer, Trophy } from 'lucide-react';
 import { PrintButton } from '@/components/print/PrintButton';
 import { Modal } from '@/components/ui/modal';
 import { toast } from 'sonner';
