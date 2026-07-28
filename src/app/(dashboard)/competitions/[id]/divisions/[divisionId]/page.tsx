@@ -34,6 +34,7 @@ function getSheetSlug(sheetType: SheetType, iasfWorld: boolean): string {
     if (sheetType === 'tumbling') return 'iasf-tumbling';
     if (sheetType === 'overall')  return 'iasf-overall';
   }
+  if (sheetType === 'deductions_combined') return 'deducciones';
   return sheetType.replace(/_/g, '-');
 }
 

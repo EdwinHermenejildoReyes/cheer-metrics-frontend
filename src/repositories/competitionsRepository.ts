@@ -141,6 +141,7 @@ import type {
   Competition,
   Division,
   DivisionRankings,
+  GrandChampionData,
   Gym,
   HeroImage,
   JudgeAssignment,
@@ -197,6 +198,9 @@ class CompetitionsRepository {
 
   getDivisionRankings = (id: string) =>
     api.get<DivisionRankings>(`/divisions/${id}/rankings/`);
+
+  getGrandChampion = (competitionId: string) =>
+    api.get<GrandChampionData>(`/competitions/${competitionId}/grand-champion/`);
 
   createDivision = (data: Partial<Division>) =>
     api.post<Division>('/divisions/', data);

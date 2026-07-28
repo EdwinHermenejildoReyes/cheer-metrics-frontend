@@ -68,14 +68,14 @@ export const SCORING_FAMILY_REGULATION: Record<ScoringFamily, string> = {
 };
 
 export const GRUPAL_SHEET_TYPES: SheetType[] = [
-  'building', 'tumbling', 'overall', 'rangos', 'deducciones', 'deductions_only', 'safety_rules',
+  'building', 'tumbling', 'overall', 'rangos', 'deducciones',
 ];
 export const INDIVIDUAL_SHEET_TYPES: SheetType[] = [
   'partner_stunt',
-  'building_difficulty', 'building_execution', 'building_combined',
-  'tumbling_difficulty', 'tumbling_execution', 'tumbling_combined',
+  'building_difficulty', 'building_execution',
+  'tumbling_difficulty', 'tumbling_execution',
   'overall',
-  'deductions_only', 'safety_rules', 'deductions_combined',
+  'deductions_only', 'safety_rules',
   'rangos',
 ];
 
@@ -312,6 +312,25 @@ export interface DivisionRankings {
   entries: RankingEntry[];
 }
 
+export interface GrandChampionEntry {
+  registration_id: number;
+  team_name: string;
+  gym_name: string;
+  division_name: string;
+  raw_score: string;
+  scaled_score: string;
+  total_deductions: string;
+  final_score: string;
+  percentage: string;
+  rank: number;
+}
+
+export interface GrandChampionData {
+  competition_id: number;
+  competition_name: string;
+  entries: GrandChampionEntry[];
+}
+
 export interface HeroImage {
   id: number;
   image: string;
@@ -409,6 +428,17 @@ export const DEDUCTION_AMOUNTS: Record<DeductionType, string> = {
   seg:         '0.50',
   ad:          '3.00',
   div:         '5.00',
+};
+
+export const DEDUCTION_RULE_REFERENCE: Partial<Record<DeductionType, string>> = {
+  pi:  'Guía para la Parte Superior del Uniforme IASF',
+  eap: 'Estándares Atléticos de Presentación IASF',
+  rg:  'Reglas Generales IASF',
+  gfn: 'Gimnasia Fuera de Nivel IASF',
+  bfn: 'Habilidad de Construcción Fuera de Nivel IASF',
+  seg: 'Reglas para Todos los Niveles / Habilidades Restringidas',
+  ad:  'Actitud Antideportiva',
+  div: 'Infracción de División',
 };
 
 export const SCORING_SYSTEM_LABELS: Record<ScoringSystem, string> = {

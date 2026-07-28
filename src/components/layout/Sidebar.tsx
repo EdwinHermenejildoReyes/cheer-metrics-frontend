@@ -12,13 +12,13 @@ import authRepository from '@/repositories/authRepository';
 import { useJudge } from '@/hooks/useJudge';
 
 const ADMIN_NAV = [
-  { href: '/home',          label: 'Inicio',         icon: LayoutDashboard },
-  { href: '/competitions',  label: 'Competencias',   icon: Trophy },
-  { href: '/billing',       label: 'Facturación',    icon: Receipt },
-  { href: '/athletes',      label: 'Atletas',        icon: Users },
-  { href: '/gyms',          label: 'Gimnasios',      icon: Building2 },
-  { href: '/organizations', label: 'Organizaciones', icon: Landmark },
-  { href: '/users',         label: 'Usuarios',       icon: UserCog },
+  { href: '/home',          label: 'Inicio',         icon: LayoutDashboard, staffOnly: false },
+  { href: '/competitions',  label: 'Competencias',   icon: Trophy,          staffOnly: false },
+  { href: '/billing',       label: 'Facturación',    icon: Receipt,         staffOnly: true  },
+  { href: '/athletes',      label: 'Atletas',        icon: Users,           staffOnly: false },
+  { href: '/gyms',          label: 'Gimnasios',      icon: Building2,       staffOnly: false },
+  { href: '/organizations', label: 'Organizaciones', icon: Landmark,        staffOnly: false },
+  { href: '/users',         label: 'Usuarios',       icon: UserCog,         staffOnly: false },
 ];
 
 const SETTINGS_NAV = [
@@ -33,10 +33,10 @@ const JUDGE_NAV = [
 ];
 
 const ADMIN_COMPETITION_SUBNAV = [
-  { slug: 'backstage', label: 'Backstage',       icon: Monitor },
-  { slug: 'import',    label: 'Importar',         icon: Upload },
-  { slug: 'billing',   label: 'Facturación',      icon: Receipt },
-  { slug: 'tokens',    label: 'Links inscripción', icon: Link2 },
+  { slug: 'backstage', label: 'Backstage',        icon: Monitor, staffOnly: false },
+  { slug: 'import',    label: 'Importar',          icon: Upload,  staffOnly: false },
+  { slug: 'billing',   label: 'Facturación',       icon: Receipt, staffOnly: true  },
+  { slug: 'tokens',    label: 'Links inscripción', icon: Link2,   staffOnly: false },
 ];
 
 const JUDGE_COMPETITION_SUBNAV = [
@@ -52,7 +52,7 @@ export function Sidebar() {
   const nav         = isJudge ? JUDGE_NAV : ADMIN_NAV;
   const settingsNav = isAdmin ? SETTINGS_NAV : [];
 
-  const competitionIdMatch = pathname.match(/^\/competitions\/(\d+)/);
+  const competitionIdMatch = pathname.match(/^\/competitions\/([^/]+)/);
   const activeCompetitionId = competitionIdMatch ? competitionIdMatch[1] : null;
   const competitionSubNav   = activeCompetitionId
     ? (isJudge ? JUDGE_COMPETITION_SUBNAV : ADMIN_COMPETITION_SUBNAV)
@@ -102,12 +102,12 @@ export function Sidebar() {
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
-        {nav.map(({ href, label, icon: Icon }) => (
+        {nav.filter((item) => !item.staffOnly || isAdmin).map(({ href, label, icon: Icon }) => (
           <div key={href}>
             {navLink(href, label, Icon)}
             {href === '/competitions' && competitionSubNav.length > 0 && (
               <div className="ml-3 mt-0.5 flex flex-col gap-0.5 border-l border-plt-border pl-3">
-                {competitionSubNav.map(({ slug, label: subLabel, icon: SubIcon }) => {
+                {competitionSubNav.filter((item) => !item.staffOnly || isAdmin).map(({ slug, label: subLabel, icon: SubIcon }) => {
                   const subHref = `/competitions/${activeCompetitionId}/${slug}`;
                   const active  = pathname === subHref || pathname.startsWith(subHref + '/');
                   const activeStyle = active

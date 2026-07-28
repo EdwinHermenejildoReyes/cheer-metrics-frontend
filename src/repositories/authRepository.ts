@@ -19,6 +19,7 @@ interface RegisterWithInvitationBody {
   token: string;
   first_name: string;
   last_name: string;
+  phone?: string;
   password: string;
   re_password: string;
 }

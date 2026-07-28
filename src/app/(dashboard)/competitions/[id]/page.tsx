@@ -16,6 +16,7 @@ import authRepository, { type SimpleUser } from '@/repositories/authRepository';
 import publicRegistrationRepository from '@/repositories/publicRegistrationRepository';
 import getEnvVars from '@/utils/getEnvVars';
 import { useJudge } from '@/hooks/useJudge';
+import { useConfirm } from '@/hooks/useConfirm';
 import { printItineraryPdf, fetchItineraryRegistrations } from '@/lib/exportItinerary';
 import { useBranding } from '@/contexts/BrandingContext';
 import {
@@ -77,6 +78,7 @@ export default function CompetitionDetailPage() {
 
   const { isJudge, isCompetitionActive } = useJudge();
   const { organization } = useBranding();
+  const confirm = useConfirm();
 
   const hasJudging      = competition?.service_type !== 'registration_only';
   const hasRegistration = competition?.service_type !== 'judging_only';
@@ -187,6 +189,8 @@ export default function CompetitionDetailPage() {
   };
 
   const handleDeleteToken = async (tokenId: number) => {
+    const ok = await confirm({ title: '¿Eliminar token?', message: 'El link de inscripción dejará de funcionar.\nEsta acción no se puede deshacer.', confirmLabel: 'Eliminar' });
+    if (!ok) return;
     try {
       await publicRegistrationRepository.deleteToken(tokenId);
       toast.success('Token eliminado');
@@ -236,6 +240,8 @@ export default function CompetitionDetailPage() {
   };
 
   const handleRemoveJudge = async (assignmentId: number) => {
+    const ok = await confirm({ title: '¿Eliminar asignación?', message: 'Esta acción eliminará al juez de la competencia.\nEsta acción no se puede deshacer.', confirmLabel: 'Eliminar' });
+    if (!ok) return;
     try {
       await competitionsRepository.deleteJudgeAssignment(assignmentId);
       toast.success('Asignación eliminada');
@@ -323,6 +329,14 @@ export default function CompetitionDetailPage() {
               >
                 <ListOrdered className="h-3.5 w-3.5" />
                 {assigningOrders ? 'Generando…' : 'Generar itinerario'}
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => router.push(`/competitions/${id}/grand-champion`)}
+              >
+                <Trophy className="h-3.5 w-3.5" />
+                Gran Campeón
               </Button>
               <Button
                 variant="secondary"

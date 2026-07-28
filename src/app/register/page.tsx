@@ -14,10 +14,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import authRepository, { type InvitationValidation } from '@/repositories/authRepository';
 
+const PHONE_RE = /^\+?\d{7,15}$/;
+
 const schema = z
   .object({
     first_name:  z.string().min(1, 'Requerido'),
     last_name:   z.string().min(1, 'Requerido'),
+    phone:       z
+      .string()
+      .optional()
+      .transform((v) => v?.replace(/[\s\-\(\)]/g, '') ?? '')
+      .refine((v) => !v || PHONE_RE.test(v), 'Ingresa un número de teléfono válido'),
     password:    z.string().min(8, 'Mínimo 8 caracteres'),
     re_password: z.string().min(1, 'Requerido'),
   })
@@ -87,7 +94,7 @@ export default function RegisterPage() {
       }
       const fieldMap: Record<string, keyof FormValues> = {
         first_name: 'first_name', last_name: 'last_name',
-        password: 'password', re_password: 're_password',
+        phone: 'phone', password: 'password', re_password: 're_password',
       };
       let hasFieldError = false;
       for (const [key, field] of Object.entries(fieldMap)) {
@@ -124,7 +131,7 @@ export default function RegisterPage() {
       <div className="pointer-events-none absolute -bottom-32 -left-32 h-[28rem] w-[28rem] rounded-full bg-indigo-500 opacity-25 blur-3xl" />
       <div className="pointer-events-none absolute top-1/2 left-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400 opacity-15 blur-3xl" />
 
-      <div className="relative z-10 w-full max-w-sm">
+      <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold tracking-tight text-white drop-shadow-lg">Cheer Metrics</h1>
           <p className="mt-2 text-sm text-white/70">Crear cuenta</p>
@@ -187,6 +194,14 @@ export default function RegisterPage() {
                   {...register('last_name')}
                 />
               </div>
+              <Input
+                label="Teléfono"
+                id="phone"
+                type="tel"
+                placeholder="+593 99 999 9999"
+                error={errors.phone?.message}
+                {...register('phone')}
+              />
               <Input
                 label="Contraseña"
                 id="password"

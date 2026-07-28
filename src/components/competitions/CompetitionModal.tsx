@@ -10,8 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { useSelector } from 'react-redux';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { SCORING_FAMILY_REGULATION, type Competition, type Organization, type ScoringFamily } from '@/types/competitions';
+import type { RootState } from '@/core/rootReducer';
 
 const schema = z.object({
   name:           z.string().min(2, 'Mínimo 2 caracteres'),
@@ -20,6 +22,7 @@ const schema = z.object({
   city:           z.string().min(2, 'Requerido'),
   scoring_family: z.enum(['united', 'iasf_567', 'icu', 'partner_stunt', 'future_flyer', 'best_cheer']),
   service_type:   z.enum(['full', 'registration_only', 'judging_only']),
+  sheet_mode:     z.enum(['grupal', 'individual']),
   notes:          z.string().optional(),
   organization:   z.string().optional(),
   require_payment: z.boolean().optional(),
@@ -49,24 +52,32 @@ const SERVICE_TYPE_OPTIONS = [
   { value: 'judging_only',      label: 'Solo Jueceo' },
 ];
 
+const SHEET_MODE_OPTIONS = [
+  { value: 'grupal',     label: 'Grupal (construcción, tumbling, overall…)' },
+  { value: 'individual', label: 'Individual (dificultad / ejecución separados)' },
+];
+
 const DEFAULT_VALUES: Partial<FormValues> = {
   scoring_family: 'united',
   service_type: 'full',
+  sheet_mode: 'grupal',
   name: '', date: '', venue: '', city: '', notes: '', organization: '',
 };
 
 export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
   const isEdit = !!initial;
+  const user   = useSelector((s: RootState) => s.auth.user);
   const [orgs, setOrgs] = useState<Organization[]>([]);
 
   const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: initial
-      ? { ...initial, scoring_family: (initial.scoring_family ?? 'united') as ScoringFamily, organization: initial.organization ? String(initial.organization) : '' }
+      ? { ...initial, scoring_family: (initial.scoring_family ?? 'united') as ScoringFamily, sheet_mode: (initial.sheet_mode ?? 'grupal') as 'grupal' | 'individual', organization: initial.organization ? String(initial.organization) : '' }
       : DEFAULT_VALUES,
   });
 
   const scoringFamily = useWatch({ control, name: 'scoring_family' });
+  const serviceType   = useWatch({ control, name: 'service_type' });
   const derivedRegulation = scoringFamily ? SCORING_FAMILY_REGULATION[scoringFamily] : null;
 
   useEffect(() => {
@@ -77,13 +88,14 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
 
   useEffect(() => {
     if (open) {
+      const defaultOrg = user?.role === 'org_admin' && user.organization ? String(user.organization) : '';
       reset(
         initial
-          ? { ...initial, scoring_family: (initial.scoring_family ?? 'united') as ScoringFamily, organization: initial.organization ? String(initial.organization) : '' }
-          : DEFAULT_VALUES,
+          ? { ...initial, scoring_family: (initial.scoring_family ?? 'united') as ScoringFamily, sheet_mode: (initial.sheet_mode ?? 'grupal') as 'grupal' | 'individual', organization: initial.organization ? String(initial.organization) : defaultOrg }
+          : { ...DEFAULT_VALUES, organization: defaultOrg },
       );
     }
-  }, [open, initial, reset]);
+  }, [open, initial, reset, user]);
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -139,6 +151,15 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
           error={errors.service_type?.message}
           {...register('service_type')}
         />
+        {serviceType !== 'registration_only' && (
+          <Select
+            label="Modo de planillas"
+            id="sheet_mode"
+            options={SHEET_MODE_OPTIONS}
+            error={errors.sheet_mode?.message}
+            {...register('sheet_mode')}
+          />
+        )}
         <Input label="Sede" id="venue" placeholder="Coliseo Mayor" error={errors.venue?.message} {...register('venue')} />
         <Input label="Ciudad" id="city" placeholder="Quito" error={errors.city?.message} {...register('city')} />
         <Select

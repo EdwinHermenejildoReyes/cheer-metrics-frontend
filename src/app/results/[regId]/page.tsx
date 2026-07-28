@@ -378,7 +378,7 @@ export default function PublicResultPage() {
         }
       `}</style>
 
-      <div className="max-w-3xl mx-auto py-6 px-4 print:p-0 print:max-w-none">
+      <div className="max-w-7xl mx-auto py-6 px-6 print:p-0 print:max-w-none">
 
         {/* ── Header ───────────────────────────────────────────────────── */}
         <div className="rounded-2xl print:rounded-none overflow-hidden mb-4"

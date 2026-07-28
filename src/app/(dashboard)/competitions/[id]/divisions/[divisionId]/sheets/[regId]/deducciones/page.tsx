@@ -16,6 +16,7 @@ import {
   DEDUCTION_CODES,
   DEDUCTION_TYPE_LABELS,
   DEDUCTION_AMOUNTS,
+  DEDUCTION_RULE_REFERENCE,
   type DeductionType,
   type Deduction,
   type ScoreSheet,
@@ -231,6 +232,9 @@ export default function DeduccionesSheetPage() {
   const [savingDirect, setSavingDirect] = useState<Set<DeductionType>>(new Set());
   const [hoveredZone,  setHoveredZone]  = useState<string | null>(null);
   const dragTypeRef = useRef<DeductionType | null>(null);
+  const [pendingType, setPendingType]   = useState<DeductionType | null>(null);
+  const [pendingRule, setPendingRule]   = useState('');
+  const pendingRuleRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     try {
@@ -299,7 +303,8 @@ export default function DeduccionesSheetPage() {
     try {
       await competitionsRepository.createDeduction({
         score_sheet: sheet.id, deduction_type: type, count: 1,
-        routine_time: '', hit_zero: false, notes: '',
+        routine_time: '', hit_zero: false,
+        notes: DEDUCTION_RULE_REFERENCE[type] ?? '',
       });
       await load();
     } catch {

@@ -17,7 +17,7 @@ export default function CompetitionsPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Competition | undefined>();
-  const { isJudge, canViewCompetition } = useJudge();
+  const { isAdmin, isJudge, canViewCompetition } = useJudge();
 
   const load = async () => {
     try {
@@ -53,7 +53,7 @@ export default function CompetitionsPage() {
           <h1 className="text-2xl font-semibold text-zinc-900">Competencias</h1>
           <p className="text-sm text-zinc-500">{competitions.filter((c) => canViewCompetition(c.id)).length} competencia{competitions.filter((c) => canViewCompetition(c.id)).length !== 1 ? 's' : ''}</p>
         </div>
-        {!isJudge && (
+        {isAdmin && (
           <Button onClick={openNew}>
             <Plus className="h-4 w-4" />
             Nueva competencia
@@ -67,7 +67,7 @@ export default function CompetitionsPage() {
         <div className="flex flex-col items-center gap-3 py-20 text-zinc-400">
           <CalendarDays className="h-10 w-10" />
           <p className="text-sm">Aún no hay competencias registradas</p>
-          <Button variant="secondary" onClick={openNew}>Crear la primera</Button>
+          {isAdmin && <Button variant="secondary" onClick={openNew}>Crear la primera</Button>}
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
