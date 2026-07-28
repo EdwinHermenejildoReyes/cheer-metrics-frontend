@@ -28,8 +28,8 @@ const SETTINGS_NAV = [
 ];
 
 const JUDGE_NAV = [
-  { href: '/assignments',  label: 'Mis asignaciones', icon: ClipboardList },
-  { href: '/competitions', label: 'Competencias',     icon: Trophy },
+  { href: '/assignments',  label: 'Mis asignaciones', icon: ClipboardList, staffOnly: false },
+  { href: '/competitions', label: 'Competencias',     icon: Trophy,        staffOnly: false },
 ];
 
 const ADMIN_COMPETITION_SUBNAV = [
@@ -40,7 +40,7 @@ const ADMIN_COMPETITION_SUBNAV = [
 ];
 
 const JUDGE_COMPETITION_SUBNAV = [
-  { slug: 'backstage', label: 'Backstage', icon: Monitor },
+  { slug: 'backstage', label: 'Backstage', icon: Monitor, staffOnly: false },
 ];
 
 export function Sidebar() {
