@@ -128,7 +128,14 @@ export default function BackstagePage() {
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-zinc-900 truncate">{reg.team_name}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-semibold text-zinc-900 truncate">{reg.team_name}</p>
+                        {reg.panel && (
+                          <span className="shrink-0 inline-flex items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 ring-1 ring-amber-200">
+                            {reg.panel}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-zinc-400 truncate">{reg.gym_name} · {reg.division_name}</p>
                     </div>
                     {reg.athlete_count != null && !isDirty && (
