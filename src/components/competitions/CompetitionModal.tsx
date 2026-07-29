@@ -52,10 +52,6 @@ const SERVICE_TYPE_OPTIONS = [
   { value: 'judging_only',      label: 'Solo Jueceo' },
 ];
 
-const SHEET_MODE_OPTIONS = [
-  { value: 'grupal',     label: 'Grupal (construcción, tumbling, overall…)' },
-  { value: 'individual', label: 'Individual (dificultad / ejecución separados)' },
-];
 
 const DEFAULT_VALUES: Partial<FormValues> = {
   scoring_family: 'united',
@@ -77,7 +73,6 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
   });
 
   const scoringFamily = useWatch({ control, name: 'scoring_family' });
-  const serviceType   = useWatch({ control, name: 'service_type' });
   const derivedRegulation = scoringFamily ? SCORING_FAMILY_REGULATION[scoringFamily] : null;
 
   useEffect(() => {
@@ -151,15 +146,7 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
           error={errors.service_type?.message}
           {...register('service_type')}
         />
-        {serviceType !== 'registration_only' && (
-          <Select
-            label="Modo de planillas"
-            id="sheet_mode"
-            options={SHEET_MODE_OPTIONS}
-            error={errors.sheet_mode?.message}
-            {...register('sheet_mode')}
-          />
-        )}
+        <input type="hidden" {...register('sheet_mode')} />
         <Input label="Sede" id="venue" placeholder="Coliseo Mayor" error={errors.venue?.message} {...register('venue')} />
         <Input label="Ciudad" id="city" placeholder="Quito" error={errors.city?.message} {...register('city')} />
         <Select
