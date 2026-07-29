@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { PageSpinner } from '@/components/ui/spinner';
 import { CompetitionModal } from '@/components/competitions/CompetitionModal';
 import { DivisionModal } from '@/components/competitions/DivisionModal';
+import { SheetTypeMultiSelect } from '@/components/competitions/SheetTypeMultiSelect';
 import competitionsRepository, { type RestConflict } from '@/repositories/competitionsRepository';
 import authRepository, { type SimpleUser } from '@/repositories/authRepository';
 import publicRegistrationRepository from '@/repositories/publicRegistrationRepository';
@@ -26,8 +27,6 @@ import {
   SCORING_SYSTEM_LABELS,
   SCORING_FAMILY_LABELS,
   SHEET_TYPE_LABELS,
-  SHEET_TYPE_GROUPS,
-  GRUPAL_SHEET_TYPES,
   type Competition,
   type Division,
   type JudgeAssignment,
@@ -581,40 +580,9 @@ export default function CompetitionDetailPage() {
                     ))}
                   </select>
                 </div>
-                <div className="col-span-2 lg:w-56">
-                  <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">
-                    Planilla {newJudgeSheets.length > 0 && <span className="normal-case font-normal text-zinc-400">({newJudgeSheets.length} seleccionada{newJudgeSheets.length !== 1 ? 's' : ''})</span>}
-                  </label>
-                  <div className="rounded-lg border border-zinc-300 bg-white overflow-y-auto max-h-52 divide-y divide-zinc-100">
-                    {SHEET_TYPE_GROUPS.map((group) => (
-                      <div key={group.label}>
-                        <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-400 bg-zinc-50 sticky top-0">
-                          {group.label}
-                        </p>
-                        {group.types.map((st) => {
-                          const isGrupal = GRUPAL_SHEET_TYPES.includes(st);
-                          return (
-                            <label key={st} className="flex items-center gap-2 px-3 py-1.5 hover:bg-zinc-50 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                className="h-3.5 w-3.5 rounded accent-zinc-900 shrink-0"
-                                checked={newJudgeSheets.includes(st)}
-                                onChange={(e) => {
-                                  setNewJudgeSheets((prev) =>
-                                    e.target.checked ? [...prev, st] : prev.filter((s) => s !== st)
-                                  );
-                                }}
-                              />
-                              <span className="flex-1 text-xs text-zinc-800">{SHEET_TYPE_LABELS[st]}</span>
-                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${isGrupal ? 'bg-blue-50 text-blue-600' : 'bg-violet-50 text-violet-600'}`}>
-                                {isGrupal ? 'G' : 'I'}
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    ))}
-                  </div>
+                <div className="col-span-2 lg:w-64">
+                  <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Planilla</label>
+                  <SheetTypeMultiSelect value={newJudgeSheets} onChange={setNewJudgeSheets} />
                 </div>
                 <div>
                   <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">
