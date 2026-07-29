@@ -26,8 +26,8 @@ import {
   SCORING_SYSTEM_LABELS,
   SCORING_FAMILY_LABELS,
   SHEET_TYPE_LABELS,
+  SHEET_TYPE_GROUPS,
   GRUPAL_SHEET_TYPES,
-  INDIVIDUAL_SHEET_TYPES,
   type Competition,
   type Division,
   type JudgeAssignment,
@@ -50,7 +50,7 @@ export default function CompetitionDetailPage() {
   const [assignments, setAssignments] = useState<JudgeAssignment[]>([]);
   const [users, setUsers] = useState<SimpleUser[]>([]);
   const [newJudgeUserId, setNewJudgeUserId] = useState('');
-  const [newJudgeSheet, setNewJudgeSheet] = useState<SheetType | ''>('');
+  const [newJudgeSheets, setNewJudgeSheets] = useState<SheetType[]>([]);
   const [newJudgeFrom, setNewJudgeFrom] = useState('');
   const [newJudgeUntil, setNewJudgeUntil] = useState('');
   const [addingJudge, setAddingJudge] = useState(false);
@@ -83,13 +83,6 @@ export default function CompetitionDetailPage() {
   const hasJudging      = competition?.service_type !== 'registration_only';
   const hasRegistration = competition?.service_type !== 'judging_only';
 
-  const availableSheetTypes = competition?.sheet_mode === 'individual'
-    ? INDIVIDUAL_SHEET_TYPES
-    : GRUPAL_SHEET_TYPES;
-
-  const effectiveJudgeSheet: SheetType = (newJudgeSheet && availableSheetTypes.includes(newJudgeSheet as SheetType))
-    ? newJudgeSheet as SheetType
-    : availableSheetTypes[0];
 
   useEffect(() => {
     if (!competition) return;
@@ -210,6 +203,10 @@ export default function CompetitionDetailPage() {
 
   const handleAddJudge = async () => {
     if (!newJudgeUserId) return;
+    if (newJudgeSheets.length === 0) {
+      toast.error('Selecciona al menos una planilla.');
+      return;
+    }
     if (!newJudgeFrom || !newJudgeUntil) {
       toast.error('Debes indicar la fecha/hora de inicio y fin de acceso.');
       return;
@@ -220,20 +217,26 @@ export default function CompetitionDetailPage() {
     }
     setAddingJudge(true);
     try {
-      await competitionsRepository.createJudgeAssignment({
-        user: Number(newJudgeUserId),
-        competition: competition!.id,
-        sheet_type: effectiveJudgeSheet,
-        access_from: new Date(newJudgeFrom).toISOString(),
-        access_until: new Date(newJudgeUntil).toISOString(),
-      });
-      toast.success('Juez asignado');
+      await Promise.all(
+        newJudgeSheets.map((sheet) =>
+          competitionsRepository.createJudgeAssignment({
+            user: Number(newJudgeUserId),
+            competition: competition!.id,
+            sheet_type: sheet,
+            access_from: new Date(newJudgeFrom).toISOString(),
+            access_until: new Date(newJudgeUntil).toISOString(),
+          })
+        )
+      );
+      const count = newJudgeSheets.length;
+      toast.success(`${count} planilla${count !== 1 ? 's' : ''} asignada${count !== 1 ? 's' : ''}`);
       setNewJudgeUserId('');
+      setNewJudgeSheets([]);
       setNewJudgeFrom('');
       setNewJudgeUntil('');
       await loadJudges();
     } catch {
-      toast.error('No se pudo asignar el juez (puede que ya esté asignado)');
+      toast.error('No se pudo asignar el juez (puede que ya esté asignado a alguna planilla)');
     } finally {
       setAddingJudge(false);
     }
@@ -562,7 +565,7 @@ export default function CompetitionDetailPage() {
           {judgesOpen && (
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
               {/* Add form */}
-              <div className="grid grid-cols-2 gap-3 px-5 py-4 border-b border-zinc-100 bg-zinc-50 lg:flex lg:items-end">
+              <div className="grid grid-cols-2 gap-3 px-5 py-4 border-b border-zinc-100 bg-zinc-50 lg:flex lg:items-start">
                 <div className="col-span-2 lg:flex-1">
                   <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Usuario</label>
                   <select
@@ -578,17 +581,40 @@ export default function CompetitionDetailPage() {
                     ))}
                   </select>
                 </div>
-                <div className="lg:w-44">
-                  <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Planilla</label>
-                  <select
-                    value={effectiveJudgeSheet}
-                    onChange={(e) => setNewJudgeSheet(e.target.value as SheetType)}
-                    className="w-full h-9 rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                  >
-                    {availableSheetTypes.map((st) => (
-                      <option key={st} value={st}>{SHEET_TYPE_LABELS[st]}</option>
+                <div className="col-span-2 lg:w-56">
+                  <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">
+                    Planilla {newJudgeSheets.length > 0 && <span className="normal-case font-normal text-zinc-400">({newJudgeSheets.length} seleccionada{newJudgeSheets.length !== 1 ? 's' : ''})</span>}
+                  </label>
+                  <div className="rounded-lg border border-zinc-300 bg-white overflow-y-auto max-h-52 divide-y divide-zinc-100">
+                    {SHEET_TYPE_GROUPS.map((group) => (
+                      <div key={group.label}>
+                        <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-400 bg-zinc-50 sticky top-0">
+                          {group.label}
+                        </p>
+                        {group.types.map((st) => {
+                          const isGrupal = GRUPAL_SHEET_TYPES.includes(st);
+                          return (
+                            <label key={st} className="flex items-center gap-2 px-3 py-1.5 hover:bg-zinc-50 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                className="h-3.5 w-3.5 rounded accent-zinc-900 shrink-0"
+                                checked={newJudgeSheets.includes(st)}
+                                onChange={(e) => {
+                                  setNewJudgeSheets((prev) =>
+                                    e.target.checked ? [...prev, st] : prev.filter((s) => s !== st)
+                                  );
+                                }}
+                              />
+                              <span className="flex-1 text-xs text-zinc-800">{SHEET_TYPE_LABELS[st]}</span>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${isGrupal ? 'bg-blue-50 text-blue-600' : 'bg-violet-50 text-violet-600'}`}>
+                                {isGrupal ? 'G' : 'I'}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
                     ))}
-                  </select>
+                  </div>
                 </div>
                 <div>
                   <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">
@@ -612,8 +638,8 @@ export default function CompetitionDetailPage() {
                     className="h-9 rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
                   />
                 </div>
-                <div className="col-span-2 flex justify-end lg:col-span-1">
-                  <Button size="sm" onClick={handleAddJudge} disabled={!newJudgeUserId || !effectiveJudgeSheet || !newJudgeFrom || !newJudgeUntil || addingJudge}>
+                <div className="col-span-2 flex justify-end lg:col-span-1 lg:self-end">
+                  <Button size="sm" onClick={handleAddJudge} disabled={!newJudgeUserId || newJudgeSheets.length === 0 || !newJudgeFrom || !newJudgeUntil || addingJudge}>
                     <Plus className="h-4 w-4" />
                     Asignar
                   </Button>

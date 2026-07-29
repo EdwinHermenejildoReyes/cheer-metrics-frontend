@@ -6,22 +6,31 @@ export type SheetType =
   | 'building_combined' | 'tumbling_combined' | 'deductions_combined';
 
 export const SHEET_TYPE_LABELS: Record<SheetType, string> = {
-  building:             'Building (Elevaciones)',
-  tumbling:             'Tumbling (Gimnasia)',
+  building:             'Building',
+  tumbling:             'Tumbling',
   rangos:               'Rangos (Dificultad)',
   overall:              'Overall (General)',
   partner_stunt:        'Partner Stunt',
   deducciones:          'Deducciones',
-  building_difficulty:  'Dificultad — Elevaciones',
-  building_execution:   'Ejecución — Elevaciones',
-  tumbling_difficulty:  'Dificultad — Gimnasia',
-  tumbling_execution:   'Ejecución — Gimnasia',
+  building_difficulty:  'Building (Dificultad)',
+  building_execution:   'Building (Elevaciones)',
+  tumbling_difficulty:  'Tumbling (Dificultad)',
+  tumbling_execution:   'Tumbling (Ejecución)',
   deductions_only:      'Deducciones (Caídas/Tiempo)',
   safety_rules:         'Reglas y Seguridad',
   building_combined:    'Elevaciones (Dif. + Ejec.)',
   tumbling_combined:    'Gimnasia (Dif. + Ejec.)',
   deductions_combined:  'Reglas y Deducciones',
 };
+
+export const SHEET_TYPE_GROUPS: { label: string; types: SheetType[] }[] = [
+  { label: 'Building',      types: ['building', 'building_difficulty', 'building_execution'] },
+  { label: 'Tumbling',      types: ['tumbling', 'tumbling_difficulty', 'tumbling_execution'] },
+  { label: 'Overall',       types: ['overall'] },
+  { label: 'Partner Stunt', types: ['partner_stunt'] },
+  { label: 'Rangos',        types: ['rangos'] },
+  { label: 'Deducciones',   types: ['deducciones', 'deductions_only', 'safety_rules'] },
+];
 
 export interface JudgeAssignment {
   id: number;
