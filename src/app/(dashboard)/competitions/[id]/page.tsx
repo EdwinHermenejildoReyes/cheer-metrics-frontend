@@ -630,7 +630,14 @@ export default function CompetitionDetailPage() {
                     }, {} as Record<number, { user_name: string; user: number; items: JudgeAssignment[] }>)
                   ).map((group) => {
                     const isActive = group.items.some((a) => a.is_access_active);
-                    const ranges = Array.from(new Set(group.items.map((a) => `${a.access_from}|${a.access_until}`)));
+                    const rangeGroups = Object.values(
+                      group.items.reduce((racc, a) => {
+                        const key = `${a.access_from}|${a.access_until}`;
+                        if (!racc[key]) racc[key] = { from: a.access_from, until: a.access_until, items: [] as JudgeAssignment[] };
+                        racc[key].items.push(a);
+                        return racc;
+                      }, {} as Record<string, { from: string | null; until: string | null; items: JudgeAssignment[] }>)
+                    );
                     return (
                       <div key={group.user} className="px-5 py-3.5">
                         <div className="flex items-center gap-2 mb-2">
@@ -639,30 +646,34 @@ export default function CompetitionDetailPage() {
                             {isActive ? 'Activo' : 'Inactivo'}
                           </span>
                         </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {group.items.map((a) => (
-                            <span key={a.id} className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">
-                              {SHEET_TYPE_LABELS[a.sheet_type]}
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveJudge(a.id)}
-                                className="text-zinc-400 hover:text-red-500 transition-colors"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </span>
-                          ))}
+                        <div className="flex flex-col gap-2">
+                          {rangeGroups.map((rg) => {
+                            const rangeKey = `${rg.from}|${rg.until}`;
+                            return (
+                              <div key={rangeKey}>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {rg.items.map((a) => (
+                                    <span key={a.id} className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">
+                                      {SHEET_TYPE_LABELS[a.sheet_type]}
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveJudge(a.id)}
+                                        className="text-zinc-400 hover:text-red-500 transition-colors"
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </button>
+                                    </span>
+                                  ))}
+                                </div>
+                                <p className="text-[11px] text-zinc-400 mt-1 font-mono">
+                                  {rg.from && rg.from !== 'null' ? new Date(rg.from).toLocaleString('es-EC') : '—'}
+                                  {' → '}
+                                  {rg.until && rg.until !== 'null' ? new Date(rg.until).toLocaleString('es-EC') : '—'}
+                                </p>
+                              </div>
+                            );
+                          })}
                         </div>
-                        {ranges.map((range) => {
-                          const [from, until] = range.split('|');
-                          return (
-                            <p key={range} className="text-[11px] text-zinc-400 mt-1.5 font-mono">
-                              {from && from !== 'null' ? new Date(from).toLocaleString('es-EC') : '—'}
-                              {' → '}
-                              {until && until !== 'null' ? new Date(until).toLocaleString('es-EC') : '—'}
-                            </p>
-                          );
-                        })}
                       </div>
                     );
                   })}
