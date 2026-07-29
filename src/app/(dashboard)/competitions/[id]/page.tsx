@@ -562,7 +562,7 @@ export default function CompetitionDetailPage() {
           </button>
 
           {judgesOpen && (
-            <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+            <div className="rounded-xl border border-zinc-200 bg-white">
               {/* Add form */}
               <div className="grid grid-cols-2 gap-3 px-5 py-4 border-b border-zinc-100 bg-zinc-50 lg:flex lg:items-start">
                 <div className="col-span-2 lg:flex-1">
