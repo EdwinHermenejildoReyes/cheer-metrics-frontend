@@ -29,7 +29,21 @@ export function SheetTypeMultiSelect({ value, onChange }: Props) {
   }, []);
 
   const toggle = (st: SheetType) => {
-    onChange(value.includes(st) ? value.filter((s) => s !== st) : [...value, st]);
+    if (value.includes(st)) {
+      onChange(value.filter((s) => s !== st));
+      return;
+    }
+    const group = SHEET_TYPE_GROUPS.find((g) => g.types.includes(st));
+    if (!group) {
+      onChange([...value, st]);
+      return;
+    }
+    const isGrupal = GRUPAL_SHEET_TYPES.includes(st);
+    // Selecting grupal → remove individual variants of the group; selecting individual → remove grupal of the group
+    const conflicts = isGrupal
+      ? group.types.filter((t) => !GRUPAL_SHEET_TYPES.includes(t))
+      : group.types.filter((t) => GRUPAL_SHEET_TYPES.includes(t));
+    onChange([...value.filter((s) => !conflicts.includes(s)), st]);
   };
 
   const clearAll = (e: React.MouseEvent) => {
