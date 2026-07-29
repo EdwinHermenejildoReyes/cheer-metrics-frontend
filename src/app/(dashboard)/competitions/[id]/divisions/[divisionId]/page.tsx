@@ -13,6 +13,7 @@ import { DeductionModal } from '@/components/competitions/DeductionModal';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
 import { useConfirm } from '@/hooks/useConfirm';
+import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 import {
   AGE_GROUP_LABELS,
   SKILL_LEVEL_LABELS,
@@ -310,6 +311,14 @@ export default function DivisionDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Skill reference tables — visible to all users */}
+      {hasJudging && (
+        <div className="flex flex-col gap-2">
+          <SkillReferencePanel skillLevel={division.skill_level} sheetType="building" />
+          <SkillReferencePanel skillLevel={division.skill_level} sheetType="tumbling" />
+        </div>
+      )}
 
       {/* Registrations */}
       <div className="flex flex-col gap-3">
