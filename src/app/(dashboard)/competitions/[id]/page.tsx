@@ -565,7 +565,7 @@ export default function CompetitionDetailPage() {
             <div className="rounded-xl border border-zinc-200 bg-white">
               {/* Add form */}
               <div className="grid grid-cols-2 gap-3 px-5 py-4 border-b border-zinc-100 bg-zinc-50 lg:flex lg:items-start">
-                <div className="col-span-2 lg:flex-1">
+                <div className="col-span-2 lg:w-56">
                   <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Usuario</label>
                   <select
                     value={newJudgeUserId}
@@ -575,12 +575,12 @@ export default function CompetitionDetailPage() {
                     <option value="">— Seleccionar —</option>
                     {users.map((u) => (
                       <option key={u.id} value={u.id}>
-                        {u.first_name || u.last_name ? `${u.first_name} ${u.last_name}`.trim() : u.email} ({u.email})
+                        {u.first_name || u.last_name ? `${u.first_name} ${u.last_name}`.trim() : u.email}
                       </option>
                     ))}
                   </select>
                 </div>
-                <div className="col-span-2 lg:w-64">
+                <div className="col-span-2 lg:flex-1">
                   <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Planilla</label>
                   <SheetTypeMultiSelect value={newJudgeSheets} onChange={setNewJudgeSheets} />
                 </div>
