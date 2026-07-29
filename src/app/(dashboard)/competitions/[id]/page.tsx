@@ -567,18 +567,21 @@ export default function CompetitionDetailPage() {
               <div className="grid grid-cols-2 gap-3 px-5 py-4 border-b border-zinc-100 bg-zinc-50 lg:flex lg:items-start">
                 <div className="col-span-2 lg:w-72">
                   <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Usuario</label>
-                  <select
-                    value={newJudgeUserId}
-                    onChange={(e) => setNewJudgeUserId(e.target.value)}
-                    className="w-full h-9 rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                  >
-                    <option value="">— Seleccionar —</option>
-                    {users.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.first_name || u.last_name ? `${u.first_name} ${u.last_name}`.trim() : u.email}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={newJudgeUserId}
+                      onChange={(e) => setNewJudgeUserId(e.target.value)}
+                      className="w-full h-9 appearance-none rounded-lg border border-zinc-300 bg-white pl-3 pr-8 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 hover:border-zinc-400"
+                    >
+                      <option value="">— Seleccionar —</option>
+                      {users.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.first_name || u.last_name ? `${u.first_name} ${u.last_name}`.trim() : u.email}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
+                  </div>
                 </div>
                 <div className="col-span-2 lg:flex-1">
                   <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Planilla</label>
