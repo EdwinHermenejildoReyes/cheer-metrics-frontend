@@ -12,9 +12,10 @@ import {
 interface Props {
   value: SheetType[];
   onChange: (value: SheetType[]) => void;
+  disabledTypes?: SheetType[];
 }
 
-export function SheetTypeMultiSelect({ value, onChange }: Props) {
+export function SheetTypeMultiSelect({ value, onChange, disabledTypes = [] }: Props) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -29,6 +30,7 @@ export function SheetTypeMultiSelect({ value, onChange }: Props) {
   }, []);
 
   const toggle = (st: SheetType) => {
+    if (disabledTypes.includes(st)) return;
     if (value.includes(st)) {
       onChange(value.filter((s) => s !== st));
       return;
@@ -100,13 +102,16 @@ export function SheetTypeMultiSelect({ value, onChange }: Props) {
               </p>
               {group.types.map((st) => {
                 const selected = value.includes(st);
+                const disabled = disabledTypes.includes(st);
                 const isGrupal = GRUPAL_SHEET_TYPES.includes(st);
                 return (
                   <button
                     key={st}
                     type="button"
                     onClick={() => toggle(st)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-zinc-50 transition-colors ${selected ? 'bg-zinc-50/60' : ''}`}
+                    disabled={disabled}
+                    title={disabled ? 'Ya tiene asignada la planilla contraria' : undefined}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors ${disabled ? 'opacity-40 cursor-not-allowed' : `hover:bg-zinc-50 ${selected ? 'bg-zinc-50/60' : ''}`}`}
                   >
                     <div className={`h-4 w-4 rounded border shrink-0 flex items-center justify-center transition-colors ${selected ? 'bg-zinc-900 border-zinc-900' : 'border-zinc-300 bg-white'}`}>
                       {selected && <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />}

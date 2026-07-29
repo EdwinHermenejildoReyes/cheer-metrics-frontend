@@ -27,6 +27,8 @@ import {
   SCORING_SYSTEM_LABELS,
   SCORING_FAMILY_LABELS,
   SHEET_TYPE_LABELS,
+  SHEET_TYPE_GROUPS,
+  GRUPAL_SHEET_TYPES,
   type Competition,
   type Division,
   type JudgeAssignment,
@@ -585,7 +587,26 @@ export default function CompetitionDetailPage() {
                 </div>
                 <div className="col-span-2 lg:flex-1">
                   <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Planilla</label>
-                  <SheetTypeMultiSelect value={newJudgeSheets} onChange={setNewJudgeSheets} />
+                  <SheetTypeMultiSelect
+                    value={newJudgeSheets}
+                    onChange={setNewJudgeSheets}
+                    disabledTypes={(() => {
+                      if (!newJudgeUserId) return [];
+                      const existing = assignments.filter((a) => String(a.user) === newJudgeUserId).map((a) => a.sheet_type);
+                      const disabled = new Set<SheetType>();
+                      for (const st of existing) {
+                        const group = SHEET_TYPE_GROUPS.find((g) => g.types.includes(st));
+                        if (!group) continue;
+                        const isGrupal = GRUPAL_SHEET_TYPES.includes(st);
+                        const conflicts = isGrupal
+                          ? group.types.filter((t) => !GRUPAL_SHEET_TYPES.includes(t))
+                          : group.types.filter((t) => GRUPAL_SHEET_TYPES.includes(t));
+                        conflicts.forEach((c) => disabled.add(c));
+                        disabled.add(st);
+                      }
+                      return [...disabled];
+                    })()}
+                  />
                 </div>
                 <div>
                   <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">
