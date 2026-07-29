@@ -99,7 +99,7 @@ export default function InvitationsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 p-6">
+    <div className="mx-auto w-full max-w-4xl space-y-8 p-6">
       <div>
         <h1 className="text-xl font-semibold text-plt-text">Invitaciones</h1>
         <p className="mt-1 text-sm text-plt-muted">
@@ -121,13 +121,13 @@ export default function InvitationsPage() {
               {...register('email')}
             />
           </div>
-          <div className="w-full sm:w-48">
+          <div className="w-full sm:w-64">
             <label htmlFor="role" className="mb-1.5 block text-sm font-medium text-plt-text">
               Rol
             </label>
             <select
               id="role"
-              className="h-9 w-full rounded-lg border border-plt-border bg-plt-bg px-3 text-sm text-plt-text focus:outline-none focus:ring-2 focus:ring-plt-primary"
+              className="h-9 w-full rounded-lg border border-plt-border bg-plt-bg pl-3 pr-8 text-sm text-plt-text focus:outline-none focus:ring-2 focus:ring-plt-primary"
               {...register('role')}
             >
               <option value="">Seleccionar…</option>

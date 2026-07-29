@@ -56,7 +56,9 @@ uv add <package>
 
 **User approval flow** — After registration users have `is_approved=False` and are redirected to `/pending`. An admin must approve them via `POST /api/v1/users/<id>/approve/` before they can access the app.
 
-**API** — All endpoints are under `/api/v1/`. Djoser handles `/api/v1/auth/` (register, password reset). Custom views (not Djoser) handle `/api/v1/auth/login/`, `/api/v1/auth/token/refresh/`, and `/api/v1/auth/logout/` for cookie management. Default DRF pagination: 25 items/page (`page_size` query param, max 1000) with `DjangoFilterBackend`. Custom throttle scopes: `login` (10/min) applied to the login view, `wizard` (120/min) applied to all wizard endpoints.
+**Invitation-based registration** — New users must be invited by an admin. The flow: admin creates an `Invitation` (email, role, org FK, UUID token, `expires_at`); invitee calls `GET /api/v1/invitations/validate/?token=...` to retrieve email/role/org; then `POST /api/v1/auth/register/` with token + password to create the user and mark the invitation accepted. Djoser's built-in register endpoint is disabled (`TOKEN_MODEL=None`); only this custom `RegisterWithInvitationView` creates users. Djoser still handles password reset (`/api/v1/auth/`).
+
+**API** — All endpoints are under `/api/v1/`. Custom views handle `/api/v1/auth/login/`, `/api/v1/auth/token/refresh/`, and `/api/v1/auth/logout/` for cookie management. Default DRF pagination: 25 items/page (`page_size` query param, max 1000) with `DjangoFilterBackend`. Custom throttle scopes: `login` (10/min) applied to the login view, `wizard` (120/min) applied to all wizard endpoints.
 
 **Permission classes** — `apps.api.permissions` defines four classes: `IsApproved` (rejects unapproved accounts — applied as default on most ViewSets), `IsStaffOrOrgAdmin` (allows `is_staff=True` or `role=org_admin`), `IsOwnerOrAdmin` (allows admins or the object's `created_by` user), and `IsActiveJudgeForCompetition`. Judge access is determined by `JudgeAssignment.access_from` / `access_until` timestamps when set; falls back to `Competition.is_active` when both are null. The canonical logic is `_is_judge_access_active()` in `apps/api/permissions.py`.
 
@@ -90,12 +92,19 @@ uv add <package>
 
 ```bash
 python manage.py import_inscripcion <file> --competition <id> [--fotos-zip <path>] [--dry-run]
-python manage.py mark_all_paid --competition <id>   # mark all GymInvoices as paid
+python manage.py import_jueceo <file> --competition <id>       # import judging panel / divisions from XLSX
+python manage.py mark_all_paid --competition <id>              # mark all GymInvoices as paid
 ```
 
-`tools/generate_inscripcion_template.py` generates a blank CSV template for the import format; a pre-built copy lives at `templates/plantilla_inscripcion.csv` in the repo root. Also triggerable from the frontend page at `/competitions/[id]/import`. Each error row is skipped and accumulated in the result; the import never aborts mid-file unless the competition is not found.
+`tools/generate_inscripcion_template.py` generates a blank CSV template for athlete registration; `tools/generate_jueceo_template.py` generates the XLSX template for the judging panel import; `tools/generate_prueba_jueceo.py` generates synthetic test data for the judging import. A pre-built copy of the registration template lives at `templates/plantilla_inscripcion.csv` in the repo root. The import is also triggerable from the frontend page at `/competitions/[id]/import`. Each error row is skipped and accumulated in the result; the import never aborts mid-file unless the competition is not found.
 
 **Scheduler / rest validator** — `apps/competitions/scheduler.py` checks that athletes competing in multiple teams have at least `MIN_REST_GAP = 3` performance slots between appearances. Returns `RestConflict` dataclass instances. The public `/schedule` page (outside the dashboard group) renders the running order and surfaces these conflicts.
+
+**CompetitionViewSet custom actions** — Beyond CRUD, `CompetitionViewSet` (lookup by `public_id`) exposes: `GET /{id}/schedule-conflicts/?min_gap=3` (delegates to `apps/competitions/scheduler.py`), `POST /{id}/auto-assign-orders/` (assigns sequential `performance_order` to all confirmed registrations), and `POST /{id}/import-inscripcion/` / `POST /{id}/import-judging/` (file-upload triggers for the two importers).
+
+**RegistrationViewSet custom actions** — Beyond CRUD (lookup by `public_id`): `POST /{id}/move/?direction=up|down` (swap `performance_order`), `POST /{id}/send-report/` (email scorecard to `contact_email`), `POST /{id}/send-whatsapp/` (WhatsApp report via wa.me), `GET /{id}/pdf-report/` (PDF scorecard, authenticated), `GET /{id}/public-pdf/` (PDF via `public_id`, no auth), `GET /{id}/public-result/` (public JSON result via `public_id`).
+
+**Email service** — `apps/core/services.py` defines `EmailService.send_notification(subject, message, recipient_email, html_message=None)` as the canonical way to send transactional email from backend code. Use this rather than calling `send_mail` directly.
 
 **Email (dev)** — Mailpit captures outbound email. UI at `http://localhost:8025`; SMTP on `mail:8025` (within Docker network).
 
@@ -134,7 +143,7 @@ NEXT_PUBLIC_WEB_URL=http://localhost:3000/
 
 **Repository layer** — `src/repositories/` wraps all API calls (one file per domain). Add new API methods here, not directly in components.
 
-**State management** — Redux Toolkit + Redux Saga for global state. The saga middleware is wired in `src/core/store.ts` with `src/core/rootSaga.ts` (currently a stub `yield all([])`). Currently only auth state is implemented (`src/store/auth/slices.ts`). Prefer repositories + local state for simple reads; use Redux for cross-cutting state (auth, complex competition flow).
+**State management** — Redux Toolkit + Redux Saga for global state. The saga middleware is wired in `src/core/store.ts` with `src/core/rootSaga.ts` (currently a stub `yield all([])`). Auth state is persisted to localStorage via `redux-persist`, so users remain logged in across browser sessions. Currently only auth state is implemented (`src/store/auth/slices.ts`). Prefer repositories + local state for simple reads; use Redux for cross-cutting state (auth, complex competition flow).
 
 **Domain types** — `src/types/` is the canonical frontend type source: `competitions.ts` defines `SheetType`, `JudgeAssignment`, `SheetMode`, the `GRUPAL_SHEET_TYPES` / `INDIVIDUAL_SHEET_TYPES` grouping constants, and all enum-like union types (`AgeGroup`, `SkillLevel`, `DeductionType`, etc.); `athletes.ts` defines `Athlete` and `TeamMembership`; `settings.ts` defines `PlatformSettings`. Import types from here rather than redefining them.
 
@@ -185,6 +194,8 @@ docker compose exec backend python manage.py migrate    # run migrations in cont
 docker compose exec backend python manage.py createsuperuser
 ```
 
+**Production** — `docker-compose.prod.yml` adds SSL termination via Certbot and uses production images. `deploy.sh` at the repo root automates pulls, image builds, service restarts, migrations, and static file collection for production deploys. Nginx `client_max_body_size` is set to **20 MB** for media uploads.
+
 ## Architecture Overview
 
 ```
@@ -195,7 +206,7 @@ Browser → Nginx :8006
               └── /*              → Next.js (App Router)
 
 Django ↔ PostgreSQL 17
-Mailpit (dev email) :8026
+Mailpit (dev email) :8025
 ```
 
 - The backend exposes a pure REST API; Django renders no frontend pages.

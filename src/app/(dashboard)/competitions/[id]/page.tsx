@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList, Receipt, Link as LinkIcon, Copy, Check, Printer, Trophy } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, X, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList, Receipt, Link as LinkIcon, Copy, Check, Printer, Trophy } from 'lucide-react';
 import { PrintButton } from '@/components/print/PrintButton';
 import { Modal } from '@/components/ui/modal';
 import { toast } from 'sonner';
@@ -619,33 +619,50 @@ export default function CompetitionDetailPage() {
                 <p className="px-5 py-4 text-sm text-zinc-400">Sin jueces asignados a esta competencia.</p>
               ) : (
                 <div className="divide-y divide-zinc-100">
-                  {assignments.map((a) => (
-                    <div key={a.id} className="flex items-center justify-between px-5 py-3">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-zinc-900">{a.user_name}</p>
-                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${a.is_access_active ? 'bg-green-100 text-green-700' : 'bg-zinc-100 text-zinc-400'}`}>
-                            {a.is_access_active ? 'Activo' : 'Inactivo'}
+                  {Object.values(
+                    assignments.reduce((acc, a) => {
+                      if (!acc[a.user]) acc[a.user] = { user_name: a.user_name, user: a.user, items: [] };
+                      acc[a.user].items.push(a);
+                      return acc;
+                    }, {} as Record<number, { user_name: string; user: number; items: JudgeAssignment[] }>)
+                  ).map((group) => {
+                    const isActive = group.items.some((a) => a.is_access_active);
+                    const ranges = Array.from(new Set(group.items.map((a) => `${a.access_from}|${a.access_until}`)));
+                    return (
+                      <div key={group.user} className="px-5 py-3.5">
+                        <div className="flex items-center gap-2 mb-2">
+                          <p className="text-sm font-medium text-zinc-900">{group.user_name}</p>
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-green-100 text-green-700' : 'bg-zinc-100 text-zinc-400'}`}>
+                            {isActive ? 'Activo' : 'Inactivo'}
                           </span>
                         </div>
-                        <p className="text-xs text-zinc-500">{SHEET_TYPE_LABELS[a.sheet_type]}</p>
-                        {(a.access_from || a.access_until) && (
-                          <p className="text-[11px] text-zinc-400 mt-0.5 font-mono">
-                            {a.access_from ? new Date(a.access_from).toLocaleString('es-EC') : '—'}
-                            {' → '}
-                            {a.access_until ? new Date(a.access_until).toLocaleString('es-EC') : '—'}
-                          </p>
-                        )}
+                        <div className="flex flex-wrap gap-1.5">
+                          {group.items.map((a) => (
+                            <span key={a.id} className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">
+                              {SHEET_TYPE_LABELS[a.sheet_type]}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveJudge(a.id)}
+                                className="text-zinc-400 hover:text-red-500 transition-colors"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                        {ranges.map((range) => {
+                          const [from, until] = range.split('|');
+                          return (
+                            <p key={range} className="text-[11px] text-zinc-400 mt-1.5 font-mono">
+                              {from && from !== 'null' ? new Date(from).toLocaleString('es-EC') : '—'}
+                              {' → '}
+                              {until && until !== 'null' ? new Date(until).toLocaleString('es-EC') : '—'}
+                            </p>
+                          );
+                        })}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveJudge(a.id)}
-                        className="rounded-lg p-1.5 text-zinc-300 hover:bg-red-50 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
