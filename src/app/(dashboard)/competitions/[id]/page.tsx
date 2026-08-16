@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, X, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList, Receipt, Link as LinkIcon, Copy, Check, Printer, Trophy } from 'lucide-react';
 import { PrintButton } from '@/components/print/PrintButton';
@@ -83,6 +83,22 @@ export default function CompetitionDetailPage() {
   const { isJudge, isCompetitionActive } = useJudge();
   const { organization } = useBranding();
   const confirm = useConfirm();
+
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (actionsRef.current && !actionsRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const toggleDropdown = (name: string) =>
+    setOpenDropdown(prev => (prev === name ? null : name));
 
   const hasJudging      = competition?.service_type !== 'registration_only';
   const hasRegistration = competition?.service_type !== 'judging_only';
@@ -320,81 +336,112 @@ export default function CompetitionDetailPage() {
             {competition.notes && <p className="text-sm text-zinc-400 mt-1">{competition.notes}</p>}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" ref={actionsRef}>
           <PrintButton />
           {!isJudge && (
             <>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setExportModalOpen(true)}
-              >
-                <Printer className="h-3.5 w-3.5" />
-                Exportar itinerario
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setItineraryModalOpen(true)}
-                disabled={assigningOrders}
-              >
-                <ListOrdered className="h-3.5 w-3.5" />
-                {assigningOrders ? 'Generando…' : 'Generar itinerario'}
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => router.push(`/competitions/${id}/grand-champion`)}
-              >
-                <Trophy className="h-3.5 w-3.5" />
-                Gran Campeón
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => router.push(`/competitions/${id}/backstage`)}
-              >
-                <ClipboardList className="h-3.5 w-3.5" />
-                Backstage
-              </Button>
-              {competition.scoring_family === 'icu_dance' && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => router.push(`/competitions/${id}/panels`)}
-                >
-                  <Users className="h-3.5 w-3.5" />
-                  Paneles ICU
+              {/* ── Itinerario ──────────────────────────────── */}
+              <div className="relative">
+                <Button variant="secondary" size="sm" onClick={() => toggleDropdown('itinerario')}>
+                  <ListOrdered className="h-3.5 w-3.5" />
+                  Itinerario
+                  <ChevronDown className={`h-3 w-3 transition-transform duration-150 ${openDropdown === 'itinerario' ? 'rotate-180' : ''}`} />
                 </Button>
-              )}
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => router.push(`/competitions/${id}/import`)}
-              >
-                <Upload className="h-3.5 w-3.5" />
-                Importar inscripción
-              </Button>
-              {hasRegistration && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => router.push(`/competitions/${id}/billing`)}
-                >
-                  <Receipt className="h-3.5 w-3.5" />
-                  Facturación
+                {openDropdown === 'itinerario' && (
+                  <div className="absolute right-0 top-full mt-1.5 z-50 w-52 rounded-xl border border-zinc-200 bg-white shadow-xl overflow-hidden">
+                    <button
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
+                      onClick={() => { setExportModalOpen(true); setOpenDropdown(null); }}
+                    >
+                      <Printer className="h-3.5 w-3.5 text-zinc-400" />
+                      Exportar PDF
+                    </button>
+                    <button
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors disabled:opacity-50"
+                      onClick={() => { if (!assigningOrders) { setItineraryModalOpen(true); setOpenDropdown(null); } }}
+                      disabled={assigningOrders}
+                    >
+                      <ListOrdered className="h-3.5 w-3.5 text-zinc-400" />
+                      {assigningOrders ? 'Generando…' : 'Generar itinerario'}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Ver ─────────────────────────────────────── */}
+              <div className="relative">
+                <Button variant="secondary" size="sm" onClick={() => toggleDropdown('ver')}>
+                  <Trophy className="h-3.5 w-3.5" />
+                  Ver
+                  <ChevronDown className={`h-3 w-3 transition-transform duration-150 ${openDropdown === 'ver' ? 'rotate-180' : ''}`} />
                 </Button>
-              )}
-              {hasRegistration && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setTokensModalOpen(true)}
-                >
-                  <LinkIcon className="h-3.5 w-3.5" />
-                  Links de inscripción
+                {openDropdown === 'ver' && (
+                  <div className="absolute right-0 top-full mt-1.5 z-50 w-52 rounded-xl border border-zinc-200 bg-white shadow-xl overflow-hidden">
+                    <button
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
+                      onClick={() => { router.push(`/competitions/${id}/grand-champion`); setOpenDropdown(null); }}
+                    >
+                      <Trophy className="h-3.5 w-3.5 text-zinc-400" />
+                      Gran Campeón
+                    </button>
+                    <button
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
+                      onClick={() => { router.push(`/competitions/${id}/backstage`); setOpenDropdown(null); }}
+                    >
+                      <ClipboardList className="h-3.5 w-3.5 text-zinc-400" />
+                      Backstage
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Administrar ─────────────────────────────── */}
+              <div className="relative">
+                <Button variant="secondary" size="sm" onClick={() => toggleDropdown('admin')}>
+                  <UserCog className="h-3.5 w-3.5" />
+                  Administrar
+                  <ChevronDown className={`h-3 w-3 transition-transform duration-150 ${openDropdown === 'admin' ? 'rotate-180' : ''}`} />
                 </Button>
-              )}
+                {openDropdown === 'admin' && (
+                  <div className="absolute right-0 top-full mt-1.5 z-50 w-56 rounded-xl border border-zinc-200 bg-white shadow-xl overflow-hidden">
+                    {competition.scoring_family === 'icu_dance' && (
+                      <button
+                        className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
+                        onClick={() => { router.push(`/competitions/${id}/panels`); setOpenDropdown(null); }}
+                      >
+                        <Users className="h-3.5 w-3.5 text-zinc-400" />
+                        Paneles ICU
+                      </button>
+                    )}
+                    <button
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
+                      onClick={() => { router.push(`/competitions/${id}/import`); setOpenDropdown(null); }}
+                    >
+                      <Upload className="h-3.5 w-3.5 text-zinc-400" />
+                      Importar inscripción
+                    </button>
+                    {hasRegistration && (
+                      <button
+                        className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
+                        onClick={() => { router.push(`/competitions/${id}/billing`); setOpenDropdown(null); }}
+                      >
+                        <Receipt className="h-3.5 w-3.5 text-zinc-400" />
+                        Facturación
+                      </button>
+                    )}
+                    {hasRegistration && (
+                      <button
+                        className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
+                        onClick={() => { setTokensModalOpen(true); setOpenDropdown(null); }}
+                      >
+                        <LinkIcon className="h-3.5 w-3.5 text-zinc-400" />
+                        Links de inscripción
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <Button variant="secondary" size="sm" onClick={() => setCompModalOpen(true)}>
                 <Pencil className="h-3.5 w-3.5" />
                 Editar
