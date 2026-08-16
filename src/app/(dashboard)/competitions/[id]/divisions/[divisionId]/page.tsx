@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, Link2, ChevronsUp, RotateCw, Star, CircleMinus, Gauge, Users2, TrendingUp, BadgeCheck, Sparkles, Timer, ShieldCheck, ChevronUp, ChevronDown, Mail, MessageCircle, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -23,6 +23,7 @@ import {
   SHEET_TYPE_LABELS,
   type Division,
   type Registration,
+  type RankingEntry,
   type ScoreSheet,
   type RegistrationStatus,
   type ScoringSystem,
@@ -55,8 +56,11 @@ const SHEET_TYPE_ICONS: Record<SheetType, LucideIcon> = {
   building_combined:   ChevronsUp,
   tumbling_combined:   RotateCw,
   deductions_combined: ShieldCheck,
-  icu_dance:           Star,
-  icu_doubles:         Users2,
+  icu_dance:                Star,
+  icu_doubles:              Users2,
+  icu_dance_deductions:     ShieldCheck,
+  icu_dance_solo:           Star,
+  icu_dance_principiantes:  Star,
 };
 
 const SHEET_TYPE_ORDER: SheetType[] = [
@@ -64,7 +68,7 @@ const SHEET_TYPE_ORDER: SheetType[] = [
   'building_difficulty', 'building_execution', 'tumbling_difficulty', 'tumbling_execution',
   'deductions_only', 'safety_rules',
   'building_combined', 'tumbling_combined', 'deductions_combined',
-  'icu_dance', 'icu_doubles',
+  'icu_dance', 'icu_doubles', 'icu_dance_deductions', 'icu_dance_solo', 'icu_dance_principiantes',
 ];
 
 const SHEET_TYPE_COLORS: Record<SheetType, string> = {
@@ -83,8 +87,11 @@ const SHEET_TYPE_COLORS: Record<SheetType, string> = {
   building_combined:   'text-blue-500',
   tumbling_combined:   'text-green-500',
   deductions_combined: 'text-amber-500',
-  icu_dance:           'text-blue-500',
-  icu_doubles:         'text-purple-500',
+  icu_dance:                'text-blue-500',
+  icu_doubles:              'text-purple-500',
+  icu_dance_deductions:     'text-amber-500',
+  icu_dance_solo:           'text-sky-500',
+  icu_dance_principiantes:  'text-teal-500',
 };
 
 
@@ -112,6 +119,8 @@ export default function DivisionDetailPage() {
   }, [isJudge, division, isCompetitionActive, router, id]);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [scoreSheets, setScoreSheets]     = useState<Record<number, ScoreSheet>>({});
+  const [icuRankings, setIcuRankings]     = useState<Record<number, RankingEntry>>({});
+  const isIcuDanceModeRef                 = useRef(false);
   const [loading, setLoading]             = useState(true);
   const [expandedRow, setExpandedRow]     = useState<number | null>(null);
 
@@ -123,6 +132,13 @@ export default function DivisionDetailPage() {
   const [deductionSheetId, setDeductionSheetId]     = useState<number | null>(null);
 
 
+  const loadIcuRankings = useCallback(async () => {
+    const res = await competitionsRepository.getDivisionRankings(divisionId);
+    const map: Record<number, RankingEntry> = {};
+    res.data.entries.forEach((e) => { map[e.registration_id] = e; });
+    setIcuRankings(map);
+  }, [divisionId]);
+
   const loadSheets = useCallback(async () => {
     const res = await competitionsRepository.listScoreSheets({
       registration__division__public_id: divisionId,
@@ -131,12 +147,14 @@ export default function DivisionDetailPage() {
     const map: Record<number, ScoreSheet> = {};
     res.data.results.forEach((s) => { map[s.registration] = s; });
     setScoreSheets(map);
-  }, [divisionId]);
+    if (isIcuDanceModeRef.current) await loadIcuRankings();
+  }, [divisionId, loadIcuRankings]);
 
   const load = useCallback(async () => {
     try {
       const divRes = await competitionsRepository.getDivision(divisionId);
       setDivision(divRes.data);
+      isIcuDanceModeRef.current = divRes.data.competition_sheet_mode === 'icu_dance';
       const regRes = await competitionsRepository.listRegistrations({
         division: String(divRes.data.id),
         page_size: '100',
@@ -252,11 +270,18 @@ export default function DivisionDetailPage() {
     }
   };
 
-  // Ranking: sorted by final_score desc
+  // Ranking: sorted by final_score desc; ICU divisions use IcuJudgeScore aggregates
   const ranked = registrations
     .filter((r) => scoreSheets[r.id])
     .map((r) => ({ reg: r, sheet: scoreSheets[r.id] }))
-    .sort((a, b) => parseFloat(b.sheet.final_score) - parseFloat(a.sheet.final_score));
+    .sort((a, b) => {
+      if (isIcuDanceModeRef.current) {
+        const fa = parseFloat(icuRankings[a.reg.id]?.final_score ?? '0');
+        const fb = parseFloat(icuRankings[b.reg.id]?.final_score ?? '0');
+        return fb - fa;
+      }
+      return parseFloat(b.sheet.final_score) - parseFloat(a.sheet.final_score);
+    });
 
   if (loading) return <PageSpinner />;
   if (!division) return <div className="p-8 text-zinc-500">División no encontrada.</div>;
@@ -270,10 +295,11 @@ export default function DivisionDetailPage() {
   const judgeSheetTypes = sheetTypesForCompetition(division.competition);
   const judgeVisibleSheets = judgeSheetTypes.filter((sheetType) => {
     if (isIcuDanceMode) {
-      return sheetType === 'icu_dance' || sheetType === 'icu_doubles';
+      if (sheetType === 'icu_dance_deductions') return true; // safety judge applies to any ICU division
+      return sheetType === activeScoringSystem; // content judge must match division's scoring system
     }
     // Cheerleader mode — never show ICU dance sheets
-    if (sheetType === 'icu_dance' || sheetType === 'icu_doubles') return false;
+    if (['icu_dance', 'icu_doubles', 'icu_dance_deductions', 'icu_dance_solo', 'icu_dance_principiantes'].includes(sheetType)) return false;
     if (sheetType === 'rangos') return true;
     if (isGrupalMode) {
       if (sheetType === 'partner_stunt') return activeScoringSystem === 'partner_stunt';
@@ -396,9 +422,15 @@ export default function DivisionDetailPage() {
                     {sheet ? (
                       <div className="text-right">
                         <p className="text-sm font-semibold text-zinc-900 tabular-nums">
-                          {parseFloat(sheet.final_score).toFixed(2)}
+                          {isIcuDanceMode
+                            ? parseFloat(icuRankings[reg.id]?.final_score ?? '0').toFixed(2)
+                            : parseFloat(sheet.final_score).toFixed(2)}
                         </p>
-                        <p className="text-[10px] text-zinc-400">{sheet.percentage}%</p>
+                        <p className="text-[10px] text-zinc-400">
+                          {isIcuDanceMode
+                            ? `${parseFloat(icuRankings[reg.id]?.percentage ?? '0').toFixed(1)}%`
+                            : `${sheet.percentage}%`}
+                        </p>
                       </div>
                     ) : (
                       <span className="text-xs text-zinc-400">Sin puntaje</span>
@@ -595,6 +627,36 @@ export default function DivisionDetailPage() {
                           <Users2 className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
+                      {hasJudging && canViewSheet(division.competition,'icu_dance_solo') && isIcuDanceMode && activeScoringSystem === 'icu_dance_solo' && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="ICU Dance Solo / Dúo"
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-dance-solo`)}
+                        >
+                          <Star className="h-3.5 w-3.5 text-sky-500" />
+                        </Button>
+                      )}
+                      {hasJudging && canViewSheet(division.competition,'icu_dance_principiantes') && isIcuDanceMode && activeScoringSystem === 'icu_dance_principiantes' && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="ICU Dance Principiantes"
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-dance-principiantes`)}
+                        >
+                          <Star className="h-3.5 w-3.5 text-teal-500" />
+                        </Button>
+                      )}
+                      {hasJudging && canViewSheet(division.competition,'icu_dance_deductions') && isIcuDanceMode && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Deducciones ICU Dance (Juez de Seguridad)"
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-dance-deductions`)}
+                        >
+                          <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
+                        </Button>
+                      )}
                       {sheet && (
                         <Button
                           size="icon"
@@ -670,10 +732,14 @@ export default function DivisionDetailPage() {
                               <span className="tabular-nums font-medium">{parseFloat(sheet.partner_stunt_total).toFixed(2)}</span>
                             </div>
                           )}
-                          {parseFloat(sheet.icu_dance_total) > 0 && (
+                          {(parseFloat(sheet.icu_dance_total) > 0 || (isIcuDanceMode && icuRankings[reg.id]?.has_score)) && (
                             <div className="flex justify-between text-zinc-600">
-                              <span>ICU Dance</span>
-                              <span className="tabular-nums font-medium">{parseFloat(sheet.icu_dance_total).toFixed(2)}</span>
+                              <span>ICU Dance {icuRankings[reg.id]?.judge_count ? `(${icuRankings[reg.id].judge_count} juez${(icuRankings[reg.id].judge_count ?? 0) !== 1 ? 'ces' : ''})` : ''}</span>
+                              <span className="tabular-nums font-medium">
+                                {isIcuDanceMode
+                                  ? parseFloat(icuRankings[reg.id]?.raw_score ?? '0').toFixed(2)
+                                  : parseFloat(sheet.icu_dance_total).toFixed(2)}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -804,7 +870,9 @@ export default function DivisionDetailPage() {
         const hasCreativity  = ranked.some(({ sheet }) => f(sheet.avg_creativity)      > 0);
         const hasShowmanship = ranked.some(({ sheet }) => f(sheet.avg_showmanship)     > 0);
         const hasPartner     = ranked.some(({ sheet }) => f(sheet.partner_stunt_total) > 0);
-        const hasIcuDance    = ranked.some(({ sheet }) => f(sheet.icu_dance_total)     > 0);
+        const hasIcuDance    = isIcuDanceMode
+          ? Object.values(icuRankings).some((e) => e.has_score)
+          : ranked.some(({ sheet }) => f(sheet.icu_dance_total) > 0);
 
         const hasBuildingDetail = ranked.some(({ sheet }) =>
           f(sheet.stunts_difficulty) > 0 || f(sheet.pyramids_difficulty) > 0 || f(sheet.tosses_difficulty) > 0
@@ -1005,15 +1073,25 @@ export default function DivisionDetailPage() {
                         {hasPartner     && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">{f(sheet.partner_stunt_total).toFixed(2)}</td>}
                         {hasCreativity  && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">{f(sheet.avg_creativity).toFixed(2)}</td>}
                         {hasShowmanship && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">{f(sheet.avg_showmanship).toFixed(2)}</td>}
-                        {hasIcuDance    && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">{f(sheet.icu_dance_total).toFixed(2)}</td>}
+                        {hasIcuDance    && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">
+                          {isIcuDanceMode
+                            ? parseFloat(icuRankings[reg.id]?.raw_score ?? '0').toFixed(2)
+                            : f(sheet.icu_dance_total).toFixed(2)}
+                        </td>}
                         <td className="px-4 py-3.5 text-right tabular-nums text-red-600">
-                          -{f(sheet.total_deductions).toFixed(2)}
+                          -{isIcuDanceMode
+                            ? parseFloat(icuRankings[reg.id]?.total_deductions ?? '0').toFixed(2)
+                            : f(sheet.total_deductions).toFixed(2)}
                         </td>
                         <td className="px-4 py-3.5 text-right tabular-nums font-semibold text-zinc-900">
-                          {parseFloat(sheet.final_score).toFixed(2)}
+                          {isIcuDanceMode
+                            ? parseFloat(icuRankings[reg.id]?.final_score ?? '0').toFixed(2)
+                            : parseFloat(sheet.final_score).toFixed(2)}
                         </td>
                         <td className="px-4 py-3.5 text-right tabular-nums text-zinc-500">
-                          {sheet.percentage}%
+                          {isIcuDanceMode
+                            ? `${parseFloat(icuRankings[reg.id]?.percentage ?? '0').toFixed(1)}%`
+                            : `${sheet.percentage}%`}
                         </td>
                       </tr>
                     ))}

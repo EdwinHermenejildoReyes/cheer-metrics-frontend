@@ -1,5 +1,5 @@
 import api from '@/services/api';
-import type { AthleteInvoiceLine, FanPackage, FanPackageLine, GymInvoice, IcuAggregate, IcuJudgeScore, IcuSheetType, JudgePanel } from '@/types/competitions';
+import type { AthleteInvoiceLine, FanPackage, FanPackageLine, GymInvoice, IcuAggregate, IcuDanceDeductionSheet, IcuJudgeScore, IcuSheetType, JudgePanel } from '@/types/competitions';
 
 export interface PublicResultDeduction {
   type: string;
@@ -404,6 +404,19 @@ class CompetitionsRepository {
     api.get<IcuAggregate>('/icu-judge-scores/aggregate/', {
       params: { registration: registrationId, sheet_type: sheetType },
     });
+
+  // ── ICU Dance deduction sheets (safety judge) ───────────────────────────────
+
+  getIcuDeductionSheet = (registrationId: number) =>
+    api.get<{ results: IcuDanceDeductionSheet[] }>('/icu-dance-deductions/', {
+      params: { registration: registrationId },
+    });
+
+  createIcuDeductionSheet = (data: Partial<IcuDanceDeductionSheet>) =>
+    api.post<IcuDanceDeductionSheet>('/icu-dance-deductions/', data);
+
+  updateIcuDeductionSheet = (id: number, data: Partial<IcuDanceDeductionSheet>) =>
+    api.patch<IcuDanceDeductionSheet>(`/icu-dance-deductions/${id}/`, data);
 }
 
 export default new CompetitionsRepository();

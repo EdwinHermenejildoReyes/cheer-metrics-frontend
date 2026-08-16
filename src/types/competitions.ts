@@ -4,7 +4,8 @@ export type SheetType =
   | 'tumbling_difficulty' | 'tumbling_execution'
   | 'deductions_only' | 'safety_rules'
   | 'building_combined' | 'tumbling_combined' | 'deductions_combined'
-  | 'icu_dance' | 'icu_doubles';
+  | 'icu_dance' | 'icu_doubles'
+  | 'icu_dance_deductions' | 'icu_dance_solo' | 'icu_dance_principiantes';
 
 export const SHEET_TYPE_LABELS: Record<SheetType, string> = {
   building:             'Building',
@@ -22,8 +23,11 @@ export const SHEET_TYPE_LABELS: Record<SheetType, string> = {
   building_combined:    'Elevaciones (Dif. + Ejec.)',
   tumbling_combined:    'Gimnasia (Dif. + Ejec.)',
   deductions_combined:  'Reglas y Deducciones',
-  icu_dance:            'ICU Dance',
-  icu_doubles:          'ICU Doubles',
+  icu_dance:                 'ICU Dance',
+  icu_doubles:               'ICU Doubles',
+  icu_dance_deductions:      'ICU Dance — Juez de Seguridad',
+  icu_dance_solo:            'ICU Dance — Solo / Dúo',
+  icu_dance_principiantes:   'ICU Dance — Principiantes',
 };
 
 export const SHEET_TYPE_GROUPS: { label: string; types: SheetType[] }[] = [
@@ -33,7 +37,7 @@ export const SHEET_TYPE_GROUPS: { label: string; types: SheetType[] }[] = [
   { label: 'Partner Stunt', types: ['partner_stunt'] },
   { label: 'Rangos',        types: ['rangos'] },
   { label: 'Deducciones',   types: ['deducciones', 'deductions_only', 'safety_rules'] },
-  { label: 'ICU Dance',     types: ['icu_dance', 'icu_doubles'] },
+  { label: 'ICU Dance',     types: ['icu_dance', 'icu_doubles', 'icu_dance_deductions', 'icu_dance_solo', 'icu_dance_principiantes'] },
 ];
 
 export interface JudgeAssignment {
@@ -59,7 +63,7 @@ export interface JudgePanel {
   registration_ids: number[];
 }
 
-export type IcuSheetType = 'icu_dance' | 'icu_doubles';
+export type IcuSheetType = 'icu_dance' | 'icu_doubles' | 'icu_dance_solo' | 'icu_dance_principiantes';
 
 export interface IcuJudgeScore {
   id: number;
@@ -86,6 +90,16 @@ export interface IcuJudgeScore {
   icu_overall_movement: string;
   icu_quality_of_movement: string;
   icu_difficulty_of_skills: string;
+  // solo / dúo
+  icu_solo_facial: string;
+  icu_solo_costume: string;
+  icu_solo_overall_effect: string;
+  icu_solo_variety: string;
+  icu_solo_creativity: string;
+  icu_solo_music: string;
+  icu_solo_technique_exec: string;
+  icu_solo_technique_body: string;
+  icu_solo_technique_control: string;
   // comments
   notes: string;
   icu_notes_style_execution: string;
@@ -101,6 +115,38 @@ export interface IcuJudgeScore {
   icu_notes_overall_movement: string;
   icu_notes_quality_of_movement: string;
   icu_notes_difficulty_of_skills: string;
+  icu_notes_solo_facial: string;
+  icu_notes_solo_costume: string;
+  icu_notes_solo_overall_effect: string;
+  icu_notes_solo_variety: string;
+  icu_notes_solo_creativity: string;
+  icu_notes_solo_music: string;
+  icu_notes_solo_technique_exec: string;
+  icu_notes_solo_technique_body: string;
+  icu_notes_solo_technique_control: string;
+}
+
+export interface IcuDanceDeductionSheet {
+  id?: number;
+  registration: number;
+  judge?: number | null;
+  judge_name?: string | null;
+  skill_025_count: number;
+  skill_050_count: number;
+  skill_100_count: number;
+  skill_150_count: number;
+  skill_200_count: number;
+  skill_250_count: number;
+  time_infraction: 'none' | 'low' | 'mid' | 'high';
+  safety_deduction: string;
+  image_policy_count: number;
+  conduct_deduction: string;
+  registration_deduction: string;
+  notes: string;
+  skill_total: string;
+  time_total: string;
+  total_deductions: string;
+  updated_at?: string;
 }
 
 export interface IcuAggregate {
@@ -152,7 +198,7 @@ export const INDIVIDUAL_SHEET_TYPES: SheetType[] = [
   'deductions_only', 'safety_rules',
   'rangos',
 ];
-export const ICU_DANCE_SHEET_TYPES: SheetType[] = ['icu_dance', 'icu_doubles'];
+export const ICU_DANCE_SHEET_TYPES: SheetType[] = ['icu_dance', 'icu_doubles', 'icu_dance_deductions', 'icu_dance_solo', 'icu_dance_principiantes'];
 
 export type Regulation = 'IASF' | 'ICU' | 'AMBAS';
 export type AgeGroup = 'tiny' | 'mini' | 'youth' | 'junior' | 'senior' | 'open';
@@ -163,7 +209,7 @@ export type SkillLevel =
   | 'elite' | 'icc' | 'iasf_cat' | 'star'
   | 'group_stunt' | 'future_flyer' | 'best_cheerleader' | 'paracheer' | 'cheer_parents'
   | 'icu_dance';
-export type DivisionCategory = 'all_girl' | 'coed' | 'all_male' | 'non_tumbling' | 'mixed' | 'pom' | 'hip_hop' | 'jazz' | 'high_kick' | 'doubles_hh';
+export type DivisionCategory = 'all_girl' | 'coed' | 'all_male' | 'non_tumbling' | 'mixed' | 'pom' | 'hip_hop' | 'jazz' | 'high_kick' | 'doubles_hh' | 'solo';
 export type RegistrationStatus = 'pending' | 'confirmed' | 'withdrawn';
 
 // Deduction codes matching the Level Up / Adventure Brands United system
@@ -178,7 +224,7 @@ export type ScoringSystem =
   | 'elite_l1' | 'elite_l2_7' | 'elite_nt' | 'partner_stunt' | 'iasf_l6_7'
   | 'iasf_world_l6_7'
   | 'intl_l1' | 'intl_l2_7' | 'intl_nt'
-  | 'icu_dance' | 'icu_doubles';
+  | 'icu_dance' | 'icu_doubles' | 'icu_dance_solo' | 'icu_dance_principiantes';
 
 // Keys of all sub-score fields on ScoreSheet
 export type ScoreFieldKey =
