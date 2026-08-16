@@ -621,8 +621,10 @@ export const SCORING_SYSTEM_LABELS: Record<ScoringSystem, string> = {
   intl_l1:         'Internacional Nivel 1',
   intl_l2_7:       'Internacional Nivel 2–7',
   intl_nt:         'Internacional Non-Tumbling',
-  icu_dance:       'ICU Dance (POM / Hip Hop / Jazz / High Kick)',
-  icu_doubles:     'ICU Doubles',
+  icu_dance:                'ICU Dance (POM / Hip Hop / Jazz / High Kick)',
+  icu_doubles:              'ICU Doubles',
+  icu_dance_solo:           'ICU Dance Solo / Dúo',
+  icu_dance_principiantes:  'ICU Dance Principiantes',
 };
 
 // Active score fields per scoring system (mirrors backend SCORING_SYSTEM_CONFIG)
@@ -694,6 +696,8 @@ export const SCORING_SYSTEM_FIELDS: Record<ScoringSystem, ScoreFieldKey[]> = {
     'icu_musicality', 'icu_staging', 'icu_complexity', 'icu_difficulty_of_skills',
     'icu_audience_appeal',
   ],
+  icu_dance_solo:          [],
+  icu_dance_principiantes: [],
 };
 
 // Max value per field (used for live totals in the modal)
