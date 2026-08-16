@@ -55,6 +55,8 @@ const SHEET_TYPE_ICONS: Record<SheetType, LucideIcon> = {
   building_combined:   ChevronsUp,
   tumbling_combined:   RotateCw,
   deductions_combined: ShieldCheck,
+  icu_dance:           Star,
+  icu_doubles:         Users2,
 };
 
 const SHEET_TYPE_ORDER: SheetType[] = [
@@ -62,6 +64,7 @@ const SHEET_TYPE_ORDER: SheetType[] = [
   'building_difficulty', 'building_execution', 'tumbling_difficulty', 'tumbling_execution',
   'deductions_only', 'safety_rules',
   'building_combined', 'tumbling_combined', 'deductions_combined',
+  'icu_dance', 'icu_doubles',
 ];
 
 const SHEET_TYPE_COLORS: Record<SheetType, string> = {
@@ -80,6 +83,8 @@ const SHEET_TYPE_COLORS: Record<SheetType, string> = {
   building_combined:   'text-blue-500',
   tumbling_combined:   'text-green-500',
   deductions_combined: 'text-amber-500',
+  icu_dance:           'text-blue-500',
+  icu_doubles:         'text-purple-500',
 };
 
 
@@ -258,11 +263,17 @@ export default function DivisionDetailPage() {
 
   const activeScoringSystem = (division.scoring_system || division.suggested_scoring_system) as ScoringSystem;
   const isIasfWorld = activeScoringSystem === 'iasf_world_l6_7';
-  const isGrupalMode = (division.competition_sheet_mode ?? 'grupal') !== 'individual';
+  const isIcuDanceMode = division.competition_sheet_mode === 'icu_dance';
+  const isGrupalMode = !isIcuDanceMode && (division.competition_sheet_mode ?? 'grupal') !== 'individual';
   const hasJudging = division.competition_service_type !== 'registration_only';
   const hasRegistration = division.competition_service_type !== 'judging_only';
   const judgeSheetTypes = sheetTypesForCompetition(division.competition);
   const judgeVisibleSheets = judgeSheetTypes.filter((sheetType) => {
+    if (isIcuDanceMode) {
+      return sheetType === 'icu_dance' || sheetType === 'icu_doubles';
+    }
+    // Cheerleader mode — never show ICU dance sheets
+    if (sheetType === 'icu_dance' || sheetType === 'icu_doubles') return false;
     if (sheetType === 'rangos') return true;
     if (isGrupalMode) {
       if (sheetType === 'partner_stunt') return activeScoringSystem === 'partner_stunt';
@@ -312,8 +323,8 @@ export default function DivisionDetailPage() {
         )}
       </div>
 
-      {/* Skill reference tables — visible to all users */}
-      {hasJudging && (
+      {/* Skill reference tables — cheerleader only */}
+      {hasJudging && !isIcuDanceMode && (
         <div className="flex flex-col gap-2">
           <SkillReferencePanel skillLevel={division.skill_level} sheetType="building" />
           <SkillReferencePanel skillLevel={division.skill_level} sheetType="tumbling" />
@@ -493,7 +504,7 @@ export default function DivisionDetailPage() {
                           <Gauge className="h-3.5 w-3.5 text-amber-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'building_difficulty') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(division.competition,'building_difficulty') && !isGrupalMode && !isIcuDanceMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -503,7 +514,7 @@ export default function DivisionDetailPage() {
                           <TrendingUp className="h-3.5 w-3.5 text-blue-700" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'building_execution') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(division.competition,'building_execution') && !isGrupalMode && !isIcuDanceMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -513,7 +524,7 @@ export default function DivisionDetailPage() {
                           <BadgeCheck className="h-3.5 w-3.5 text-blue-400" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'tumbling_difficulty') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(division.competition,'tumbling_difficulty') && !isGrupalMode && !isIcuDanceMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -523,7 +534,7 @@ export default function DivisionDetailPage() {
                           <TrendingUp className="h-3.5 w-3.5 text-green-700" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'tumbling_execution') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(division.competition,'tumbling_execution') && !isGrupalMode && !isIcuDanceMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -533,7 +544,7 @@ export default function DivisionDetailPage() {
                           <Sparkles className="h-3.5 w-3.5 text-green-400" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'overall') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(division.competition,'overall') && !isGrupalMode && !isIcuDanceMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -543,7 +554,7 @@ export default function DivisionDetailPage() {
                           <Star className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'deductions_only') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(division.competition,'deductions_only') && !isGrupalMode && !isIcuDanceMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -553,7 +564,7 @@ export default function DivisionDetailPage() {
                           <Timer className="h-3.5 w-3.5 text-orange-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'safety_rules') && !isGrupalMode && (
+                      {hasJudging && canViewSheet(division.competition,'safety_rules') && !isGrupalMode && !isIcuDanceMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -561,6 +572,27 @@ export default function DivisionDetailPage() {
                           onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/safety-rules`)}
                         >
                           <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
+                        </Button>
+                      )}
+                      {/* ICU Dance quick-link buttons */}
+                      {hasJudging && canViewSheet(division.competition,'icu_dance') && isIcuDanceMode && activeScoringSystem === 'icu_dance' && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="ICU Dance"
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-dance`)}
+                        >
+                          <Star className="h-3.5 w-3.5 text-blue-500" />
+                        </Button>
+                      )}
+                      {hasJudging && canViewSheet(division.competition,'icu_doubles') && isIcuDanceMode && activeScoringSystem === 'icu_doubles' && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="ICU Doubles HH"
+                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-doubles`)}
+                        >
+                          <Users2 className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
                       {sheet && (
@@ -636,6 +668,12 @@ export default function DivisionDetailPage() {
                             <div className="flex justify-between text-zinc-600">
                               <span>Parejas</span>
                               <span className="tabular-nums font-medium">{parseFloat(sheet.partner_stunt_total).toFixed(2)}</span>
+                            </div>
+                          )}
+                          {parseFloat(sheet.icu_dance_total) > 0 && (
+                            <div className="flex justify-between text-zinc-600">
+                              <span>ICU Dance</span>
+                              <span className="tabular-nums font-medium">{parseFloat(sheet.icu_dance_total).toFixed(2)}</span>
                             </div>
                           )}
                         </div>
@@ -766,6 +804,7 @@ export default function DivisionDetailPage() {
         const hasCreativity  = ranked.some(({ sheet }) => f(sheet.avg_creativity)      > 0);
         const hasShowmanship = ranked.some(({ sheet }) => f(sheet.avg_showmanship)     > 0);
         const hasPartner     = ranked.some(({ sheet }) => f(sheet.partner_stunt_total) > 0);
+        const hasIcuDance    = ranked.some(({ sheet }) => f(sheet.icu_dance_total)     > 0);
 
         const hasBuildingDetail = ranked.some(({ sheet }) =>
           f(sheet.stunts_difficulty) > 0 || f(sheet.pyramids_difficulty) > 0 || f(sheet.tosses_difficulty) > 0
@@ -946,6 +985,7 @@ export default function DivisionDetailPage() {
                       {hasPartner     && <th className="px-4 py-3 text-right">Partner</th>}
                       {hasCreativity  && <th className="px-4 py-3 text-right">Creatividad</th>}
                       {hasShowmanship && <th className="px-4 py-3 text-right">Showmanship</th>}
+                      {hasIcuDance    && <th className="px-4 py-3 text-right">ICU Dance</th>}
                       <th className="px-4 py-3 text-right">Desc.</th>
                       <th className="px-4 py-3 text-right">P. final</th>
                       <th className="px-4 py-3 text-right">%</th>
@@ -965,6 +1005,7 @@ export default function DivisionDetailPage() {
                         {hasPartner     && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">{f(sheet.partner_stunt_total).toFixed(2)}</td>}
                         {hasCreativity  && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">{f(sheet.avg_creativity).toFixed(2)}</td>}
                         {hasShowmanship && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">{f(sheet.avg_showmanship).toFixed(2)}</td>}
+                        {hasIcuDance    && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">{f(sheet.icu_dance_total).toFixed(2)}</td>}
                         <td className="px-4 py-3.5 text-right tabular-nums text-red-600">
                           -{f(sheet.total_deductions).toFixed(2)}
                         </td>

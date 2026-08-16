@@ -471,6 +471,9 @@ const CONFIGS: Record<ScoringSystem, ScoringConfig> = {
   iasf_world_l6_7: { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
   // Partner stunt has a completely different page, use elite as safe fallback
   partner_stunt:   { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
+  // ICU Dance has dedicated pages; use elite as safe fallback for modal
+  icu_dance:       { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
+  icu_doubles:     { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
 };
 
 export function getScoringConfig(division: Division): ScoringConfig {

@@ -20,9 +20,9 @@ const schema = z.object({
   date:           z.string().min(1, 'Requerido'),
   venue:          z.string().min(2, 'Requerido'),
   city:           z.string().min(2, 'Requerido'),
-  scoring_family: z.enum(['united', 'iasf_567', 'icu', 'partner_stunt', 'future_flyer', 'best_cheer']),
+  scoring_family: z.enum(['united', 'iasf_567', 'icu', 'partner_stunt', 'future_flyer', 'best_cheer', 'icu_dance']),
   service_type:   z.enum(['full', 'registration_only', 'judging_only']),
-  sheet_mode:     z.enum(['grupal', 'individual']),
+  sheet_mode:     z.enum(['grupal', 'individual', 'icu_dance']),
   notes:          z.string().optional(),
   organization:   z.string().optional(),
   require_payment: z.boolean().optional(),
@@ -44,6 +44,7 @@ const SCORING_FAMILY_OPTIONS = [
   { value: 'partner_stunt', label: 'Partner / Group Stunts' },
   { value: 'future_flyer',  label: 'Future Flyer' },
   { value: 'best_cheer',    label: 'Best Cheerleader' },
+  { value: 'icu_dance',     label: 'ICU Dance (POM / Hip Hop / Jazz / High Kick / Doubles HH)' },
 ];
 
 const SERVICE_TYPE_OPTIONS = [
@@ -68,7 +69,7 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
   const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: initial
-      ? { ...initial, scoring_family: (initial.scoring_family ?? 'united') as ScoringFamily, sheet_mode: (initial.sheet_mode ?? 'grupal') as 'grupal' | 'individual', organization: initial.organization ? String(initial.organization) : '' }
+      ? { ...initial, scoring_family: (initial.scoring_family ?? 'united') as ScoringFamily, sheet_mode: (initial.sheet_mode ?? 'grupal') as 'grupal' | 'individual' | 'icu_dance', organization: initial.organization ? String(initial.organization) : '' }
       : DEFAULT_VALUES,
   });
 
@@ -86,7 +87,7 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
       const defaultOrg = user?.role === 'org_admin' && user.organization ? String(user.organization) : '';
       reset(
         initial
-          ? { ...initial, scoring_family: (initial.scoring_family ?? 'united') as ScoringFamily, sheet_mode: (initial.sheet_mode ?? 'grupal') as 'grupal' | 'individual', organization: initial.organization ? String(initial.organization) : defaultOrg }
+          ? { ...initial, scoring_family: (initial.scoring_family ?? 'united') as ScoringFamily, sheet_mode: (initial.sheet_mode ?? 'grupal') as 'grupal' | 'individual' | 'icu_dance', organization: initial.organization ? String(initial.organization) : defaultOrg }
           : { ...DEFAULT_VALUES, organization: defaultOrg },
       );
     }

@@ -350,6 +350,16 @@ export default function CompetitionDetailPage() {
                 <ClipboardList className="h-3.5 w-3.5" />
                 Backstage
               </Button>
+              {competition.scoring_family === 'icu_dance' && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => router.push(`/competitions/${id}/panels`)}
+                >
+                  <Users className="h-3.5 w-3.5" />
+                  Paneles ICU
+                </Button>
+              )}
               <Button
                 variant="secondary"
                 size="sm"
@@ -895,6 +905,7 @@ export default function CompetitionDetailPage() {
         onClose={() => setDivModalOpen(false)}
         onSaved={handleDivSaved}
         competitionId={competition.id}
+        sheetMode={competition.sheet_mode}
         initial={editingDivision}
       />
     </div>

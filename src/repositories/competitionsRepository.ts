@@ -1,5 +1,5 @@
 import api from '@/services/api';
-import type { AthleteInvoiceLine, FanPackage, FanPackageLine, GymInvoice } from '@/types/competitions';
+import type { AthleteInvoiceLine, FanPackage, FanPackageLine, GymInvoice, IcuAggregate, IcuJudgeScore, IcuSheetType, JudgePanel } from '@/types/competitions';
 
 export interface PublicResultDeduction {
   type: string;
@@ -360,6 +360,50 @@ class CompetitionsRepository {
 
   deleteFanPackageLine = (id: number) =>
     api.delete(`/fan-package-lines/${id}/`);
+
+  // ── ICU judge panels ───────────────────────────────────────────────────────
+
+  listJudgePanels = (params: Record<string, string | number>) =>
+    api.get<{ results: JudgePanel[] }>('/judge-panels/', { params });
+
+  createJudgePanel = (data: { competition: number; name: string }) =>
+    api.post<JudgePanel>('/judge-panels/', data);
+
+  updateJudgePanel = (id: number, data: Partial<JudgePanel>) =>
+    api.patch<JudgePanel>(`/judge-panels/${id}/`, data);
+
+  deleteJudgePanel = (id: number) =>
+    api.delete(`/judge-panels/${id}/`);
+
+  assignRegistrationsToPanel = (panelId: number, registrationIds: number[]) =>
+    api.post<JudgePanel>(`/judge-panels/${panelId}/assign-registrations/`, { registration_ids: registrationIds });
+
+  autoAssignPanels = (competitionId: number) =>
+    api.post<JudgePanel[]>('/judge-panels/auto-assign/', { competition: competitionId });
+
+  // ── ICU judge scores ───────────────────────────────────────────────────────
+
+  listIcuJudgeScores = (params: Record<string, string | number>) =>
+    api.get<{ results: IcuJudgeScore[] }>('/icu-judge-scores/', { params });
+
+  getIcuJudgeScore = (id: number) =>
+    api.get<IcuJudgeScore>(`/icu-judge-scores/${id}/`);
+
+  getMyIcuJudgeScore = (registrationId: number, sheetType: IcuSheetType, judgeId: number) =>
+    api.get<{ results: IcuJudgeScore[] }>('/icu-judge-scores/', {
+      params: { registration: registrationId, sheet_type: sheetType, judge: judgeId },
+    });
+
+  createIcuJudgeScore = (data: Partial<IcuJudgeScore>) =>
+    api.post<IcuJudgeScore>('/icu-judge-scores/', data);
+
+  updateIcuJudgeScore = (id: number, data: Partial<IcuJudgeScore>) =>
+    api.patch<IcuJudgeScore>(`/icu-judge-scores/${id}/`, data);
+
+  getIcuAggregate = (registrationId: number, sheetType: IcuSheetType) =>
+    api.get<IcuAggregate>('/icu-judge-scores/aggregate/', {
+      params: { registration: registrationId, sheet_type: sheetType },
+    });
 }
 
 export default new CompetitionsRepository();

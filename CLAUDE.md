@@ -102,6 +102,8 @@ python manage.py mark_all_paid --competition <id>              # mark all GymInv
 
 **CompetitionViewSet custom actions** — Beyond CRUD, `CompetitionViewSet` (lookup by `public_id`) exposes: `GET /{id}/schedule-conflicts/?min_gap=3` (delegates to `apps/competitions/scheduler.py`), `POST /{id}/auto-assign-orders/` (assigns sequential `performance_order` to all confirmed registrations), and `POST /{id}/import-inscripcion/` / `POST /{id}/import-judging/` (file-upload triggers for the two importers).
 
+**Grand Champion** — `GET /api/v1/competitions/<uuid>/grand-champion/` (standalone `APIView`, not a ViewSet action) returns all scored registrations across every division in the competition, sorted by `final_score` descending with a rank field. Used to compute the overall best team regardless of division. Frontend page: `/competitions/[id]/grand-champion`. Types: `GrandChampionData` / `GrandChampionEntry` in `src/types/competitions.ts`.
+
 **RegistrationViewSet custom actions** — Beyond CRUD (lookup by `public_id`): `POST /{id}/move/?direction=up|down` (swap `performance_order`), `POST /{id}/send-report/` (email scorecard to `contact_email`), `POST /{id}/send-whatsapp/` (WhatsApp report via wa.me), `GET /{id}/pdf-report/` (PDF scorecard, authenticated), `GET /{id}/public-pdf/` (PDF via `public_id`, no auth), `GET /{id}/public-result/` (public JSON result via `public_id`).
 
 **Email service** — `apps/core/services.py` defines `EmailService.send_notification(subject, message, recipient_email, html_message=None)` as the canonical way to send transactional email from backend code. Use this rather than calling `send_mail` directly.
