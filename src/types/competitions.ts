@@ -51,6 +51,8 @@ export interface JudgeAssignment {
   competition_end_datetime: string | null;
   competition_is_active: boolean;
   sheet_type: SheetType;
+  panel: number | null;
+  panel_name: string | null;
   access_from: string | null;
   access_until: string | null;
   is_access_active: boolean;

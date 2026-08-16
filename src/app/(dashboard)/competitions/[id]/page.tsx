@@ -32,6 +32,7 @@ import {
   type Competition,
   type Division,
   type JudgeAssignment,
+  type JudgePanel,
   type SheetType,
   type ScoringSystem,
 } from '@/types/competitions';
@@ -50,7 +51,9 @@ export default function CompetitionDetailPage() {
   const [judgesOpen, setJudgesOpen] = useState(false);
   const [assignments, setAssignments] = useState<JudgeAssignment[]>([]);
   const [users, setUsers] = useState<SimpleUser[]>([]);
+  const [panels, setPanels] = useState<JudgePanel[]>([]);
   const [newJudgeUserId, setNewJudgeUserId] = useState('');
+  const [newJudgePanelId, setNewJudgePanelId] = useState('');
   const [newJudgeSheets, setNewJudgeSheets] = useState<SheetType[]>([]);
   const [newJudgeFrom, setNewJudgeFrom] = useState('');
   const [newJudgeUntil, setNewJudgeUntil] = useState('');
@@ -109,13 +112,15 @@ export default function CompetitionDetailPage() {
 
   const loadJudges = useCallback(async () => {
     if (!competition) return;
-    const [assignRes, usersRes] = await Promise.all([
+    const [assignRes, usersRes, panelsRes] = await Promise.all([
       competitionsRepository.listJudgeAssignments({ competition: String(competition.id), page_size: '100' }),
       authRepository.listUsers(),
+      competitionsRepository.listJudgePanels({ competition__public_id: id, page_size: '100' }),
     ]);
     setAssignments(assignRes.data.results);
     setUsers(usersRes.data);
-  }, [competition]);
+    setPanels(panelsRes.data.results);
+  }, [competition, id]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -224,6 +229,7 @@ export default function CompetitionDetailPage() {
             user: Number(newJudgeUserId),
             competition: competition!.id,
             sheet_type: sheet,
+            panel: newJudgePanelId ? Number(newJudgePanelId) : null,
             access_from: new Date(newJudgeFrom).toISOString(),
             access_until: new Date(newJudgeUntil).toISOString(),
           })
@@ -232,6 +238,7 @@ export default function CompetitionDetailPage() {
       const count = newJudgeSheets.length;
       toast.success(`${count} planilla${count !== 1 ? 's' : ''} asignada${count !== 1 ? 's' : ''}`);
       setNewJudgeUserId('');
+      setNewJudgePanelId('');
       setNewJudgeSheets([]);
       setNewJudgeFrom('');
       setNewJudgeUntil('');
@@ -595,6 +602,24 @@ export default function CompetitionDetailPage() {
                     <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
                   </div>
                 </div>
+                {panels.length > 0 && (
+                  <div>
+                    <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Panel</label>
+                    <div className="relative">
+                      <select
+                        value={newJudgePanelId}
+                        onChange={(e) => setNewJudgePanelId(e.target.value)}
+                        className="w-full h-9 appearance-none rounded-lg border border-zinc-300 bg-white pl-3 pr-8 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 hover:border-zinc-400"
+                      >
+                        <option value="">— Sin panel —</option>
+                        {panels.map((p) => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
+                    </div>
+                  </div>
+                )}
                 <div className="col-span-2 lg:flex-1">
                   <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Planilla</label>
                   <SheetTypeMultiSelect
@@ -686,6 +711,11 @@ export default function CompetitionDetailPage() {
                                   {rg.items.map((a) => (
                                     <span key={a.id} className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">
                                       {SHEET_TYPE_LABELS[a.sheet_type]}
+                                      {a.panel_name && (
+                                        <span className="rounded bg-blue-100 text-blue-700 px-1 py-0.5 text-[10px] font-semibold leading-none">
+                                          {a.panel_name}
+                                        </span>
+                                      )}
                                       <button
                                         type="button"
                                         onClick={() => handleRemoveJudge(a.id)}
