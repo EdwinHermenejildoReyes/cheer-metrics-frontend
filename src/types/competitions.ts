@@ -541,7 +541,7 @@ export const CATEGORY_LABELS: Record<DivisionCategory, string> = {
   all_girl: 'All Girl', coed: 'Coed', all_male: 'All Male', non_tumbling: 'Non-Tumbling',
   mixed: 'Mixto',
   pom: 'Pom', hip_hop: 'Hip Hop', jazz: 'Jazz', high_kick: 'High Kick',
-  doubles_hh: 'Doubles HH',
+  doubles_hh: 'Doubles HH', solo: 'Solo / Dúo',
 };
 
 export const REGISTRATION_STATUS_LABELS: Record<RegistrationStatus, string> = {
