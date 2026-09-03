@@ -82,7 +82,7 @@ export default function CompetitionDetailPage() {
   const [creatingToken, setCreatingToken] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
-  const { isJudge, isCompetitionActive } = useJudge();
+  const { isJudge, isCompetitionActive, canViewDivision } = useJudge();
   const { organization } = useBranding();
   const confirm = useConfirm();
 
@@ -253,6 +253,7 @@ export default function CompetitionDetailPage() {
             competition: competition!.id,
             sheet_type: sheet,
             panel: newJudgePanelId ? Number(newJudgePanelId) : null,
+            divisions: selectedDivIds,
             access_from: new Date(newJudgeFrom).toISOString(),
             access_until: new Date(newJudgeUntil).toISOString(),
           })
@@ -317,6 +318,10 @@ export default function CompetitionDetailPage() {
 
   if (loading) return <PageSpinner />;
   if (!competition) return <div className="p-8 text-zinc-500">Competencia no encontrada.</div>;
+
+  const visibleDivisions = isJudge
+    ? divisions.filter((d) => canViewDivision(competition.id, d.id))
+    : divisions;
 
   return (
     <div className="flex flex-col gap-6 p-8">
@@ -471,10 +476,10 @@ export default function CompetitionDetailPage() {
           )}
         </div>
 
-        {divisions.length === 0 ? (
+        {visibleDivisions.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-14 text-zinc-400 rounded-xl border border-dashed border-zinc-200">
             <Users className="h-8 w-8" />
-            <p className="text-sm">Sin divisiones. Agrega la primera.</p>
+            <p className="text-sm">{isJudge ? 'No tienes divisiones asignadas.' : 'Sin divisiones. Agrega la primera.'}</p>
           </div>
         ) : (
           <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
@@ -491,7 +496,7 @@ export default function CompetitionDetailPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
-                {divisions.map((div) => (
+                {visibleDivisions.map((div) => (
                   <tr
                     key={div.id}
                     className="cursor-pointer hover:bg-zinc-50 transition-colors"
@@ -799,6 +804,16 @@ export default function CompetitionDetailPage() {
                                   {' → '}
                                   {rg.until && rg.until !== 'null' ? new Date(rg.until).toLocaleString('es-EC') : '—'}
                                 </p>
+                                {(() => {
+                                  const divIds = rg.items[0]?.divisions ?? [];
+                                  if (divIds.length === 0) return null;
+                                  const names = divIds.map(did => divisions.find(d => d.id === did)?.name ?? String(did));
+                                  return (
+                                    <p className="text-[11px] text-zinc-400 mt-0.5">
+                                      Divisiones: {names.join(', ')}
+                                    </p>
+                                  );
+                                })()}
                               </div>
                             );
                           })}

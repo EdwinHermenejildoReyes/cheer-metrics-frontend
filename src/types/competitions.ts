@@ -53,6 +53,7 @@ export interface JudgeAssignment {
   sheet_type: SheetType;
   panel: number | null;
   panel_name: string | null;
+  divisions: number[];
   access_from: string | null;
   access_until: string | null;
   is_access_active: boolean;

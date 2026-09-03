@@ -43,6 +43,16 @@ export function useJudge() {
     return myCompetitionIds.includes(competitionId);
   };
 
+  /** True when the judge has at least one assignment covering this division (empty divisions = all). */
+  const canViewDivision = (competitionId: number, divisionId: number): boolean => {
+    if (!isJudge) return true;
+    return assignments.some((a) => {
+      if (a.competition !== competitionId) return false;
+      if (!a.divisions || a.divisions.length === 0) return true;
+      return a.divisions.includes(divisionId);
+    });
+  };
+
   return {
     isAdmin,
     isJudge,
@@ -52,5 +62,6 @@ export function useJudge() {
     sheetTypesForCompetition,
     canViewSheet,
     canViewCompetition,
+    canViewDivision,
   };
 }

@@ -106,7 +106,7 @@ export default function DivisionDetailPage() {
   const router = useRouter();
   const { id, divisionId } = useParams<{ id: string; divisionId: string }>();
 
-  const { isJudge, isCompetitionActive, canViewSheet, sheetTypesForCompetition } = useJudge();
+  const { isJudge, isCompetitionActive, canViewSheet, sheetTypesForCompetition, canViewDivision } = useJudge();
 
   const [division, setDivision]       = useState<Division | null>(null);
 
@@ -297,9 +297,10 @@ export default function DivisionDetailPage() {
   const isSheetAllowedInDivision = (st: SheetType) =>
     !division.allowed_sheet_types || division.allowed_sheet_types.includes(st);
   const canViewSheetInDivision = (st: SheetType) =>
-    canViewSheet(compId, st) && isSheetAllowedInDivision(st);
+    canViewSheet(compId, st) && isSheetAllowedInDivision(st) && canViewDivision(compId, division.id);
 
   const judgeVisibleSheets = judgeSheetTypes.filter((sheetType) => {
+    if (!canViewDivision(compId, division.id)) return false;
     if (!isSheetAllowedInDivision(sheetType)) return false;
     if (isIcuDanceMode) {
       if (sheetType === 'icu_dance_deductions') return true; // safety judge applies to any ICU division
