@@ -59,6 +59,7 @@ export default function CompetitionDetailPage() {
   const [newJudgeFrom, setNewJudgeFrom] = useState('');
   const [newJudgeUntil, setNewJudgeUntil] = useState('');
   const [addingJudge, setAddingJudge] = useState(false);
+  const [judgeScope, setJudgeScope] = useState<'all' | 'specific'>('all');
   const [selectedDivIds, setSelectedDivIds] = useState<number[]>([]);
 
   const [conflictsOpen, setConflictsOpen] = useState(false);
@@ -266,6 +267,7 @@ export default function CompetitionDetailPage() {
       setNewJudgeSheets([]);
       setNewJudgeFrom('');
       setNewJudgeUntil('');
+      setJudgeScope('all');
       setSelectedDivIds([]);
       await loadJudges();
     } catch {
@@ -684,11 +686,31 @@ export default function CompetitionDetailPage() {
                   {/* Division selector */}
                   <div>
                     <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Divisiones</label>
-                    <DivisionMultiSelect
-                      divisions={divisions}
-                      value={selectedDivIds}
-                      onChange={setSelectedDivIds}
-                    />
+                    <div className="flex flex-col gap-1.5">
+                      <div className="inline-flex rounded-lg border border-zinc-300 overflow-hidden w-fit">
+                        <button
+                          type="button"
+                          onClick={() => { setJudgeScope('all'); setSelectedDivIds([]); }}
+                          className={`px-3 py-1.5 text-xs font-medium transition-colors ${judgeScope === 'all' ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-600 hover:bg-zinc-50'}`}
+                        >
+                          Todas
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setJudgeScope('specific')}
+                          className={`px-3 py-1.5 text-xs font-medium transition-colors border-l border-zinc-300 ${judgeScope === 'specific' ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-600 hover:bg-zinc-50'}`}
+                        >
+                          Específicas
+                        </button>
+                      </div>
+                      {judgeScope === 'specific' && (
+                        <DivisionMultiSelect
+                          divisions={divisions}
+                          value={selectedDivIds}
+                          onChange={setSelectedDivIds}
+                        />
+                      )}
+                    </div>
                   </div>
 
                   {/* Sheet type selector */}
@@ -789,6 +811,11 @@ export default function CompetitionDetailPage() {
                                           {a.panel_name}
                                         </span>
                                       )}
+                                      {a.divisions.length > 0 && (
+                                        <span className="rounded bg-emerald-100 text-emerald-700 px-1 py-0.5 text-[10px] font-semibold leading-none">
+                                          {a.divisions.map(did => divisions.find(d => d.id === did)?.name ?? String(did)).join(', ')}
+                                        </span>
+                                      )}
                                       <button
                                         type="button"
                                         onClick={() => handleRemoveJudge(a.id)}
@@ -804,16 +831,6 @@ export default function CompetitionDetailPage() {
                                   {' → '}
                                   {rg.until && rg.until !== 'null' ? new Date(rg.until).toLocaleString('es-EC') : '—'}
                                 </p>
-                                {(() => {
-                                  const divIds = rg.items[0]?.divisions ?? [];
-                                  if (divIds.length === 0) return null;
-                                  const names = divIds.map(did => divisions.find(d => d.id === did)?.name ?? String(did));
-                                  return (
-                                    <p className="text-[11px] text-zinc-400 mt-0.5">
-                                      Divisiones: {names.join(', ')}
-                                    </p>
-                                  );
-                                })()}
                               </div>
                             );
                           })}
