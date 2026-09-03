@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { PageSpinner } from '@/components/ui/spinner';
 import { CompetitionModal } from '@/components/competitions/CompetitionModal';
 import { DivisionModal } from '@/components/competitions/DivisionModal';
+import { SheetTypeMultiSelect } from '@/components/competitions/SheetTypeMultiSelect';
 import competitionsRepository, { type RestConflict } from '@/repositories/competitionsRepository';
 import authRepository, { type SimpleUser } from '@/repositories/authRepository';
 import publicRegistrationRepository from '@/repositories/publicRegistrationRepository';
@@ -26,6 +27,7 @@ import {
   SCORING_SYSTEM_LABELS,
   SCORING_FAMILY_LABELS,
   SHEET_TYPE_LABELS,
+  SHEET_TYPE_GROUPS,
   GRUPAL_SHEET_TYPES,
   INDIVIDUAL_SHEET_TYPES,
   ICU_DANCE_SHEET_TYPES,
@@ -54,6 +56,7 @@ export default function CompetitionDetailPage() {
   const [panels, setPanels] = useState<JudgePanel[]>([]);
   const [newJudgeUserId, setNewJudgeUserId] = useState('');
   const [newJudgePanelId, setNewJudgePanelId] = useState('');
+  const [newJudgeSheets, setNewJudgeSheets] = useState<SheetType[]>([]);
   const [newJudgeFrom, setNewJudgeFrom] = useState('');
   const [newJudgeUntil, setNewJudgeUntil] = useState('');
   const [addingJudge, setAddingJudge] = useState(false);
@@ -146,20 +149,14 @@ export default function CompetitionDetailPage() {
     return GRUPAL_SHEET_TYPES;
   }, [competition]);
 
-  const newJudgeSheets = useMemo((): SheetType[] => {
-    const divList = judgeScope === 'all'
-      ? divisions
-      : divisions.filter((d) => selectedDivIds.has(d.id));
+  const computeSheetsForDivs = useCallback((divList: Division[]): SheetType[] => {
     const collected = new Set<SheetType>();
     divList.forEach((div) => {
       const types = div.allowed_sheet_types ?? baseSheetTypes;
       types.forEach((t) => collected.add(t));
     });
-    const alreadyAssigned = new Set(
-      assignments.filter((a) => String(a.user) === newJudgeUserId).map((a) => a.sheet_type)
-    );
-    return [...collected].filter((s) => !alreadyAssigned.has(s));
-  }, [judgeScope, selectedDivIds, divisions, baseSheetTypes, newJudgeUserId, assignments]);
+    return [...collected];
+  }, [baseSheetTypes]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -282,6 +279,7 @@ export default function CompetitionDetailPage() {
       toast.success(`${count} planilla${count !== 1 ? 's' : ''} asignada${count !== 1 ? 's' : ''}`);
       setNewJudgeUserId('');
       setNewJudgePanelId('');
+      setNewJudgeSheets([]);
       setNewJudgeFrom('');
       setNewJudgeUntil('');
       setJudgeScope('all');
@@ -695,83 +693,101 @@ export default function CompetitionDetailPage() {
                     </div>
                   </div>
                 )}
-                <div className="col-span-2 lg:flex-1">
-                  <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-2 block">Divisiones</label>
-                  {/* Scope toggle */}
-                  <div className="inline-flex rounded-lg border border-zinc-200 bg-white p-0.5 mb-3">
-                    <button
-                      type="button"
-                      onClick={() => { setJudgeScope('all'); setSelectedDivIds(new Set()); }}
-                      className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${judgeScope === 'all' ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:text-zinc-700'}`}
-                    >
-                      Todas
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setJudgeScope('specific'); setSelectedDivIds(new Set()); }}
-                      className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${judgeScope === 'specific' ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:text-zinc-700'}`}
-                    >
-                      Específicas
-                    </button>
+                <div className="col-span-2 lg:flex-1 flex flex-col gap-3">
+                  {/* Division scope selector */}
+                  <div>
+                    <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-2 block">Divisiones</label>
+                    <div className="inline-flex rounded-lg border border-zinc-200 bg-white p-0.5 mb-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setJudgeScope('all');
+                          setSelectedDivIds(new Set());
+                          setNewJudgeSheets(computeSheetsForDivs(divisions));
+                        }}
+                        className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${judgeScope === 'all' ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:text-zinc-700'}`}
+                      >
+                        Todas
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setJudgeScope('specific');
+                          setSelectedDivIds(new Set());
+                          setNewJudgeSheets([]);
+                        }}
+                        className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${judgeScope === 'specific' ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:text-zinc-700'}`}
+                      >
+                        Específicas
+                      </button>
+                    </div>
+
+                    {judgeScope === 'specific' && (
+                      <div className="flex flex-col gap-1.5 max-h-44 overflow-y-auto pr-0.5">
+                        {divisions.length === 0 && (
+                          <p className="text-xs text-zinc-400">No hay divisiones en esta competencia.</p>
+                        )}
+                        {divisions.map((div) => {
+                          const divSheets = div.allowed_sheet_types ?? baseSheetTypes;
+                          const isChecked = selectedDivIds.has(div.id);
+                          return (
+                            <label
+                              key={div.id}
+                              className={`flex items-start gap-2 rounded-lg border px-3 py-2 cursor-pointer transition-colors ${isChecked ? 'border-zinc-400 bg-zinc-50' : 'border-zinc-200 hover:bg-zinc-50'}`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  const next = new Set(selectedDivIds);
+                                  if (e.target.checked) next.add(div.id);
+                                  else next.delete(div.id);
+                                  setSelectedDivIds(next);
+                                  setNewJudgeSheets(computeSheetsForDivs(divisions.filter((d) => next.has(d.id))));
+                                }}
+                                className="mt-0.5 h-3.5 w-3.5 rounded border-zinc-300 accent-zinc-900"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium text-zinc-800 leading-tight">{div.name}</p>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {divSheets.map((s) => (
+                                    <span key={s} className="rounded bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium text-zinc-500">
+                                      {SHEET_TYPE_LABELS[s]}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
-                  {judgeScope === 'specific' && (
-                    <div className="flex flex-col gap-1.5 max-h-44 overflow-y-auto pr-0.5 mb-2">
-                      {divisions.length === 0 && (
-                        <p className="text-xs text-zinc-400">No hay divisiones en esta competencia.</p>
-                      )}
-                      {divisions.map((div) => {
-                        const divSheets = div.allowed_sheet_types ?? baseSheetTypes;
-                        const isChecked = selectedDivIds.has(div.id);
-                        return (
-                          <label
-                            key={div.id}
-                            className={`flex items-start gap-2 rounded-lg border px-3 py-2 cursor-pointer transition-colors ${isChecked ? 'border-zinc-400 bg-zinc-50' : 'border-zinc-200 hover:bg-zinc-50'}`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={(e) => {
-                                const next = new Set(selectedDivIds);
-                                if (e.target.checked) next.add(div.id);
-                                else next.delete(div.id);
-                                setSelectedDivIds(next);
-                              }}
-                              className="mt-0.5 h-3.5 w-3.5 rounded border-zinc-300 accent-zinc-900"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium text-zinc-800 leading-tight">{div.name}</p>
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {divSheets.map((s) => (
-                                  <span key={s} className="rounded bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium text-zinc-500">
-                                    {SHEET_TYPE_LABELS[s]}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Preview of sheets that will be assigned */}
-                  {newJudgeSheets.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {newJudgeSheets.map((s) => (
-                        <span key={s} className="rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-xs font-medium text-blue-700">
-                          {SHEET_TYPE_LABELS[s]}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {newJudgeSheets.length === 0 && newJudgeUserId && (
-                    <p className="text-xs text-zinc-400">
-                      {judgeScope === 'specific' && selectedDivIds.size === 0
-                        ? 'Selecciona al menos una división.'
-                        : 'Todas las planillas ya están asignadas a este juez.'}
-                    </p>
-                  )}
+                  {/* Sheet type selector */}
+                  <div>
+                    <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Planilla</label>
+                    <SheetTypeMultiSelect
+                      value={newJudgeSheets}
+                      onChange={setNewJudgeSheets}
+                      disabledTypes={(() => {
+                        if (!newJudgeUserId) return [];
+                        const existing = assignments.filter((a) => String(a.user) === newJudgeUserId).map((a) => a.sheet_type);
+                        const disabled = new Set<SheetType>();
+                        for (const st of existing) {
+                          const group = SHEET_TYPE_GROUPS.find((g) => g.types.includes(st));
+                          if (!group) continue;
+                          const isGrupal = GRUPAL_SHEET_TYPES.includes(st);
+                          const conflicts = isGrupal
+                            ? group.types.filter((t) => !GRUPAL_SHEET_TYPES.includes(t))
+                            : group.types.filter((t) => GRUPAL_SHEET_TYPES.includes(t));
+                          conflicts.forEach((c) => disabled.add(c));
+                          disabled.add(st);
+                        }
+                        return [...disabled];
+                      })()}
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">
