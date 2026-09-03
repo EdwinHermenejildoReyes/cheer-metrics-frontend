@@ -719,6 +719,7 @@ export default function CompetitionDetailPage() {
                     <SheetTypeMultiSelect
                       value={newJudgeSheets}
                       onChange={setNewJudgeSheets}
+                      sheetMode={competition.sheet_mode}
                       disabledTypes={(() => {
                         if (!newJudgeUserId) return [];
                         const existing = assignments.filter((a) => String(a.user) === newJudgeUserId).map((a) => a.sheet_type);

@@ -242,7 +242,7 @@ export default function DivisionDetailPage() {
     const msg =
       `Hola Coach de *${reg.team_name}* 🏆\n\n` +
       `Resultado de calificación — *${division?.name ?? ''}*\n\n` +
-      `📊 Puntaje final: *${parseFloat(sheet.final_score).toFixed(2)}* (${sheet.percentage}%)\n\n` +
+      `📊 Puntaje final: *${parseFloat(sheet.final_score ?? '0').toFixed(2)}* (${parseFloat(sheet.percentage ?? '0').toFixed(1)}%)\n\n` +
       `⚠️ Tienes *15 minutos* para presentar un reclamo.\n\n` +
       `Descarga tu reporte en PDF:\n${pdfUrl}\n\n` +
       `Desglose completo:\n${window.location.origin}/results/${reg.public_id}`;
@@ -280,7 +280,7 @@ export default function DivisionDetailPage() {
         const fb = parseFloat(icuRankings[b.reg.id]?.final_score ?? '0');
         return fb - fa;
       }
-      return parseFloat(b.sheet.final_score) - parseFloat(a.sheet.final_score);
+      return parseFloat(b.sheet.final_score ?? '0') - parseFloat(a.sheet.final_score ?? '0');
     });
 
   if (loading) return <PageSpinner />;
@@ -432,12 +432,12 @@ export default function DivisionDetailPage() {
                         <p className="text-sm font-semibold text-zinc-900 tabular-nums">
                           {isIcuDanceMode
                             ? parseFloat(icuRankings[reg.id]?.final_score ?? '0').toFixed(2)
-                            : parseFloat(sheet.final_score).toFixed(2)}
+                            : parseFloat(sheet.final_score ?? '0').toFixed(2)}
                         </p>
                         <p className="text-[10px] text-zinc-400">
                           {isIcuDanceMode
                             ? `${parseFloat(icuRankings[reg.id]?.percentage ?? '0').toFixed(1)}%`
-                            : `${sheet.percentage}%`}
+                            : `${parseFloat(sheet.percentage ?? '0').toFixed(1)}%`}
                         </p>
                       </div>
                     ) : (
@@ -754,8 +754,8 @@ export default function DivisionDetailPage() {
                         <div className="mt-2 pt-2 border-t border-zinc-200 flex justify-between text-sm font-medium text-zinc-800">
                           <span>Puntaje bruto</span>
                           <span className="tabular-nums">
-                            {parseFloat(sheet.raw_score).toFixed(2)}
-                            <span className="ml-1 font-normal text-zinc-400 text-xs">/ {parseFloat(sheet.max_raw).toFixed(0)} ({sheet.percentage}%)</span>
+                            {parseFloat(sheet.raw_score ?? '0').toFixed(2)}
+                            <span className="ml-1 font-normal text-zinc-400 text-xs">/ {parseFloat(sheet.max_raw ?? '0').toFixed(0)} ({parseFloat(sheet.percentage ?? '0').toFixed(1)}%)</span>
                           </span>
                         </div>
                       </div>
@@ -813,7 +813,7 @@ export default function DivisionDetailPage() {
                         </div>
                         <div className="flex justify-between font-semibold text-zinc-900 text-base">
                           <span>Puntaje final</span>
-                          <span className="tabular-nums">{parseFloat(sheet.final_score).toFixed(2)}</span>
+                          <span className="tabular-nums">{parseFloat(sheet.final_score ?? '0').toFixed(2)}</span>
                         </div>
                       </div>
 
@@ -1094,12 +1094,12 @@ export default function DivisionDetailPage() {
                         <td className="px-4 py-3.5 text-right tabular-nums font-semibold text-zinc-900">
                           {isIcuDanceMode
                             ? parseFloat(icuRankings[reg.id]?.final_score ?? '0').toFixed(2)
-                            : parseFloat(sheet.final_score).toFixed(2)}
+                            : parseFloat(sheet.final_score ?? '0').toFixed(2)}
                         </td>
                         <td className="px-4 py-3.5 text-right tabular-nums text-zinc-500">
                           {isIcuDanceMode
                             ? `${parseFloat(icuRankings[reg.id]?.percentage ?? '0').toFixed(1)}%`
-                            : `${sheet.percentage}%`}
+                            : `${parseFloat(sheet.percentage ?? '0').toFixed(1)}%`}
                         </td>
                       </tr>
                     ))}
