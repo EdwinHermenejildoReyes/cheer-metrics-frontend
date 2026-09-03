@@ -163,8 +163,9 @@ export default function CompetitionDetailPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  useEffect(() => {
-    if (judgesOpen) loadJudges();
+  const handleJudgesToggle = useCallback(() => {
+    if (!judgesOpen) loadJudges();
+    setJudgesOpen((v) => !v);
   }, [judgesOpen, loadJudges]);
 
   const handleAutoAssignOrders = async () => {
@@ -191,8 +192,9 @@ export default function CompetitionDetailPage() {
     }
   }, [id]);
 
-  useEffect(() => {
-    if (conflictsOpen) loadConflicts();
+  const handleConflictsToggle = useCallback(() => {
+    if (!conflictsOpen) loadConflicts();
+    setConflictsOpen((v) => !v);
   }, [conflictsOpen, loadConflicts]);
 
   const loadTokens = useCallback(async () => {
@@ -200,9 +202,11 @@ export default function CompetitionDetailPage() {
     setTokens(res.results ?? res);
   }, [id]);
 
-  useEffect(() => {
-    if (tokensModalOpen) loadTokens();
-  }, [tokensModalOpen, loadTokens]);
+  const handleTokensOpen = useCallback(() => {
+    setTokensModalOpen(true);
+    setOpenDropdown(null);
+    loadTokens();
+  }, [loadTokens]);
 
   const handleCreateToken = async () => {
     if (!newTokenExpiry) { toast.error('Indica la fecha de expiración.'); return; }
@@ -456,7 +460,7 @@ export default function CompetitionDetailPage() {
                     {hasRegistration && (
                       <button
                         className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
-                        onClick={() => { setTokensModalOpen(true); setOpenDropdown(null); }}
+                        onClick={handleTokensOpen}
                       >
                         <LinkIcon className="h-3.5 w-3.5 text-zinc-400" />
                         Links de inscripción
@@ -548,7 +552,7 @@ export default function CompetitionDetailPage() {
         <div className="print:hidden flex flex-col gap-3">
           <button
             type="button"
-            onClick={() => setConflictsOpen((v) => !v)}
+            onClick={handleConflictsToggle}
             className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-3.5 text-left hover:bg-zinc-50 transition-colors"
           >
             <div className="flex items-center gap-2">
@@ -636,7 +640,7 @@ export default function CompetitionDetailPage() {
         <div className="print:hidden flex flex-col gap-3">
           <button
             type="button"
-            onClick={() => setJudgesOpen((v) => !v)}
+            onClick={handleJudgesToggle}
             className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-3.5 text-left hover:bg-zinc-50 transition-colors"
           >
             <div className="flex items-center gap-2">
