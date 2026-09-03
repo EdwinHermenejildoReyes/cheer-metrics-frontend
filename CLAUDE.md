@@ -29,7 +29,7 @@ python manage.py makemigrations
 python manage.py migrate
 python manage.py createsuperuser
 
-# Tests
+# Tests (no test files exist yet — suite is empty)
 python manage.py test
 python manage.py test <app_name>        # single app
 python manage.py test <app>.<TestClass> # single test class
@@ -64,7 +64,7 @@ uv add <package>
 
 **Multi-tenancy** — `User.organization` is a FK to `Organization`. The `_org_id(user)` helper in `apps/api/views.py` returns `None` for `is_staff` users (they see all data) and `user.organization_id` for everyone else; ViewSet querysets filter by this. When adding new ViewSets, apply the same `_org_id` scoping to `get_queryset()`.
 
-**`ScoringFamily` / regulation** — `Competition.scoring_family` (`united`, `iasf_567`, `icu`, `partner_stunt`, `future_flyer`, `best_cheer`) is the high-level scoring family. `Competition.save()` automatically sets `Competition.regulation` (`IASF` | `ICU` | `AMBAS`) from `_SCORING_FAMILY_TO_REGULATION`. Set `scoring_family` and let the model derive `regulation`; don't set `regulation` directly.
+**`ScoringFamily` / regulation** — `Competition.scoring_family` (`united`, `iasf_567`, `icu`, `partner_stunt`, `future_flyer`, `best_cheer`, `icu_dance`) is the high-level scoring family. `Competition.save()` automatically sets `Competition.regulation` (`IASF` | `ICU` | `AMBAS`) from `_SCORING_FAMILY_TO_REGULATION`. Set `scoring_family` and let the model derive `regulation`; don't set `regulation` directly. `icu_dance` maps to `ICU` regulation.
 
 **`ServiceType`** — `Competition.service_type` (`full` | `registration_only` | `judging_only`) controls which modules are enabled for a competition. `full` enables both registration and judging; the others restrict access accordingly.
 
@@ -72,7 +72,9 @@ uv add <package>
 
 **`Division.is_non_tumbling`** — Boolean field independent of `DivisionCategory`. When `True`, `suggest_scoring_system()` returns `ELITE_NT` regardless of skill level. Used when a standard division (e.g., All Girl) competes without tumbling.
 
-**Sheet mode** — `Competition.sheet_mode` (`grupal` | `individual`) controls which judge sheet tabs are shown. `grupal` shows `building`, `tumbling`, `overall`, `rangos`, `deducciones`, `deductions_only`, and `safety_rules`; `individual` shows `partner_stunt`, `building_difficulty`, `building_execution`, `tumbling_difficulty`, and `tumbling_execution`. These groupings are defined in `src/types/competitions.ts` as `GRUPAL_SHEET_TYPES` / `INDIVIDUAL_SHEET_TYPES`. The `JudgeAssignment.sheet_type` field ties a judge to a specific `SheetType` choice. When adding new sheet types, update both `SheetType` choices in `apps/competitions/models.py` and both frontend constants.
+**Sheet mode** — `Competition.sheet_mode` (`grupal` | `individual` | `icu_dance`) controls which judge sheet tabs are shown. `grupal` shows `building`, `tumbling`, `overall`, `rangos`, `deducciones`, `deductions_only`, and `safety_rules`; `individual` shows `partner_stunt`, `building_difficulty`, `building_execution`, `tumbling_difficulty`, `tumbling_execution`, `overall`, `deductions_only`, `safety_rules`, and `rangos`; `icu_dance` shows `icu_dance`, `icu_doubles`, `icu_dance_deductions`, `icu_dance_solo`, and `icu_dance_principiantes`. These groupings are defined in `src/types/competitions.ts` as `GRUPAL_SHEET_TYPES` / `INDIVIDUAL_SHEET_TYPES` / `ICU_DANCE_SHEET_TYPES`. The `JudgeAssignment.sheet_type` field ties a judge to a specific `SheetType` choice. When adding new sheet types, update both `SheetType` choices in `apps/competitions/models.py` and both frontend constants.
+
+**ICU Dance scoring model** — `icu_dance` sheet mode uses a fundamentally different scoring model than `grupal`/`individual`. Instead of a single `ScoreSheet` per registration, each judge submits an `IcuJudgeScore` (model in `apps/competitions/models.py`) per registration. The final competition score is the average across all submitted `IcuJudgeScore` records. Deductions are handled by a separate `IcuDanceDeductionSheet` model (one per registration), entered by the safety/deductions judge via the `icu_dance_deductions` sheet type. `JudgePanel` (model: `apps/competitions/models.py`, ViewSet: `JudgePanelViewSet`) groups registrations into named panels (e.g., "Panel A") within a competition; each `IcuJudgeScore` is optionally linked to a panel. `JudgeAssignment.panel` (FK to `JudgePanel`) assigns a judge to score only the registrations in their panel. `Registration.panel` (CharField, separate from the FK) stores a human-readable panel label (e.g., "A", "B"). Do not manually create `ScoreSheet` records for ICU Dance competitions — they are not used.
 
 **ScoreSheet auto-creation** — A post-save signal in `apps/competitions/signals.py` automatically calls `ScoreSheet.objects.get_or_create(registration=instance)` whenever a `Registration` transitions to `confirmed` status. Never create ScoreSheets manually for confirmed registrations.
 
@@ -80,7 +82,7 @@ uv add <package>
 
 **Public registration wizard** — `/registro?token=...` is a public multi-step form (no auth) that lets coaches self-register a team. It validates a `RegistrationToken` via `GET /api/v1/wizard/validate/?token=...` then creates gym, team, and athlete records through the `wizard/` endpoints. Admins issue tokens from `/competitions/[id]/tokens` (managed via `registration-tokens/` API).
 
-**Scoring config** — `apps.competitions.models` is the canonical source for scoring: `FIELD_MAXIMA` (default max per field), `DEDUCTION_AMOUNTS` (unit penalty per type), and `SCORING_SYSTEM_CONFIG` (fields + bonus + multiplier for each `ScoringSystem`). Each system config may include optional `field_maxima` and `avg_maxima` dicts to override the global defaults — notably `IASF_WORLD_L6_7` uses a 0–150 raw scale with its own per-field maxima, and `ESCOLAR_AB` has different building/cross-sheet maxima. Always check the system's config dict before assuming `FIELD_MAXIMA` applies. `Division.suggest_scoring_system(skill_level, age_group, category, is_non_tumbling=False)` maps a division's attributes to a `ScoringSystem` choice. The frontend mirrors this in `src/lib/scoringConfig.ts` — keep both in sync when changing scoring rules.
+**Scoring config** — `apps.competitions.models` is the canonical source for scoring: `FIELD_MAXIMA` (default max per field), `DEDUCTION_AMOUNTS` (unit penalty per type), and `SCORING_SYSTEM_CONFIG` (fields + bonus + multiplier for each `ScoringSystem`). Each system config may include optional `field_maxima` and `avg_maxima` dicts to override the global defaults — notably `IASF_WORLD_L6_7` uses a 0–150 raw scale with its own per-field maxima, and `ESCOLAR_AB` has different building/cross-sheet maxima. Always check the system's config dict before assuming `FIELD_MAXIMA` applies. `Division.suggest_scoring_system(skill_level, age_group, category, is_non_tumbling=False)` maps a division's attributes to a `ScoringSystem` choice. The frontend mirrors this in `src/lib/scoringConfig.ts` — keep both in sync when changing scoring rules. ICU Dance scoring systems (`ICU_DANCE`, `ICU_DOUBLES`, `ICU_DANCE_SOLO`, `ICU_DANCE_PRINCIPIANTES`) use `IcuJudgeScore` fields rather than `ScoreSheet` fields; each criterion is scored 0–10 and the system totals to 100 points.
 
 **ScoreSheet computed properties** — `ScoreSheet` stores raw field values. All totals are computed properties: `building_total`, `tumbling_total`, `overall_total`, `avg_creativity`, `avg_showmanship`, `cross_sheet_total`, `raw_score`, `scaled_score`, `total_deductions`, `final_score`, `percentage`. Creativity and showmanship are averaged across all three judges, not summed — their effective max contribution to the total is 2.00 each regardless of how many judges scored them. The scoring formula is: `final_score = (raw_score + bonus) × multiplier − total_deductions`.
 
@@ -135,9 +137,11 @@ npm run lint     # ESLint
 ### Environment Variables
 
 ```
-NEXT_PUBLIC_MAIN_API_URL=http://localhost:8006/api/v1/
+NEXT_PUBLIC_MAIN_API_URL=http://localhost:8002/api/v1/
 NEXT_PUBLIC_WEB_URL=http://localhost:3000/
 ```
+
+> **Note:** The `docker-compose.yml` dev Nginx maps to port 8002. The `.env.example` references 8006 — update it to 8002 if using the default compose file.
 
 ### Key Patterns
 
@@ -167,6 +171,8 @@ NEXT_PUBLIC_WEB_URL=http://localhost:3000/
 
 **Rankings** — `/competitions/[id]/divisions/[divisionId]/rankings/` shows the final ranking table for a division, sorted by `final_score` descending.
 
+**Panels** — `/competitions/[id]/panels` is an admin page for managing `JudgePanel` records (ICU Dance only): create/rename panels, assign registrations to each panel, and link judge assignments to a panel.
+
 **Backstage** — `/competitions/[id]/backstage` is a dashboard-only page for performance check-in: it shows all confirmed registrations with athlete count and performance order, letting staff verify team size against `Registration.athlete_count`.
 
 **Assignments** — `/assignments` is a judge-facing dashboard page that lists all `JudgeAssignment` records for the current user, grouped by competition, with quick links to each assigned score sheet type.
@@ -179,7 +185,7 @@ NEXT_PUBLIC_WEB_URL=http://localhost:3000/
 
 ## Infrastructure
 
-**Docker Compose** orchestrates all services. **Nginx** listens on port **8006** and acts as reverse proxy:
+**Docker Compose** orchestrates all services. **Nginx** listens on port **8002** (dev, mapped in `docker-compose.yml`) and acts as reverse proxy:
 - `/api/*` and `/admin/*` → Django (Gunicorn, 3 workers)
 - `/media/*` → uploaded media files
 - `/*` → Next.js
@@ -188,7 +194,7 @@ NEXT_PUBLIC_WEB_URL=http://localhost:3000/
 ### Commands
 
 ```bash
-docker compose up -d                                    # start all
+docker compose up -d                                    # start all (dev)
 docker compose down                                     # stop all
 docker compose logs -f                                  # stream logs
 docker compose logs -f backend                          # backend only
@@ -201,7 +207,7 @@ docker compose exec backend python manage.py createsuperuser
 ## Architecture Overview
 
 ```
-Browser → Nginx :8006
+Browser → Nginx :8002 (dev)
               ├── /api/, /admin/  → Gunicorn → Django (DRF)
               │                              └── Whitenoise (static)
               ├── /media/         → uploaded files

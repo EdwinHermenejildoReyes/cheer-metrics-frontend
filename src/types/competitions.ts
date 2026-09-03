@@ -297,6 +297,7 @@ export interface Division {
   min_athletes: number | null;
   max_athletes: number | null;
   is_enable: boolean;
+  allowed_sheet_types: SheetType[] | null;
 }
 
 export interface Gym {

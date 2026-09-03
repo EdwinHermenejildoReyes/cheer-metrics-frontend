@@ -292,8 +292,15 @@ export default function DivisionDetailPage() {
   const isGrupalMode = !isIcuDanceMode && (division.competition_sheet_mode ?? 'grupal') !== 'individual';
   const hasJudging = division.competition_service_type !== 'registration_only';
   const hasRegistration = division.competition_service_type !== 'judging_only';
-  const judgeSheetTypes = sheetTypesForCompetition(division.competition);
+  const compId = division.competition;
+  const judgeSheetTypes = sheetTypesForCompetition(compId);
+  const isSheetAllowedInDivision = (st: SheetType) =>
+    !division.allowed_sheet_types || division.allowed_sheet_types.includes(st);
+  const canViewSheetInDivision = (st: SheetType) =>
+    canViewSheet(compId, st) && isSheetAllowedInDivision(st);
+
   const judgeVisibleSheets = judgeSheetTypes.filter((sheetType) => {
+    if (!isSheetAllowedInDivision(sheetType)) return false;
     if (isIcuDanceMode) {
       if (sheetType === 'icu_dance_deductions') return true; // safety judge applies to any ICU division
       return sheetType === activeScoringSystem; // content judge must match division's scoring system
@@ -446,7 +453,7 @@ export default function DivisionDetailPage() {
                           {sheet ? 'Editar' : 'Calificar'}
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'building') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                      {hasJudging && canViewSheetInDivision('building') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -456,7 +463,7 @@ export default function DivisionDetailPage() {
                           <ChevronsUp className="h-3.5 w-3.5 text-blue-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'building') && isGrupalMode && isIasfWorld && (
+                      {hasJudging && canViewSheetInDivision('building') && isGrupalMode && isIasfWorld && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -466,7 +473,7 @@ export default function DivisionDetailPage() {
                           <ChevronsUp className="h-3.5 w-3.5 text-blue-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'tumbling') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                      {hasJudging && canViewSheetInDivision('tumbling') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -476,7 +483,7 @@ export default function DivisionDetailPage() {
                           <RotateCw className="h-3.5 w-3.5 text-green-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'tumbling') && isGrupalMode && isIasfWorld && (
+                      {hasJudging && canViewSheetInDivision('tumbling') && isGrupalMode && isIasfWorld && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -486,7 +493,7 @@ export default function DivisionDetailPage() {
                           <RotateCw className="h-3.5 w-3.5 text-green-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'overall') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                      {hasJudging && canViewSheetInDivision('overall') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -496,7 +503,7 @@ export default function DivisionDetailPage() {
                           <Star className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'overall') && isGrupalMode && isIasfWorld && (
+                      {hasJudging && canViewSheetInDivision('overall') && isGrupalMode && isIasfWorld && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -506,7 +513,7 @@ export default function DivisionDetailPage() {
                           <Star className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'partner_stunt') && isGrupalMode && activeScoringSystem === 'partner_stunt' && (
+                      {hasJudging && canViewSheetInDivision('partner_stunt') && isGrupalMode && activeScoringSystem === 'partner_stunt' && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -516,7 +523,7 @@ export default function DivisionDetailPage() {
                           <Users2 className="h-3.5 w-3.5 text-orange-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'deducciones') && isGrupalMode && (
+                      {hasJudging && canViewSheetInDivision('deducciones') && isGrupalMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -526,7 +533,7 @@ export default function DivisionDetailPage() {
                           <CircleMinus className="h-3.5 w-3.5 text-red-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'rangos') && (
+                      {hasJudging && canViewSheetInDivision('rangos') && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -536,7 +543,7 @@ export default function DivisionDetailPage() {
                           <Gauge className="h-3.5 w-3.5 text-amber-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'building_difficulty') && !isGrupalMode && !isIcuDanceMode && (
+                      {hasJudging && canViewSheetInDivision('building_difficulty') && !isGrupalMode && !isIcuDanceMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -546,7 +553,7 @@ export default function DivisionDetailPage() {
                           <TrendingUp className="h-3.5 w-3.5 text-blue-700" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'building_execution') && !isGrupalMode && !isIcuDanceMode && (
+                      {hasJudging && canViewSheetInDivision('building_execution') && !isGrupalMode && !isIcuDanceMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -556,7 +563,7 @@ export default function DivisionDetailPage() {
                           <BadgeCheck className="h-3.5 w-3.5 text-blue-400" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'tumbling_difficulty') && !isGrupalMode && !isIcuDanceMode && (
+                      {hasJudging && canViewSheetInDivision('tumbling_difficulty') && !isGrupalMode && !isIcuDanceMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -566,7 +573,7 @@ export default function DivisionDetailPage() {
                           <TrendingUp className="h-3.5 w-3.5 text-green-700" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'tumbling_execution') && !isGrupalMode && !isIcuDanceMode && (
+                      {hasJudging && canViewSheetInDivision('tumbling_execution') && !isGrupalMode && !isIcuDanceMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -576,7 +583,7 @@ export default function DivisionDetailPage() {
                           <Sparkles className="h-3.5 w-3.5 text-green-400" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'overall') && !isGrupalMode && !isIcuDanceMode && (
+                      {hasJudging && canViewSheetInDivision('overall') && !isGrupalMode && !isIcuDanceMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -586,7 +593,7 @@ export default function DivisionDetailPage() {
                           <Star className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'deductions_only') && !isGrupalMode && !isIcuDanceMode && (
+                      {hasJudging && canViewSheetInDivision('deductions_only') && !isGrupalMode && !isIcuDanceMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -596,7 +603,7 @@ export default function DivisionDetailPage() {
                           <Timer className="h-3.5 w-3.5 text-orange-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'safety_rules') && !isGrupalMode && !isIcuDanceMode && (
+                      {hasJudging && canViewSheetInDivision('safety_rules') && !isGrupalMode && !isIcuDanceMode && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -607,7 +614,7 @@ export default function DivisionDetailPage() {
                         </Button>
                       )}
                       {/* ICU Dance quick-link buttons */}
-                      {hasJudging && canViewSheet(division.competition,'icu_dance') && isIcuDanceMode && activeScoringSystem === 'icu_dance' && (
+                      {hasJudging && canViewSheetInDivision('icu_dance') && isIcuDanceMode && activeScoringSystem === 'icu_dance' && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -617,7 +624,7 @@ export default function DivisionDetailPage() {
                           <Star className="h-3.5 w-3.5 text-blue-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'icu_doubles') && isIcuDanceMode && activeScoringSystem === 'icu_doubles' && (
+                      {hasJudging && canViewSheetInDivision('icu_doubles') && isIcuDanceMode && activeScoringSystem === 'icu_doubles' && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -627,7 +634,7 @@ export default function DivisionDetailPage() {
                           <Users2 className="h-3.5 w-3.5 text-purple-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'icu_dance_solo') && isIcuDanceMode && activeScoringSystem === 'icu_dance_solo' && (
+                      {hasJudging && canViewSheetInDivision('icu_dance_solo') && isIcuDanceMode && activeScoringSystem === 'icu_dance_solo' && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -637,7 +644,7 @@ export default function DivisionDetailPage() {
                           <Star className="h-3.5 w-3.5 text-sky-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'icu_dance_principiantes') && isIcuDanceMode && activeScoringSystem === 'icu_dance_principiantes' && (
+                      {hasJudging && canViewSheetInDivision('icu_dance_principiantes') && isIcuDanceMode && activeScoringSystem === 'icu_dance_principiantes' && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -647,7 +654,7 @@ export default function DivisionDetailPage() {
                           <Star className="h-3.5 w-3.5 text-teal-500" />
                         </Button>
                       )}
-                      {hasJudging && canViewSheet(division.competition,'icu_dance_deductions') && isIcuDanceMode && (
+                      {hasJudging && canViewSheetInDivision('icu_dance_deductions') && isIcuDanceMode && (
                         <Button
                           size="icon"
                           variant="ghost"
