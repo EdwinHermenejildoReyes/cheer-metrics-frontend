@@ -60,6 +60,7 @@ export default function InvitationsPage() {
 
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading]         = useState(true);
+  const [confirmId, setConfirmId]     = useState<number | null>(null);
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
     useForm<FormValues>({ resolver: zodResolver(schema) });
@@ -92,13 +93,34 @@ export default function InvitationsPage() {
     try {
       await authRepository.deleteInvitation(id);
       setInvitations((prev) => prev.filter((i) => i.id !== id));
+      setConfirmId(null);
       toast.success('Invitación eliminada.');
     } catch {
+      setConfirmId(null);
       toast.error('No se pudo eliminar la invitación.');
     }
   };
 
   return (
+    <>
+    {confirmId !== null && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div className="w-full max-w-sm rounded-xl border border-plt-border bg-plt-bg p-6 shadow-xl">
+          <h3 className="text-base font-semibold text-plt-text">¿Eliminar invitación?</h3>
+          <p className="mt-2 text-sm text-plt-muted">
+            Esta acción no se puede deshacer. La invitación quedará inválida.
+          </p>
+          <div className="mt-6 flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setConfirmId(null)}>
+              Cancelar
+            </Button>
+            <Button variant="danger" onClick={() => handleDelete(confirmId)}>
+              Eliminar
+            </Button>
+          </div>
+        </div>
+      </div>
+    )}
     <div className="mx-auto w-full max-w-4xl space-y-8 p-6">
       <div>
         <h1 className="text-xl font-semibold text-plt-text">Invitaciones</h1>
@@ -178,7 +200,7 @@ export default function InvitationsPage() {
                     <td className="px-4 py-3 text-right">
                       {!inv.accepted && (
                         <button
-                          onClick={() => handleDelete(inv.id)}
+                          onClick={() => setConfirmId(inv.id)}
                           className="rounded p-1.5 text-plt-muted hover:bg-red-50 hover:text-red-600 transition-colors"
                           title="Eliminar invitación"
                         >
@@ -194,5 +216,6 @@ export default function InvitationsPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
