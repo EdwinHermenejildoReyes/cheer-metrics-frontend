@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, X, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList, Receipt, Link as LinkIcon, Copy, Check, Printer, Trophy } from 'lucide-react';
 import { PrintButton } from '@/components/print/PrintButton';
@@ -29,8 +29,6 @@ import {
   SHEET_TYPE_LABELS,
   SHEET_TYPE_GROUPS,
   GRUPAL_SHEET_TYPES,
-  INDIVIDUAL_SHEET_TYPES,
-  ICU_DANCE_SHEET_TYPES,
   type Competition,
   type Division,
   type JudgeAssignment,
@@ -142,21 +140,6 @@ export default function CompetitionDetailPage() {
     setPanels(panelsRes.data.results);
   }, [competition, id]);
 
-  const baseSheetTypes = useMemo((): SheetType[] => {
-    const mode = competition?.sheet_mode;
-    if (mode === 'individual') return INDIVIDUAL_SHEET_TYPES;
-    if (mode === 'icu_dance')  return ICU_DANCE_SHEET_TYPES;
-    return GRUPAL_SHEET_TYPES;
-  }, [competition]);
-
-  const computeSheetsForDivs = useCallback((divList: Division[]): SheetType[] => {
-    const collected = new Set<SheetType>();
-    divList.forEach((div) => {
-      const types = div.allowed_sheet_types ?? baseSheetTypes;
-      types.forEach((t) => collected.add(t));
-    });
-    return [...collected];
-  }, [baseSheetTypes]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -700,22 +683,14 @@ export default function CompetitionDetailPage() {
                     <div className="inline-flex rounded-lg border border-zinc-200 bg-white p-0.5 mb-3">
                       <button
                         type="button"
-                        onClick={() => {
-                          setJudgeScope('all');
-                          setSelectedDivIds(new Set());
-                          setNewJudgeSheets(computeSheetsForDivs(divisions));
-                        }}
+                        onClick={() => { setJudgeScope('all'); setSelectedDivIds(new Set()); }}
                         className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${judgeScope === 'all' ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:text-zinc-700'}`}
                       >
                         Todas
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
-                          setJudgeScope('specific');
-                          setSelectedDivIds(new Set());
-                          setNewJudgeSheets([]);
-                        }}
+                        onClick={() => { setJudgeScope('specific'); setSelectedDivIds(new Set()); }}
                         className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${judgeScope === 'specific' ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:text-zinc-700'}`}
                       >
                         Específicas
@@ -728,12 +703,11 @@ export default function CompetitionDetailPage() {
                           <p className="text-xs text-zinc-400">No hay divisiones en esta competencia.</p>
                         )}
                         {divisions.map((div) => {
-                          const divSheets = div.allowed_sheet_types ?? baseSheetTypes;
                           const isChecked = selectedDivIds.has(div.id);
                           return (
                             <label
                               key={div.id}
-                              className={`flex items-start gap-2 rounded-lg border px-3 py-2 cursor-pointer transition-colors ${isChecked ? 'border-zinc-400 bg-zinc-50' : 'border-zinc-200 hover:bg-zinc-50'}`}
+                              className={`flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer transition-colors ${isChecked ? 'border-zinc-400 bg-zinc-50' : 'border-zinc-200 hover:bg-zinc-50'}`}
                             >
                               <input
                                 type="checkbox"
@@ -743,20 +717,10 @@ export default function CompetitionDetailPage() {
                                   if (e.target.checked) next.add(div.id);
                                   else next.delete(div.id);
                                   setSelectedDivIds(next);
-                                  setNewJudgeSheets(computeSheetsForDivs(divisions.filter((d) => next.has(d.id))));
                                 }}
-                                className="mt-0.5 h-3.5 w-3.5 rounded border-zinc-300 accent-zinc-900"
+                                className="h-3.5 w-3.5 rounded border-zinc-300 accent-zinc-900"
                               />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-medium text-zinc-800 leading-tight">{div.name}</p>
-                                <div className="flex flex-wrap gap-1 mt-1">
-                                  {divSheets.map((s) => (
-                                    <span key={s} className="rounded bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium text-zinc-500">
-                                      {SHEET_TYPE_LABELS[s]}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
+                              <p className="text-xs font-medium text-zinc-800">{div.name}</p>
                             </label>
                           );
                         })}
