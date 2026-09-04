@@ -322,6 +322,16 @@ export default function DivisionDetailPage() {
     }
   }).sort((a, b) => SHEET_TYPE_ORDER.indexOf(a) - SHEET_TYPE_ORDER.indexOf(b));
 
+  // Compound assignments expand to their component sheet types for icon display
+  const COMPOUND_EXPANSION: Partial<Record<SheetType, SheetType[]>> = {
+    building_combined:   ['building_difficulty', 'building_execution'],
+    tumbling_combined:   ['tumbling_difficulty',  'tumbling_execution'],
+    deductions_combined: ['deductions_only',       'safety_rules'],
+  };
+  const judgeExpandedSheets: SheetType[] = judgeVisibleSheets.flatMap(
+    (st) => COMPOUND_EXPANSION[st] ?? [st]
+  );
+
   return (
     <div className="flex flex-col gap-6 p-8">
 
@@ -404,9 +414,9 @@ export default function DivisionDetailPage() {
                     className="flex items-center gap-4 px-5 py-3.5 cursor-pointer hover:bg-zinc-50"
                     onClick={() => {
                       if (isJudge && hasJudging) {
-                        if (judgeVisibleSheets.length === 1) {
-                          router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/${getSheetSlug(judgeVisibleSheets[0], isIasfWorld)}`);
-                        } else if (judgeVisibleSheets.length > 1) {
+                        if (judgeExpandedSheets.length === 1) {
+                          router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/${getSheetSlug(judgeExpandedSheets[0], isIasfWorld)}`);
+                        } else if (judgeExpandedSheets.length > 1) {
                           setExpandedRow(isExpanded ? null : reg.id);
                         }
                       } else if (!isJudge) {
@@ -446,228 +456,153 @@ export default function DivisionDetailPage() {
                       <span className="text-xs text-zinc-400">Sin puntaje</span>
                     )}
                     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                      {/* Admin: edit button + all mode-specific sheet shortcuts */}
                       {!isJudge && hasJudging && (
-                        <Button
-                          size="sm"
-                          variant={sheet ? 'secondary' : 'primary'}
-                          onClick={() => { setScoringReg(reg); setScoreModalOpen(true); }}
-                        >
-                          {sheet ? <Pencil className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                          {sheet ? 'Editar' : 'Calificar'}
-                        </Button>
+                        <>
+                          <Button
+                            size="sm"
+                            variant={sheet ? 'secondary' : 'primary'}
+                            onClick={() => { setScoringReg(reg); setScoreModalOpen(true); }}
+                          >
+                            {sheet ? <Pencil className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                            {sheet ? 'Editar' : 'Calificar'}
+                          </Button>
+                          {isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                            <Button size="icon" variant="ghost" title="Planilla Building"
+                              onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/building`)}>
+                              <ChevronsUp className="h-3.5 w-3.5 text-blue-500" />
+                            </Button>
+                          )}
+                          {isGrupalMode && isIasfWorld && (
+                            <Button size="icon" variant="ghost" title="IASF World — Elevaciones"
+                              onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/iasf-building`)}>
+                              <ChevronsUp className="h-3.5 w-3.5 text-blue-500" />
+                            </Button>
+                          )}
+                          {isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                            <Button size="icon" variant="ghost" title="Planilla Tumbling"
+                              onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/tumbling`)}>
+                              <RotateCw className="h-3.5 w-3.5 text-green-500" />
+                            </Button>
+                          )}
+                          {isGrupalMode && isIasfWorld && (
+                            <Button size="icon" variant="ghost" title="IASF World — Gimnasia"
+                              onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/iasf-tumbling`)}>
+                              <RotateCw className="h-3.5 w-3.5 text-green-500" />
+                            </Button>
+                          )}
+                          {isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                            <Button size="icon" variant="ghost" title="Planilla Overall"
+                              onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/overall`)}>
+                              <Star className="h-3.5 w-3.5 text-purple-500" />
+                            </Button>
+                          )}
+                          {isGrupalMode && isIasfWorld && (
+                            <Button size="icon" variant="ghost" title="IASF World — General"
+                              onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/iasf-overall`)}>
+                              <Star className="h-3.5 w-3.5 text-purple-500" />
+                            </Button>
+                          )}
+                          {isGrupalMode && activeScoringSystem === 'partner_stunt' && (
+                            <Button size="icon" variant="ghost" title="Planilla Partner Stunt"
+                              onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/partner-stunt`)}>
+                              <Users2 className="h-3.5 w-3.5 text-orange-500" />
+                            </Button>
+                          )}
+                          {isGrupalMode && (
+                            <Button size="icon" variant="ghost" title="Planilla Deducciones"
+                              onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/deducciones`)}>
+                              <CircleMinus className="h-3.5 w-3.5 text-red-500" />
+                            </Button>
+                          )}
+                          {!isIcuDanceMode && (
+                            <Button size="icon" variant="ghost" title="Planilla Rangos (Dificultad)"
+                              onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/rangos`)}>
+                              <Gauge className="h-3.5 w-3.5 text-amber-500" />
+                            </Button>
+                          )}
+                          {!isGrupalMode && !isIcuDanceMode && (
+                            <>
+                              <Button size="icon" variant="ghost" title="Dificultad — Elevaciones"
+                                onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/building-difficulty`)}>
+                                <TrendingUp className="h-3.5 w-3.5 text-blue-700" />
+                              </Button>
+                              <Button size="icon" variant="ghost" title="Ejecución — Elevaciones"
+                                onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/building-execution`)}>
+                                <BadgeCheck className="h-3.5 w-3.5 text-blue-400" />
+                              </Button>
+                              <Button size="icon" variant="ghost" title="Dificultad — Gimnasia"
+                                onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/tumbling-difficulty`)}>
+                                <TrendingUp className="h-3.5 w-3.5 text-green-700" />
+                              </Button>
+                              <Button size="icon" variant="ghost" title="Ejecución — Gimnasia"
+                                onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/tumbling-execution`)}>
+                                <Sparkles className="h-3.5 w-3.5 text-green-400" />
+                              </Button>
+                              <Button size="icon" variant="ghost" title="Overall (General)"
+                                onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/overall`)}>
+                                <Star className="h-3.5 w-3.5 text-purple-500" />
+                              </Button>
+                              <Button size="icon" variant="ghost" title="Deducciones (Caídas/Tiempo)"
+                                onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/deductions-only`)}>
+                                <Timer className="h-3.5 w-3.5 text-orange-500" />
+                              </Button>
+                              <Button size="icon" variant="ghost" title="Reglas y Seguridad"
+                                onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/safety-rules`)}>
+                                <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
+                              </Button>
+                            </>
+                          )}
+                          {isIcuDanceMode && (
+                            <>
+                              {activeScoringSystem === 'icu_dance' && (
+                                <Button size="icon" variant="ghost" title="ICU Dance"
+                                  onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-dance`)}>
+                                  <Star className="h-3.5 w-3.5 text-blue-500" />
+                                </Button>
+                              )}
+                              {activeScoringSystem === 'icu_doubles' && (
+                                <Button size="icon" variant="ghost" title="ICU Doubles HH"
+                                  onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-doubles`)}>
+                                  <Users2 className="h-3.5 w-3.5 text-purple-500" />
+                                </Button>
+                              )}
+                              {activeScoringSystem === 'icu_dance_solo' && (
+                                <Button size="icon" variant="ghost" title="ICU Dance Solo / Dúo"
+                                  onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-dance-solo`)}>
+                                  <Star className="h-3.5 w-3.5 text-sky-500" />
+                                </Button>
+                              )}
+                              {activeScoringSystem === 'icu_dance_principiantes' && (
+                                <Button size="icon" variant="ghost" title="ICU Dance Principiantes"
+                                  onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-dance-principiantes`)}>
+                                  <Star className="h-3.5 w-3.5 text-teal-500" />
+                                </Button>
+                              )}
+                              <Button size="icon" variant="ghost" title="Deducciones ICU Dance"
+                                onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-dance-deductions`)}>
+                                <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
+                              </Button>
+                            </>
+                          )}
+                        </>
                       )}
-                      {hasJudging && canViewSheetInDivision('building') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Planilla Building"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/building`)}
-                        >
-                          <ChevronsUp className="h-3.5 w-3.5 text-blue-500" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('building') && isGrupalMode && isIasfWorld && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="IASF World — Elevaciones"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/iasf-building`)}
-                        >
-                          <ChevronsUp className="h-3.5 w-3.5 text-blue-500" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('tumbling') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Planilla Tumbling"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/tumbling`)}
-                        >
-                          <RotateCw className="h-3.5 w-3.5 text-green-500" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('tumbling') && isGrupalMode && isIasfWorld && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="IASF World — Gimnasia"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/iasf-tumbling`)}
-                        >
-                          <RotateCw className="h-3.5 w-3.5 text-green-500" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('overall') && isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Planilla Overall"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/overall`)}
-                        >
-                          <Star className="h-3.5 w-3.5 text-purple-500" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('overall') && isGrupalMode && isIasfWorld && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="IASF World — General"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/iasf-overall`)}
-                        >
-                          <Star className="h-3.5 w-3.5 text-purple-500" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('partner_stunt') && isGrupalMode && activeScoringSystem === 'partner_stunt' && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Planilla Partner Stunt"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/partner-stunt`)}
-                        >
-                          <Users2 className="h-3.5 w-3.5 text-orange-500" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('deducciones') && isGrupalMode && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Planilla Deducciones"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/deducciones`)}
-                        >
-                          <CircleMinus className="h-3.5 w-3.5 text-red-500" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('rangos') && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Planilla Rangos (Dificultad)"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/rangos`)}
-                        >
-                          <Gauge className="h-3.5 w-3.5 text-amber-500" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('building_difficulty') && !isGrupalMode && !isIcuDanceMode && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Dificultad — Elevaciones"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/building-difficulty`)}
-                        >
-                          <TrendingUp className="h-3.5 w-3.5 text-blue-700" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('building_execution') && !isGrupalMode && !isIcuDanceMode && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Ejecución — Elevaciones"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/building-execution`)}
-                        >
-                          <BadgeCheck className="h-3.5 w-3.5 text-blue-400" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('tumbling_difficulty') && !isGrupalMode && !isIcuDanceMode && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Dificultad — Gimnasia"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/tumbling-difficulty`)}
-                        >
-                          <TrendingUp className="h-3.5 w-3.5 text-green-700" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('tumbling_execution') && !isGrupalMode && !isIcuDanceMode && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Ejecución — Gimnasia"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/tumbling-execution`)}
-                        >
-                          <Sparkles className="h-3.5 w-3.5 text-green-400" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('overall') && !isGrupalMode && !isIcuDanceMode && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Overall (General)"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/overall`)}
-                        >
-                          <Star className="h-3.5 w-3.5 text-purple-500" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('deductions_only') && !isGrupalMode && !isIcuDanceMode && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Deducciones (Caídas/Tiempo)"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/deductions-only`)}
-                        >
-                          <Timer className="h-3.5 w-3.5 text-orange-500" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('safety_rules') && !isGrupalMode && !isIcuDanceMode && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Reglas y Seguridad"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/safety-rules`)}
-                        >
-                          <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
-                        </Button>
-                      )}
-                      {/* ICU Dance quick-link buttons */}
-                      {hasJudging && canViewSheetInDivision('icu_dance') && isIcuDanceMode && activeScoringSystem === 'icu_dance' && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="ICU Dance"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-dance`)}
-                        >
-                          <Star className="h-3.5 w-3.5 text-blue-500" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('icu_doubles') && isIcuDanceMode && activeScoringSystem === 'icu_doubles' && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="ICU Doubles HH"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-doubles`)}
-                        >
-                          <Users2 className="h-3.5 w-3.5 text-purple-500" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('icu_dance_solo') && isIcuDanceMode && activeScoringSystem === 'icu_dance_solo' && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="ICU Dance Solo / Dúo"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-dance-solo`)}
-                        >
-                          <Star className="h-3.5 w-3.5 text-sky-500" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('icu_dance_principiantes') && isIcuDanceMode && activeScoringSystem === 'icu_dance_principiantes' && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="ICU Dance Principiantes"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-dance-principiantes`)}
-                        >
-                          <Star className="h-3.5 w-3.5 text-teal-500" />
-                        </Button>
-                      )}
-                      {hasJudging && canViewSheetInDivision('icu_dance_deductions') && isIcuDanceMode && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          title="Deducciones ICU Dance (Juez de Seguridad)"
-                          onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-dance-deductions`)}
-                        >
-                          <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
-                        </Button>
-                      )}
-                      {sheet && (
+                      {/* Judge: one icon per assigned sheet, purely data-driven */}
+                      {isJudge && hasJudging && judgeExpandedSheets.map((sheetType) => {
+                        const Icon = SHEET_TYPE_ICONS[sheetType];
+                        return (
+                          <Button
+                            key={sheetType}
+                            size="icon"
+                            variant="ghost"
+                            title={SHEET_TYPE_LABELS[sheetType]}
+                            onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/${getSheetSlug(sheetType, isIasfWorld)}`)}
+                          >
+                            <Icon className={`h-3.5 w-3.5 ${SHEET_TYPE_COLORS[sheetType]}`} />
+                          </Button>
+                        );
+                      })}
+                      {sheet && !isJudge && (
                         <Button
                           size="icon"
                           variant="ghost"
@@ -843,11 +778,11 @@ export default function DivisionDetailPage() {
                   )}
 
                   {/* Expanded: sheet picker (judges with multiple assignments, when judging enabled) */}
-                  {isExpanded && isJudge && hasJudging && judgeVisibleSheets.length > 1 && (
+                  {isExpanded && isJudge && hasJudging && judgeExpandedSheets.length > 1 && (
                     <div className="border-t border-zinc-100 bg-zinc-50 px-5 py-4">
                       <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-3">Ir a planilla</p>
                       <div className="flex flex-wrap gap-2">
-                        {judgeVisibleSheets.map((sheetType) => {
+                        {judgeExpandedSheets.map((sheetType) => {
                           const Icon = SHEET_TYPE_ICONS[sheetType];
                           return (
                             <button
