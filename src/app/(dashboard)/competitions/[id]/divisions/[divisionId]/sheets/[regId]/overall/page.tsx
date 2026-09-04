@@ -18,8 +18,13 @@ import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBa
 
 // ── Formations scale (standard: 2.0 → 1.0 in steps of −0.1) ─────────────────
 const FORMATIONS_VALUES      = [2.0, 1.9, 1.8, 1.7, 1.6, 1.5, 1.4, 1.3, 1.2, 1.1, 1.0];
-// International 2026: 5.0 → 3.0 in steps of −0.2
+// International/Prep 2026: 5.0 → 3.0 in steps of −0.2
 const FORMATIONS_VALUES_INTL = [5.0, 4.8, 4.6, 4.4, 4.2, 4.0, 3.8, 3.6, 3.4, 3.2, 3.0];
+// Escolar 2026: 5.0 → 3.0 in steps of −0.1 (finer granularity per FECU 2026 p.7)
+const FORMATIONS_VALUES_ESCOLAR = [
+  5.0, 4.9, 4.8, 4.7, 4.6, 4.5, 4.4, 4.3, 4.2, 4.1, 4.0,
+  3.9, 3.8, 3.7, 3.6, 3.5, 3.4, 3.3, 3.2, 3.1, 3.0,
+];
 
 // ── Dance levels ──────────────────────────────────────────────────────────────
 const DANCE_LEVELS_FULL = [
@@ -161,14 +166,17 @@ export default function OverallSheetPage() {
 
   // ── Computed ──────────────────────────────────────────────────────────────
   const isEscolarAB     = scoringSystem === 'escolar_ab';
-  const isIntl          = scoringSystem === 'intl_l1' || scoringSystem === 'intl_l2_7' || scoringSystem === 'intl_nt' || scoringSystem === 'prep' || scoringSystem === 'escolar';
+  const isEscolar       = scoringSystem === 'escolar';
+  const isIntl          = scoringSystem === 'intl_l1' || scoringSystem === 'intl_l2_7' || scoringSystem === 'intl_nt' || scoringSystem === 'prep' || isEscolar;
   const hasDanceLimited = !isEscolarAB && !isIntl && (scoringSystem === 'tiny_novice' || scoringSystem === 'mini_novice' || scoringSystem === 'novice_plus' || scoringSystem === 'elite_l1');
   const danceDiffLevels = isEscolarAB ? DANCE_DIFF_LEVELS_AB : isIntl ? DANCE_LEVELS_INTL : (hasDanceLimited ? DANCE_LEVELS_ESCOLAR : DANCE_LEVELS_FULL);
   const danceExecLevels = isEscolarAB ? DANCE_EXEC_LEVELS_AB : isIntl ? DANCE_LEVELS_INTL : (hasDanceLimited ? DANCE_LEVELS_ESCOLAR : DANCE_LEVELS_FULL);
   const showmanshipMax  = (isEscolarAB || isIntl) ? 5.0 : 2.0;
   const overallSubtotal = parseFloat((formationsScore + danceDifficulty + danceExecution).toFixed(2));
   const sheetTotal      = parseFloat((overallSubtotal + (isEscolarAB ? 0 : creativityOverall) + showmanshipOverall).toFixed(2));
-  const errorsCount     = isIntl
+  const errorsCount     = isEscolar
+    ? Math.round((5.0 - formationsScore) / 0.1)
+    : isIntl
     ? Math.round((5.0 - formationsScore) / 0.2)
     : Math.round((2.0 - formationsScore) * 10);
 
@@ -470,9 +478,11 @@ export default function OverallSheetPage() {
               </div>
               <div className="p-4">
                 <div className="grid grid-cols-11 gap-1">
-                  {(isIntl ? FORMATIONS_VALUES_INTL : FORMATIONS_VALUES).map((v) => {
+                  {(isEscolar ? FORMATIONS_VALUES_ESCOLAR : isIntl ? FORMATIONS_VALUES_INTL : FORMATIONS_VALUES).map((v) => {
                     const active = formationsScore === v;
-                    const errors = isIntl
+                    const errors = isEscolar
+                      ? Math.round((5.0 - v) / 0.1)
+                      : isIntl
                       ? Math.round((5.0 - v) / 0.2)
                       : Math.round((2.0 - v) * 10);
                     const isRed   = isIntl ? v < 3.6 : v < 1.5;

@@ -1767,13 +1767,178 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
       ],
     },
   },
+
+  // ── Escolar Nivel 1 — FECU Ecuador 2026 ──────────────────────────────────────
+  ESCOLAR_L1: {
+    building: {
+      levelLabel: 'Nivel 1 Escolar',
+      sections: [
+        {
+          title: 'HABILIDADES DEL NIVEL',
+          columns: [
+            {
+              header: 'ESTILO SUELTO',
+              items: [
+                'Estilo suelto desde nivel del suelo (switch up) hacia lib debajo del nivel prep',
+                'Tic toc debajo del nivel prep (lib a lib)',
+              ],
+            },
+            {
+              header: 'GIRO',
+              items: [
+                'Transición con 1/4 de giro hacia debajo del nivel prep',
+                'Transición con 1/4 de giro hacia nivel de suelo',
+                'Transición con 1/4 de giro desde nivel prep',
+              ],
+            },
+            {
+              header: 'COMBINACIÓN / OTRAS HABILIDADES',
+              items: [
+                'Parado en espalda',
+                'Show & go por nivel prep',
+                'Escuadra',
+                'Acostado de espalda',
+                'Escuadra extendida',
+                'Elevación en 1 pierna bajo nivel prep',
+                'Acostado de espalda extendido',
+                'Elevación en 1 pierna a nivel prep',
+                'Sentado en hombros',
+                'Silla',
+                'Parado en hombros',
+                'Prono',
+              ],
+            },
+            {
+              header: 'DESMONTE',
+              items: ['Bajarse con paso'],
+            },
+          ],
+        },
+        {
+          title: 'HABILIDADES AVANZADAS',
+          columns: [
+            {
+              header: 'ESTILO SUELTO',
+              items: [
+                'Estilo suelto desde nivel del suelo (switch up) hacia posición del cuerpo debajo del nivel prep',
+                'Tic Tic toc debajo del nivel prep (lib a posición del cuerpo)',
+                'Tic toc en nivel prep (lib a posición del cuerpo) con un conector',
+                'Estilo suelto desde nivel de cintura hacia lib en nivel prep con conector',
+                'Estilo suelto desde nivel de suelo (switch up) hacia lib en nivel prep con conector',
+              ],
+            },
+            {
+              header: 'GIRO',
+              items: [
+                'Transición con 1/4 de giro desde nivel prep hacia nivel prep',
+                'Transición con 1/4 desde nivel inferior a prep hacia lib en nivel prep con conector',
+                'Tictoc con 1/4 de giro en nivel prep (lib a lib) con conector',
+                'Tictoc con 1/4 de giro debajo del nivel prep (lib a posición del cuerpo)',
+                'Transición desde nivel inferior a prep hacia posición del cuerpo en nivel prep con conector',
+              ],
+            },
+            { header: 'COMBINACIÓN / OTRAS HABILIDADES', items: [] },
+            { header: 'DESMONTE', items: [] },
+          ],
+        },
+        {
+          title: 'HABILIDADES ÉLITE — MÁX 1 POR GRAN PARTE/MÁX (−0.50 por élite adicional)',
+          columns: [
+            {
+              header: 'ESTILO SUELTO',
+              items: [
+                'Estilo suelto desde nivel de suelo (switch up) hacia posición del cuerpo en nivel prep con conector',
+                'Tic Tic toc debajo del nivel prep (posición del cuerpo a posición del cuerpo)',
+                'Tic toc en nivel prep (posición del cuerpo a posición del cuerpo) con conector',
+                'Estilo suelto desde nivel de cintura hacia posición del cuerpo en nivel prep con conector',
+              ],
+            },
+            {
+              header: 'GIRO',
+              items: [
+                'Transición con 1/4 de giro desde nivel inferior a prep hacia elevación prep',
+                'Transición con 1/4 desde nivel inferior a prep hacia posición del cuerpo en nivel prep con conector',
+                'Tictoc con 1/4 de giro en nivel prep (posición del cuerpo a posición del cuerpo) con conector',
+                'Estilo suelto con 1/4 de giro desde nivel del suelo (switch up) hacia lib en nivel prep con conector',
+                'Estilo suelto con 1/4 de giro desde nivel de cintura hacia lib en nivel prep con conector',
+                'Tictoc con 1/4 de giro debajo del nivel prep (posición del cuerpo a posición del cuerpo)',
+                'Cuna recta desde elevación prep',
+              ],
+            },
+            { header: 'COMBINACIÓN / OTRAS HABILIDADES', items: [] },
+            { header: 'DESMONTE', items: [] },
+          ],
+        },
+      ],
+    },
+
+    gym: {
+      levelLabel: 'Nivel 1 Escolar',
+      subTables: [
+        {
+          title: 'GIMNASIA ESTÁTICA',
+          colLabels: ['HABILIDADES DEL NIVEL', 'HABILIDADES AVANZADAS', 'RESTRINGIDAS (ILEGALES) −0.05 c/u'],
+          delNivel: [
+            'Rol adelante',
+            'Rol en escuadra',
+            'Arco desde el suelo',
+            'Rola atrás',
+            'Parado de manos (invertida)',
+            'Arco con pateo atrás',
+            'Arco desde parada de manos',
+            'Inversión adelante/atrás con piernas juntas',
+          ],
+          avanzadas: [
+            'Camino atrás',
+            'Camino atrás – Rola atrás – Camino atrás',
+            'Rola atrás a invertida',
+          ],
+          elite: [
+            'Serie de camino atrás',
+            'Camino atrás cambiando pierna',
+            'Rola atrás hacia invertida – Camino atrás / Serie de caminos atrás',
+            'Valdez',
+            'Cualquier combinación o variación de las anteriores',
+          ],
+        },
+        {
+          title: 'GIMNASIA CON CARRERA',
+          colLabels: ['HABILIDADES DEL NIVEL', 'HABILIDADES AVANZADAS', 'RESTRINGIDAS (ILEGALES) −0.05 c/u'],
+          delNivel: [
+            'Media luna',
+            'Media luna – Rola atrás',
+            'Parado de manos (invertida) – Rol adelante',
+          ],
+          avanzadas: [
+            'Media luna – Camino atrás / Camino atrás cambiando pierna',
+            'Rondada (RO)',
+            'Camino adelante / Serie de caminos adelante',
+            'Invertida – Rol adelante – Media luna',
+            'Cualquier combinación o variación de las anteriores',
+          ],
+          elite: [
+            'Media luna – Serie de caminos atrás',
+            'Camino adelante – Media luna / Rondada',
+            'Camino adelante – Media luna – Camino atrás / Serie de C. Atrás',
+            'Camino adelante – Media luna – Camino atrás cambiando pierna',
+            'Invertida – Rol adelante – Media luna – Camino atrás / Serie de C. Atrás',
+            'Cualquier combinación o variación de las anteriores',
+          ],
+        },
+      ],
+      footer: GYM_FOOTER,
+    },
+
+    tosses: null,
+  },
 };
 
 // ── Skill-level → table key ───────────────────────────────────────────────────
 
 const LEVEL_KEY_MAP: Record<string, string> = {
-  novice: 'NOVICE',
-  prep:   'L1',
+  novice:  'NOVICE',
+  prep:    'L1',
+  escolar: 'ESCOLAR_L1',
   L1: 'L1', L2: 'L2', L3: 'L3', L4: 'L4', L5: 'L5', L6: 'L6', L7: 'L7',
 };
 
