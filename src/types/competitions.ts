@@ -397,6 +397,7 @@ export interface ScoreSheet {
   showmanship_building: string | null;
   showmanship_tumbling: string | null;
   showmanship_overall:  string | null;
+  animacion_escolar:    string | null;
   // Partner Stunt
   pg_technique:         string | null;
   pg_difficulty:        string | null;

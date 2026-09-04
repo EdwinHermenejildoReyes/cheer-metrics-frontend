@@ -65,6 +65,16 @@ const DANCE_EXEC_CRITERIA = [
   'Perfección', 'Sincronización / Timing', 'Energía / Entretenimiento',
 ];
 
+// ── Animación / Porra — Escolar 2026 ─────────────────────────────────────────
+const ANIMACION_CRITERIA_LABELS = [
+  'Voz', 'Motions', 'Saltos', 'Contenido Coreográfico', 'Showmanship',
+];
+const ANIMACION_LEVELS = [
+  { label: 'BAJO',  value: 0.3 },
+  { label: 'MEDIO', value: 0.6 },
+  { label: 'ALTO',  value: 1.0 },
+];
+
 function fmt(n: number) { return n.toFixed(2); }
 
 // ── Dance level selector ──────────────────────────────────────────────────────
@@ -163,6 +173,7 @@ export default function OverallSheetPage() {
   const [showmanshipOverall, setShowmanshipOverall] = useState<number>(1.0);
   const [formationsNotes,    setFormationsNotes]    = useState('');
   const [danceNotes,         setDanceNotes]         = useState('');
+  const [animacionCriteria,  setAnimacionCriteria]  = useState<number[]>([0, 0, 0, 0, 0]);
 
   // ── Computed ──────────────────────────────────────────────────────────────
   const isEscolarAB     = scoringSystem === 'escolar_ab';
@@ -179,6 +190,8 @@ export default function OverallSheetPage() {
     : isIntl
     ? Math.round((5.0 - formationsScore) / 0.2)
     : Math.round((2.0 - formationsScore) * 10);
+  const animacionTotal  = parseFloat(animacionCriteria.reduce((s, v) => s + v, 0).toFixed(2));
+  const animacionFilled = isEscolar && animacionCriteria.some(v => v > 0);
 
   // ── Load ──────────────────────────────────────────────────────────────────
   const load = useCallback(async () => {
@@ -236,6 +249,9 @@ export default function OverallSheetPage() {
             const p = JSON.parse(sheet.notes);
             setFormationsNotes(p.formations ?? '');
             setDanceNotes(p.dance ?? '');
+            if (Array.isArray(p.animacion) && p.animacion.length === 5) {
+              setAnimacionCriteria(p.animacion as number[]);
+            }
             if (p.protest_started_at) {
               const elapsed = Date.now() - new Date(p.protest_started_at).getTime();
               if (elapsed >= 15 * 60 * 1000) setProtestExpired(true);
@@ -270,6 +286,9 @@ export default function OverallSheetPage() {
             const p = JSON.parse(sheet.notes);
             setFormationsNotes(p.formations ?? '');
             setDanceNotes(p.dance ?? '');
+            if (Array.isArray(p.animacion) && p.animacion.length === 5) {
+              setAnimacionCriteria(p.animacion as number[]);
+            }
           } catch { /* noop */ }
         }
         if (sheet.formations_score    != null) setFormationsScore(parseFloat(sheet.formations_score)    || 0);
@@ -322,10 +341,13 @@ export default function OverallSheetPage() {
         dance_execution:     String(danceExecution),
         creativity_overall:  String(isEscolarAB ? 0 : creativityOverall),
         showmanship_overall: String(showmanshipOverall),
+        animacion_escolar:   animacionFilled ? String(animacionTotal) : null,
         notes: (() => {
           let existing: Record<string, unknown> = {};
           try { existing = JSON.parse(existingSheet?.notes ?? '{}'); } catch { /* noop */ }
-          return JSON.stringify({ ...existing, formations: formationsNotes, dance: danceNotes });
+          const n: Record<string, unknown> = { ...existing, formations: formationsNotes, dance: danceNotes };
+          if (isEscolar) n.animacion = animacionCriteria;
+          return JSON.stringify(n);
         })(),
       };
 
@@ -357,7 +379,7 @@ export default function OverallSheetPage() {
     if (readOnly || !hasSettled) return;
     const timer = setTimeout(() => { handleSaveRef.current(true); }, 2000);
     return () => clearTimeout(timer);
-  }, [readOnly, hasSettled, formationsScore, danceDifficulty, danceExecution, creativityOverall, showmanshipOverall, formationsNotes, danceNotes]);
+  }, [readOnly, hasSettled, formationsScore, danceDifficulty, danceExecution, creativityOverall, showmanshipOverall, formationsNotes, danceNotes, animacionCriteria]);
 
   if (loading) return <PageSpinner />;
 
@@ -683,6 +705,91 @@ export default function OverallSheetPage() {
           </div>
         </section>
 
+        {/* ── ANIMACIÓN / PORRA (Escolar 2026 only) ────────────────────── */}
+        {isEscolar && (
+          <section className="flex flex-col gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Animación / Porra</h2>
+                <InfoButton title="Animación / Porra — FECU 2026" size="lg">
+                  <div className="space-y-3 text-sm">
+                    <p className="text-zinc-600">Sección opcional exclusiva de la categoría Escolar (FECU 2026). Cada criterio se evalúa como <strong>BAJO (0.3)</strong>, <strong>MEDIO (0.6)</strong> o <strong>ALTO (1.0)</strong>. El total máximo es <strong>5.0</strong>.</p>
+                    <p className="text-zinc-600">El puntaje efectivo de Showmanship para este equipo será <strong>el mayor</strong> entre el Showmanship tradicional (promedio de los tres jueces) y el puntaje de Animación/Porra.</p>
+                    <p className="text-xs text-zinc-400">Si el equipo no presenta sección de porra, deja todos los criterios en 0.</p>
+                  </div>
+                </InfoButton>
+              </div>
+              <p className="text-xs text-zinc-400 mt-0.5">Opcional — puntuación: BAJO 0.3 / MEDIO 0.6 / ALTO 1.0 por criterio (máx. 5.0)</p>
+            </div>
+
+            <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
+                <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Puntaje Animación</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xl font-bold tabular-nums text-zinc-900">{animacionTotal.toFixed(2)}</span>
+                  <span className="text-xs text-zinc-400">/ 5.00</span>
+                </div>
+              </div>
+              <div className="divide-y divide-zinc-100">
+                {ANIMACION_CRITERIA_LABELS.map((label, i) => (
+                  <div key={label} className="flex items-center gap-4 px-4 py-3">
+                    <span className="text-sm text-zinc-700 w-48 shrink-0">{label}</span>
+                    <div className="flex gap-2 flex-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = [...animacionCriteria];
+                          next[i] = next[i] === 0 ? 0 : 0;
+                          setAnimacionCriteria(next);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                          animacionCriteria[i] === 0
+                            ? 'bg-zinc-100 text-zinc-500 border-zinc-200'
+                            : 'bg-white text-zinc-400 border-zinc-200 hover:bg-zinc-50'
+                        }`}
+                      >
+                        —
+                      </button>
+                      {ANIMACION_LEVELS.map(({ label: lbl, value: v }) => {
+                        const active = animacionCriteria[i] === v;
+                        return (
+                          <button
+                            key={v}
+                            type="button"
+                            onClick={() => {
+                              const next = [...animacionCriteria];
+                              next[i] = active ? 0 : v;
+                              setAnimacionCriteria(next);
+                            }}
+                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
+                              active ? 'border-transparent text-white' : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50'
+                            }`}
+                            style={active ? { backgroundColor: 'var(--plt-primary)', borderColor: 'var(--plt-primary)' } : undefined}
+                          >
+                            {lbl}
+                            <span className="ml-1 opacity-70">({v.toFixed(1)})</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <span className="w-10 text-right text-sm font-semibold tabular-nums text-zinc-900">
+                      {animacionCriteria[i].toFixed(1)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {animacionFilled && (
+                <div className="px-4 py-3 bg-blue-50 border-t border-blue-100 flex items-center gap-2">
+                  <span className="text-xs text-blue-700">
+                    Showmanship efectivo = <strong>max(animación {animacionTotal.toFixed(2)}, promedio showmanship jueces)</strong>
+                    {' '}— el mayor de los dos se aplica al puntaje final.
+                  </span>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* ── OBSERVATIONS ─────────────────────────────────────────────── */}
         <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
           <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
@@ -811,6 +918,18 @@ export default function OverallSheetPage() {
                   <span className="text-zinc-400 font-normal"> / {fmt(showmanshipMax)}</span>
                 </td>
               </tr>
+              {isEscolar && animacionFilled && (
+                <tr>
+                  <td className="px-4 py-2.5 text-zinc-600">Animación / Porra (total)</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
+                    <span className="font-semibold">{animacionTotal.toFixed(2)}</span>
+                    <span className="text-zinc-400 font-normal"> / 5.00</span>
+                    {animacionTotal > showmanshipOverall && (
+                      <span className="ml-2 text-[10px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">usa este</span>
+                    )}
+                  </td>
+                </tr>
+              )}
               <tr style={{ backgroundColor: 'var(--plt-primary)' }}>
                 <td className="px-4 py-2.5 font-bold" style={{ color: 'var(--plt-primary-fg)' }}>TOTAL</td>
                 <td className="px-4 py-2.5 text-right font-bold tabular-nums text-lg" style={{ color: 'var(--plt-primary-fg)' }}>{fmt(sheetTotal)}</td>
