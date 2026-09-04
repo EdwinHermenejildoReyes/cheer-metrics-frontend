@@ -410,6 +410,7 @@ export default function DeduccionesSheetPage() {
             {/* ══════════════════════════════════════════════════════════════
                 SECCIÓN 1 — Caídas, Tiempos y Pista
                 ══════════════════════════════════════════════════════════════ */}
+            <h2 className="text-2xl font-bold text-zinc-900 mb-4">Deducciones</h2>
             <div className="grid grid-cols-[200px_1fr] gap-4 items-start">
 
               {/* ═══ LEFT — Caídas + Tiempos palette (direct-add) ═══════════ */}
@@ -679,6 +680,7 @@ export default function DeduccionesSheetPage() {
                 SECCIÓN 2 — Ilegalidades y Administración
                 ══════════════════════════════════════════════════════════════ */}
             <div className="mt-8 pt-8 border-t border-zinc-200">
+              <h2 className="text-2xl font-bold text-zinc-900 mb-6">Infracciones a las reglas / Ilegalidades</h2>
               <div className="grid grid-cols-[220px_1fr] gap-6 items-start">
 
                 {/* LEFT palette */}
