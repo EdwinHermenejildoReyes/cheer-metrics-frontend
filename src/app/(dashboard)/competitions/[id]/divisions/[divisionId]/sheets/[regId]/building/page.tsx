@@ -252,7 +252,7 @@ export default function BuildingSheetPage() {
   const [tossesExecDeds, setTossesExecDeds] = useState<ExecDeds>([null, null, null]);
 
   // ── Cross-sheet ───────────────────────────────────────────────────────────
-  const [creativityBuilding,  setCreativityBuilding]  = useState<number>(1.0);
+  const [creativityBuilding,  setCreativityBuilding]  = useState<number>(1.5);
   const [showmanshipBuilding, setShowmanshipBuilding] = useState<number>(1.0);
 
   const [stuntsNotes,   setStuntsNotes]   = useState('');
@@ -374,7 +374,7 @@ export default function BuildingSheetPage() {
           if (cfg.pyramidDriversOpts.some(o => o.value === v)) setPyramidsDrivers(v);
         }
         if (sheet.creativity_building) {
-          setCreativityBuilding(Math.min(2.0, Math.max(1.0, parseFloat(sheet.creativity_building))));
+          setCreativityBuilding(Math.min(2.0, Math.max(1.5, parseFloat(sheet.creativity_building))));
         }
         if (sheet.showmanship_building) {
           const showMin = cfg.hasCreativity ? 1.0 : 0;
@@ -1357,7 +1357,7 @@ export default function BuildingSheetPage() {
                   <div className="flex items-center gap-3">
                     <input
                       type="range"
-                      min="1.0"
+                      min="1.5"
                       max="2.0"
                       step="0.1"
                       value={creativityBuilding}
@@ -1366,12 +1366,12 @@ export default function BuildingSheetPage() {
                     />
                     <input
                       type="number"
-                      min="1.0"
+                      min="1.5"
                       max="2.0"
                       step="0.1"
                       value={creativityBuilding}
                       onChange={(e) => {
-                        const v = Math.min(2.0, Math.max(1.0, parseFloat(e.target.value) || 1.0));
+                        const v = Math.min(2.0, Math.max(1.5, parseFloat(e.target.value) || 1.5));
                         setCreativityBuilding(parseFloat(v.toFixed(2)));
                       }}
                       className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"

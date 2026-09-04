@@ -321,7 +321,7 @@ export default function TumblingSheetPage() {
   const [jumpsExecDeds, setJumpsExecDeds] = useState<ExecDeds>(emptyExec(JUMPS_EXEC_CATS));
 
   // ── Cross-sheet ───────────────────────────────────────────────────────────
-  const [creativityTumbling,  setCreativityTumbling]  = useState<number>(1.0);
+  const [creativityTumbling,  setCreativityTumbling]  = useState<number>(1.5);
   const [showmanshipTumbling, setShowmanshipTumbling] = useState<number>(1.0);
 
   const [standingNotes, setStandingNotes] = useState('');
@@ -420,7 +420,7 @@ export default function TumblingSheetPage() {
           setJumpsDiff(match ? v : (tcfg.jumpsDiffOpts[0]?.value ?? 0));
         }
         if (sheet.creativity_tumbling) {
-          setCreativityTumbling(Math.min(2.0, Math.max(1.0, parseFloat(sheet.creativity_tumbling))));
+          setCreativityTumbling(Math.min(2.0, Math.max(1.5, parseFloat(sheet.creativity_tumbling))));
         }
         if (sheet.showmanship_tumbling) {
           const showMin = tcfg.hasCreativity ? 1.0 : 0;
@@ -958,7 +958,7 @@ export default function TumblingSheetPage() {
                   <div className="flex items-center gap-3">
                     <input
                       type="range"
-                      min="1.0"
+                      min="1.5"
                       max="2.0"
                       step="0.1"
                       value={creativityTumbling}
@@ -967,12 +967,12 @@ export default function TumblingSheetPage() {
                     />
                     <input
                       type="number"
-                      min="1.0"
+                      min="1.5"
                       max="2.0"
                       step="0.1"
                       value={creativityTumbling}
                       onChange={(e) => {
-                        const v = Math.min(2.0, Math.max(1.0, parseFloat(e.target.value) || 1.0));
+                        const v = Math.min(2.0, Math.max(1.5, parseFloat(e.target.value) || 1.5));
                         setCreativityTumbling(parseFloat(v.toFixed(2)));
                       }}
                       className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
