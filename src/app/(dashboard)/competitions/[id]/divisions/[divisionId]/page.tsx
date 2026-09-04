@@ -305,37 +305,40 @@ export default function DivisionDetailPage() {
   const hasJudging = division.competition_service_type !== 'registration_only';
   const hasRegistration = division.competition_service_type !== 'judging_only';
   const compId = division.competition;
-  const judgeSheetTypes = sheetTypesForCompetition(compId);
   const isSheetAllowedInDivision = (st: SheetType) =>
     !division.allowed_sheet_types || division.allowed_sheet_types.includes(st);
-  // Uses canViewSheetForDivision so each sheet type is checked against its OWN assignment's
-  // division scope, not a global "does the judge see this division" check.
   const canViewSheetInDivision = (st: SheetType) =>
     canViewSheetForDivision(compId, division.id, st) && isSheetAllowedInDivision(st);
 
-  const ICU_SHEET_TYPES = ['icu_dance', 'icu_doubles', 'icu_dance_deductions', 'icu_dance_solo', 'icu_dance_principiantes'];
-  const judgeVisibleSheets = judgeSheetTypes.filter((sheetType) => {
-    if (!canViewSheetForDivision(compId, division.id, sheetType)) return false;
-    if (!isSheetAllowedInDivision(sheetType)) return false;
-    // Never mix ICU and cheerleader sheet types across modes
-    const isIcuSheet = ICU_SHEET_TYPES.includes(sheetType);
-    if (isIcuSheet !== isIcuDanceMode) return false;
-    if (isIcuDanceMode) {
-      if (sheetType === 'icu_dance_deductions') return true;
-      return sheetType === activeScoringSystem;
-    }
-    // Cheerleader mode: show every assigned sheet regardless of grupal/individual distinction
-    return true;
-  }).sort((a, b) => SHEET_TYPE_ORDER.indexOf(a) - SHEET_TYPE_ORDER.indexOf(b));
-
-  // Compound assignments expand to their component sheet types for icon display
+  // Compound assignments expand to their component sheet types for icon/button display
   const COMPOUND_EXPANSION: Partial<Record<SheetType, SheetType[]>> = {
     building_combined:   ['building_difficulty', 'building_execution'],
     tumbling_combined:   ['tumbling_difficulty',  'tumbling_execution'],
     deductions_combined: ['deductions_only',       'safety_rules'],
   };
+  const ICU_SHEET_TYPES = ['icu_dance', 'icu_doubles', 'icu_dance_deductions', 'icu_dance_solo', 'icu_dance_principiantes'];
+
+  // For icon display: every active assignment for this competition is shown,
+  // regardless of the assignment's division scope. Division scope enforcement
+  // is a backend concern when the judge actually opens the scoresheet.
+  const judgeVisibleSheets = assignments
+    .filter((a) => a.competition === compId && a.is_access_active)
+    .map((a) => a.sheet_type)
+    .filter((sheetType, idx, arr) => arr.indexOf(sheetType) === idx) // dedupe
+    .filter((sheetType) => {
+      if (!isSheetAllowedInDivision(sheetType)) return false;
+      const isIcuSheet = ICU_SHEET_TYPES.includes(sheetType);
+      if (isIcuSheet !== isIcuDanceMode) return false;
+      if (isIcuDanceMode) {
+        if (sheetType === 'icu_dance_deductions') return true;
+        return sheetType === activeScoringSystem;
+      }
+      return true;
+    })
+    .sort((a, b) => SHEET_TYPE_ORDER.indexOf(a) - SHEET_TYPE_ORDER.indexOf(b));
+
   const judgeExpandedSheets: SheetType[] = judgeVisibleSheets.flatMap(
-    (st) => COMPOUND_EXPANSION[st] ?? [st]
+    (st) => COMPOUND_EXPANSION[st as keyof typeof COMPOUND_EXPANSION] ?? [st]
   );
 
   return (
