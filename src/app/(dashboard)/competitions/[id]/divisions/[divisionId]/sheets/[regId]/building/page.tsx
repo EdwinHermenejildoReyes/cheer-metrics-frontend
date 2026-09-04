@@ -288,7 +288,7 @@ export default function BuildingSheetPage() {
   const maxStuntsPartMax   = bCfg.stuntsPartMaxOpts.length > 0 ? Math.max(...bCfg.stuntsPartMaxOpts.map(o => o.value)) : 0;
   const maxStuntsDrivers   = parseFloat((maxStuntsSkills + maxStuntsPartMax).toFixed(2));
   const maxPyramidsDiff    = bCfg.pyramidRango.length > 0
-    ? parseFloat((bCfg.pyramidRango[bCfg.pyramidRango.length - 1].high +
+    ? parseFloat((bCfg.pyramidRango[bCfg.pyramidRango.length - 1].low +
         (bCfg.pyramidFineSteps.length > 0 ? Math.max(...bCfg.pyramidFineSteps) : 0)).toFixed(1)) : 0;
   const maxPyramidsDrivers = bCfg.pyramidDriversOpts.length > 0 ? Math.max(...bCfg.pyramidDriversOpts.map(o => o.value)) : 0;
   const maxTossesDiff      = bCfg.tossDiffOpts.length > 0 ? Math.max(...bCfg.tossDiffOpts.map(o => o.value)) : 0;
@@ -1155,7 +1155,7 @@ export default function BuildingSheetPage() {
                     {pyramidsRangeIdx !== null && bCfg.pyramidFineSteps.length > 0 && (
                       <div>
                         <p className="text-xs font-medium text-zinc-500 mb-2">Ajuste dentro del rango</p>
-                        <div className="grid grid-cols-6 gap-1">
+                        <div className={`grid gap-1 ${bCfg.pyramidFineSteps.length > 6 ? 'grid-cols-6' : 'grid-cols-6'}`}>
                           {bCfg.pyramidFineSteps.map((step) => (
                             <button
                               key={step}

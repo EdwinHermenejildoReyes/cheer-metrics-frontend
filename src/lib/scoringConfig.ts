@@ -316,7 +316,8 @@ const INTL_JUMPS: RangoOpt[] = [
   { value: 2.0, label: 'MÁX: 3 Conectados ó 2+1 (variedad)' },
 ];
 
-const INTL_PYRAMID_FINE_STEPS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
+// INTL/Prep pyramid bands are 1.0 wide (e.g. 14.0–15.0), so fine steps must reach 1.0
+const INTL_PYRAMID_FINE_STEPS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
 
 // ── Building configs ──────────────────────────────────────────────────────────
 
