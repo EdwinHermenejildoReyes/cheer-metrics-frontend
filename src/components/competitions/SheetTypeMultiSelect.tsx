@@ -4,11 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown, X } from 'lucide-react';
 import {
   GRUPAL_SHEET_TYPES,
-  INDIVIDUAL_SHEET_TYPES,
-  ICU_DANCE_SHEET_TYPES,
   SHEET_TYPE_GROUPS,
   SHEET_TYPE_LABELS,
-  type SheetMode,
   type SheetType,
 } from '@/types/competitions';
 
@@ -16,10 +13,9 @@ interface Props {
   value: SheetType[];
   onChange: (value: SheetType[]) => void;
   disabledTypes?: SheetType[];
-  sheetMode?: SheetMode;
 }
 
-export function SheetTypeMultiSelect({ value, onChange, disabledTypes = [], sheetMode }: Props) {
+export function SheetTypeMultiSelect({ value, onChange, disabledTypes = [] }: Props) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -56,15 +52,6 @@ export function SheetTypeMultiSelect({ value, onChange, disabledTypes = [], shee
     e.stopPropagation();
     onChange([]);
   };
-
-  const modeAllowed = sheetMode === 'grupal' ? GRUPAL_SHEET_TYPES
-    : sheetMode === 'individual' ? INDIVIDUAL_SHEET_TYPES
-    : sheetMode === 'icu_dance' ? ICU_DANCE_SHEET_TYPES
-    : null;
-
-  const visibleGroups = SHEET_TYPE_GROUPS
-    .map((g) => ({ ...g, types: modeAllowed ? g.types.filter((t) => modeAllowed.includes(t)) : g.types }))
-    .filter((g) => g.types.length > 0);
 
   return (
     <div ref={containerRef} className="relative">
@@ -108,7 +95,7 @@ export function SheetTypeMultiSelect({ value, onChange, disabledTypes = [], shee
       {/* Dropdown */}
       {open && (
         <div className="absolute z-50 bottom-full mb-1 w-full min-w-[220px] rounded-lg border border-zinc-200 bg-white shadow-lg overflow-y-auto max-h-72">
-          {visibleGroups.map((group) => (
+          {SHEET_TYPE_GROUPS.map((group) => (
             <div key={group.label}>
               <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400 bg-zinc-50 sticky top-0 border-b border-zinc-100">
                 {group.label}
