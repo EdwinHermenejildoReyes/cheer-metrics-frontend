@@ -100,7 +100,7 @@ function TumblingExecInfoContent({ cats }: { cats: string[] }) {
 
 // ── Execution sub-component ───────────────────────────────────────────────────
 function ExecSection({
-  label, max, categories, deds, onChange, info,
+  label, max, categories, deds, onChange, info, dedOpts,
 }: {
   label: string;
   max: number;
@@ -108,7 +108,9 @@ function ExecSection({
   deds: ExecDeds;
   onChange: (deds: ExecDeds) => void;
   info?: React.ReactNode;
+  dedOpts?: number[];
 }) {
+  const opts     = dedOpts ?? EXEC_DED_OPTS;
   const score    = execScore(max, deds);
   const totalDed = deds.reduce<number>((s, d) => s + (d ?? 0), 0);
 
@@ -130,7 +132,7 @@ function ExecSection({
           <div key={cat} className="flex items-center gap-3 px-4 py-2.5">
             <span className="w-36 shrink-0 text-sm text-zinc-700">{cat}</span>
             <div className="flex flex-1 gap-1.5">
-              {EXEC_DED_OPTS.map((amt, aidx) => {
+              {opts.map((amt, aidx) => {
                 const active = deds[i] === amt;
                 return (
                   <button
@@ -781,6 +783,7 @@ export default function TumblingSheetPage() {
                   deds={standingExecDeds}
                   onChange={setStandingExecDeds}
                   info={<TumblingExecInfoContent cats={STANDING_EXEC_CATS} />}
+                  dedOpts={tCfg.execDedOpts}
                 />
                 <SectionTotal
                   label="Total Estática"
@@ -841,6 +844,7 @@ export default function TumblingSheetPage() {
                   deds={runningExecDeds}
                   onChange={setRunningExecDeds}
                   info={<TumblingExecInfoContent cats={RUNNING_EXEC_CATS} />}
+                  dedOpts={tCfg.execDedOpts}
                 />
                 <SectionTotal
                   label="Total Carrera"
@@ -906,7 +910,7 @@ export default function TumblingSheetPage() {
                 </div>
               )}
               <div className="flex flex-col gap-4">
-                <ExecSection label="Saltos" max={tCfg.jumpsExecMax} categories={JUMPS_EXEC_CATS} deds={jumpsExecDeds} onChange={setJumpsExecDeds} info={<TumblingExecInfoContent cats={JUMPS_EXEC_CATS} />} />
+                <ExecSection label="Saltos" max={tCfg.jumpsExecMax} categories={JUMPS_EXEC_CATS} deds={jumpsExecDeds} onChange={setJumpsExecDeds} info={<TumblingExecInfoContent cats={JUMPS_EXEC_CATS} />} dedOpts={tCfg.execDedOpts} />
                 <SectionTotal
                   label="Total Saltos"
                   breakdown={

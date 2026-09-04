@@ -26,6 +26,12 @@ export interface BuildingConfig {
   hasTosses:            boolean;
   tossDiffOpts:         RangoOpt[];
   tossesExecMax:        number;
+  // Execution deduction amounts (per driver).
+  // buildingExecDedOpts: for stunts & pyramids (high scale, e.g. max 15.0)
+  // tossesExecDedOpts: for tosses (low scale, max 2.0)
+  // Default (undefined) → [0.05, 0.10, 0.20, 0.30] used by domestic Elite.
+  buildingExecDedOpts?: number[];
+  tossesExecDedOpts?:   number[];
   // Cross-sheet
   hasCreativity:        boolean;   // false for escolar_ab (cheer only)
   showmanshipMax:       number;    // 2.0 standard, 5.0 for escolar_ab
@@ -50,6 +56,9 @@ export interface TumblingConfig {
   jumpsHasDiff:         boolean;
   jumpsDiffOpts:        RangoOpt[];
   jumpsExecMax:         number;
+  // Execution deduction amounts per driver for all tumbling/jumps sections (low scale, max 2.0).
+  // Default (undefined) → [0.05, 0.10, 0.20, 0.30] used by domestic Elite.
+  execDedOpts?:         number[];
   // escolar_ab: standing section represents combined Standing+Running
   isCombinedSR:         boolean;
   // Cross-sheet
@@ -466,6 +475,12 @@ const PREP_TUMBLING: TumblingConfig = {
   showmanshipMax:   2.0,
 };
 
+// INTL 2026 execution deduction amounts per driver (FECU 2026 International PDF):
+// - Stunts/Pyramids (max 15.0): −0.1 Mínimos / −0.3 Menores / −0.5 Múltiples / −0.7 Generalizados
+// - Tosses/Tumbling/Jumps (max 2.0): −0.1 / −0.2 / −0.3 / −0.4
+const INTL_BUILDING_EXEC_DEDS = [0.10, 0.30, 0.50, 0.70];
+const INTL_SMALL_EXEC_DEDS    = [0.10, 0.20, 0.30, 0.40];
+
 // All Star Prep FECU 2026 — raw max 91.5, same overall/cross sheet behavior as INTL
 const PREP_BUILDING_2026: BuildingConfig = {
   hasStunts:          true,
@@ -475,6 +490,7 @@ const PREP_BUILDING_2026: BuildingConfig = {
   stuntsSkillGrades:  INTL_SKILL_GRADES,   // 0 / 0.3 / 0.5 per skill
   stuntsPartMaxOpts:  PREP_2026_PART_MAX,
   stuntsExecMax:      15.0,
+  buildingExecDedOpts: INTL_BUILDING_EXEC_DEDS,
   hasPyramids:        true,
   pyramidsHasDiff:    true,
   pyramidRango:       PREP_2026_PYRAMID_RANGO,
@@ -503,6 +519,7 @@ const PREP_TUMBLING_2026: TumblingConfig = {
   jumpsHasDiff:      true,
   jumpsDiffOpts:     PREP_JUMPS,   // [0.5, 1.0, 1.5, 2.0] — correct per PDF
   jumpsExecMax:      2.0,
+  execDedOpts:       INTL_SMALL_EXEC_DEDS,
   isCombinedSR:      false,
   hasCreativity:     true,
   showmanshipMax:    5.0,
@@ -583,6 +600,7 @@ const INTL_BUILDING: BuildingConfig = {
   stuntsSkillGrades:  INTL_SKILL_GRADES,
   stuntsPartMaxOpts:  INTL_PART_MAX,
   stuntsExecMax:      15.0,
+  buildingExecDedOpts: INTL_BUILDING_EXEC_DEDS,
   hasPyramids:        true,
   pyramidsHasDiff:    true,
   pyramidRango:       INTL_PYRAMID_RANGO,
@@ -592,6 +610,7 @@ const INTL_BUILDING: BuildingConfig = {
   hasTosses:          true,
   tossDiffOpts:       ELITE_TOSS_DIFF,
   tossesExecMax:      2.0,
+  tossesExecDedOpts:  INTL_SMALL_EXEC_DEDS,
   hasCreativity:      true,
   showmanshipMax:     5.0,
 };
@@ -611,6 +630,7 @@ const INTL_TUMBLING: TumblingConfig = {
   jumpsHasDiff:      true,
   jumpsDiffOpts:     INTL_JUMPS,
   jumpsExecMax:      2.0,
+  execDedOpts:       INTL_SMALL_EXEC_DEDS,
   isCombinedSR:      false,
   hasCreativity:     true,
   showmanshipMax:    5.0,

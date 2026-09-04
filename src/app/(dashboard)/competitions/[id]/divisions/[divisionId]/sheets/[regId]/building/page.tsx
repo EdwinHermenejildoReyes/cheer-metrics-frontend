@@ -105,7 +105,7 @@ function NoAplicaBadge({ label }: { label: string }) {
 
 // ── Execution sub-component ──────────────────────────────────────────────────
 function ExecSection({
-  label, max, deds, onChange, cats = EXEC_CATS, info,
+  label, max, deds, onChange, cats = EXEC_CATS, info, dedOpts,
 }: {
   label: string;
   max: number;
@@ -113,7 +113,9 @@ function ExecSection({
   onChange: (deds: ExecDeds) => void;
   cats?: string[];
   info?: React.ReactNode;
+  dedOpts?: number[];
 }) {
+  const opts = dedOpts ?? EXEC_DED_OPTS;
   const score = execScore(max, deds);
   const totalDed = deds.reduce<number>((s, d) => s + (d ?? 0), 0);
 
@@ -137,7 +139,7 @@ function ExecSection({
           <div key={cat} className="flex items-center gap-3 px-4 py-2.5">
             <span className="w-28 shrink-0 text-sm text-zinc-700">{cat}</span>
             <div className="flex flex-1 gap-1.5">
-              {EXEC_DED_OPTS.map((amt, aidx) => {
+              {opts.map((amt, aidx) => {
                 const active = deds[i] === amt;
                 return (
                   <button
@@ -1061,7 +1063,7 @@ export default function BuildingSheetPage() {
 
               {/* RIGHT: Execution + Total + Comments */}
               <div className="flex flex-col gap-4">
-                <ExecSection label="Elevaciones" max={bCfg.stuntsExecMax} deds={stuntsExecDeds} onChange={setStuntsExecDeds}
+                <ExecSection label="Elevaciones" max={bCfg.stuntsExecMax} deds={stuntsExecDeds} onChange={setStuntsExecDeds} dedOpts={bCfg.buildingExecDedOpts}
                   info={<ExecInfoContent cats={EXEC_CATS} note="Cada categoría se evalúa de forma independiente. Solo se puede seleccionar un nivel de deducción por categoría por vuelta." />}
                 />
                 <SectionTotal
@@ -1181,7 +1183,7 @@ export default function BuildingSheetPage() {
 
               {/* RIGHT: Execution + Drivers + Total + Comments */}
               <div className="flex flex-col gap-4">
-                <ExecSection label="Pirámides" max={bCfg.pyramidsExecMax} deds={pyramidsExecDeds} onChange={setPyramidsExecDeds}
+                <ExecSection label="Pirámides" max={bCfg.pyramidsExecMax} deds={pyramidsExecDeds} onChange={setPyramidsExecDeds} dedOpts={bCfg.buildingExecDedOpts}
                   info={<ExecInfoContent cats={EXEC_CATS} note="En pirámides, la Sincronización evalúa la coordinación entre todos los stunts que forman la estructura simultáneamente." />}
                 />
 
@@ -1287,7 +1289,7 @@ export default function BuildingSheetPage() {
 
               {/* RIGHT: Execution + Total + Comments */}
               <div className="flex flex-col gap-4">
-                <ExecSection label="Lanzamientos" max={bCfg.tossesExecMax} deds={tossesExecDeds} onChange={setTossesExecDeds} cats={TOSS_EXEC_CATS}
+                <ExecSection label="Lanzamientos" max={bCfg.tossesExecMax} deds={tossesExecDeds} onChange={setTossesExecDeds} cats={TOSS_EXEC_CATS} dedOpts={bCfg.tossesExecDedOpts}
                   info={<ExecInfoContent cats={TOSS_EXEC_CATS} note="En lanzamientos, la Altura evalúa el alcance del pico máximo y la limpieza de la trayectoria; no se evalúa Sincronización." />}
                 />
                 <SectionTotal
