@@ -302,6 +302,7 @@ export interface Division {
   max_athletes: number | null;
   is_enable: boolean;
   allowed_sheet_types: SheetType[] | null;
+  order: number;
 }
 
 export interface Gym {
