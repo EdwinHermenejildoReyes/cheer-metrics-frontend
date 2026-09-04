@@ -101,3 +101,25 @@ export function getGymGroups(athleteCount: number): GymGroups | null {
   // > 38: use largest defined row
   return { mayoria: 15, gran_parte: 16, max: 30 };
 }
+
+// ── Prep-specific gym table (FECU 2026, page 5) ───────────────────────────────
+// Distinct from the International table — different ranges and counts.
+const GYM_TABLE_PREP: readonly [number, number, number, number, number][] = [
+  [10, 11,  5,  6,  7],
+  [12, 15,  6,  7,  9],
+  [16, 19,  8, 10, 12],
+  [20, 23, 10, 13, 16],
+  [24, 30, 12, 15, 19],
+  [31, 35, 14, 18, 23],
+];
+
+export function getGymGroupsPrep(athleteCount: number): GymGroups | null {
+  if (athleteCount < 10) return null;
+  for (const [min, max, mayoria, gran_parte, maxVal] of GYM_TABLE_PREP) {
+    if (athleteCount >= min && athleteCount <= max) {
+      return { mayoria, gran_parte, max: maxVal };
+    }
+  }
+  // > 35: use largest defined row
+  return { mayoria: 14, gran_parte: 18, max: 23 };
+}

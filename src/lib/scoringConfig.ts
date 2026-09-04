@@ -144,7 +144,7 @@ const ELITE_JUMPS: RangoOpt[] = [
 
 const PYRAMID_FINE_STEPS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
 
-// Prep shares skill grade values (labels differ slightly but scores identical)
+// Escolar (shared with old Prep — kept for CONFIGS['escolar'])
 const PREP_STUNT_RANGO: RangoOpt[] = [
   { value: 2.5, label: 'No cumple con 3.0',                      skillCount: 0 },
   { value: 3.0, label: '4 Hab Dif por Gran Parte (Acumulativas)', skillCount: 3 },
@@ -173,6 +173,31 @@ const PREP_TUMBLING_RANGO: RangoOpt[] = [
   { value: 1.5, label: 'No cumple con 2.0' },
   { value: 2.0, label: 'MAYORÍA: 1 pase del nivel' },
   { value: 2.5, label: 'GRAN PARTE: 1 pase del nivel' },
+];
+
+// All Star Prep FECU 2026 — stunts rango 8.5–10.0, pyramids rango 10.0–13.0
+const PREP_2026_STUNT_RANGO: RangoOpt[] = [
+  { value:  8.5, label: 'No cumple con 9.0',                    skillCount: 0 },
+  { value:  9.0, label: '4 Hab Dif por Gran Parte',             skillCount: 4 },
+  { value:  9.5, label: '2 Hab Dif Simultáneas por Gran Parte', skillCount: 2 },
+  { value: 10.0, label: '3 Hab Dif Simultáneas por Gran Parte', skillCount: 3 },
+];
+
+const PREP_2026_PART_MAX: RangoOpt[] = [
+  { value: 0.0, label: 'No Cumple' },
+  { value: 1.0, label: 'Nivel × MÁX ó Avanzada × Gran Parte' },
+];
+
+const PREP_2026_PYRAMID_RANGO: PyramidRangoOpt[] = [
+  { low: 10.0, high: 11.0, label: 'Inferior: No cumple con 11.0' },
+  { low: 11.0, high: 12.0, label: 'Bajo: 2 Hab Dif + 2 Estructuras' },
+  { low: 12.0, high: 13.0, label: 'Medio: 3 Hab Dif + 2 Estructuras × Gran Parte' },
+];
+
+const PREP_2026_TUMBLING_RANGO: RangoOpt[] = [
+  { value: 0.5, label: 'No cumple con 1.0' },
+  { value: 1.0, label: 'MAYORÍA: 1 pase del nivel' },
+  { value: 1.5, label: 'GRAN PARTE: 1 pase del nivel' },
 ];
 
 const PREP_HABILIDAD: RangoOpt[] = [
@@ -441,6 +466,48 @@ const PREP_TUMBLING: TumblingConfig = {
   showmanshipMax:   2.0,
 };
 
+// All Star Prep FECU 2026 — raw max 91.5, same overall/cross sheet behavior as INTL
+const PREP_BUILDING_2026: BuildingConfig = {
+  hasStunts:          true,
+  stuntsHasDiff:      true,
+  stuntsRango:        PREP_2026_STUNT_RANGO,
+  stuntsSkillCount:   3,
+  stuntsSkillGrades:  INTL_SKILL_GRADES,   // 0 / 0.3 / 0.5 per skill
+  stuntsPartMaxOpts:  PREP_2026_PART_MAX,
+  stuntsExecMax:      15.0,
+  hasPyramids:        true,
+  pyramidsHasDiff:    true,
+  pyramidRango:       PREP_2026_PYRAMID_RANGO,
+  pyramidFineSteps:   INTL_PYRAMID_FINE_STEPS,
+  pyramidsExecMax:    15.0,
+  pyramidDriversOpts: [],
+  hasTosses:          false,
+  tossDiffOpts:       [],
+  tossesExecMax:      2.0,
+  hasCreativity:      true,
+  showmanshipMax:     5.0,
+};
+
+const PREP_TUMBLING_2026: TumblingConfig = {
+  hasStanding:       true,
+  standingHasDiff:   true,
+  standingRango:     PREP_2026_TUMBLING_RANGO,
+  standingHabilidad: PREP_HABILIDAD,   // [0.0, 0.3, 0.5] — unchanged
+  standingExecMax:   2.0,
+  hasRunning:        true,
+  runningHasDiff:    true,
+  runningRango:      PREP_2026_TUMBLING_RANGO,
+  runningHabilidad:  PREP_HABILIDAD,
+  runningExecMax:    2.0,
+  hasJumps:          true,
+  jumpsHasDiff:      true,
+  jumpsDiffOpts:     PREP_JUMPS,   // [0.5, 1.0, 1.5, 2.0] — correct per PDF
+  jumpsExecMax:      2.0,
+  isCombinedSR:      false,
+  hasCreativity:     true,
+  showmanshipMax:    5.0,
+};
+
 const MINI_NOVICE_TUMBLING: TumblingConfig = {
   hasStanding:      false,
   standingHasDiff:  false,
@@ -560,7 +627,7 @@ const CONFIGS: Record<ScoringSystem, ScoringConfig> = {
   elite_l1:      { building: { ...ELITE_BUILDING, hasTosses: false }, tumbling: ELITE_TUMBLING },
   elite_l2_7:    { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
   elite_nt:      { building: ELITE_BUILDING,        tumbling: { ...ELITE_TUMBLING, hasStanding: false, hasRunning: false } },
-  prep:          { building: PREP_BUILDING,         tumbling: PREP_TUMBLING },
+  prep:          { building: PREP_BUILDING_2026,     tumbling: PREP_TUMBLING_2026 },
   escolar:       { building: PREP_BUILDING,         tumbling: PREP_TUMBLING },
   escolar_ab:    { building: ESCOLAR_AB_BUILDING,   tumbling: ESCOLAR_AB_TUMBLING },
   tiny_novice:   { building: TINY_NOVICE_BUILDING,  tumbling: MINI_NOVICE_TUMBLING },

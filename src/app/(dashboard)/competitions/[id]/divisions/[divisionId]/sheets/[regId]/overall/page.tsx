@@ -161,8 +161,8 @@ export default function OverallSheetPage() {
 
   // ── Computed ──────────────────────────────────────────────────────────────
   const isEscolarAB     = scoringSystem === 'escolar_ab';
-  const isIntl          = scoringSystem === 'intl_l1' || scoringSystem === 'intl_l2_7' || scoringSystem === 'intl_nt';
-  const hasDanceLimited = !isEscolarAB && !isIntl && (scoringSystem === 'tiny_novice' || scoringSystem === 'mini_novice' || scoringSystem === 'novice_plus' || scoringSystem === 'prep' || scoringSystem === 'escolar' || scoringSystem === 'elite_l1');
+  const isIntl          = scoringSystem === 'intl_l1' || scoringSystem === 'intl_l2_7' || scoringSystem === 'intl_nt' || scoringSystem === 'prep';
+  const hasDanceLimited = !isEscolarAB && !isIntl && (scoringSystem === 'tiny_novice' || scoringSystem === 'mini_novice' || scoringSystem === 'novice_plus' || scoringSystem === 'escolar' || scoringSystem === 'elite_l1');
   const danceDiffLevels = isEscolarAB ? DANCE_DIFF_LEVELS_AB : isIntl ? DANCE_LEVELS_INTL : (hasDanceLimited ? DANCE_LEVELS_ESCOLAR : DANCE_LEVELS_FULL);
   const danceExecLevels = isEscolarAB ? DANCE_EXEC_LEVELS_AB : isIntl ? DANCE_LEVELS_INTL : (hasDanceLimited ? DANCE_LEVELS_ESCOLAR : DANCE_LEVELS_FULL);
   const showmanshipMax  = (isEscolarAB || isIntl) ? 5.0 : 2.0;
@@ -194,7 +194,7 @@ export default function OverallSheetPage() {
       }
 
       const sysKey = (div.scoring_system || div.suggested_scoring_system) as string;
-      const isIntlSys = sysKey === 'intl_l1' || sysKey === 'intl_l2_7' || sysKey === 'intl_nt';
+      const isIntlSys = sysKey === 'intl_l1' || sysKey === 'intl_l2_7' || sysKey === 'intl_nt' || sysKey === 'prep';
 
       if (sheetRes.data.results.length > 0) {
         const sheet = sheetRes.data.results[0];

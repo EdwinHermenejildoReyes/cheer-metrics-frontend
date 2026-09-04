@@ -14,6 +14,7 @@ interface Props {
 
 const LEVEL_LABELS: Record<string, string> = {
   novice: 'All Star Novice',
+  prep:   'All Star Prep',
   L1: 'Nivel 1', L2: 'Nivel 2', L3: 'Nivel 3',
   L4: 'Nivel 4', L5: 'Nivel 5', L6: 'Nivel 6', L7: 'Nivel 7',
 };

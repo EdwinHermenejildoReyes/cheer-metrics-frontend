@@ -11,7 +11,7 @@ import { PrintButton } from '@/components/print/PrintButton';
 import { TumblingSheetPrintView } from '@/components/print/TumblingSheetPrintView';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { getScoringConfig, DEFAULT_TUMBLING_CONFIG } from '@/lib/scoringConfig';
-import { getGymGroups } from '@/lib/constructionTable';
+import { getGymGroups, getGymGroupsPrep } from '@/lib/constructionTable';
 import { useJudge } from '@/hooks/useJudge';
 import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
@@ -694,7 +694,8 @@ export default function TumblingSheetPage() {
 
         {/* ── Gym construction table banner ────────────────────────────── */}
         {(() => {
-          const groups = athleteCount ? getGymGroups(athleteCount) : null;
+          const sysForGym = (division?.scoring_system || division?.suggested_scoring_system) as string;
+          const groups = athleteCount ? (sysForGym === 'prep' ? getGymGroupsPrep(athleteCount) : getGymGroups(athleteCount)) : null;
           return (
             <div className={`rounded-xl border px-5 py-4 flex items-center justify-between gap-4 mb-6 ${
               groups ? 'border-zinc-200 bg-white' : 'border-dashed border-zinc-300 bg-zinc-50'

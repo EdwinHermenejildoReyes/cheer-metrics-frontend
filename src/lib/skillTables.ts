@@ -1773,6 +1773,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
 
 const LEVEL_KEY_MAP: Record<string, string> = {
   novice: 'NOVICE',
+  prep:   'L1',
   L1: 'L1', L2: 'L2', L3: 'L3', L4: 'L4', L5: 'L5', L6: 'L6', L7: 'L7',
 };
 
