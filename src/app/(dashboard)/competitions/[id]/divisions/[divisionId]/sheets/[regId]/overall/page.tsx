@@ -171,8 +171,7 @@ export default function OverallSheetPage() {
   const [danceExecution,     setDanceExecution]     = useState<number>(0);
   const [creativityOverall,  setCreativityOverall]  = useState<number>(1.5);
   const [showmanshipOverall, setShowmanshipOverall] = useState<number>(1.0);
-  const [formationsNotes,    setFormationsNotes]    = useState('');
-  const [danceNotes,         setDanceNotes]         = useState('');
+  const [comments,           setComments]           = useState('');
   const [animacionCriteria,  setAnimacionCriteria]  = useState<number[]>([0, 0, 0, 0, 0]);
 
   // ── Computed ──────────────────────────────────────────────────────────────
@@ -247,8 +246,7 @@ export default function OverallSheetPage() {
         if (sheet.notes) {
           try {
             const p = JSON.parse(sheet.notes);
-            setFormationsNotes(p.formations ?? '');
-            setDanceNotes(p.dance ?? '');
+            setComments(p.comments ?? [p.formations, p.dance].filter(Boolean).join('\n'));
             if (Array.isArray(p.animacion) && p.animacion.length === 5) {
               setAnimacionCriteria(p.animacion as number[]);
             }
@@ -257,7 +255,7 @@ export default function OverallSheetPage() {
               if (elapsed >= 15 * 60 * 1000) setProtestExpired(true);
             }
           } catch {
-            setFormationsNotes(sheet.notes);
+            setComments(sheet.notes);
           }
         }
       } else if (isIntlSys) {
@@ -284,8 +282,7 @@ export default function OverallSheetPage() {
         if (sheet.notes) {
           try {
             const p = JSON.parse(sheet.notes);
-            setFormationsNotes(p.formations ?? '');
-            setDanceNotes(p.dance ?? '');
+            setComments(p.comments ?? [p.formations, p.dance].filter(Boolean).join('\n'));
             if (Array.isArray(p.animacion) && p.animacion.length === 5) {
               setAnimacionCriteria(p.animacion as number[]);
             }
@@ -345,7 +342,7 @@ export default function OverallSheetPage() {
         notes: (() => {
           let existing: Record<string, unknown> = {};
           try { existing = JSON.parse(existingSheet?.notes ?? '{}'); } catch { /* noop */ }
-          const n: Record<string, unknown> = { ...existing, formations: formationsNotes, dance: danceNotes };
+          const n: Record<string, unknown> = { ...existing, comments };
           if (isEscolar) n.animacion = animacionCriteria;
           return JSON.stringify(n);
         })(),
@@ -379,7 +376,7 @@ export default function OverallSheetPage() {
     if (readOnly || !hasSettled) return;
     const timer = setTimeout(() => { handleSaveRef.current(true); }, 2000);
     return () => clearTimeout(timer);
-  }, [readOnly, hasSettled, formationsScore, danceDifficulty, danceExecution, creativityOverall, showmanshipOverall, formationsNotes, danceNotes, animacionCriteria]);
+  }, [readOnly, hasSettled, formationsScore, danceDifficulty, danceExecution, creativityOverall, showmanshipOverall, comments, animacionCriteria]);
 
   if (loading) return <PageSpinner />;
 
@@ -448,8 +445,8 @@ export default function OverallSheetPage() {
           danceExecution={danceExecution}
           creativityOverall={creativityOverall}
           showmanshipOverall={showmanshipOverall}
-          formationsNotes={formationsNotes}
-          danceNotes={danceNotes}
+          formationsNotes={comments}
+          danceNotes=""
           errorsCount={errorsCount}
           overallSubtotal={overallSubtotal}
           sheetTotal={sheetTotal}
@@ -790,25 +787,19 @@ export default function OverallSheetPage() {
           </section>
         )}
 
-        {/* ── OBSERVATIONS ─────────────────────────────────────────────── */}
+        {/* ── COMMENTS ─────────────────────────────────────────────────── */}
         <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
           <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Observaciones del juez</span>
-            <p className="text-[10px] text-zinc-400 mt-0.5">Aquí se consolidarán los comentarios de todas las secciones calificadas (Formaciones, Baile)</p>
+            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Comentarios</span>
           </div>
-          <div className="divide-y divide-zinc-100">
-            <div className="p-4">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Formaciones</p>
-              <textarea value={formationsNotes} onChange={(e) => setFormationsNotes(e.target.value)}
-                placeholder="Observaciones sobre formaciones y transiciones..." rows={4}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
-            </div>
-            <div className="p-4">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Baile</p>
-              <textarea value={danceNotes} onChange={(e) => setDanceNotes(e.target.value)}
-                placeholder="Observaciones sobre dificultad y ejecución de baile..." rows={4}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
-            </div>
+          <div className="p-4">
+            <textarea
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
+              placeholder="Comentarios de la rutina..."
+              rows={5}
+              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
+            />
           </div>
         </div>
 

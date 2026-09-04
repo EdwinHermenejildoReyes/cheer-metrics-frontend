@@ -257,9 +257,7 @@ export default function BuildingSheetPage() {
   const [creativityBuilding,  setCreativityBuilding]  = useState<number>(1.5);
   const [showmanshipBuilding, setShowmanshipBuilding] = useState<number>(1.0);
 
-  const [stuntsNotes,   setStuntsNotes]   = useState('');
-  const [pyramidsNotes, setPyramidsNotes] = useState('');
-  const [tossesNotes,   setTossesNotes]   = useState('');
+  const [comments, setComments] = useState('');
 
   // ── Computed totals ───────────────────────────────────────────────────────
   const stuntsSkillsTotal  = parseFloat(stuntsSkills.reduce<number>((s, v) => s + (v ?? 0), 0).toFixed(2));
@@ -400,15 +398,13 @@ export default function BuildingSheetPage() {
               const v = parseFloat(sheet.stunts_drivers);
               if (cfg.stuntsPartMaxOpts.some(o => o.value === v)) setStuntsPartMax(v);
             }
-            setStuntsNotes(parsed.stunts ?? '');
-            setPyramidsNotes(parsed.pyramids ?? '');
-            setTossesNotes(parsed.tosses ?? '');
+            setComments(parsed.comments ?? [parsed.stunts, parsed.pyramids, parsed.tosses].filter(Boolean).join('\n'));
             if (parsed.protest_started_at) {
               const elapsed = Date.now() - new Date(parsed.protest_started_at).getTime();
               if (elapsed >= 15 * 60 * 1000) setProtestExpired(true);
             }
           } catch {
-            setStuntsNotes(sheet.notes);
+            setComments(sheet.notes);
           }
         }
       }
@@ -466,9 +462,7 @@ export default function BuildingSheetPage() {
         if (sheet.notes) {
           try {
             const p = JSON.parse(sheet.notes);
-            setStuntsNotes(p.stunts ?? '');
-            setPyramidsNotes(p.pyramids ?? '');
-            setTossesNotes(p.tosses ?? '');
+            setComments(p.comments ?? [p.stunts, p.pyramids, p.tosses].filter(Boolean).join('\n'));
             const s = p._scores ?? {};
             if (s.stuntsRango       != null) setStuntsRango(s.stuntsRango);
             if (Array.isArray(s.stuntsSkills))    setStuntsSkills(s.stuntsSkills);
@@ -539,9 +533,7 @@ export default function BuildingSheetPage() {
           const existingScores = (existing._scores as Record<string, unknown>) ?? {};
           return JSON.stringify({
             ...existing,
-            stunts: stuntsNotes,
-            pyramids: pyramidsNotes,
-            tosses: tossesNotes,
+            comments,
             _scores: {
               ...existingScores,
               stuntsRango, stuntsSkills, stuntsPartMax,
@@ -581,7 +573,7 @@ export default function BuildingSheetPage() {
     const timer = setTimeout(() => { handleSaveRef.current(true); }, 2000);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readOnly, stuntsRango, stuntsSkills, stuntsPartMax, stuntsExecDeds, pyramidsExecDeds, tossesExecDeds, pyramidsRangeIdx, pyramidsFine, pyramidsDrivers, tossesDiff, creativityBuilding, showmanshipBuilding, stuntsNotes, pyramidsNotes, tossesNotes]);
+  }, [readOnly, stuntsRango, stuntsSkills, stuntsPartMax, stuntsExecDeds, pyramidsExecDeds, tossesExecDeds, pyramidsRangeIdx, pyramidsFine, pyramidsDrivers, tossesDiff, creativityBuilding, showmanshipBuilding, comments]);
 
   const handleSaveAthleteCount = async () => {
     const val = localCountStr === '' ? null : parseInt(localCountStr, 10);
@@ -670,15 +662,15 @@ export default function BuildingSheetPage() {
           stuntsSkills={stuntsSkills}
           stuntsPartMax={stuntsPartMax}
           stuntsExecDeds={stuntsExecDeds}
-          stuntsNotes={stuntsNotes}
+          stuntsNotes={comments}
           pyramidsRangeIdx={pyramidsRangeIdx}
           pyramidsFine={pyramidsFine}
           pyramidsExecDeds={pyramidsExecDeds}
           pyramidsDrivers={pyramidsDrivers}
-          pyramidsNotes={pyramidsNotes}
+          pyramidsNotes=""
           tossesDiff={tossesDiff}
           tossesExecDeds={tossesExecDeds}
-          tossesNotes={tossesNotes}
+          tossesNotes=""
           creativityBuilding={creativityBuilding}
           showmanshipBuilding={showmanshipBuilding}
           stuntsSkillsTotal={stuntsSkillsTotal}
@@ -1425,49 +1417,19 @@ export default function BuildingSheetPage() {
           </div>
         </section>
 
-        {/* ── OBSERVATIONS ─────────────────────────────────────────────── */}
+        {/* ── COMMENTS ─────────────────────────────────────────────────── */}
         <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
           <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Observaciones del juez</span>
-            <p className="text-[10px] text-zinc-400 mt-0.5">Aquí se consolidarán los comentarios de todas las secciones calificadas (Elevaciones, Pirámides, Lanzamientos)</p>
+            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Comentarios</span>
           </div>
-          <div className="divide-y divide-zinc-100">
-            {bCfg.hasStunts && (
-              <div className="p-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Elevaciones</p>
-                <textarea
-                  value={stuntsNotes}
-                  onChange={(e) => setStuntsNotes(e.target.value)}
-                  placeholder="Observaciones sobre Elevaciones..."
-                  rows={3}
-                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                />
-              </div>
-            )}
-            {bCfg.hasPyramids && (
-              <div className="p-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Pirámides</p>
-                <textarea
-                  value={pyramidsNotes}
-                  onChange={(e) => setPyramidsNotes(e.target.value)}
-                  placeholder="Observaciones sobre Pirámides..."
-                  rows={3}
-                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                />
-              </div>
-            )}
-            {bCfg.hasTosses && (
-              <div className="p-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Lanzamientos</p>
-                <textarea
-                  value={tossesNotes}
-                  onChange={(e) => setTossesNotes(e.target.value)}
-                  placeholder="Observaciones sobre Lanzamientos..."
-                  rows={3}
-                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                />
-              </div>
-            )}
+          <div className="p-4">
+            <textarea
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
+              placeholder="Comentarios de la rutina..."
+              rows={5}
+              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
+            />
           </div>
         </div>
 

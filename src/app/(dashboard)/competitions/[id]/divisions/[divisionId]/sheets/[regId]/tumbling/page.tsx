@@ -326,9 +326,7 @@ export default function TumblingSheetPage() {
   const [creativityTumbling,  setCreativityTumbling]  = useState<number>(1.5);
   const [showmanshipTumbling, setShowmanshipTumbling] = useState<number>(1.0);
 
-  const [standingNotes, setStandingNotes] = useState('');
-  const [runningNotes,  setRunningNotes]  = useState('');
-  const [jumpsNotes,    setJumpsNotes]    = useState('');
+  const [comments, setComments] = useState('');
 
   // ── Computed totals ───────────────────────────────────────────────────────
   const standingExecTotal   = execScore(tCfg.standingExecMax, standingExecDeds);
@@ -430,9 +428,7 @@ export default function TumblingSheetPage() {
         if (sheet.notes) {
           try {
             const p = JSON.parse(sheet.notes);
-            setStandingNotes(p.standing ?? '');
-            setRunningNotes(p.running ?? '');
-            setJumpsNotes(p.jumps ?? '');
+            setComments(p.comments ?? [p.standing, p.running, p.jumps].filter(Boolean).join('\n'));
             if (p._scores) {
               const s = p._scores;
               if (Array.isArray(s.standingExecDeds)) setStandingExecDeds(s.standingExecDeds);
@@ -444,7 +440,7 @@ export default function TumblingSheetPage() {
               if (elapsed >= 15 * 60 * 1000) setProtestExpired(true);
             }
           } catch {
-            setStandingNotes(sheet.notes);
+            setComments(sheet.notes);
           }
         }
       }
@@ -492,9 +488,7 @@ export default function TumblingSheetPage() {
         if (sheet.notes) {
           try {
             const p = JSON.parse(sheet.notes);
-            setStandingNotes(p.standing ?? '');
-            setRunningNotes(p.running ?? '');
-            setJumpsNotes(p.jumps ?? '');
+            setComments(p.comments ?? [p.standing, p.running, p.jumps].filter(Boolean).join('\n'));
             const s = p._scores ?? {};
             if (Array.isArray(s.standingExecDeds)) setStandingExecDeds(s.standingExecDeds);
             if (Array.isArray(s.runningExecDeds))  setRunningExecDeds(s.runningExecDeds);
@@ -563,9 +557,7 @@ export default function TumblingSheetPage() {
           const existingScores = (existing._scores as Record<string, unknown>) ?? {};
           return JSON.stringify({
             ...existing,
-            standing: standingNotes,
-            running: runningNotes,
-            jumps: jumpsNotes,
+            comments,
             _scores: { ...existingScores, standingExecDeds, runningExecDeds, jumpsExecDeds },
           });
         })(),
@@ -600,7 +592,7 @@ export default function TumblingSheetPage() {
     const timer = setTimeout(() => { handleSaveRef.current(true); }, 2000);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readOnly, standingRango, standingHabilidad, standingExecDeds, runningRango, runningHabilidad, runningExecDeds, jumpsDiff, jumpsExecDeds, creativityTumbling, showmanshipTumbling, standingNotes, runningNotes, jumpsNotes]);
+  }, [readOnly, standingRango, standingHabilidad, standingExecDeds, runningRango, runningHabilidad, runningExecDeds, jumpsDiff, jumpsExecDeds, creativityTumbling, showmanshipTumbling, comments]);
 
   if (loading) return <PageSpinner />;
 
@@ -665,14 +657,14 @@ export default function TumblingSheetPage() {
           standingRango={standingRango}
           standingHabilidad={standingHabilidad}
           standingExecDeds={standingExecDeds}
-          standingNotes={standingNotes}
+          standingNotes={comments}
           runningRango={runningRango}
           runningHabilidad={runningHabilidad}
           runningExecDeds={runningExecDeds}
-          runningNotes={runningNotes}
+          runningNotes=""
           jumpsDiff={jumpsDiff}
           jumpsExecDeds={jumpsExecDeds}
-          jumpsNotes={jumpsNotes}
+          jumpsNotes=""
           creativityTumbling={creativityTumbling}
           showmanshipTumbling={showmanshipTumbling}
           standingDiffEff={standingDiffEff}
@@ -1029,37 +1021,19 @@ export default function TumblingSheetPage() {
           </div>
         </section>
 
-        {/* ── OBSERVATIONS ─────────────────────────────────────────────── */}
+        {/* ── COMMENTS ─────────────────────────────────────────────────── */}
         <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
           <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
-            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Observaciones del juez</span>
-            <p className="text-[10px] text-zinc-400 mt-0.5">Aquí se consolidarán los comentarios de todas las secciones calificadas (Estática, Con Carrera, Saltos)</p>
+            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Comentarios</span>
           </div>
-          <div className="divide-y divide-zinc-100">
-            {tCfg.hasStanding && (
-              <div className="p-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Estática</p>
-                <textarea value={standingNotes} onChange={(e) => setStandingNotes(e.target.value)}
-                  placeholder="Observaciones sobre Gimnasia Estática..." rows={3}
-                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
-              </div>
-            )}
-            {tCfg.hasRunning && (
-              <div className="p-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Con Carrera</p>
-                <textarea value={runningNotes} onChange={(e) => setRunningNotes(e.target.value)}
-                  placeholder="Observaciones sobre Gimnasia con Carrera..." rows={3}
-                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
-              </div>
-            )}
-            {tCfg.hasJumps && (
-              <div className="p-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Saltos</p>
-                <textarea value={jumpsNotes} onChange={(e) => setJumpsNotes(e.target.value)}
-                  placeholder="Observaciones sobre Saltos..." rows={3}
-                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
-              </div>
-            )}
+          <div className="p-4">
+            <textarea
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
+              placeholder="Comentarios de la rutina..."
+              rows={5}
+              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
+            />
           </div>
         </div>
 
