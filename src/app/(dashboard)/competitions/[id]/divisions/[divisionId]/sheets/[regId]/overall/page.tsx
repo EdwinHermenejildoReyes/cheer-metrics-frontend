@@ -76,6 +76,11 @@ const ANIMACION_LEVELS = [
 ];
 
 function fmt(n: number) { return n.toFixed(2); }
+function safeNum(v: string | number | null | undefined, decimals = 2): string {
+  if (v == null) return '—';
+  const n = typeof v === 'number' ? v : parseFloat(v as string);
+  return isNaN(n) ? '—' : n.toFixed(decimals);
+}
 
 // ── Dance level selector ──────────────────────────────────────────────────────
 function DanceLevelSelector({
@@ -916,20 +921,20 @@ export default function OverallSheetPage() {
               <div className="px-4 py-4">
                 <p className="text-[10px] text-zinc-400 uppercase tracking-wide mb-1">Puntaje Bruto</p>
                 <p className="text-2xl font-bold tabular-nums text-zinc-900">
-                  {parseFloat(existingSheet.raw_score).toFixed(2)}
+                  {safeNum(existingSheet.raw_score)}
                 </p>
-                <p className="text-xs text-zinc-400 mt-0.5">/ {parseFloat(existingSheet.max_raw).toFixed(2)}</p>
+                <p className="text-xs text-zinc-400 mt-0.5">/ {safeNum(existingSheet.max_raw)}</p>
               </div>
               <div className="px-4 py-4">
                 <p className="text-[10px] text-zinc-400 uppercase tracking-wide mb-1">Descuentos</p>
                 <p className="text-2xl font-bold tabular-nums text-red-600">
-                  −{parseFloat(existingSheet.total_deductions).toFixed(2)}
+                  −{safeNum(existingSheet.total_deductions)}
                 </p>
               </div>
               <div className="px-4 py-4">
                 <p className="text-[10px] text-zinc-400 uppercase tracking-wide mb-1">% de Perfección</p>
                 <p className="text-2xl font-bold tabular-nums text-zinc-900">
-                  {existingSheet.percentage}%
+                  {existingSheet.percentage != null ? `${existingSheet.percentage}%` : '—'}
                 </p>
               </div>
             </div>
@@ -938,17 +943,17 @@ export default function OverallSheetPage() {
                 <p className="text-xs text-zinc-400 uppercase tracking-wide">Puntaje Final</p>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-xs text-zinc-500 tabular-nums">
-                    Bruto {parseFloat(existingSheet.scaled_score).toFixed(2)}
+                    Bruto {safeNum(existingSheet.scaled_score)}
                   </span>
-                  {parseFloat(existingSheet.total_deductions) > 0 && (
+                  {existingSheet.total_deductions != null && parseFloat(existingSheet.total_deductions as string) > 0 && (
                     <span className="text-xs text-red-400 tabular-nums">
-                      − desc {parseFloat(existingSheet.total_deductions).toFixed(2)}
+                      − desc {safeNum(existingSheet.total_deductions)}
                     </span>
                   )}
                 </div>
               </div>
               <span className="text-3xl font-bold tabular-nums text-white">
-                {parseFloat(existingSheet.final_score).toFixed(2)}
+                {safeNum(existingSheet.final_score)}
               </span>
             </div>
           </div>
