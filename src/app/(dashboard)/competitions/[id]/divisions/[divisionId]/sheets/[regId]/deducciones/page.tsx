@@ -234,6 +234,7 @@ export default function DeduccionesSheetPage() {
   const dragTypeRef = useRef<DeductionType | null>(null);
   const [pendingType, setPendingType]   = useState<DeductionType | null>(null);
   const [pendingRule, setPendingRule]   = useState('');
+  const [tiempoSecs, setTiempoSecs]    = useState(1);
   const pendingRuleRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
@@ -297,12 +298,12 @@ export default function DeduccionesSheetPage() {
   };
 
   // ── Direct add — always creates a new record ──────────────────────────────
-  const handleDirectAdd = async (type: DeductionType) => {
+  const handleDirectAdd = async (type: DeductionType, count = 1) => {
     if (!sheet || savingDirect.has(type)) return;
     setSavingDirect(prev => new Set(prev).add(type));
     try {
       await competitionsRepository.createDeduction({
-        score_sheet: sheet.id, deduction_type: type, count: 1,
+        score_sheet: sheet.id, deduction_type: type, count,
         routine_time: '', hit_zero: false,
         notes: DEDUCTION_RULE_REFERENCE[type] ?? '',
       });
@@ -460,8 +461,8 @@ export default function DeduccionesSheetPage() {
                             onDragEnd={isDragGroup ? () => {
                               dragTypeRef.current = null;
                             } : undefined}
-                            onClick={isDragGroup ? undefined : () => handleDirectAdd(type)}
-                            className={`relative flex items-center justify-between rounded-lg px-3 py-2 border transition-all select-none ${
+                            onClick={isDragGroup ? undefined : () => handleDirectAdd(type, type === 'tiempo' ? tiempoSecs : 1)}
+                            className={`relative flex flex-col rounded-lg border transition-all select-none overflow-hidden ${
                               isBusy
                                 ? 'cursor-wait bg-zinc-100 border-zinc-200 opacity-60'
                                 : isDragGroup
@@ -474,13 +475,29 @@ export default function DeduccionesSheetPage() {
                                 {cnt}
                               </span>
                             )}
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="text-sm font-black shrink-0 text-zinc-900">{DEDUCTION_CODES[type]}</span>
-                              <span className="text-[9px] text-zinc-400 leading-tight">{DEDUCTION_TYPE_LABELS[type]}</span>
+                            <div className="flex items-center justify-between px-3 py-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="text-sm font-black shrink-0 text-zinc-900">{DEDUCTION_CODES[type]}</span>
+                                <span className="text-[9px] text-zinc-400 leading-tight">{DEDUCTION_TYPE_LABELS[type]}</span>
+                              </div>
+                              <span className="text-[10px] font-bold tabular-nums shrink-0 ml-1 text-red-600">
+                                −{DEDUCTION_AMOUNTS[type]}
+                              </span>
                             </div>
-                            <span className="text-[10px] font-bold tabular-nums shrink-0 ml-1 text-red-600">
-                              −{DEDUCTION_AMOUNTS[type]}
-                            </span>
+                            {type === 'tiempo' && (
+                              <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 border-t border-orange-100" onClick={e => e.stopPropagation()}>
+                                <span className="text-[9px] text-orange-500 font-bold uppercase tracking-wide shrink-0">Seg. sobre:</span>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  max={60}
+                                  value={tiempoSecs}
+                                  onChange={e => setTiempoSecs(Math.max(1, parseInt(e.target.value) || 1))}
+                                  className="w-14 rounded-md border border-orange-200 bg-white px-2 py-0.5 text-xs text-center tabular-nums focus:outline-none focus:ring-1 focus:ring-orange-400"
+                                />
+                                <span className="text-[9px] text-orange-400">= −{(tiempoSecs * 0.05).toFixed(2)}</span>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
