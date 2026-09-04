@@ -376,11 +376,10 @@ export default function BuildingSheetPage() {
           if (cfg.pyramidDriversOpts.some(o => o.value === v)) setPyramidsDrivers(v);
         }
         if (sheet.creativity_building) {
-          setCreativityBuilding(Math.min(2.0, Math.max(1.5, parseFloat(sheet.creativity_building))));
+          setCreativityBuilding(Math.min(cfg.creativityMax, Math.max(cfg.creativityMin, parseFloat(sheet.creativity_building))));
         }
         if (sheet.showmanship_building) {
-          const showMin = cfg.hasCreativity ? 1.0 : 0;
-          setShowmanshipBuilding(Math.min(cfg.showmanshipMax, Math.max(showMin, parseFloat(sheet.showmanship_building))));
+          setShowmanshipBuilding(Math.min(cfg.showmanshipMax, Math.max(cfg.showmanshipMin, parseFloat(sheet.showmanship_building))));
         }
         if (sheet.notes) {
           try {
@@ -1359,8 +1358,8 @@ export default function BuildingSheetPage() {
                   <div className="flex items-center gap-3">
                     <input
                       type="range"
-                      min="1.5"
-                      max="2.0"
+                      min={String(bCfg.creativityMin)}
+                      max={String(bCfg.creativityMax)}
                       step="0.1"
                       value={creativityBuilding}
                       onChange={(e) => setCreativityBuilding(parseFloat(e.target.value))}
@@ -1368,12 +1367,12 @@ export default function BuildingSheetPage() {
                     />
                     <input
                       type="number"
-                      min="1.5"
-                      max="2.0"
+                      min={String(bCfg.creativityMin)}
+                      max={String(bCfg.creativityMax)}
                       step="0.1"
                       value={creativityBuilding}
                       onChange={(e) => {
-                        const v = Math.min(2.0, Math.max(1.5, parseFloat(e.target.value) || 1.5));
+                        const v = Math.min(bCfg.creativityMax, Math.max(bCfg.creativityMin, parseFloat(e.target.value) || bCfg.creativityMin));
                         setCreativityBuilding(parseFloat(v.toFixed(2)));
                       }}
                       className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
@@ -1396,7 +1395,7 @@ export default function BuildingSheetPage() {
                 <div className="flex items-center gap-3">
                   <input
                     type="range"
-                    min={bCfg.hasCreativity ? '1.0' : '0'}
+                    min={String(bCfg.showmanshipMin)}
                     max={bCfg.showmanshipMax}
                     step="0.1"
                     value={showmanshipBuilding}
@@ -1405,13 +1404,12 @@ export default function BuildingSheetPage() {
                   />
                   <input
                     type="number"
-                    min={bCfg.hasCreativity ? '1.0' : '0'}
+                    min={String(bCfg.showmanshipMin)}
                     max={bCfg.showmanshipMax}
                     step="0.1"
                     value={showmanshipBuilding}
                     onChange={(e) => {
-                      const showMin = bCfg.hasCreativity ? 1.0 : 0;
-                      const v = Math.min(bCfg.showmanshipMax, Math.max(showMin, parseFloat(e.target.value) || showMin));
+                      const v = Math.min(bCfg.showmanshipMax, Math.max(bCfg.showmanshipMin, parseFloat(e.target.value) || bCfg.showmanshipMin));
                       setShowmanshipBuilding(parseFloat(v.toFixed(2)));
                     }}
                     className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"

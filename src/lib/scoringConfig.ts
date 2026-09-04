@@ -35,6 +35,9 @@ export interface BuildingConfig {
   // Cross-sheet
   hasCreativity:        boolean;   // false for escolar_ab (cheer only)
   showmanshipMax:       number;    // 2.0 standard, 5.0 for escolar_ab
+  creativityMin:        number;    // 1.5 domestic, 8.0 INTL
+  creativityMax:        number;    // 2.0 domestic, 10.0 INTL
+  showmanshipMin:       number;    // 0 no-creativity, 1.0 domestic, 3.5 INTL
 }
 
 // ── Tumbling config ───────────────────────────────────────────────────────────
@@ -64,6 +67,9 @@ export interface TumblingConfig {
   // Cross-sheet
   hasCreativity:        boolean;
   showmanshipMax:       number;
+  creativityMin:        number;
+  creativityMax:        number;
+  showmanshipMin:       number;
 }
 
 // ── Shared option sets ────────────────────────────────────────────────────────
@@ -346,6 +352,9 @@ const ELITE_BUILDING: BuildingConfig = {
   tossesExecMax:      2.0,
   hasCreativity:      true,
   showmanshipMax:     2.0,
+  creativityMin:      1.5,
+  creativityMax:      2.0,
+  showmanshipMin:     1.0,
 };
 
 const PREP_BUILDING: BuildingConfig = {
@@ -367,6 +376,9 @@ const PREP_BUILDING: BuildingConfig = {
   tossesExecMax:      2.0,
   hasCreativity:      true,
   showmanshipMax:     2.0,
+  creativityMin:      1.5,
+  creativityMax:      2.0,
+  showmanshipMin:     1.0,
 };
 
 const MINI_NOVICE_BUILDING: BuildingConfig = {
@@ -388,6 +400,9 @@ const MINI_NOVICE_BUILDING: BuildingConfig = {
   tossesExecMax:      2.0,
   hasCreativity:      true,
   showmanshipMax:     2.0,
+  creativityMin:      1.5,
+  creativityMax:      2.0,
+  showmanshipMin:     1.0,
 };
 
 const TINY_NOVICE_BUILDING: BuildingConfig = {
@@ -409,6 +424,9 @@ const TINY_NOVICE_BUILDING: BuildingConfig = {
   tossesExecMax:      2.0,
   hasCreativity:      true,
   showmanshipMax:     2.0,
+  creativityMin:      1.5,
+  creativityMax:      2.0,
+  showmanshipMin:     1.0,
 };
 
 const NOVICE_PLUS_BUILDING: BuildingConfig = { ...MINI_NOVICE_BUILDING };
@@ -432,6 +450,9 @@ const ESCOLAR_AB_BUILDING: BuildingConfig = {
   tossesExecMax:      2.0,
   hasCreativity:      false,
   showmanshipMax:     5.0,
+  creativityMin:      1.5,
+  creativityMax:      2.0,
+  showmanshipMin:     0,
 };
 
 // ── Tumbling configs ──────────────────────────────────────────────────────────
@@ -454,6 +475,9 @@ const ELITE_TUMBLING: TumblingConfig = {
   isCombinedSR:     false,
   hasCreativity:    true,
   showmanshipMax:   2.0,
+  creativityMin:    1.5,
+  creativityMax:    2.0,
+  showmanshipMin:   1.0,
 };
 
 const PREP_TUMBLING: TumblingConfig = {
@@ -474,6 +498,9 @@ const PREP_TUMBLING: TumblingConfig = {
   isCombinedSR:     false,
   hasCreativity:    true,
   showmanshipMax:   2.0,
+  creativityMin:    1.5,
+  creativityMax:    2.0,
+  showmanshipMin:   1.0,
 };
 
 // INTL 2026 execution deduction amounts per driver (FECU 2026 International PDF):
@@ -503,6 +530,9 @@ const PREP_BUILDING_2026: BuildingConfig = {
   tossesExecMax:      2.0,
   hasCreativity:      true,
   showmanshipMax:     5.0,
+  creativityMin:      8.0,
+  creativityMax:      10.0,
+  showmanshipMin:     3.5,
 };
 
 const PREP_TUMBLING_2026: TumblingConfig = {
@@ -524,6 +554,9 @@ const PREP_TUMBLING_2026: TumblingConfig = {
   isCombinedSR:      false,
   hasCreativity:     true,
   showmanshipMax:    5.0,
+  creativityMin:     8.0,
+  creativityMax:     10.0,
+  showmanshipMin:    3.5,
 };
 
 const MINI_NOVICE_TUMBLING: TumblingConfig = {
@@ -544,6 +577,9 @@ const MINI_NOVICE_TUMBLING: TumblingConfig = {
   isCombinedSR:     false,
   hasCreativity:    true,
   showmanshipMax:   2.0,
+  creativityMin:    1.5,
+  creativityMax:    2.0,
+  showmanshipMin:   1.0,
 };
 
 const NOVICE_PLUS_TUMBLING: TumblingConfig = {
@@ -564,6 +600,9 @@ const NOVICE_PLUS_TUMBLING: TumblingConfig = {
   isCombinedSR:     false,
   hasCreativity:    true,
   showmanshipMax:   2.0,
+  creativityMin:    1.5,
+  creativityMax:    2.0,
+  showmanshipMin:   1.0,
 };
 
 // Combined Standing/Running — uses standing_* fields only; running section hidden
@@ -585,6 +624,9 @@ const ESCOLAR_AB_TUMBLING: TumblingConfig = {
   isCombinedSR:     true,
   hasCreativity:    false,
   showmanshipMax:   5.0,
+  creativityMin:    1.5,
+  creativityMax:    2.0,
+  showmanshipMin:   0,
 };
 
 // L1/L2 Coed uses the same "5 Hab Dif Simultáneas" row — Coed-specific row only starts at N3+
@@ -622,6 +664,9 @@ const INTL_BUILDING: BuildingConfig = {
   tossesExecDedOpts:  INTL_SMALL_EXEC_DEDS,
   hasCreativity:      true,
   showmanshipMax:     5.0,
+  creativityMin:      8.0,
+  creativityMax:      10.0,
+  showmanshipMin:     3.5,
 };
 
 const INTL_TUMBLING: TumblingConfig = {
@@ -643,6 +688,9 @@ const INTL_TUMBLING: TumblingConfig = {
   isCombinedSR:      false,
   hasCreativity:     true,
   showmanshipMax:    5.0,
+  creativityMin:     8.0,
+  creativityMax:     10.0,
+  showmanshipMin:    3.5,
 };
 
 // ── Config map ────────────────────────────────────────────────────────────────

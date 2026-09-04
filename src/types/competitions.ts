@@ -625,7 +625,8 @@ export const SCORING_SYSTEM_LABELS: Record<ScoringSystem, string> = {
   iasf_l6_7:       'IASF Nivel 6–7',
   iasf_world_l6_7: 'IASF World L6-L7',
   intl_l1:         'Internacional Nivel 1',
-  intl_l2_7:       'Internacional Nivel 2–7',
+  intl_l2:         'Internacional Nivel 2',
+  intl_l2_7:       'Internacional Nivel 3–7',
   intl_nt:         'Internacional Non-Tumbling',
   icu_dance:                'ICU Dance (POM / Hip Hop / Jazz / High Kick)',
   icu_doubles:              'ICU Doubles',
@@ -676,6 +677,7 @@ export const SCORING_SYSTEM_FIELDS: Record<ScoringSystem, ScoreFieldKey[]> = {
   partner_stunt:   _PARTNER,
   iasf_l6_7:       [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   intl_l1:         [..._BUILDING_BASE, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
+  intl_l2:         [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   intl_l2_7:       [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   intl_nt:         [..._BUILDING_BASE, ..._TOSSES, ..._JUMPS, ..._OVERALL, ..._CROSS],
   iasf_world_l6_7: [
