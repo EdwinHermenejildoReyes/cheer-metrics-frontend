@@ -10,7 +10,10 @@ import { PageSpinner } from '@/components/ui/spinner';
 import { RegistrationModal } from '@/components/competitions/RegistrationModal';
 import { ScoringSheetModal } from '@/components/competitions/ScoringSheetModal';
 import { DeductionModal } from '@/components/competitions/DeductionModal';
+import { useDispatch } from 'react-redux';
 import competitionsRepository from '@/repositories/competitionsRepository';
+import authRepository from '@/repositories/authRepository';
+import { setUser } from '@/store/auth/slices';
 import { useJudge } from '@/hooks/useJudge';
 import { useConfirm } from '@/hooks/useConfirm';
 import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
@@ -103,10 +106,19 @@ const STATUS_VARIANT: Record<RegistrationStatus, 'default' | 'success' | 'warnin
 
 export default function DivisionDetailPage() {
   const confirm = useConfirm();
+  const dispatch = useDispatch();
   const router = useRouter();
   const { id, divisionId } = useParams<{ id: string; divisionId: string }>();
 
   const { isJudge, isCompetitionActive, sheetTypesForCompetition, canViewSheetForDivision } = useJudge();
+
+  // Refresh judge assignments on mount so new assignments set by admin are visible
+  // without requiring the judge to log out and back in.
+  useEffect(() => {
+    if (!isJudge) return;
+    authRepository.me().then((res) => dispatch(setUser(res.data))).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [division, setDivision]       = useState<Division | null>(null);
 
