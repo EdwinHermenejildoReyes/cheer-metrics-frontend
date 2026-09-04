@@ -649,7 +649,6 @@ export default function BuildingSheetPage() {
       )}
       <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
       <SkillReferencePanel skillLevel={division?.skill_level} sheetType="building" />
-      <SkillReferencePanel skillLevel={division?.skill_level} sheetType="tumbling" />
 
       {/* Print-only view (hidden in browser, visible when printing) */}
       {!loading && (
