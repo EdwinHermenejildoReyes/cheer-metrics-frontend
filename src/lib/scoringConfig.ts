@@ -587,6 +587,14 @@ const ESCOLAR_AB_TUMBLING: TumblingConfig = {
   showmanshipMax:   5.0,
 };
 
+// L1/L2 Coed uses the same "5 Hab Dif Simultáneas" row — Coed-specific row only starts at N3+
+const INTL_L1_L2_BUILDING_RANGO_BY_CATEGORY = {
+  all_girl:     INTL_STUNT_RANGO,
+  all_male:     INTL_STUNT_RANGO,
+  coed:         INTL_STUNT_RANGO,
+  non_tumbling: INTL_STUNT_RANGO,
+};
+
 const INTL_BUILDING: BuildingConfig = {
   hasStunts:          true,
   stuntsHasDiff:      true,
@@ -657,7 +665,9 @@ const CONFIGS: Record<ScoringSystem, ScoringConfig> = {
   // IASF L6-L7: same UCA scoring structure as Elite for our purposes
   iasf_l6_7:      { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
   // International Elite 2026: FECU Ecuador — new scoring scale per INTL_FULL_FIELD_MAXIMA
-  intl_l1:         { building: { ...INTL_BUILDING, hasTosses: false }, tumbling: INTL_TUMBLING },
+  // L1/L2: Coed uses standard "5 Hab Dif Simultáneas" row (Coed-specific row starts at N3+)
+  intl_l1:         { building: { ...INTL_BUILDING, stuntsRangoByCategory: INTL_L1_L2_BUILDING_RANGO_BY_CATEGORY, hasTosses: false }, tumbling: INTL_TUMBLING },
+  intl_l2:         { building: { ...INTL_BUILDING, stuntsRangoByCategory: INTL_L1_L2_BUILDING_RANGO_BY_CATEGORY }, tumbling: INTL_TUMBLING },
   intl_l2_7:       { building: INTL_BUILDING,                          tumbling: INTL_TUMBLING },
   intl_nt:         { building: INTL_BUILDING,                          tumbling: { ...INTL_TUMBLING, hasStanding: false, hasRunning: false } },
   // IASF World has dedicated slider-based pages; use elite as fallback for modal

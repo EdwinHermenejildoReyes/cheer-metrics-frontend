@@ -567,7 +567,7 @@ export default function IcuDanceSheetPage() {
                       })}
                     </tbody>
                   </table>
-                  <div className="flex items-center justify-between px-4 py-3 rounded-b-xl" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }}>
+                  <div className="flex items-center justify-between px-4 py-3 rounded-b-xl bg-zinc-800 text-white">
                     <div>
                       <p className="text-sm uppercase tracking-wide font-bold">TOTAL ICU {categoryLabel}</p>
                       <p className="text-xs opacity-70 mt-0.5">{pct.toFixed(1)}% de {MAX_TOTAL} puntos</p>
@@ -609,10 +609,9 @@ export default function IcuDanceSheetPage() {
                         ))}
                       </tbody>
                     </table>
-                    <div className="border-t border-zinc-100 flex items-center justify-between px-5 py-3 rounded-b-xl"
-                      style={{ backgroundColor: 'var(--plt-primary)' }}>
-                      <p className="text-sm font-bold" style={{ color: 'var(--plt-primary-fg)' }}>Puntaje Final (promedio)</p>
-                      <span className="text-2xl font-bold tabular-nums" style={{ color: 'var(--plt-primary-fg)' }}>
+                    <div className="border-t border-zinc-700 flex items-center justify-between px-5 py-3 rounded-b-xl bg-zinc-800">
+                      <p className="text-sm font-bold text-white">Puntaje Final (promedio)</p>
+                      <span className="text-2xl font-bold tabular-nums text-white">
                         {aggregate.average?.toFixed(2) ?? '—'}
                       </span>
                     </div>

@@ -229,7 +229,7 @@ export type ScoringSystem =
   | 'tiny_novice' | 'mini_novice' | 'novice_plus' | 'prep' | 'escolar' | 'escolar_ab'
   | 'elite_l1' | 'elite_l2_7' | 'elite_nt' | 'partner_stunt' | 'iasf_l6_7'
   | 'iasf_world_l6_7'
-  | 'intl_l1' | 'intl_l2_7' | 'intl_nt'
+  | 'intl_l1' | 'intl_l2' | 'intl_l2_7' | 'intl_nt'
   | 'icu_dance' | 'icu_doubles' | 'icu_dance_solo' | 'icu_dance_principiantes';
 
 // Keys of all sub-score fields on ScoreSheet

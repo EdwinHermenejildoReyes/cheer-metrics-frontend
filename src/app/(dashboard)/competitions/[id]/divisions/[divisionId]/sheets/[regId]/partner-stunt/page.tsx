@@ -526,7 +526,7 @@ export default function PartnerStuntSheetPage() {
               })}
             </tbody>
           </table>
-          <div className="flex items-center justify-between px-4 py-4 rounded-b-xl" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }}>
+          <div className="flex items-center justify-between px-4 py-4 rounded-b-xl bg-zinc-800 text-white">
             <div>
               <p className="text-base uppercase tracking-wide font-bold">TOTAL Partner Stunt</p>
               <p className="text-xs opacity-70 mt-0.5">{pct.toFixed(1)}% de {MAX_TOTAL} puntos</p>
@@ -559,9 +559,9 @@ export default function PartnerStuntSheetPage() {
                 <p className="text-2xl font-bold tabular-nums text-zinc-900">{existingSheet.percentage}%</p>
               </div>
             </div>
-            <div className="border-t border-zinc-100 flex items-center justify-between px-6 py-4 rounded-b-xl" style={{ backgroundColor: 'var(--plt-primary)' }}>
-              <p className="text-base font-bold">Puntaje Final</p>
-              <span className="text-3xl font-bold tabular-nums" style={{ color: 'var(--plt-primary-fg)' }}>
+            <div className="border-t border-zinc-700 flex items-center justify-between px-6 py-4 rounded-b-xl bg-zinc-800">
+              <p className="text-base font-bold text-white">Puntaje Final</p>
+              <span className="text-3xl font-bold tabular-nums text-white">
                 {parseFloat(existingSheet.final_score).toFixed(0)}
               </span>
             </div>

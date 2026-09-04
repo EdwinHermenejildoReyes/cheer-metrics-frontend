@@ -23,7 +23,7 @@ function SectionTotal({ label, breakdown, total }: {
   label: string; breakdown: { key: string; value: number }[]; total: number;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }}>
+    <div className="flex items-center justify-between rounded-xl px-5 py-3 bg-zinc-800 text-white">
       <div className="flex items-center gap-4 text-sm">
         <span className="text-xs uppercase tracking-wide opacity-60">{label}</span>
         {breakdown.map(({ key, value }) => <span key={key}>{key}: <strong className="tabular-nums">{fmt(value)}</strong></span>)}
@@ -52,7 +52,7 @@ function TumblingDiffCard({ label, rangoOpts, habilidadOpts, rango, onRango, hab
             {rangoOpts.map(({ label: lbl, value }) => (
               <button key={value} type="button" onClick={() => onRango(value)}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${rango === value ? 'border-transparent' : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'}`}
-                style={rango === value ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
+                style={rango === value ? { backgroundColor: '#2563eb', color: '#ffffff', borderColor: '#2563eb' } : undefined}
               >
                 <span className={`w-8 text-center rounded font-bold tabular-nums text-xs ${rango === value ? 'text-zinc-300' : 'text-zinc-400'}`}>{value.toFixed(1)}</span>
                 <span className="flex-1">{lbl}</span>
@@ -66,8 +66,8 @@ function TumblingDiffCard({ label, rangoOpts, habilidadOpts, rango, onRango, hab
             <div className="flex gap-1.5">
               {habilidadOpts.map(({ label: lbl, value }) => (
                 <button key={value} type="button" onClick={() => onHabilidad(value)}
-                  className={`flex-1 flex flex-col items-center gap-0.5 rounded-lg px-2 py-2.5 text-xs font-medium transition-colors border ${habilidad === value ? 'border-transparent' : 'bg-white text-zinc-600 border-zinc-300 hover:border-violet-400 hover:text-violet-700'}`}
-                  style={habilidad === value ? { backgroundColor: 'var(--plt-accent)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-accent)' } : undefined}
+                  className={`flex-1 flex flex-col items-center gap-0.5 rounded-lg px-2 py-2.5 text-xs font-medium transition-colors border ${habilidad === value ? 'border-transparent' : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-500 hover:bg-zinc-50'}`}
+                  style={habilidad === value ? { backgroundColor: '#f59e0b', color: '#ffffff', borderColor: '#f59e0b' } : undefined}
                 >
                   <span className="font-bold text-sm">{value.toFixed(1)}</span>
                   <span className="leading-tight text-center opacity-80">{lbl}</span>
@@ -476,7 +476,7 @@ export default function TumblingDifficultyPage() {
                 {tCfg.jumpsDiffOpts.map(({ label, value }) => (
                   <button key={value} type="button" onClick={() => setJumpsDiff(value)}
                     className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${jumpsDiff === value ? 'border-transparent' : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'}`}
-                    style={jumpsDiff === value ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
+                    style={jumpsDiff === value ? { backgroundColor: '#2563eb', color: '#ffffff', borderColor: '#2563eb' } : undefined}
                   >
                     <span className={`w-8 text-center rounded font-bold tabular-nums text-xs ${jumpsDiff === value ? 'text-zinc-300' : 'text-zinc-400'}`}>{value.toFixed(1)}</span>
                     <span className="flex-1">{label}</span>
@@ -489,7 +489,7 @@ export default function TumblingDifficultyPage() {
         )}
 
         {/* ── Subtotal ──────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', marginTop: '2rem' }}>
+        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm bg-zinc-800 text-white" style={{ marginTop: '2rem' }}>
           <span className="text-sm font-semibold uppercase tracking-wide">Subtotal Dificultad</span>
           <span className="text-2xl font-bold tabular-nums">{fmt(diffSubtotal)}</span>
         </div>
@@ -590,7 +590,7 @@ export default function TumblingDifficultyPage() {
         </div>
 
         {/* Grand total */}
-        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', marginTop: '2rem' }}>
+        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg bg-zinc-800 text-white" style={{ marginTop: '2rem' }}>
           <div>
             <p className="text-base uppercase tracking-wide font-bold">Total Planilla — Dificultad Gimnasia</p>
             <p className="text-xs opacity-70 mt-0.5">Dif. + Creatividad ({fmt(creativityTumbling)}) + Showmanship ({fmt(showmanshipTumbling)})</p>

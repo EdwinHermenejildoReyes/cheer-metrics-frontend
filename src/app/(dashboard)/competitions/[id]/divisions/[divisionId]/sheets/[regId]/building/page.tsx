@@ -188,7 +188,7 @@ function SectionTotal({ label, breakdown, total }: {
   total: number;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }}>
+    <div className="flex items-center justify-between rounded-xl px-5 py-3 bg-zinc-800 text-white">
       <div className="flex items-center gap-4 text-sm">
         <span className="text-xs uppercase tracking-wide opacity-60">{label}</span>
         {breakdown.map(({ key, value }) => (
@@ -806,14 +806,14 @@ export default function BuildingSheetPage() {
             ? (COED_ROWS.find(([mn, mx]) => maleVal >= mn && maleVal <= mx) ?? (maleVal > 16 ? COED_ROWS[COED_ROWS.length - 1] : null))
             : null;
           return (
-            <div className="rounded-xl border border-violet-200 bg-white px-5 py-4 flex flex-col gap-3">
+            <div className="rounded-xl border border-zinc-200 bg-white px-5 py-4 flex flex-col gap-3">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-violet-500">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                     Tabla de cantidad Coed — Estilo Coed
                   </p>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-violet-400">{isMidCoed ? 'N3–N4:' : 'N5–N7:'}</span>
+                    <span className="text-xs text-zinc-400">{isMidCoed ? 'N3–N4:' : 'N5–N7:'}</span>
                     {maleCountEditable ? (
                       <input
                         type="number"
@@ -822,17 +822,17 @@ export default function BuildingSheetPage() {
                         value={maleCountStr}
                         placeholder="0"
                         onChange={e => setMaleCountStr(e.target.value)}
-                        className="w-12 h-6 rounded border border-violet-200 bg-violet-50 text-center text-xs font-bold tabular-nums text-violet-900 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                        className="w-12 h-6 rounded border border-zinc-200 bg-zinc-50 text-center text-xs font-bold tabular-nums text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-400"
                       />
                     ) : (
-                      <span className="text-xs font-bold tabular-nums text-violet-900">{maleCountStr}</span>
+                      <span className="text-xs font-bold tabular-nums text-zinc-900">{maleCountStr}</span>
                     )}
-                    <span className="text-xs text-violet-400">atletas masculinos</span>
+                    <span className="text-xs text-zinc-400">atletas masculinos</span>
                     {!maleCountEditable && !readOnly && (
                       <button
                         type="button"
                         onClick={() => setMaleCountEditable(true)}
-                        className="p-1 rounded text-violet-300 hover:text-violet-600 hover:bg-violet-100 transition-colors"
+                        className="p-1 rounded text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
                         title="Editar conteo"
                       >
                         <Pencil className="h-3 w-3" />
@@ -842,25 +842,25 @@ export default function BuildingSheetPage() {
                 </div>
                 {isMidCoed ? (
                   <div className="text-center shrink-0">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-violet-400">Grupos Estilo Coed</p>
-                    <p className="text-3xl font-black tabular-nums text-violet-700">1</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Grupos Estilo Coed</p>
+                    <p className="text-3xl font-black tabular-nums text-zinc-700">1</p>
                   </div>
                 ) : (
                   <div className="shrink-0 overflow-x-auto">
                     <table className="text-xs border-collapse">
                       <thead>
                         <tr>
-                          <th className="px-3 py-1.5 text-left border border-violet-200 whitespace-nowrap text-[9px] font-bold uppercase tracking-widest text-violet-400">Atletas masc.</th>
-                          <th className="px-3 py-1.5 text-center border border-violet-200 whitespace-nowrap text-[9px] font-bold uppercase tracking-widest text-violet-400">Grupos Coed</th>
+                          <th className="px-3 py-1.5 text-left border border-zinc-200 whitespace-nowrap text-[9px] font-bold uppercase tracking-widest text-zinc-400">Atletas masc.</th>
+                          <th className="px-3 py-1.5 text-center border border-zinc-200 whitespace-nowrap text-[9px] font-bold uppercase tracking-widest text-zinc-400">Grupos Coed</th>
                         </tr>
                       </thead>
                       <tbody>
                         {COED_ROWS.map(([min, max, grp]) => {
                           const active = matched?.[0] === min;
                           return (
-                            <tr key={min} className={active ? 'bg-violet-600' : 'even:bg-violet-50'}>
-                              <td className={`px-3 py-1 border border-violet-200 tabular-nums ${active ? 'text-white font-bold' : 'text-violet-700'}`}>{min}–{max}</td>
-                              <td className={`px-3 py-1 border border-violet-200 text-center font-bold tabular-nums ${active ? 'text-white' : 'text-violet-900'}`}>{grp}</td>
+                            <tr key={min} className={active ? 'bg-blue-600' : 'even:bg-zinc-50'}>
+                              <td className={`px-3 py-1 border border-zinc-200 tabular-nums ${active ? 'text-white font-bold' : 'text-zinc-700'}`}>{min}–{max}</td>
+                              <td className={`px-3 py-1 border border-zinc-200 text-center font-bold tabular-nums ${active ? 'text-white' : 'text-zinc-900'}`}>{grp}</td>
                             </tr>
                           );
                         })}
@@ -969,7 +969,7 @@ export default function BuildingSheetPage() {
                                 ? 'border-transparent'
                                 : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                             }`}
-                            style={stuntsRango === value ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
+                            style={stuntsRango === value ? { backgroundColor: '#2563eb', color: '#ffffff', borderColor: '#2563eb' } : undefined}
                           >
                             <span className="flex-1">{label}</span>
                             <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${stuntsRango === value ? 'text-zinc-300' : 'text-zinc-400'}`}>
@@ -1008,7 +1008,7 @@ export default function BuildingSheetPage() {
                                             ? 'border-transparent'
                                             : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-600'
                                       }`}
-                                      style={!skillDisabled && stuntsSkills[i] !== null && stuntsSkills[i] === value ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
+                                      style={!skillDisabled && stuntsSkills[i] !== null && stuntsSkills[i] === value ? { backgroundColor: '#2563eb', color: '#ffffff', borderColor: '#2563eb' } : undefined}
                                     >
                                       {label}
                                       {value > 0 && (
@@ -1044,9 +1044,9 @@ export default function BuildingSheetPage() {
                               className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
                                 stuntsPartMax !== null && stuntsPartMax === value
                                   ? 'border-transparent'
-                                  : 'bg-white text-zinc-700 border-zinc-300 hover:border-violet-400 hover:text-violet-700'
+                                  : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-500 hover:bg-zinc-50'
                               }`}
-                              style={stuntsPartMax !== null && stuntsPartMax === value ? { backgroundColor: 'var(--plt-accent)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-accent)' } : undefined}
+                              style={stuntsPartMax !== null && stuntsPartMax === value ? { backgroundColor: '#f59e0b', color: '#ffffff', borderColor: '#f59e0b' } : undefined}
                             >
                               <span className="flex-1">{label}</span>
                               <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${stuntsPartMax !== null && stuntsPartMax === value ? 'text-white/80' : 'text-zinc-400'}`}>
@@ -1141,7 +1141,7 @@ export default function BuildingSheetPage() {
                                 ? 'border-transparent'
                                 : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                             }`}
-                            style={pyramidsRangeIdx === idx ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
+                            style={pyramidsRangeIdx === idx ? { backgroundColor: '#2563eb', color: '#ffffff', borderColor: '#2563eb' } : undefined}
                           >
                             <span className="flex-1">{label}</span>
                             <span className={`text-sm font-bold tabular-nums ml-3 shrink-0 ${pyramidsRangeIdx === idx ? 'text-zinc-300' : 'text-zinc-400'}`}>
@@ -1166,7 +1166,7 @@ export default function BuildingSheetPage() {
                                   ? 'border-transparent'
                                   : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-600'
                               }`}
-                              style={pyramidsFine === step ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
+                              style={pyramidsFine === step ? { backgroundColor: '#2563eb', color: '#ffffff', borderColor: '#2563eb' } : undefined}
                             >
                               +{step.toFixed(1)}
                             </button>
@@ -1202,9 +1202,9 @@ export default function BuildingSheetPage() {
                           className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors border text-left ${
                             pyramidsDrivers === value
                               ? 'border-transparent'
-                              : 'bg-white text-zinc-700 border-zinc-300 hover:border-violet-400 hover:text-violet-700'
+                              : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-500 hover:bg-zinc-50'
                           }`}
-                          style={pyramidsDrivers === value ? { backgroundColor: 'var(--plt-accent)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-accent)' } : undefined}
+                          style={pyramidsDrivers === value ? { backgroundColor: '#f59e0b', color: '#ffffff', borderColor: '#f59e0b' } : undefined}
                         >
                           <span className="flex-1">{label}</span>
                           <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${pyramidsDrivers === value ? 'text-white/80' : 'text-zinc-400'}`}>
@@ -1275,7 +1275,7 @@ export default function BuildingSheetPage() {
                             ? 'border-transparent'
                             : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                         }`}
-                        style={tossesDiff === value ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
+                        style={tossesDiff === value ? { backgroundColor: '#2563eb', color: '#ffffff', borderColor: '#2563eb' } : undefined}
                       >
                         <span className="flex-1">{label}</span>
                         <span className={`text-base font-bold tabular-nums ml-3 shrink-0 ${tossesDiff === value ? 'text-zinc-300' : 'text-zinc-400'}`}>
@@ -1306,7 +1306,7 @@ export default function BuildingSheetPage() {
         )}
 
         {/* ── BUILDING SUBTOTAL ────────────────────────────────────────── */}
-        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm mb-6" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }}>
+        <div className="flex items-center justify-between rounded-xl px-5 py-4 shadow-sm mb-6 bg-zinc-800 text-white">
           <span className="text-sm font-semibold uppercase tracking-wide">Subtotal Elevaciones</span>
           <span className="text-2xl font-bold tabular-nums">{fmt(buildingTotal)}</span>
         </div>
@@ -1474,7 +1474,7 @@ export default function BuildingSheetPage() {
         </div>
 
         {/* ── GRAND TOTAL ───────────────────────────────────────────────── */}
-        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }}>
+        <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg bg-zinc-800 text-white">
           <div>
             <p className="text-base uppercase tracking-wide font-bold">Total Planilla Building</p>
             <p className="text-xs opacity-70 mt-0.5">
@@ -1566,8 +1566,8 @@ export default function BuildingSheetPage() {
                 </>
               )}
               <tr className="bg-zinc-50">
-                <td className="px-4 py-2.5 font-semibold" style={{ color: 'var(--plt-primary)' }}>Subtotal Elevaciones</td>
-                <td className="px-4 py-2.5 text-right font-bold tabular-nums" style={{ color: 'var(--plt-primary)' }}>{fmt(buildingTotal)}</td>
+                <td className="px-4 py-2.5 font-semibold text-zinc-700">Subtotal Elevaciones</td>
+                <td className="px-4 py-2.5 text-right font-bold tabular-nums text-zinc-700">{fmt(buildingTotal)}</td>
               </tr>
               {bCfg.hasCreativity && (
                 <tr>
@@ -1587,9 +1587,9 @@ export default function BuildingSheetPage() {
                   <span className="text-zinc-400 font-normal"> / {fmt(bCfg.showmanshipMax)}</span>
                 </td>
               </tr>
-              <tr style={{ backgroundColor: 'var(--plt-primary)' }}>
-                <td className="px-4 py-2.5 font-bold" style={{ color: 'var(--plt-primary-fg)' }}>TOTAL</td>
-                <td className="px-4 py-2.5 text-right font-bold tabular-nums text-lg" style={{ color: 'var(--plt-primary-fg)' }}>{fmt(sheetTotal)}</td>
+              <tr className="bg-zinc-800">
+                <td className="px-4 py-2.5 font-bold text-white">TOTAL</td>
+                <td className="px-4 py-2.5 text-right font-bold tabular-nums text-lg text-white">{fmt(sheetTotal)}</td>
               </tr>
             </tbody>
           </table>

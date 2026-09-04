@@ -270,7 +270,7 @@ export default function IcuDancePrincPage() {
         <button onClick={() => router.back()} className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <Users className="w-4 h-4 text-violet-500" />
+        <Users className="w-4 h-4 text-zinc-500" />
         <div>
           <p className="text-xs text-zinc-400">{teamName} · {divisionName}</p>
           <h1 className="text-sm font-semibold text-zinc-900">Principiantes Grupales</h1>
@@ -292,7 +292,7 @@ export default function IcuDancePrincPage() {
       </div>
 
       {/* Score summary banner */}
-      <div className={`px-4 py-3 flex items-center justify-between ${readOnly ? 'bg-violet-50 border-b border-violet-100' : 'bg-white border-b border-zinc-100'}`}>
+      <div className={`px-4 py-3 flex items-center justify-between ${readOnly ? 'bg-zinc-50 border-b border-zinc-100' : 'bg-white border-b border-zinc-100'}`}>
         <div>
           <p className="text-xs text-zinc-400">{readOnly ? 'Promedio de jueces' : 'Mi puntuación'}</p>
           <p className="text-2xl font-bold text-zinc-900 tabular-nums">
@@ -303,7 +303,7 @@ export default function IcuDancePrincPage() {
         <div className="text-right">
           <p className="text-xs text-zinc-400">{readOnly ? `${aggregate?.count ?? 0} juez(ces)` : `${pct.toFixed(0)}%`}</p>
           {!readOnly && <div className="w-24 h-1.5 rounded-full bg-zinc-100 overflow-hidden mt-1">
-            <div className="h-full rounded-full bg-violet-500 transition-all" style={{ width: `${pct}%` }} />
+            <div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${pct}%` }} />
           </div>}
         </div>
       </div>
@@ -324,9 +324,9 @@ export default function IcuDancePrincPage() {
                   </div>
                 ))}
               </div>
-              <div className="px-4 py-2.5 bg-violet-50 border-t border-violet-100 flex justify-between">
-                <span className="text-xs font-medium text-violet-700">Promedio</span>
-                <span className="text-sm font-bold text-violet-900">{aggregate.average?.toFixed(2) ?? '—'}</span>
+              <div className="px-4 py-2.5 bg-zinc-50 border-t border-zinc-100 flex justify-between">
+                <span className="text-xs font-medium text-zinc-700">Promedio</span>
+                <span className="text-sm font-bold text-zinc-900">{aggregate.average?.toFixed(2) ?? '—'}</span>
               </div>
             </div>
           ) : (

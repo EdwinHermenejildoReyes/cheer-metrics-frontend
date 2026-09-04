@@ -771,7 +771,7 @@ export default function DeduccionesSheetPage() {
                 <span className="text-sm font-semibold uppercase tracking-wide">Total Descuentos</span>
                 <span className="text-2xl font-bold tabular-nums">−{fmt(totalDed)}</span>
               </div>
-              <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)' }}>
+              <div className="flex items-center justify-between rounded-xl px-5 py-3 bg-zinc-800 text-white">
                 <div className="flex items-center gap-4 text-sm">
                   <span className="text-xs uppercase tracking-wide opacity-60">Score final</span>
                   <span>Escalado: <strong className="tabular-nums">{fmt(scaledScore)}</strong></span>
