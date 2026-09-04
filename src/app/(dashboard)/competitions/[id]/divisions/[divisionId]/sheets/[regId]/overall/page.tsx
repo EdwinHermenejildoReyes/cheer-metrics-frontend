@@ -739,7 +739,7 @@ export default function OverallSheetPage() {
                         type="button"
                         onClick={() => {
                           const next = [...animacionCriteria];
-                          next[i] = next[i] === 0 ? 0 : 0;
+                          next[i] = 0;
                           setAnimacionCriteria(next);
                         }}
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
