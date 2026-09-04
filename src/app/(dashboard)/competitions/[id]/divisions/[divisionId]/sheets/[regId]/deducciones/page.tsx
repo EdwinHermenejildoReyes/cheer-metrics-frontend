@@ -464,7 +464,7 @@ export default function DeduccionesSheetPage() {
                               dragTypeRef.current = null;
                             } : undefined}
                             onClick={isDragGroup ? undefined : () => handleDirectAdd(type, type === 'tiempo' ? tiempoSecs : 1, type === 'tiempo' ? normalizeTime(tiempoReal) : '')}
-                            className={`relative flex flex-col rounded-lg border transition-all select-none overflow-hidden ${
+                            className={`relative flex flex-col rounded-lg border transition-all select-none ${
                               isBusy
                                 ? 'cursor-wait bg-zinc-100 border-zinc-200 opacity-60'
                                 : isDragGroup
@@ -487,7 +487,7 @@ export default function DeduccionesSheetPage() {
                               </span>
                             </div>
                             {type === 'tiempo' && (
-                              <div className="flex flex-col gap-1.5 px-3 py-2 bg-orange-50 border-t border-orange-100" onClick={e => e.stopPropagation()}>
+                              <div className="flex flex-col gap-1.5 px-3 py-2 bg-orange-50 border-t border-orange-100 rounded-b-lg" onClick={e => e.stopPropagation()}>
                                 <div className="flex items-center gap-2">
                                   <span className="text-[9px] text-orange-500 font-bold uppercase tracking-wide w-20 shrink-0">Duración real</span>
                                   <input
