@@ -226,6 +226,64 @@ const ESCOLAR_AB_JUMPS_DIFF: RangoOpt[] = [
   { value: 1.0, label: 'GRAN PARTE: salto avanzado del nivel' },
 ];
 
+// ── International Elite 2026 option sets ─────────────────────────────────────
+
+const INTL_STUNT_RANGO: RangoOpt[] = [
+  { value:  8.5, label: 'No cumple con 9.0',                     skillCount: 0 },
+  { value:  9.0, label: '4 Hab Dif por Gran Parte',              skillCount: 4 },
+  { value:  9.5, label: '2 Hab Dif Simultáneas por Gran Parte',  skillCount: 2 },
+  { value: 10.0, label: '3 Hab Dif Simultáneas por Gran Parte',  skillCount: 3 },
+  { value: 10.5, label: '4 Hab Dif Simultáneas por Gran Parte',  skillCount: 4 },
+  { value: 11.0, label: '5 Hab Dif Simultáneas por Gran Parte',  skillCount: 5 },
+];
+
+const INTL_STUNT_RANGO_COED: RangoOpt[] = [
+  { value:  8.5, label: 'No cumple con 9.0',                         skillCount: 0 },
+  { value:  9.0, label: '4 Hab Dif por Gran Parte',                  skillCount: 4 },
+  { value:  9.5, label: '2 Hab Dif Simultáneas por Gran Parte',      skillCount: 2 },
+  { value: 10.0, label: '3 Hab Dif Simultáneas por Gran Parte',      skillCount: 3 },
+  { value: 10.5, label: '4 Hab Dif Simultáneas por Gran Parte',      skillCount: 4 },
+  { value: 11.0, label: '4 Hab Dif + 1 Estilo Coed por Gran Parte',  skillCount: 5 },
+];
+
+const INTL_SKILL_GRADES: RangoOpt[] = [
+  { value: 0.00, label: 'No Cumple' },
+  { value: 0.30, label: 'Avanzada' },
+  { value: 0.50, label: 'Élite' },
+];
+
+const INTL_PART_MAX: RangoOpt[] = [
+  { value: 0.0, label: 'No Cumple' },
+  { value: 0.5, label: 'Nivel x MÁX · Avz x GRAN PARTE' },
+  { value: 1.0, label: 'Avz x MÁX · Élite x GRAN PARTE' },
+  { value: 1.5, label: 'Élite x MÁX' },
+];
+
+const INTL_PYRAMID_RANGO: PyramidRangoOpt[] = [
+  { low: 10.0, high: 11.0, label: 'No cumple con 11.0' },
+  { low: 11.0, high: 12.0, label: '2 Hab Dif + 2 Estructuras' },
+  { low: 12.0, high: 13.0, label: '3 Hab Dif + 2 Estructuras x Gran Parte' },
+  { low: 13.0, high: 14.0, label: '4 Hab Dif + 2 Estructuras x Gran Parte' },
+  { low: 14.0, high: 15.0, label: '5 Hab Dif + 2 Estructuras x Gran Parte' },
+];
+
+// INTL_TOSS_DIFF: same labels/values as ELITE_TOSS_DIFF
+const INTL_TUMBLING_RANGO: RangoOpt[] = [
+  { value: 0.5, label: 'No cumple con 1.0' },
+  { value: 1.0, label: 'MAYORÍA: 1 pase del nivel' },
+  { value: 1.5, label: 'GRAN PARTE: 1 pase del nivel' },
+];
+
+// INTL_HABILIDAD: same labels/values as ELITE_HABILIDAD
+const INTL_JUMPS: RangoOpt[] = [
+  { value: 0.5, label: 'No cumple con 1.0' },
+  { value: 1.0, label: 'GRAN PARTE: 1 Salto Avanzado' },
+  { value: 1.5, label: 'GRAN PARTE: 2 Conectados + Variedad' },
+  { value: 2.0, label: 'MÁX: 3 Conectados ó 2+1 (variedad)' },
+];
+
+const INTL_PYRAMID_FINE_STEPS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
+
 // ── Building configs ──────────────────────────────────────────────────────────
 
 const ELITE_BUILDING: BuildingConfig = {
@@ -444,6 +502,53 @@ const ESCOLAR_AB_TUMBLING: TumblingConfig = {
   showmanshipMax:   5.0,
 };
 
+const INTL_BUILDING: BuildingConfig = {
+  hasStunts:          true,
+  stuntsHasDiff:      true,
+  stuntsRango:        INTL_STUNT_RANGO,
+  stuntsRangoByCategory: {
+    all_girl:     INTL_STUNT_RANGO,
+    all_male:     INTL_STUNT_RANGO,
+    coed:         INTL_STUNT_RANGO_COED,
+    non_tumbling: INTL_STUNT_RANGO,
+  },
+  stuntsSkillCount:   5,
+  stuntsSkillGrades:  INTL_SKILL_GRADES,
+  stuntsPartMaxOpts:  INTL_PART_MAX,
+  stuntsExecMax:      15.0,
+  hasPyramids:        true,
+  pyramidsHasDiff:    true,
+  pyramidRango:       INTL_PYRAMID_RANGO,
+  pyramidFineSteps:   INTL_PYRAMID_FINE_STEPS,
+  pyramidsExecMax:    15.0,
+  pyramidDriversOpts: [],
+  hasTosses:          true,
+  tossDiffOpts:       ELITE_TOSS_DIFF,
+  tossesExecMax:      2.0,
+  hasCreativity:      true,
+  showmanshipMax:     5.0,
+};
+
+const INTL_TUMBLING: TumblingConfig = {
+  hasStanding:       true,
+  standingHasDiff:   true,
+  standingRango:     INTL_TUMBLING_RANGO,
+  standingHabilidad: ELITE_HABILIDAD,
+  standingExecMax:   2.0,
+  hasRunning:        true,
+  runningHasDiff:    true,
+  runningRango:      INTL_TUMBLING_RANGO,
+  runningHabilidad:  ELITE_HABILIDAD,
+  runningExecMax:    2.0,
+  hasJumps:          true,
+  jumpsHasDiff:      true,
+  jumpsDiffOpts:     INTL_JUMPS,
+  jumpsExecMax:      2.0,
+  isCombinedSR:      false,
+  hasCreativity:     true,
+  showmanshipMax:    5.0,
+};
+
 // ── Config map ────────────────────────────────────────────────────────────────
 
 interface ScoringConfig {
@@ -463,10 +568,10 @@ const CONFIGS: Record<ScoringSystem, ScoringConfig> = {
   novice_plus:   { building: NOVICE_PLUS_BUILDING,  tumbling: NOVICE_PLUS_TUMBLING },
   // IASF L6-L7: same UCA scoring structure as Elite for our purposes
   iasf_l6_7:      { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
-  // International Elite: dance limited to 1.0; L1 has no tosses; NT has no tumbling
-  intl_l1:         { building: { ...ELITE_BUILDING, hasTosses: false }, tumbling: ELITE_TUMBLING },
-  intl_l2_7:       { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
-  intl_nt:         { building: ELITE_BUILDING,        tumbling: { ...ELITE_TUMBLING, hasStanding: false, hasRunning: false } },
+  // International Elite 2026: FECU Ecuador — new scoring scale per INTL_FULL_FIELD_MAXIMA
+  intl_l1:         { building: { ...INTL_BUILDING, hasTosses: false }, tumbling: INTL_TUMBLING },
+  intl_l2_7:       { building: INTL_BUILDING,                          tumbling: INTL_TUMBLING },
+  intl_nt:         { building: INTL_BUILDING,                          tumbling: { ...INTL_TUMBLING, hasStanding: false, hasRunning: false } },
   // IASF World has dedicated slider-based pages; use elite as fallback for modal
   iasf_world_l6_7: { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
   // Partner stunt has a completely different page, use elite as safe fallback

@@ -1,7 +1,7 @@
 import type { DivisionCategory, SkillLevel } from '@/types/competitions';
 
 // ── Building / Construcción ───────────────────────────────────────────────────
-// Source: UCA Ecuador — "TABLA DE CANTIDAD EN CONSTRUCCIÓN"
+// Source: International FECU 2026 — "TABLA DE CANTIDAD EN CONSTRUCCIÓN"
 // Applies to ALL categories (All Girl, Coed, All Male, Non-Tumbling).
 
 export interface ConstructionGroups {
@@ -12,21 +12,22 @@ export interface ConstructionGroups {
 
 // [minAthletes, maxAthletes, mayoria, gran_parte, max]
 const BUILDING_TABLE: readonly [number, number, number, number, number][] = [
-  [10, 15, 1, 2, 3],
-  [16, 20, 2, 3, 4],
-  [21, 24, 3, 4, 5],
-  [25, 30, 4, 5, 6],
+  [ 5, 11, 1, 2, 3],
+  [12, 17, 2, 3, 4],
+  [18, 22, 3, 4, 5],
+  [23, 30, 4, 5, 6],
+  [31, 35, 5, 6, 7],
 ];
 
 export function getConstructionGroups(athleteCount: number): ConstructionGroups | null {
-  if (athleteCount < 10) return null;
+  if (athleteCount < 5) return null;
   for (const [min, max, mayoria, gran_parte, maxVal] of BUILDING_TABLE) {
     if (athleteCount >= min && athleteCount <= max) {
       return { mayoria, gran_parte, max: maxVal };
     }
   }
-  // > 30: use largest defined row
-  return { mayoria: 4, gran_parte: 5, max: 6 };
+  // > 35: use largest defined row
+  return { mayoria: 5, gran_parte: 6, max: 7 };
 }
 
 // ── Coed-specific: Estilo Coed groups ────────────────────────────────────────
@@ -72,7 +73,7 @@ export function getCoedStyleGroups(
 }
 
 // ── Gymnastics / Gimnasia-Saltos ──────────────────────────────────────────────
-// Source: UCA Ecuador — "TABLA DE CANTIDAD EN GIMNASIA/SALTOS"
+// Source: International FECU 2026 — "TABLA DE CANTIDAD EN GIMNASIA/SALTOS"
 // Same table for all categories.
 
 export interface GymGroups {
@@ -83,18 +84,20 @@ export interface GymGroups {
 
 // [minAthletes, maxAthletes, mayoria, gran_parte, max]
 const GYM_TABLE: readonly [number, number, number, number, number][] = [
-  [10, 15,  8,  9, 13],
-  [16, 24, 11, 12, 18],
-  [25, 30, 14, 15, 23],
+  [ 5, 11,  5,  6, 10],
+  [12, 17,  6,  7, 12],
+  [18, 22,  9, 10, 18],
+  [23, 30, 11, 12, 22],
+  [31, 38, 15, 16, 30],
 ];
 
 export function getGymGroups(athleteCount: number): GymGroups | null {
-  if (athleteCount < 10) return null;
+  if (athleteCount < 5) return null;
   for (const [min, max, mayoria, gran_parte, maxVal] of GYM_TABLE) {
     if (athleteCount >= min && athleteCount <= max) {
       return { mayoria, gran_parte, max: maxVal };
     }
   }
-  // > 30: use largest defined row
-  return { mayoria: 14, gran_parte: 15, max: 23 };
+  // > 38: use largest defined row
+  return { mayoria: 15, gran_parte: 16, max: 30 };
 }

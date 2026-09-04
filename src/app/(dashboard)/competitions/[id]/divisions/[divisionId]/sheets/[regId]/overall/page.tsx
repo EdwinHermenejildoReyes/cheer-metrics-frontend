@@ -16,8 +16,10 @@ import { toastApiError } from '@/utils/apiErrors';
 import type { ScoreSheet, ScoringSystem, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 
-// ── Formations scale (2.0 → 1.0 in steps of −0.1) ───────────────────────────
-const FORMATIONS_VALUES = [2.0, 1.9, 1.8, 1.7, 1.6, 1.5, 1.4, 1.3, 1.2, 1.1, 1.0];
+// ── Formations scale (standard: 2.0 → 1.0 in steps of −0.1) ─────────────────
+const FORMATIONS_VALUES      = [2.0, 1.9, 1.8, 1.7, 1.6, 1.5, 1.4, 1.3, 1.2, 1.1, 1.0];
+// International 2026: 5.0 → 3.0 in steps of −0.2
+const FORMATIONS_VALUES_INTL = [5.0, 4.8, 4.6, 4.4, 4.2, 4.0, 3.8, 3.6, 3.4, 3.2, 3.0];
 
 // ── Dance levels ──────────────────────────────────────────────────────────────
 const DANCE_LEVELS_FULL = [
@@ -28,6 +30,13 @@ const DANCE_LEVELS_FULL = [
 const DANCE_LEVELS_ESCOLAR = [
   { label: 'Reducido',  sublabel: 'Bajo el Promedio',   value: 0.5 },
   { label: 'Elevado',   sublabel: 'Promedio / Alto',     value: 1.0 },
+];
+// International 2026: 4 levels for both difficulty and execution (max 2.0)
+const DANCE_LEVELS_INTL = [
+  { label: 'Reducido',  sublabel: 'Bajo el Promedio',   value: 0.5 },
+  { label: 'Moderado',  sublabel: 'Promedio',            value: 1.0 },
+  { label: 'Elevado',   sublabel: 'Sobre el Promedio',   value: 1.5 },
+  { label: 'Superior',  sublabel: 'Nivel Alto',          value: 2.0 },
 ];
 // Escolar AB: diff max=1.0, exec max=2.0 (separate level sets per field)
 const DANCE_DIFF_LEVELS_AB = [
@@ -81,7 +90,7 @@ function DanceLevelSelector({
           ))}
         </div>
       </div>
-      <div className={`grid divide-x divide-zinc-200 ${levels.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+      <div className={`grid divide-x divide-zinc-200 ${levels.length === 2 ? 'grid-cols-2' : levels.length === 4 ? 'grid-cols-4' : 'grid-cols-3'}`}>
         {levels.map(({ label: lbl, sublabel, value: v }) => {
           const active = value === v;
           return (
@@ -152,13 +161,16 @@ export default function OverallSheetPage() {
 
   // ── Computed ──────────────────────────────────────────────────────────────
   const isEscolarAB     = scoringSystem === 'escolar_ab';
-  const hasDanceLimited = !isEscolarAB && (scoringSystem === 'tiny_novice' || scoringSystem === 'mini_novice' || scoringSystem === 'novice_plus' || scoringSystem === 'prep' || scoringSystem === 'escolar' || scoringSystem === 'elite_l1' || scoringSystem === 'intl_l1' || scoringSystem === 'intl_l2_7' || scoringSystem === 'intl_nt');
-  const danceDiffLevels = isEscolarAB ? DANCE_DIFF_LEVELS_AB : (hasDanceLimited ? DANCE_LEVELS_ESCOLAR : DANCE_LEVELS_FULL);
-  const danceExecLevels = isEscolarAB ? DANCE_EXEC_LEVELS_AB : (hasDanceLimited ? DANCE_LEVELS_ESCOLAR : DANCE_LEVELS_FULL);
-  const showmanshipMax  = isEscolarAB ? 5.0 : 2.0;
+  const isIntl          = scoringSystem === 'intl_l1' || scoringSystem === 'intl_l2_7' || scoringSystem === 'intl_nt';
+  const hasDanceLimited = !isEscolarAB && !isIntl && (scoringSystem === 'tiny_novice' || scoringSystem === 'mini_novice' || scoringSystem === 'novice_plus' || scoringSystem === 'prep' || scoringSystem === 'escolar' || scoringSystem === 'elite_l1');
+  const danceDiffLevels = isEscolarAB ? DANCE_DIFF_LEVELS_AB : isIntl ? DANCE_LEVELS_INTL : (hasDanceLimited ? DANCE_LEVELS_ESCOLAR : DANCE_LEVELS_FULL);
+  const danceExecLevels = isEscolarAB ? DANCE_EXEC_LEVELS_AB : isIntl ? DANCE_LEVELS_INTL : (hasDanceLimited ? DANCE_LEVELS_ESCOLAR : DANCE_LEVELS_FULL);
+  const showmanshipMax  = (isEscolarAB || isIntl) ? 5.0 : 2.0;
   const overallSubtotal = parseFloat((formationsScore + danceDifficulty + danceExecution).toFixed(2));
   const sheetTotal      = parseFloat((overallSubtotal + (isEscolarAB ? 0 : creativityOverall) + showmanshipOverall).toFixed(2));
-  const errorsCount     = Math.round((2.0 - formationsScore) * 10);
+  const errorsCount     = isIntl
+    ? Math.round((5.0 - formationsScore) / 0.2)
+    : Math.round((2.0 - formationsScore) * 10);
 
   // ── Load ──────────────────────────────────────────────────────────────────
   const load = useCallback(async () => {
@@ -181,6 +193,9 @@ export default function OverallSheetPage() {
         setRequirePayment(reg.competition_require_payment);
       }
 
+      const sysKey = (div.scoring_system || div.suggested_scoring_system) as string;
+      const isIntlSys = sysKey === 'intl_l1' || sysKey === 'intl_l2_7' || sysKey === 'intl_nt';
+
       if (sheetRes.data.results.length > 0) {
         const sheet = sheetRes.data.results[0];
         setExistingSheet(sheet);
@@ -191,21 +206,21 @@ export default function OverallSheetPage() {
         }
         if (sheet.dance_difficulty) {
           const v = parseFloat(sheet.dance_difficulty);
-          const allDiffLevels = [...DANCE_LEVELS_FULL, ...DANCE_DIFF_LEVELS_AB];
+          const allDiffLevels = [...DANCE_LEVELS_FULL, ...DANCE_DIFF_LEVELS_AB, ...DANCE_LEVELS_INTL];
           setDanceDifficulty(allDiffLevels.find((l) => l.value === v) ? v : 0);
         }
         if (sheet.dance_execution) {
           const v = parseFloat(sheet.dance_execution);
-          const allExecLevels = [...DANCE_LEVELS_FULL, ...DANCE_EXEC_LEVELS_AB];
+          const allExecLevels = [...DANCE_LEVELS_FULL, ...DANCE_EXEC_LEVELS_AB, ...DANCE_LEVELS_INTL];
           setDanceExecution(allExecLevels.find((l) => l.value === v) ? v : 0);
         }
         if (sheet.creativity_overall) {
-          setCreativityOverall(Math.min(2.0, Math.max(1.5, parseFloat(sheet.creativity_overall))));
+          const [cMin, cMax] = isIntlSys ? [8.0, 10.0] : [1.5, 2.0];
+          setCreativityOverall(Math.min(cMax, Math.max(cMin, parseFloat(sheet.creativity_overall))));
         }
         if (sheet.showmanship_overall) {
-          const sys = (div.scoring_system || div.suggested_scoring_system) as string;
-          const sMax = sys === 'escolar_ab' ? 5.0 : 2.0;
-          const showMin = sys === 'escolar_ab' ? 0 : 1.0;
+          const sMax    = (sysKey === 'escolar_ab' || isIntlSys) ? 5.0 : 2.0;
+          const showMin = sysKey === 'escolar_ab' ? 0 : isIntlSys ? 3.5 : 1.0;
           setShowmanshipOverall(Math.min(sMax, Math.max(showMin, parseFloat(sheet.showmanship_overall))));
         }
         if (sheet.notes) {
@@ -221,6 +236,10 @@ export default function OverallSheetPage() {
             setFormationsNotes(sheet.notes);
           }
         }
+      } else if (isIntlSys) {
+        setFormationsScore(5.0);
+        setCreativityOverall(8.0);
+        setShowmanshipOverall(3.5);
       }
     } finally {
       setLoading(false);
@@ -425,7 +444,7 @@ export default function OverallSheetPage() {
                 <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Formaciones y Transiciones</h2>
                 <InfoButton title="Formaciones y Transiciones — Reglas" size="lg">
                   <div className="space-y-3 text-sm">
-                    <p className="text-zinc-600">Evalúa la precisión en las formaciones del equipo y la fluidez al cambiar entre ellas. El puntaje inicia en <strong>2.0</strong> y se descuenta <strong>−0.1</strong> por cada error observado.</p>
+                    <p className="text-zinc-600">Evalúa la precisión en las formaciones del equipo y la fluidez al cambiar entre ellas. El puntaje inicia en <strong>{isIntl ? '5.0' : '2.0'}</strong> y se descuenta <strong>{isIntl ? '−0.2' : '−0.1'}</strong> por cada error observado.</p>
                     <ul className="space-y-1.5 text-xs text-zinc-600">
                       <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Espaciado:</strong> Desigualdad en la distancia entre atletas dentro de la formación.</span></li>
                       <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Alineación:</strong> Falta de alineación visible en filas, columnas o figuras.</span></li>
@@ -434,7 +453,7 @@ export default function OverallSheetPage() {
                   </div>
                 </InfoButton>
               </div>
-              <p className="text-xs text-zinc-400 mt-0.5">−0.1 por cada problema de espaciado en formaciones o choque/empalme en transiciones</p>
+              <p className="text-xs text-zinc-400 mt-0.5">{isIntl ? '−0.2' : '−0.1'} por cada problema de espaciado en formaciones o choque/empalme en transiciones</p>
             </div>
 
             <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
@@ -442,25 +461,29 @@ export default function OverallSheetPage() {
                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Valor Inicial</span>
                 <div className="flex items-center gap-3">
                   {errorsCount > 0 && (
-                    <span className="text-xs text-red-500 tabular-nums">{errorsCount} error{errorsCount !== 1 ? 'es' : ''} × −0.1</span>
+                    <span className="text-xs text-red-500 tabular-nums">{errorsCount} error{errorsCount !== 1 ? 'es' : ''} × {isIntl ? '−0.2' : '−0.1'}</span>
                   )}
-                  <span className={`text-xl font-bold tabular-nums ${formationsScore < 2.0 ? 'text-red-700' : 'text-zinc-900'}`}>
+                  <span className={`text-xl font-bold tabular-nums ${formationsScore < (isIntl ? 5.0 : 2.0) ? 'text-red-700' : 'text-zinc-900'}`}>
                     {fmt(formationsScore)}
                   </span>
                 </div>
               </div>
               <div className="p-4">
                 <div className="grid grid-cols-11 gap-1">
-                  {FORMATIONS_VALUES.map((v) => {
+                  {(isIntl ? FORMATIONS_VALUES_INTL : FORMATIONS_VALUES).map((v) => {
                     const active = formationsScore === v;
-                    const errors = Math.round((2.0 - v) * 10);
+                    const errors = isIntl
+                      ? Math.round((5.0 - v) / 0.2)
+                      : Math.round((2.0 - v) * 10);
+                    const isRed   = isIntl ? v < 3.6 : v < 1.5;
+                    const isAmber = isIntl ? v < 4.6 : v < 1.8;
                     return (
                       <button key={v} type="button" onClick={() => setFormationsScore(v)}
                         title={errors === 0 ? 'Sin errores' : `${errors} error${errors !== 1 ? 'es' : ''}`}
                         className={`flex flex-col items-center gap-0.5 rounded-lg py-2.5 text-xs font-semibold transition-colors border ${
                           active ? 'border-transparent'
-                            : v < 1.5 ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
-                            : v < 1.8 ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+                            : isRed   ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+                            : isAmber ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
                             : 'bg-white text-zinc-700 border-zinc-300 hover:border-zinc-600 hover:bg-zinc-50'
                         }`}
                         style={active ? { backgroundColor: 'var(--plt-primary)', color: 'var(--plt-primary-fg)', borderColor: 'var(--plt-primary)' } : undefined}
@@ -579,8 +602,8 @@ export default function OverallSheetPage() {
                   <div className="flex items-center gap-3">
                     <input
                       type="range"
-                      min="1.5"
-                      max="2.0"
+                      min={isIntl ? '8.0' : '1.5'}
+                      max={isIntl ? '10.0' : '2.0'}
                       step="0.1"
                       value={creativityOverall}
                       onChange={(e) => setCreativityOverall(parseFloat(e.target.value))}
@@ -588,12 +611,13 @@ export default function OverallSheetPage() {
                     />
                     <input
                       type="number"
-                      min="1.5"
-                      max="2.0"
+                      min={isIntl ? '8.0' : '1.5'}
+                      max={isIntl ? '10.0' : '2.0'}
                       step="0.1"
                       value={creativityOverall}
                       onChange={(e) => {
-                        const v = Math.min(2.0, Math.max(1.5, parseFloat(e.target.value) || 1.5));
+                        const [cMin, cMax] = isIntl ? [8.0, 10.0] : [1.5, 2.0];
+                        const v = Math.min(cMax, Math.max(cMin, parseFloat(e.target.value) || cMin));
                         setCreativityOverall(parseFloat(v.toFixed(2)));
                       }}
                       className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
@@ -616,7 +640,7 @@ export default function OverallSheetPage() {
                 <div className="flex items-center gap-3">
                   <input
                     type="range"
-                    min={isEscolarAB ? '0' : '1.0'}
+                    min={isEscolarAB ? '0' : isIntl ? '3.5' : '1.0'}
                     max={showmanshipMax}
                     step="0.1"
                     value={showmanshipOverall}
@@ -625,12 +649,12 @@ export default function OverallSheetPage() {
                   />
                   <input
                     type="number"
-                    min={isEscolarAB ? '0' : '1.0'}
+                    min={isEscolarAB ? '0' : isIntl ? '3.5' : '1.0'}
                     max={showmanshipMax}
                     step="0.1"
                     value={showmanshipOverall}
                     onChange={(e) => {
-                      const showMin = isEscolarAB ? 0 : 1.0;
+                      const showMin = isEscolarAB ? 0 : isIntl ? 3.5 : 1.0;
                       const v = Math.min(showmanshipMax, Math.max(showMin, parseFloat(e.target.value) || showMin));
                       setShowmanshipOverall(parseFloat(v.toFixed(2)));
                     }}
@@ -640,6 +664,8 @@ export default function OverallSheetPage() {
                 <p className="text-[11px] text-zinc-400 leading-snug">
                   {isEscolarAB
                     ? 'Cheer / Animación — máx 5.0 (se promedia con los otros dos jueces)'
+                    : isIntl
+                    ? 'Showmanship — máx 5.0 (se promedia con los otros dos jueces)'
                     : 'Confianza, Limpieza y Conexión durante la rutina (Habilidades de Construcción)'}
                 </p>
               </div>
@@ -741,7 +767,7 @@ export default function OverallSheetPage() {
           <table className="w-full">
             <tbody className="divide-y divide-zinc-100">
               {[
-                { label: 'Formaciones y Transiciones', value: formationsScore, max: 2.0 },
+                { label: 'Formaciones y Transiciones', value: formationsScore, max: isIntl ? 5.0 : 2.0 },
                 { label: 'Dificultad de Baile',        value: danceDifficulty, max: Math.max(...danceDiffLevels.map(l => l.value)) },
                 { label: 'Ejecución de Baile',         value: danceExecution,  max: Math.max(...danceExecLevels.map(l => l.value)) },
               ].map(({ label, value, max }) => (
@@ -762,7 +788,7 @@ export default function OverallSheetPage() {
                   <td className="px-4 py-2.5 text-zinc-600">Creatividad (este juez)</td>
                   <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
                     <span className="font-semibold">{fmt(creativityOverall)}</span>
-                    <span className="text-zinc-400 font-normal"> / 2.00</span>
+                    <span className="text-zinc-400 font-normal"> / {isIntl ? '10.00' : '2.00'}</span>
                   </td>
                 </tr>
               )}
