@@ -16,7 +16,6 @@ import authRepository from '@/repositories/authRepository';
 import { setUser } from '@/store/auth/slices';
 import { useJudge } from '@/hooks/useJudge';
 import { useConfirm } from '@/hooks/useConfirm';
-import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 import {
   AGE_GROUP_LABELS,
   SKILL_LEVEL_LABELS,
@@ -377,14 +376,6 @@ export default function DivisionDetailPage() {
           </div>
         )}
       </div>
-
-      {/* Skill reference tables — cheerleader only */}
-      {hasJudging && !isIcuDanceMode && (
-        <div className="flex flex-col gap-2">
-          <SkillReferencePanel skillLevel={division.skill_level} sheetType="building" />
-          <SkillReferencePanel skillLevel={division.skill_level} sheetType="tumbling" />
-        </div>
-      )}
 
       {/* Registrations */}
       <div className="flex flex-col gap-3">
