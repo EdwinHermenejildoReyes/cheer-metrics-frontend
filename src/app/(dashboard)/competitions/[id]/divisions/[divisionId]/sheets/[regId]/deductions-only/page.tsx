@@ -21,7 +21,7 @@ import {
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 
 const FALLS: DeductionType[] = ['x', 'ca', 'csa', 'ec', 'cc', 'csc'];
-const TIME:  DeductionType[] = ['tiempo', 'tiempo_grave'];
+const TIME:  DeductionType[] = ['tiempo'];
 
 const ZONE_ROWS = [{ key: 'F', label: 'FRENTE' }, { key: 'C', label: 'CENTRO' }, { key: 'T', label: 'FONDO' }] as const;
 const ZONE_COLS = [{ key: 'IZQ', label: 'IZQ' }, { key: 'CTR', label: 'CTR' }, { key: 'DER', label: 'DER' }] as const;

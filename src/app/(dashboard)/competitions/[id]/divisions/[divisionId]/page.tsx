@@ -864,7 +864,7 @@ export default function DivisionDetailPage() {
             {/* SECTION 1: Desglose por planilla — tabla unificada con detalle completo */}
             {(hasBuildingDetail || hasTumblingDetail || hasOverallDetail) && (() => {
               const CAIDAS   = ['x', 'ca', 'csa', 'ec', 'cc', 'csc'];
-              const TIEMPO   = ['tiempo', 'tiempo_grave'];
+              const TIEMPO   = ['tiempo'];
               const ILEGALES = ['pi', 'eap', 'rg', 'gfn', 'bfn', 'seg'];
               const ADMIN    = ['ad', 'div'];
               const sumDed = (deds: typeof ranked[0]['sheet']['deductions'], types: string[]) =>

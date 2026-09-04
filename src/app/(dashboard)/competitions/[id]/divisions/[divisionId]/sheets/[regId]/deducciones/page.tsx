@@ -27,7 +27,7 @@ import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBa
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const FALLS:   DeductionType[] = ['x', 'ca', 'csa', 'ec', 'cc', 'csc'];
-const TIME:    DeductionType[] = ['tiempo', 'tiempo_grave'];
+const TIME:    DeductionType[] = ['tiempo'];
 const ILLEGAL: DeductionType[] = ['pi', 'eap', 'rg', 'gfn', 'bfn', 'seg'];
 const ADMIN:   DeductionType[] = ['ad', 'div'];
 

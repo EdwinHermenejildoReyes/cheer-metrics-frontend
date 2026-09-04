@@ -218,7 +218,7 @@ export type RegistrationStatus = 'pending' | 'confirmed' | 'withdrawn';
 // Deduction codes matching the Level Up / Adventure Brands United system
 export type DeductionType =
   | 'x' | 'ca' | 'csa' | 'ec' | 'cc' | 'csc'
-  | 'tiempo' | 'tiempo_grave'
+  | 'tiempo'
   | 'pi' | 'eap' | 'rg' | 'gfn' | 'bfn' | 'seg'
   | 'ad' | 'div';
 
@@ -561,7 +561,6 @@ export const DEDUCTION_TYPE_LABELS: Record<DeductionType, string> = {
   cc:          'Caída de construcción',
   csc:         'Caída grave de construcción',
   tiempo:      'Exceso de tiempo (por segundo)',
-  tiempo_grave:'Exceso de tiempo grave (≥10 seg)',
   pi:          'Política de imagen',
   eap:         'Estándares atléticos de presentación',
   rg:          'Reglas generales',
@@ -574,7 +573,7 @@ export const DEDUCTION_TYPE_LABELS: Record<DeductionType, string> = {
 
 export const DEDUCTION_CODES: Record<DeductionType, string> = {
   x: 'X', ca: 'CA', csa: 'CSA', ec: 'EC', cc: 'CC', csc: 'CSC',
-  tiempo: 'TIEMPO', tiempo_grave: 'TIEMPO+',
+  tiempo: 'TIEMPO',
   pi: 'PI', eap: 'EAP', rg: 'RG', gfn: 'GFN', bfn: 'BFN', seg: 'SEG',
   ad: 'AD', div: 'DIV',
 };
@@ -587,7 +586,6 @@ export const DEDUCTION_AMOUNTS: Record<DeductionType, string> = {
   cc:          '0.75',
   csc:         '1.25',
   tiempo:      '0.05',
-  tiempo_grave:'1.25',
   pi:          '0.01',
   eap:         '0.25',
   rg:          '0.05',
