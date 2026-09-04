@@ -88,16 +88,21 @@ function DanceLevelSelector({
   onChange: (v: number) => void;
   info?: React.ReactNode;
 }) {
+  const min = 0.5;
+  const max = levels.length > 0 ? Math.max(...levels.map(l => l.value)) : 2.0;
   return (
     <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
       <div className="px-4 py-2.5 border-b border-zinc-700 bg-zinc-800">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-semibold uppercase tracking-wide text-white">{label}</span>
-          {info && (
-            <InfoButton title={label} size="lg">
-              {info}
-            </InfoButton>
-          )}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-white">{label}</span>
+            {info && (
+              <InfoButton title={label} size="lg">
+                {info}
+              </InfoButton>
+            )}
+          </div>
+          <span className="text-xl font-bold tabular-nums text-white">{value > 0 ? value.toFixed(1) : '—'}</span>
         </div>
         <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
           {criteria.map((c) => (
@@ -113,24 +118,45 @@ function DanceLevelSelector({
               key={v}
               type="button"
               onClick={() => onChange(v)}
-              className={`flex flex-col items-center gap-1 py-5 px-3 transition-colors ${
+              className={`flex flex-col items-center gap-1 py-4 px-3 transition-colors ${
                 active ? '' : 'bg-white text-zinc-700 hover:bg-zinc-50'
               }`}
               style={active ? { backgroundColor: '#2563eb', color: '#ffffff' } : undefined}
             >
-              <span className={`text-2xl font-bold tabular-nums ${active ? '' : 'text-zinc-900'}`}
+              <span className={`text-xl font-bold tabular-nums ${active ? '' : 'text-zinc-900'}`}
                 style={active ? { color: '#ffffff' } : undefined}>
                 {v.toFixed(1)}
               </span>
-              <span className={`text-xs font-semibold ${active ? 'opacity-90' : 'text-zinc-700'}`}>
-                {lbl}
-              </span>
-              <span className={`text-[10px] text-center ${active ? 'opacity-60' : 'text-zinc-400'}`}>
-                {sublabel}
-              </span>
+              <span className={`text-xs font-semibold ${active ? 'opacity-90' : 'text-zinc-700'}`}>{lbl}</span>
+              <span className={`text-[10px] text-center ${active ? 'opacity-60' : 'text-zinc-400'}`}>{sublabel}</span>
             </button>
           );
         })}
+      </div>
+      {/* Fine-grained slider */}
+      <div className="px-4 py-3 border-t border-zinc-100 flex items-center gap-3">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step="0.1"
+          value={value > 0 ? value : min}
+          onChange={(e) => onChange(parseFloat(e.target.value))}
+          className="flex-1 accent-zinc-900"
+        />
+        <input
+          type="number"
+          min={min}
+          max={max}
+          step="0.1"
+          value={value > 0 ? value : ''}
+          placeholder="0.0"
+          onChange={(e) => {
+            const v = Math.min(max, Math.max(min, parseFloat(e.target.value) || min));
+            onChange(parseFloat(v.toFixed(1)));
+          }}
+          className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900"
+        />
       </div>
     </div>
   );
@@ -173,6 +199,7 @@ export default function OverallSheetPage() {
   const [showmanshipOverall, setShowmanshipOverall] = useState<number>(1.0);
   const [comments,           setComments]           = useState('');
   const [animacionCriteria,  setAnimacionCriteria]  = useState<number[]>([0, 0, 0, 0, 0]);
+  const [formationErrors,    setFormationErrors]    = useState<{ time: string; formation: string }[]>([]);
 
   // ── Computed ──────────────────────────────────────────────────────────────
   const isEscolarAB     = scoringSystem === 'escolar_ab';
@@ -226,13 +253,11 @@ export default function OverallSheetPage() {
         }
         if (sheet.dance_difficulty) {
           const v = parseFloat(sheet.dance_difficulty);
-          const allDiffLevels = [...DANCE_LEVELS_FULL, ...DANCE_DIFF_LEVELS_AB, ...DANCE_LEVELS_INTL];
-          setDanceDifficulty(allDiffLevels.find((l) => l.value === v) ? v : 0);
+          setDanceDifficulty(v >= 0.5 && v <= 2.0 ? v : 0);
         }
         if (sheet.dance_execution) {
           const v = parseFloat(sheet.dance_execution);
-          const allExecLevels = [...DANCE_LEVELS_FULL, ...DANCE_EXEC_LEVELS_AB, ...DANCE_LEVELS_INTL];
-          setDanceExecution(allExecLevels.find((l) => l.value === v) ? v : 0);
+          setDanceExecution(v >= 0.5 && v <= 2.0 ? v : 0);
         }
         if (sheet.creativity_overall) {
           const [cMin, cMax] = isIntlSys ? [8.0, 10.0] : [1.5, 2.0];
@@ -247,6 +272,7 @@ export default function OverallSheetPage() {
           try {
             const p = JSON.parse(sheet.notes);
             setComments(p.comments ?? [p.formations, p.dance].filter(Boolean).join('\n'));
+            if (Array.isArray(p.formationErrors)) setFormationErrors(p.formationErrors);
             if (Array.isArray(p.animacion) && p.animacion.length === 5) {
               setAnimacionCriteria(p.animacion as number[]);
             }
@@ -283,6 +309,7 @@ export default function OverallSheetPage() {
           try {
             const p = JSON.parse(sheet.notes);
             setComments(p.comments ?? [p.formations, p.dance].filter(Boolean).join('\n'));
+            if (Array.isArray(p.formationErrors)) setFormationErrors(p.formationErrors);
             if (Array.isArray(p.animacion) && p.animacion.length === 5) {
               setAnimacionCriteria(p.animacion as number[]);
             }
@@ -342,7 +369,7 @@ export default function OverallSheetPage() {
         notes: (() => {
           let existing: Record<string, unknown> = {};
           try { existing = JSON.parse(existingSheet?.notes ?? '{}'); } catch { /* noop */ }
-          const n: Record<string, unknown> = { ...existing, comments };
+          const n: Record<string, unknown> = { ...existing, comments, formationErrors };
           if (isEscolar) n.animacion = animacionCriteria;
           return JSON.stringify(n);
         })(),
@@ -376,7 +403,7 @@ export default function OverallSheetPage() {
     if (readOnly || !hasSettled) return;
     const timer = setTimeout(() => { handleSaveRef.current(true); }, 2000);
     return () => clearTimeout(timer);
-  }, [readOnly, hasSettled, formationsScore, danceDifficulty, danceExecution, creativityOverall, showmanshipOverall, comments, animacionCriteria]);
+  }, [readOnly, hasSettled, formationsScore, danceDifficulty, danceExecution, creativityOverall, showmanshipOverall, comments, animacionCriteria, formationErrors]);
 
   if (loading) return <PageSpinner />;
 
@@ -527,6 +554,66 @@ export default function OverallSheetPage() {
                   <span>Sin errores →</span>
                 </div>
               </div>
+            </div>
+
+            {/* Formations error log table */}
+            <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+              <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wide text-zinc-700">Registro de errores</span>
+                <button
+                  type="button"
+                  onClick={() => setFormationErrors(prev => [...prev, { time: '', formation: '' }])}
+                  className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                >
+                  + Agregar
+                </button>
+              </div>
+              {formationErrors.length === 0 ? (
+                <p className="text-xs text-zinc-400 text-center py-3">Sin errores registrados</p>
+              ) : (
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-zinc-100">
+                      <th className="text-left px-3 py-1.5 font-semibold text-zinc-500 w-24">Tiempo</th>
+                      <th className="text-left px-3 py-1.5 font-semibold text-zinc-500">Formación / Descripción</th>
+                      <th className="w-8" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100">
+                    {formationErrors.map((row, i) => (
+                      <tr key={i}>
+                        <td className="px-2 py-1">
+                          <input
+                            type="text"
+                            value={row.time}
+                            onChange={(e) => setFormationErrors(prev => prev.map((r, j) => j === i ? { ...r, time: e.target.value } : r))}
+                            placeholder="0:00"
+                            className="w-full rounded border border-zinc-200 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-zinc-400"
+                          />
+                        </td>
+                        <td className="px-2 py-1">
+                          <input
+                            type="text"
+                            value={row.formation}
+                            onChange={(e) => setFormationErrors(prev => prev.map((r, j) => j === i ? { ...r, formation: e.target.value } : r))}
+                            placeholder="Descripción del error..."
+                            className="w-full rounded border border-zinc-200 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-zinc-400"
+                          />
+                        </td>
+                        <td className="px-2 py-1 text-center">
+                          <button
+                            type="button"
+                            onClick={() => setFormationErrors(prev => prev.filter((_, j) => j !== i))}
+                            className="text-red-400 hover:text-red-600 font-bold leading-none"
+                          >
+                            ×
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
 
           </section>
