@@ -23,6 +23,8 @@ export interface BuildingTableData {
 export interface GymSubTable {
   title: string;
   abbreviations?: string;
+  /** Override column headers; empty string in slot 2 hides the third column */
+  colLabels?: [string, string, string];
   delNivel:  string[];
   avanzadas: string[];
   elite:     string[];
@@ -1349,6 +1351,150 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
     },
   },
 
+  // ── NOVICE ────────────────────────────────────────────────────────────────
+
+  NOVICE: {
+    building: {
+      levelLabel: 'All Star Novice',
+      sections: [
+        {
+          title: 'HABILIDADES DEL NIVEL',
+          columns: [
+            {
+              header: 'ESTILO RELEASE',
+              items: [
+                'Estilo Release desde nivel del suelo (switch up) hacia lib debajo del nivel prep',
+                'Tic toc debajo del nivel prep (lib a lib)',
+              ],
+            },
+            {
+              header: 'GIRO',
+              items: [
+                'Transición con 1/4 de giro hacia debajo del nivel prep',
+                'Transición con 1/4 de giro hacia nivel de suelo',
+                'Transición con 1/4 de giro desde nivel prep',
+              ],
+            },
+            {
+              header: 'COMBINACIÓN / OTRAS HABILIDADES',
+              items: [
+                'Parado en espalda',
+                'Acostado de espalda',
+                'Escuadra',
+                'Escuadra extendida',
+                'Elevación en 1 pierna',
+                'Silla',
+                'Prono',
+                'Acostado de espalda prep',
+                'Sentado en hombros',
+                'Parado en hombros',
+                'Elevación en 1 pierna a nivel',
+              ],
+            },
+            {
+              header: 'DESMONTE',
+              items: [
+                'Bajarse con paso',
+                'Show & go por nivel prep extendido',
+              ],
+            },
+          ],
+        },
+        {
+          title: 'HABILIDADES RESTRINGIDAS (−0.50 por ocurrencia)',
+          columns: [
+            {
+              header: 'ESTILO RELEASE',
+              items: [
+                'Estilo Release desde nivel del suelo (switch up) hacia posición corporal debajo del nivel prep',
+                'Tic Tic toc debajo del nivel prep (lib a posición corporal)',
+                'Tic toc en nivel prep (lib a posición corporal) con un conector hacia lib en nivel prep con conector',
+                'Estilo Release desde nivel de cintura hacia lib en nivel prep con conector',
+                'Estilo Release desde nivel de suelo (switch up) hacia lib en nivel prep con conector',
+                'Estilo Release desde nivel de suelo (switch up) hacia posición corporal en nivel prep con conector',
+                'Tic Tic toc debajo del nivel prep (posición corporal a posición corporal)',
+                'Tic toc en nivel prep (posición corporal a posición corporal) con conector',
+                'Estilo Release desde nivel de cintura hacia posición corporal en nivel prep con conector',
+              ],
+            },
+            {
+              header: 'GIRO',
+              items: [
+                'Transición con 1/4 de giro desde nivel prep hacia nivel prep',
+                'Transición con 1/4 desde nivel inferior a prep hacia lib en nivel prep con conector',
+                'Transición con 1/4 desde nivel inferior a prep hacia elevación prep',
+                'Transición con 1/4 desde nivel inferior a prep hacia posición corporal en nivel prep con conector',
+              ],
+            },
+            {
+              header: 'COMBINACIÓN / OTRAS HABILIDADES',
+              items: [
+                'Tic toc con 1/4 de giro en nivel prep (lib a lib) con conector',
+                'Tic toc con 1/4 de giro debajo del nivel prep (lib a posición corporal)',
+                'Transición desde nivel inferior a prep hacia posición corporal en nivel prep con conector',
+                'Tic toc con 1/4 de giro en nivel prep (posición corporal a posición corporal) con conector',
+                'Estilo Release con 1/4 de giro desde nivel del suelo (switch up) hacia lib en nivel prep con conector',
+                'Estilo Release con 1/4 de giro desde nivel de cintura hacia lib en nivel prep con conector',
+                'Tic toc con 1/4 de giro debajo del nivel prep (posición corporal a posición corporal)',
+              ],
+            },
+            {
+              header: 'DESMONTE',
+              items: ['Cuna recta desde elevación prep'],
+            },
+          ],
+        },
+      ],
+    },
+
+    gym: {
+      levelLabel: 'All Star Novice',
+      subTables: [
+        {
+          title: 'GIMNASIA ESTÁTICA',
+          colLabels: ['RECOMENDADAS DEL NIVEL', 'RESTRINGIDAS (−0.05 c/u)', ''],
+          delNivel: [
+            'ROL ADELANTE',
+            'ROL EN ESCUADRA',
+            'ARCO DESDE EL SUELO',
+            'ARCO DESDE PARADO (STANDING BACKBEND)',
+            'ROL ATRÁS',
+          ],
+          avanzadas: [
+            'PARADO DE MANOS (INVERTIDA)',
+            'CAMINO ADELANTE/ATRÁS CON PIERNAS JUNTAS',
+            'CAMINO ATRÁS O ADELANTE',
+            'ROL ATRÁS A PARADO DE MANOS (INVERTIDA)',
+            'ARCO A PASAR',
+            'CUALQUIER COMBINACIÓN O VARIACIÓN DE LAS ANTERIORES',
+            'TINY NOVICE: NINGUNA HABILIDAD CON LA ESPALDA ARQUEADA (PUENTE)',
+          ],
+          elite: [],
+        },
+        {
+          title: 'GIMNASIA CON CARRERA',
+          colLabels: ['RECOMENDADAS DEL NIVEL', 'RESTRINGIDAS (−0.05 c/u)', ''],
+          delNivel: [
+            'MEDIA LUNA',
+            'MEDIA LUNA – ROL ATRÁS',
+            'PARADO DE MANOS (INVERTIDA) – ROL ADELANTE',
+            'PARADA DE MANOS – ARCO',
+          ],
+          avanzadas: [
+            'MEDIA LUNA – CAMINO ATRÁS RONDADA (RO)',
+            'CAMINO ADELANTE',
+            'CUALQUIER COMBINACIÓN O VARIACIÓN DE LAS ANTERIORES',
+            'TINY NOVICE: NINGUNA HABILIDAD CON LA ESPALDA ARQUEADA (PUENTE)',
+          ],
+          elite: [],
+        },
+      ],
+      footer: GYM_FOOTER,
+    },
+
+    tosses: null,
+  },
+
   // ── L7 ────────────────────────────────────────────────────────────────────
 
   L7: {
@@ -1626,6 +1772,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
 // ── Skill-level → table key ───────────────────────────────────────────────────
 
 const LEVEL_KEY_MAP: Record<string, string> = {
+  novice: 'NOVICE',
   L1: 'L1', L2: 'L2', L3: 'L3', L4: 'L4', L5: 'L5', L6: 'L6', L7: 'L7',
 };
 

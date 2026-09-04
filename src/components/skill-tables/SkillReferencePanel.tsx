@@ -13,6 +13,7 @@ interface Props {
 }
 
 const LEVEL_LABELS: Record<string, string> = {
+  novice: 'All Star Novice',
   L1: 'Nivel 1', L2: 'Nivel 2', L3: 'Nivel 3',
   L4: 'Nivel 4', L5: 'Nivel 5', L6: 'Nivel 6', L7: 'Nivel 7',
 };
@@ -46,7 +47,6 @@ export function SkillReferencePanel({ skillLevel, sheetType }: Props) {
   };
 
   const tables = getSkillTables(skillLevel);
-  // Don't render for non-L1..L7 levels (Novice, Prep, etc.)
   if (!tables) return null;
 
   const levelLabel  = LEVEL_LABELS[skillLevel ?? ''] ?? skillLevel ?? '';

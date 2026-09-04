@@ -76,7 +76,17 @@ export function TossTable({ data }: { data: TossTableData }) {
 // ── Gym sub-table ─────────────────────────────────────────────────────────────
 
 function GymSubTableView({ sub }: { sub: GymSubTable }) {
-  const hasContent = sub.delNivel.length > 0 || sub.avanzadas.length > 0 || sub.elite.length > 0;
+  const defaultLabels: [string, string, string] = ['HABILIDADES DEL NIVEL', 'HABILIDADES AVANZADAS', 'HABILIDADES ÉLITE'];
+  const rawLabels = sub.colLabels ?? defaultLabels;
+  const allCols = [
+    { label: rawLabels[0], items: sub.delNivel },
+    { label: rawLabels[1], items: sub.avanzadas },
+    { label: rawLabels[2], items: sub.elite },
+  ];
+  const cols = allCols.filter(c => c.label !== '');
+  const colWidth = cols.length === 2 ? 'w-1/2' : 'w-1/3';
+
+  const hasContent = cols.some(c => c.items.length > 0);
 
   return (
     <div className="mb-5">
@@ -99,29 +109,25 @@ function GymSubTableView({ sub }: { sub: GymSubTable }) {
           <table className="w-full border-collapse text-xs min-w-[480px]">
             <thead>
               <tr>
-                <th className="bg-zinc-800 text-white px-3 py-2 font-semibold uppercase tracking-wide text-[10px] border border-zinc-700 w-1/3">
-                  HABILIDADES DEL NIVEL
-                </th>
-                <th className="bg-zinc-800 text-white px-3 py-2 font-semibold uppercase tracking-wide text-[10px] border border-zinc-700 w-1/3">
-                  HABILIDADES AVANZADAS
-                </th>
-                <th className="bg-zinc-800 text-white px-3 py-2 font-semibold uppercase tracking-wide text-[10px] border border-zinc-700 w-1/3">
-                  HABILIDADES ÉLITE
-                </th>
+                {cols.map((c, ci) => (
+                  <th key={ci} className={`bg-zinc-800 text-white px-3 py-2 font-semibold uppercase tracking-wide text-[10px] border border-zinc-700 ${colWidth}`}>
+                    {c.label}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               <tr>
-                {[sub.delNivel, sub.avanzadas, sub.elite].map((items, ci) => (
+                {cols.map((c, ci) => (
                   <td
                     key={ci}
                     className={`align-top px-3 py-2.5 border border-zinc-200 ${ci % 2 === 0 ? 'bg-white' : 'bg-zinc-50'}`}
                   >
-                    {items.length === 0 ? (
+                    {c.items.length === 0 ? (
                       <span className="text-zinc-300 italic">—</span>
                     ) : (
                       <ul className="space-y-1">
-                        {items.map((item, i) => (
+                        {c.items.map((item, i) => (
                           <li key={i} className="flex items-start gap-1.5 text-zinc-700">
                             <span className="mt-1 shrink-0 w-1 h-1 rounded-full bg-zinc-400" />
                             <span className="leading-relaxed">{item}</span>
