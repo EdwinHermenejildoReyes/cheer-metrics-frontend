@@ -235,6 +235,7 @@ export default function DeduccionesSheetPage() {
   const [pendingType, setPendingType]   = useState<DeductionType | null>(null);
   const [pendingRule, setPendingRule]   = useState('');
   const [tiempoSecs, setTiempoSecs]    = useState(1);
+  const [tiempoReal, setTiempoReal]    = useState('');
   const pendingRuleRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
@@ -298,13 +299,13 @@ export default function DeduccionesSheetPage() {
   };
 
   // ── Direct add — always creates a new record ──────────────────────────────
-  const handleDirectAdd = async (type: DeductionType, count = 1) => {
+  const handleDirectAdd = async (type: DeductionType, count = 1, routineTime = '') => {
     if (!sheet || savingDirect.has(type)) return;
     setSavingDirect(prev => new Set(prev).add(type));
     try {
       await competitionsRepository.createDeduction({
         score_sheet: sheet.id, deduction_type: type, count,
-        routine_time: '', hit_zero: false,
+        routine_time: routineTime, hit_zero: false,
         notes: DEDUCTION_RULE_REFERENCE[type] ?? '',
       });
       await load();
@@ -461,7 +462,7 @@ export default function DeduccionesSheetPage() {
                             onDragEnd={isDragGroup ? () => {
                               dragTypeRef.current = null;
                             } : undefined}
-                            onClick={isDragGroup ? undefined : () => handleDirectAdd(type, type === 'tiempo' ? tiempoSecs : 1)}
+                            onClick={isDragGroup ? undefined : () => handleDirectAdd(type, type === 'tiempo' ? tiempoSecs : 1, type === 'tiempo' ? normalizeTime(tiempoReal) : '')}
                             className={`relative flex flex-col rounded-lg border transition-all select-none overflow-hidden ${
                               isBusy
                                 ? 'cursor-wait bg-zinc-100 border-zinc-200 opacity-60'
@@ -485,17 +486,31 @@ export default function DeduccionesSheetPage() {
                               </span>
                             </div>
                             {type === 'tiempo' && (
-                              <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 border-t border-orange-100" onClick={e => e.stopPropagation()}>
-                                <span className="text-[9px] text-orange-500 font-bold uppercase tracking-wide shrink-0">Seg. sobre:</span>
-                                <input
-                                  type="number"
-                                  min={1}
-                                  max={60}
-                                  value={tiempoSecs}
-                                  onChange={e => setTiempoSecs(Math.max(1, parseInt(e.target.value) || 1))}
-                                  className="w-14 rounded-md border border-orange-200 bg-white px-2 py-0.5 text-xs text-center tabular-nums focus:outline-none focus:ring-1 focus:ring-orange-400"
-                                />
-                                <span className="text-[9px] text-orange-400">= −{(tiempoSecs * 0.05).toFixed(2)}</span>
+                              <div className="flex flex-col gap-1.5 px-3 py-2 bg-orange-50 border-t border-orange-100" onClick={e => e.stopPropagation()}>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[9px] text-orange-500 font-bold uppercase tracking-wide w-20 shrink-0">Duración real</span>
+                                  <input
+                                    type="text"
+                                    value={tiempoReal}
+                                    onChange={e => setTiempoReal(filterTimeChars(e.target.value))}
+                                    onBlur={() => { const n = normalizeTime(tiempoReal); if (n) setTiempoReal(n); }}
+                                    placeholder="1:36"
+                                    className="w-16 rounded-md border border-orange-200 bg-white px-2 py-0.5 text-xs text-center tabular-nums focus:outline-none focus:ring-1 focus:ring-orange-400"
+                                  />
+                                  <span className="text-[9px] text-orange-300">(evidencia)</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[9px] text-orange-500 font-bold uppercase tracking-wide w-20 shrink-0">Seg. extra</span>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    max={60}
+                                    value={tiempoSecs}
+                                    onChange={e => setTiempoSecs(Math.max(1, parseInt(e.target.value) || 1))}
+                                    className="w-16 rounded-md border border-orange-200 bg-white px-2 py-0.5 text-xs text-center tabular-nums focus:outline-none focus:ring-1 focus:ring-orange-400"
+                                  />
+                                  <span className="text-[9px] text-orange-400">= −{(tiempoSecs * 0.05).toFixed(2)}</span>
+                                </div>
                               </div>
                             )}
                           </div>
