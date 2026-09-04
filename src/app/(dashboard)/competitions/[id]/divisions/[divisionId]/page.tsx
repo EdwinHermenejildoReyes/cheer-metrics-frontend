@@ -313,25 +313,19 @@ export default function DivisionDetailPage() {
   const canViewSheetInDivision = (st: SheetType) =>
     canViewSheetForDivision(compId, division.id, st) && isSheetAllowedInDivision(st);
 
+  const ICU_SHEET_TYPES = ['icu_dance', 'icu_doubles', 'icu_dance_deductions', 'icu_dance_solo', 'icu_dance_principiantes'];
   const judgeVisibleSheets = judgeSheetTypes.filter((sheetType) => {
     if (!canViewSheetForDivision(compId, division.id, sheetType)) return false;
     if (!isSheetAllowedInDivision(sheetType)) return false;
+    // Never mix ICU and cheerleader sheet types across modes
+    const isIcuSheet = ICU_SHEET_TYPES.includes(sheetType);
+    if (isIcuSheet !== isIcuDanceMode) return false;
     if (isIcuDanceMode) {
-      if (sheetType === 'icu_dance_deductions') return true; // safety judge applies to any ICU division
-      return sheetType === activeScoringSystem; // content judge must match division's scoring system
+      if (sheetType === 'icu_dance_deductions') return true;
+      return sheetType === activeScoringSystem;
     }
-    // Cheerleader mode — never show ICU dance sheets
-    if (['icu_dance', 'icu_doubles', 'icu_dance_deductions', 'icu_dance_solo', 'icu_dance_principiantes'].includes(sheetType)) return false;
-    if (sheetType === 'rangos') return true;
-    if (isGrupalMode) {
-      if (sheetType === 'partner_stunt') return activeScoringSystem === 'partner_stunt';
-      if (['building', 'tumbling', 'overall'].includes(sheetType)) return activeScoringSystem !== 'partner_stunt';
-      if (['building_difficulty', 'building_execution', 'tumbling_difficulty', 'tumbling_execution', 'deductions_only', 'safety_rules'].includes(sheetType)) return false;
-      return true; // deducciones
-    } else {
-      if (['building', 'tumbling', 'partner_stunt', 'deducciones'].includes(sheetType)) return false;
-      return true; // building_difficulty/execution, tumbling_difficulty/execution, overall, deductions_only, safety_rules
-    }
+    // Cheerleader mode: show every assigned sheet regardless of grupal/individual distinction
+    return true;
   }).sort((a, b) => SHEET_TYPE_ORDER.indexOf(a) - SHEET_TYPE_ORDER.indexOf(b));
 
   // Compound assignments expand to their component sheet types for icon display
