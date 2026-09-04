@@ -110,7 +110,7 @@ export default function DivisionDetailPage() {
   const router = useRouter();
   const { id, divisionId } = useParams<{ id: string; divisionId: string }>();
 
-  const { isJudge, isCompetitionActive, sheetTypesForCompetition, canViewSheetForDivision } = useJudge();
+  const { isJudge, isCompetitionActive, sheetTypesForCompetition, canViewSheetForDivision, assignments } = useJudge();
 
   // Refresh judge assignments on mount so new assignments set by admin are visible
   // without requiring the judge to log out and back in.
@@ -338,7 +338,7 @@ export default function DivisionDetailPage() {
     .sort((a, b) => SHEET_TYPE_ORDER.indexOf(a) - SHEET_TYPE_ORDER.indexOf(b));
 
   const judgeExpandedSheets: SheetType[] = judgeVisibleSheets.flatMap(
-    (st) => COMPOUND_EXPANSION[st as keyof typeof COMPOUND_EXPANSION] ?? [st]
+    (st) => COMPOUND_EXPANSION[st] ?? [st]
   );
 
   return (
