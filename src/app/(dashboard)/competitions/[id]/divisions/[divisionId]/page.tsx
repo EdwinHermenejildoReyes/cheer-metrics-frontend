@@ -476,55 +476,55 @@ export default function DivisionDetailPage() {
                             {sheet ? <Pencil className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
                             {sheet ? 'Editar' : 'Calificar'}
                           </Button>
-                          {isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                          {isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && isSheetAllowedInDivision('building') && (
                             <Button size="icon" variant="ghost" title="Planilla Building"
                               onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/building`)}>
                               <ChevronsUp className="h-3.5 w-3.5 text-blue-500" />
                             </Button>
                           )}
-                          {isGrupalMode && isIasfWorld && (
+                          {isGrupalMode && isIasfWorld && isSheetAllowedInDivision('building') && (
                             <Button size="icon" variant="ghost" title="IASF World — Elevaciones"
                               onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/iasf-building`)}>
                               <ChevronsUp className="h-3.5 w-3.5 text-blue-500" />
                             </Button>
                           )}
-                          {isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                          {isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && isSheetAllowedInDivision('tumbling') && (
                             <Button size="icon" variant="ghost" title="Planilla Tumbling"
                               onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/tumbling`)}>
                               <RotateCw className="h-3.5 w-3.5 text-green-500" />
                             </Button>
                           )}
-                          {isGrupalMode && isIasfWorld && (
+                          {isGrupalMode && isIasfWorld && isSheetAllowedInDivision('tumbling') && (
                             <Button size="icon" variant="ghost" title="IASF World — Gimnasia"
                               onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/iasf-tumbling`)}>
                               <RotateCw className="h-3.5 w-3.5 text-green-500" />
                             </Button>
                           )}
-                          {isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && (
+                          {isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && isSheetAllowedInDivision('overall') && (
                             <Button size="icon" variant="ghost" title="Planilla Overall"
                               onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/overall`)}>
                               <Star className="h-3.5 w-3.5 text-purple-500" />
                             </Button>
                           )}
-                          {isGrupalMode && isIasfWorld && (
+                          {isGrupalMode && isIasfWorld && isSheetAllowedInDivision('overall') && (
                             <Button size="icon" variant="ghost" title="IASF World — General"
                               onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/iasf-overall`)}>
                               <Star className="h-3.5 w-3.5 text-purple-500" />
                             </Button>
                           )}
-                          {isGrupalMode && activeScoringSystem === 'partner_stunt' && (
+                          {isGrupalMode && activeScoringSystem === 'partner_stunt' && isSheetAllowedInDivision('partner_stunt') && (
                             <Button size="icon" variant="ghost" title="Planilla Partner Stunt"
                               onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/partner-stunt`)}>
                               <Users2 className="h-3.5 w-3.5 text-orange-500" />
                             </Button>
                           )}
-                          {isGrupalMode && (
+                          {isGrupalMode && isSheetAllowedInDivision('deducciones') && (
                             <Button size="icon" variant="ghost" title="Planilla Deducciones"
                               onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/deducciones`)}>
                               <CircleMinus className="h-3.5 w-3.5 text-red-500" />
                             </Button>
                           )}
-                          {!isIcuDanceMode && (
+                          {!isIcuDanceMode && isSheetAllowedInDivision('rangos') && (
                             <Button size="icon" variant="ghost" title="Planilla Rangos (Dificultad)"
                               onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/rangos`)}>
                               <Gauge className="h-3.5 w-3.5 text-amber-500" />
@@ -532,34 +532,48 @@ export default function DivisionDetailPage() {
                           )}
                           {!isGrupalMode && !isIcuDanceMode && (
                             <>
-                              <Button size="icon" variant="ghost" title="Dificultad — Elevaciones"
-                                onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/building-difficulty`)}>
-                                <TrendingUp className="h-3.5 w-3.5 text-blue-700" />
-                              </Button>
-                              <Button size="icon" variant="ghost" title="Ejecución — Elevaciones"
-                                onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/building-execution`)}>
-                                <BadgeCheck className="h-3.5 w-3.5 text-blue-400" />
-                              </Button>
-                              <Button size="icon" variant="ghost" title="Dificultad — Gimnasia"
-                                onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/tumbling-difficulty`)}>
-                                <TrendingUp className="h-3.5 w-3.5 text-green-700" />
-                              </Button>
-                              <Button size="icon" variant="ghost" title="Ejecución — Gimnasia"
-                                onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/tumbling-execution`)}>
-                                <Sparkles className="h-3.5 w-3.5 text-green-400" />
-                              </Button>
-                              <Button size="icon" variant="ghost" title="Overall (General)"
-                                onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/overall`)}>
-                                <Star className="h-3.5 w-3.5 text-purple-500" />
-                              </Button>
-                              <Button size="icon" variant="ghost" title="Deducciones (Caídas/Tiempo)"
-                                onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/deductions-only`)}>
-                                <Timer className="h-3.5 w-3.5 text-orange-500" />
-                              </Button>
-                              <Button size="icon" variant="ghost" title="Reglas y Seguridad"
-                                onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/safety-rules`)}>
-                                <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
-                              </Button>
+                              {isSheetAllowedInDivision('building_difficulty') && (
+                                <Button size="icon" variant="ghost" title="Dificultad — Elevaciones"
+                                  onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/building-difficulty`)}>
+                                  <TrendingUp className="h-3.5 w-3.5 text-blue-700" />
+                                </Button>
+                              )}
+                              {isSheetAllowedInDivision('building_execution') && (
+                                <Button size="icon" variant="ghost" title="Ejecución — Elevaciones"
+                                  onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/building-execution`)}>
+                                  <BadgeCheck className="h-3.5 w-3.5 text-blue-400" />
+                                </Button>
+                              )}
+                              {isSheetAllowedInDivision('tumbling_difficulty') && (
+                                <Button size="icon" variant="ghost" title="Dificultad — Gimnasia"
+                                  onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/tumbling-difficulty`)}>
+                                  <TrendingUp className="h-3.5 w-3.5 text-green-700" />
+                                </Button>
+                              )}
+                              {isSheetAllowedInDivision('tumbling_execution') && (
+                                <Button size="icon" variant="ghost" title="Ejecución — Gimnasia"
+                                  onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/tumbling-execution`)}>
+                                  <Sparkles className="h-3.5 w-3.5 text-green-400" />
+                                </Button>
+                              )}
+                              {isSheetAllowedInDivision('overall') && (
+                                <Button size="icon" variant="ghost" title="Overall (General)"
+                                  onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/overall`)}>
+                                  <Star className="h-3.5 w-3.5 text-purple-500" />
+                                </Button>
+                              )}
+                              {isSheetAllowedInDivision('deductions_only') && (
+                                <Button size="icon" variant="ghost" title="Deducciones (Caídas/Tiempo)"
+                                  onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/deductions-only`)}>
+                                  <Timer className="h-3.5 w-3.5 text-orange-500" />
+                                </Button>
+                              )}
+                              {isSheetAllowedInDivision('safety_rules') && (
+                                <Button size="icon" variant="ghost" title="Reglas y Seguridad"
+                                  onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/safety-rules`)}>
+                                  <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
+                                </Button>
+                              )}
                             </>
                           )}
                           {isIcuDanceMode && (
