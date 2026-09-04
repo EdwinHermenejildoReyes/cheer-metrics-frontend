@@ -85,7 +85,7 @@ export function SkillReferencePanel({ skillLevel, sheetType }: Props) {
           <div className="px-5 py-4 border-b border-zinc-100 flex items-center justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                Sistema de Calificación 2025
+                Sistema de Calificación 2026
               </p>
               <p className="text-sm font-semibold text-zinc-800">
                 Habilidades {levelLabel} — {sheetLabel}
