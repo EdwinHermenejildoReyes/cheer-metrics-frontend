@@ -163,6 +163,7 @@ export type CompetitionSheetMode = 'grupal' | 'individual' | 'icu_dance';
 export type ServiceType = 'full' | 'registration_only' | 'judging_only';
 export type ScoringFamily =
   | 'united'
+  | 'united_intl'
   | 'iasf_567'
   | 'icu'
   | 'partner_stunt'
@@ -172,6 +173,7 @@ export type ScoringFamily =
 
 export const SCORING_FAMILY_LABELS: Record<ScoringFamily, string> = {
   united:        'United',
+  united_intl:   'United Internacional',
   iasf_567:      'IASF (N5, N6, N7)',
   icu:           'ICU',
   partner_stunt: 'Partner / Group Stunts',
@@ -182,6 +184,7 @@ export const SCORING_FAMILY_LABELS: Record<ScoringFamily, string> = {
 
 export const SCORING_FAMILY_REGULATION: Record<ScoringFamily, string> = {
   united:        'IASF',
+  united_intl:   'IASF',
   iasf_567:      'IASF',
   icu:           'ICU',
   partner_stunt: 'IASF',

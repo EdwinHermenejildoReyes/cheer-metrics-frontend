@@ -20,7 +20,7 @@ const schema = z.object({
   date:           z.string().min(1, 'Requerido'),
   venue:          z.string().min(2, 'Requerido'),
   city:           z.string().min(2, 'Requerido'),
-  scoring_family: z.enum(['united', 'iasf_567', 'icu', 'partner_stunt', 'future_flyer', 'best_cheer', 'icu_dance']),
+  scoring_family: z.enum(['united', 'united_intl', 'iasf_567', 'icu', 'partner_stunt', 'future_flyer', 'best_cheer', 'icu_dance']),
   service_type:   z.enum(['full', 'registration_only', 'judging_only']),
   sheet_mode:     z.enum(['grupal', 'individual', 'icu_dance']),
   notes:          z.string().optional(),
@@ -39,6 +39,7 @@ interface Props {
 
 const SCORING_FAMILY_OPTIONS = [
   { value: 'united',        label: 'United' },
+  { value: 'united_intl',   label: 'United Internacional' },
   { value: 'iasf_567',      label: 'IASF (N5, N6, N7)' },
   { value: 'icu',           label: 'ICU' },
   { value: 'partner_stunt', label: 'Partner / Group Stunts' },
