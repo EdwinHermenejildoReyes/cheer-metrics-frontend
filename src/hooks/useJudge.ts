@@ -53,6 +53,27 @@ export function useJudge() {
     });
   };
 
+  /**
+   * True when the judge has an active assignment for `sheetType` (or a compound role that expands
+   * to include it) AND that specific assignment covers `divisionId`.
+   * Use this for per-sheet-type button visibility inside a division page instead of combining
+   * canViewSheet + canViewDivision (which would leak sheet types from other-division assignments).
+   */
+  const canViewSheetForDivision = (competitionId: number, divisionId: number, sheetType: SheetType): boolean => {
+    if (!isJudge) return true;
+    return assignments.some((a) => {
+      if (a.competition !== competitionId || !a.is_access_active) return false;
+      let matchesSheet = a.sheet_type === sheetType;
+      if (!matchesSheet) {
+        const expanded = COMPOUND_SHEET_MAP[a.sheet_type as SheetType];
+        matchesSheet = expanded?.includes(sheetType) ?? false;
+      }
+      if (!matchesSheet) return false;
+      if (!a.divisions || a.divisions.length === 0) return true;
+      return a.divisions.includes(divisionId);
+    });
+  };
+
   return {
     isAdmin,
     isJudge,
@@ -63,5 +84,6 @@ export function useJudge() {
     canViewSheet,
     canViewCompetition,
     canViewDivision,
+    canViewSheetForDivision,
   };
 }
