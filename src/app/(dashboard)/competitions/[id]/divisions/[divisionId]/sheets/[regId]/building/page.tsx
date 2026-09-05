@@ -586,13 +586,34 @@ export default function BuildingSheetPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readOnly, stuntsRango, stuntsSkills, stuntsPartMax, stuntsExecDeds, pyramidsExecDeds, tossesExecDeds, pyramidsRangeIdx, pyramidsFine, pyramidsDrivers, tossesDiff, creativityBuilding, showmanshipBuilding, comments]);
 
-  // Save on unmount — covers browser-back button and swipe navigation
-  // Save on unmount — covers browser-back button and swipe navigation.
-  // Uses dataLoaded (set immediately after load) instead of initialValuesSettled
-  // (which has a 500ms delay) to avoid losing values on fast back navigation.
+  // ── Browser back button — intercept popstate and AWAIT save before navigating ──
+  // The unmount save is fire-and-forget; if the user presses back quickly, the PATCH
+  // races against the division page's GET and values appear lost. Pushing a sentinel
+  // history entry lets us catch the back gesture, await the save, and then navigate.
+  const readOnlyRef = useRef(readOnly);
+  readOnlyRef.current = readOnly;
+
+  useEffect(() => {
+    window.history.pushState(null, '');
+    let handling = false;
+    const handler = async () => {
+      if (handling) return;
+      handling = true;
+      if (!readOnlyRef.current && dataLoaded.current) {
+        await handleSaveRef.current(true);
+      }
+      router.replace(`/competitions/${id}/divisions/${divisionId}`);
+    };
+    window.addEventListener('popstate', handler);
+    return () => window.removeEventListener('popstate', handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fallback unmount save — covers swipe-to-dismiss and other unmount paths
+  // not caught by the popstate handler above.
   useEffect(() => {
     return () => {
-      if (readOnly || !dataLoaded.current) return;
+      if (readOnlyRef.current || !dataLoaded.current) return;
       handleSaveRef.current(true);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
