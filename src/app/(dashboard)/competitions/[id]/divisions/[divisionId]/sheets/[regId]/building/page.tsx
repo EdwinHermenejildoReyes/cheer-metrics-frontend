@@ -508,10 +508,14 @@ export default function BuildingSheetPage() {
     return () => clearInterval(id);
   }, [existingSheet, protestExpired]);
 
-  // Prevents auto-save from firing while load() is populating initial form values
+  // Prevents auto-save from firing while load() is populating initial form values.
+  // dataLoaded is set immediately when loading finishes (no delay) so the unmount
+  // save is not blocked by the 500ms window — avoids losing values on fast back navigation.
   const initialValuesSettled = useRef(false);
+  const dataLoaded = useRef(false);
   useEffect(() => {
     if (!loading) {
+      dataLoaded.current = true;
       const t = setTimeout(() => { initialValuesSettled.current = true; }, 500);
       return () => clearTimeout(t);
     }
@@ -584,9 +588,12 @@ export default function BuildingSheetPage() {
   }, [readOnly, stuntsRango, stuntsSkills, stuntsPartMax, stuntsExecDeds, pyramidsExecDeds, tossesExecDeds, pyramidsRangeIdx, pyramidsFine, pyramidsDrivers, tossesDiff, creativityBuilding, showmanshipBuilding, comments]);
 
   // Save on unmount — covers browser-back button and swipe navigation
+  // Save on unmount — covers browser-back button and swipe navigation.
+  // Uses dataLoaded (set immediately after load) instead of initialValuesSettled
+  // (which has a 500ms delay) to avoid losing values on fast back navigation.
   useEffect(() => {
     return () => {
-      if (readOnly || !initialValuesSettled.current) return;
+      if (readOnly || !dataLoaded.current) return;
       handleSaveRef.current(true);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
