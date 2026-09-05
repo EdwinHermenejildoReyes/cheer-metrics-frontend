@@ -54,7 +54,15 @@ const TUMBLING_CAT_DESCRIPTIONS: Record<string, string> = {
   'P. Piernas': 'Posición y técnica de piernas durante el salto — extensión, ángulo y control.',
 };
 
-function TumblingExecInfoContent({ cats }: { cats: string[] }) {
+const EXEC_DED_DESCS = [
+  'Errores leves, casi imperceptibles; no afectan el conjunto',
+  'Errores claramente visibles pero controlados y aislados',
+  'Errores frecuentes o repetidos en varias ejecuciones',
+  'Errores graves o falta de control notoria en la categoría',
+];
+
+function TumblingExecInfoContent({ cats, dedOpts }: { cats: string[]; dedOpts?: number[] }) {
+  const opts = dedOpts ?? EXEC_DED_OPTS;
   return (
     <div className="space-y-4 text-sm">
       <div>
@@ -68,16 +76,11 @@ function TumblingExecInfoContent({ cats }: { cats: string[] }) {
             </tr>
           </thead>
           <tbody>
-            {[
-              { label: 'Mínimos',       amt: '−0.05', desc: 'Errores leves, casi imperceptibles; no afectan el conjunto' },
-              { label: 'Menores',       amt: '−0.10', desc: 'Errores claramente visibles pero controlados y aislados' },
-              { label: 'Múltiples',     amt: '−0.20', desc: 'Errores frecuentes o repetidos en varias ejecuciones' },
-              { label: 'Generalizados', amt: '−0.30', desc: 'Errores graves o falta de control notoria en la categoría' },
-            ].map(({ label, amt, desc }) => (
-              <tr key={label} className="even:bg-zinc-50">
-                <td className="px-3 py-1.5 border border-zinc-200 font-medium">{label}</td>
-                <td className="px-3 py-1.5 border border-zinc-200 text-center text-red-600 font-semibold tabular-nums">{amt}</td>
-                <td className="px-3 py-1.5 border border-zinc-200 text-zinc-500">{desc}</td>
+            {opts.map((amt, i) => (
+              <tr key={amt} className="even:bg-zinc-50">
+                <td className="px-3 py-1.5 border border-zinc-200 font-medium">{EXEC_DED_LABELS[i]}</td>
+                <td className="px-3 py-1.5 border border-zinc-200 text-center text-red-600 font-semibold tabular-nums">−{fmt(amt)}</td>
+                <td className="px-3 py-1.5 border border-zinc-200 text-zinc-500">{EXEC_DED_DESCS[i]}</td>
               </tr>
             ))}
           </tbody>
@@ -388,6 +391,9 @@ export default function TumblingSheetPage() {
       else setRunningRango(0);
       if (tcfg.jumpsHasDiff && tcfg.jumpsDiffOpts.length > 0) setJumpsDiff(tcfg.jumpsDiffOpts[0].value);
       else setJumpsDiff(0);
+      // Cross-sheet defaults from config (ensures INTL range 8–10 / 3.5–5 for new sheets)
+      setCreativityTumbling(tcfg.creativityMin);
+      setShowmanshipTumbling(tcfg.showmanshipMin);
 
       if (sheetRes.data.results.length > 0) {
         const sheet = sheetRes.data.results[0];
@@ -773,7 +779,7 @@ export default function TumblingSheetPage() {
                   categories={STANDING_EXEC_CATS}
                   deds={standingExecDeds}
                   onChange={setStandingExecDeds}
-                  info={<TumblingExecInfoContent cats={STANDING_EXEC_CATS} />}
+                  info={<TumblingExecInfoContent cats={STANDING_EXEC_CATS} dedOpts={tCfg.execDedOpts} />}
                   dedOpts={tCfg.execDedOpts}
                 />
                 <SectionTotal
@@ -834,7 +840,7 @@ export default function TumblingSheetPage() {
                   categories={RUNNING_EXEC_CATS}
                   deds={runningExecDeds}
                   onChange={setRunningExecDeds}
-                  info={<TumblingExecInfoContent cats={RUNNING_EXEC_CATS} />}
+                  info={<TumblingExecInfoContent cats={RUNNING_EXEC_CATS} dedOpts={tCfg.execDedOpts} />}
                   dedOpts={tCfg.execDedOpts}
                 />
                 <SectionTotal
@@ -901,7 +907,7 @@ export default function TumblingSheetPage() {
                 </div>
               )}
               <div className="flex flex-col gap-4">
-                <ExecSection label="Saltos" max={tCfg.jumpsExecMax} categories={JUMPS_EXEC_CATS} deds={jumpsExecDeds} onChange={setJumpsExecDeds} info={<TumblingExecInfoContent cats={JUMPS_EXEC_CATS} />} dedOpts={tCfg.execDedOpts} />
+                <ExecSection label="Saltos" max={tCfg.jumpsExecMax} categories={JUMPS_EXEC_CATS} deds={jumpsExecDeds} onChange={setJumpsExecDeds} info={<TumblingExecInfoContent cats={JUMPS_EXEC_CATS} dedOpts={tCfg.execDedOpts} />} dedOpts={tCfg.execDedOpts} />
                 <SectionTotal
                   label="Total Saltos"
                   breakdown={
@@ -931,10 +937,10 @@ export default function TumblingSheetPage() {
               </h2>
               <InfoButton title="Creatividad & Showmanship — Reglas" size="lg">
                 <div className="space-y-3 text-sm">
-                  <p className="text-zinc-600">Estos puntajes son asignados individualmente por cada juez y se <strong>promedian</strong> entre los tres jueces de gimnasia para obtener el valor final (máx. efectivo: 2.00 por categoría).</p>
+                  <p className="text-zinc-600">Estos puntajes son asignados individualmente por cada juez y se <strong>promedian</strong> entre los tres jueces de gimnasia para obtener el valor final.</p>
                   <ul className="space-y-1.5 text-xs text-zinc-600">
-                    <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Creatividad:</strong> Innovación visual, variedad de habilidades y uso creativo del espacio durante la rutina de gimnasia.</span></li>
-                    <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Showmanship:</strong> Confianza, limpieza y conexión emocional durante la ejecución de las habilidades de gimnasia.</span></li>
+                    <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Creatividad</strong> ({fmt(tCfg.creativityMin)} – {fmt(tCfg.creativityMax)}): Incorporación de patrones de gimnasia visuales claros que mejoren las habilidades realizadas.</span></li>
+                    <li className="flex items-start gap-2"><span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /><span><strong>Showmanship</strong> ({fmt(tCfg.showmanshipMin)} – {fmt(tCfg.showmanshipMax)}): Confianza, limpieza y conexión emocional durante la ejecución de las habilidades de gimnasia.</span></li>
                   </ul>
                 </div>
               </InfoButton>
