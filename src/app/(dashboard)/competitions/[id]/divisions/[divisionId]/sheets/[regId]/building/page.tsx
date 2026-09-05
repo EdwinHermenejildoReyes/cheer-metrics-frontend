@@ -602,7 +602,7 @@ export default function BuildingSheetPage() {
       if (!readOnlyRef.current && dataLoaded.current) {
         await handleSaveRef.current(true);
       }
-      router.replace(`/competitions/${id}/divisions/${divisionId}`);
+      window.location.href = `/competitions/${id}/divisions/${divisionId}`;
     };
     window.addEventListener('popstate', handler);
     return () => window.removeEventListener('popstate', handler);
@@ -651,7 +651,7 @@ export default function BuildingSheetPage() {
           <button
             onClick={async () => {
               if (!readOnly && dataLoaded.current) await handleSaveRef.current(true);
-              router.push(`/competitions/${id}/divisions/${divisionId}`);
+              window.location.href = `/competitions/${id}/divisions/${divisionId}`;
             }}
             className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 transition-colors"
           >
@@ -677,7 +677,7 @@ export default function BuildingSheetPage() {
           ) : (
             <Button onClick={async () => {
               const ok = await handleSave();
-              if (ok) router.push(`/competitions/${id}/divisions/${divisionId}`);
+              if (ok) window.location.href = `/competitions/${id}/divisions/${divisionId}`;
             }} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
               <Save className="h-4 w-4" />
               Guardar
