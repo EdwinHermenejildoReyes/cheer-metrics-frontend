@@ -1340,11 +1340,11 @@ export default function BuildingSheetPage() {
                   {bCfg.hasCreativity ? (
                     <div className="space-y-3">
                       <div className="rounded-lg border border-zinc-200 p-3">
-                        <p className="font-semibold text-zinc-900 text-xs mb-1">Creatividad (1.0 – 2.0)</p>
+                        <p className="font-semibold text-zinc-900 text-xs mb-1">Creatividad ({bCfg.creativityMin.toFixed(1)} – {bCfg.creativityMax.toFixed(1)})</p>
                         <p className="text-xs text-zinc-500 leading-relaxed">Evalúa la creatividad, innovación y valor visual del equipo durante formaciones, transiciones y construcciones. Considera originalidad y propuesta artística dentro de las habilidades.</p>
                       </div>
                       <div className="rounded-lg border border-zinc-200 p-3">
-                        <p className="font-semibold text-zinc-900 text-xs mb-1">Showmanship (1.0 – 2.0)</p>
+                        <p className="font-semibold text-zinc-900 text-xs mb-1">Showmanship ({bCfg.showmanshipMin.toFixed(1)} – {bCfg.showmanshipMax.toFixed(1)})</p>
                         <p className="text-xs text-zinc-500 leading-relaxed">Evalúa la expresión facial, energía, presencia escénica y la capacidad del equipo de proyectar emoción al público y al panel de jueces durante toda la rutina.</p>
                       </div>
                     </div>
@@ -1559,7 +1559,7 @@ export default function BuildingSheetPage() {
                   <td className="px-4 py-2.5 text-zinc-600">Creatividad (este juez)</td>
                   <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
                     <span className="font-semibold">{fmt(creativityBuilding)}</span>
-                    <span className="text-zinc-400 font-normal"> / 2.00</span>
+                    <span className="text-zinc-400 font-normal"> / {fmt(bCfg.creativityMax)}</span>
                   </td>
                 </tr>
               )}
