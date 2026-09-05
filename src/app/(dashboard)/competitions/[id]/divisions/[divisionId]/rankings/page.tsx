@@ -110,6 +110,12 @@ export default function DivisionRankingsPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Auto-refresh every 5s so rankings reflect judge saves in real time
+  useEffect(() => {
+    const interval = setInterval(load, 5000);
+    return () => clearInterval(interval);
+  }, [load]);
+
   if (loading) return <PageSpinner />;
   if (!data) return null;
 
@@ -165,6 +171,10 @@ export default function DivisionRankingsPage() {
           </h1>
         </div>
         <div className="ml-auto flex items-center gap-3">
+          <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-0.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            En vivo
+          </span>
           <span className="text-xs text-zinc-400 tabular-nums">
             {scored.length} calificado{scored.length !== 1 ? 's' : ''}
           </span>
