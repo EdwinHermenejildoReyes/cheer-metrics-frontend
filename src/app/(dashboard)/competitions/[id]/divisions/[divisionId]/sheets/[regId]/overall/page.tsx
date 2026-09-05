@@ -350,6 +350,8 @@ export default function OverallSheetPage() {
   // Prevents auto-save from firing while load() is populating initial form values.
   // Using useState (not useRef) so transitioning to true re-triggers the auto-save effect.
   const [hasSettled, setHasSettled] = useState(false);
+  const hasSettledRef = useRef(false);
+  hasSettledRef.current = hasSettled;
   useEffect(() => {
     if (!loading) {
       const t = setTimeout(() => setHasSettled(true), 500);
@@ -410,6 +412,15 @@ export default function OverallSheetPage() {
     return () => clearTimeout(timer);
   }, [readOnly, hasSettled, formationsScore, danceDifficulty, danceExecution, creativityOverall, showmanshipOverall, comments, animacionCriteria, formationErrors]);
 
+  // Save on unmount — covers browser-back button and swipe navigation
+  useEffect(() => {
+    return () => {
+      if (readOnly || !hasSettledRef.current) return;
+      handleSaveRef.current(true);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (loading) return <PageSpinner />;
 
   return (
@@ -419,7 +430,10 @@ export default function OverallSheetPage() {
       <div className="print:hidden sticky top-0 z-10 flex items-center justify-between gap-4 bg-white border-b border-zinc-200 px-6 py-3 shadow-sm">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}`)}
+            onClick={async () => {
+              if (!readOnly && hasSettled) await handleSaveRef.current(true);
+              router.push(`/competitions/${id}/divisions/${divisionId}`);
+            }}
             className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />

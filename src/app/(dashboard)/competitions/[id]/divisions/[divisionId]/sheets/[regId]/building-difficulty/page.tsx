@@ -353,6 +353,15 @@ export default function BuildingDifficultyPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readOnly, stuntsRango, stuntsSkills, stuntsPartMax, pyramidsRangeIdx, pyramidsFine, pyramidsDrivers, tossesDiff, creativityBuilding, showmanshipBuilding, stuntsNotes, pyramidsNotes, tossesNotes]);
 
+  // Save on unmount — covers browser-back button and swipe navigation
+  useEffect(() => {
+    return () => {
+      if (readOnly || !initialValuesSettled.current) return;
+      handleSaveRef.current(true);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleSaveAthleteCount = async () => {
     const val = localCountStr === '' ? null : parseInt(localCountStr, 10);
     if (localCountStr !== '' && (isNaN(val as number) || (val as number) < 1)) {

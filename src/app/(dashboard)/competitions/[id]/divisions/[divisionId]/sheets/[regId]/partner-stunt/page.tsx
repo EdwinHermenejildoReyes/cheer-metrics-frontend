@@ -378,6 +378,15 @@ export default function PartnerStuntSheetPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readOnly, scores, notes]);
 
+  // Save on unmount — covers browser-back button and swipe navigation
+  useEffect(() => {
+    return () => {
+      if (readOnly || !initialValuesSettled.current) return;
+      handleSaveRef.current(true);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (loading) return <PageSpinner />;
 
   return (

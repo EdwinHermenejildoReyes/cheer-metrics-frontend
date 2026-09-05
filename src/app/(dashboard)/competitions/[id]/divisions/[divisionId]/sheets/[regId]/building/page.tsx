@@ -583,6 +583,15 @@ export default function BuildingSheetPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readOnly, stuntsRango, stuntsSkills, stuntsPartMax, stuntsExecDeds, pyramidsExecDeds, tossesExecDeds, pyramidsRangeIdx, pyramidsFine, pyramidsDrivers, tossesDiff, creativityBuilding, showmanshipBuilding, comments]);
 
+  // Save on unmount — covers browser-back button and swipe navigation
+  useEffect(() => {
+    return () => {
+      if (readOnly || !initialValuesSettled.current) return;
+      handleSaveRef.current(true);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleSaveAthleteCount = async () => {
     const val = localCountStr === '' ? null : parseInt(localCountStr, 10);
     if (localCountStr !== '' && (isNaN(val as number) || (val as number) < 1)) {

@@ -600,6 +600,15 @@ export default function TumblingSheetPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readOnly, standingRango, standingHabilidad, standingExecDeds, runningRango, runningHabilidad, runningExecDeds, jumpsDiff, jumpsExecDeds, creativityTumbling, showmanshipTumbling, comments]);
 
+  // Save on unmount — covers browser-back button and swipe navigation
+  useEffect(() => {
+    return () => {
+      if (readOnly || !initialValuesSettled.current) return;
+      handleSaveRef.current(true);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (loading) return <PageSpinner />;
 
   return (

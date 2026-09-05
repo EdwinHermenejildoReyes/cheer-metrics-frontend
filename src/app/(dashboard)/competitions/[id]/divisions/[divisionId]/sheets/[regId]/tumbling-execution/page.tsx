@@ -299,6 +299,15 @@ export default function TumblingExecutionPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readOnly, standingExecDeds, runningExecDeds, jumpsExecDeds, standingNotes, runningNotes, jumpsNotes]);
 
+  // Save on unmount — covers browser-back button and swipe navigation
+  useEffect(() => {
+    return () => {
+      if (readOnly || !initialValuesSettled.current) return;
+      handleSaveRef.current(true);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (loading) return <PageSpinner />;
 
   return (
