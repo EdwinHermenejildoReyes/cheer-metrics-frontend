@@ -414,7 +414,7 @@ export default function DeduccionesSheetPage() {
             <div className="grid grid-cols-[200px_1fr] gap-4 items-start">
 
               {/* ═══ LEFT — Caídas + Tiempos palette (direct-add) ═══════════ */}
-              <div className="flex flex-col gap-3 sticky top-20">
+              <div className="flex flex-col gap-3 sticky top-20 max-h-[calc(100vh-5rem)] overflow-y-auto">
                 {[
                   { key: 'CAÍDAS', types: FALLS, color: 'red'    as ColorKey, label: 'Caídas'  },
                   { key: 'TIEMPO', types: TIME,  color: 'orange' as ColorKey, label: 'Tiempo'  },
@@ -487,7 +487,7 @@ export default function DeduccionesSheetPage() {
                               </span>
                             </div>
                             {type === 'tiempo' && (
-                              <div className="flex flex-col gap-1.5 px-3 py-2 bg-orange-50 border-t border-orange-100 rounded-b-lg" onClick={e => e.stopPropagation()}>
+                              <div className="flex flex-col gap-1.5 px-3 py-2 bg-orange-50 border-t border-orange-100 rounded-b-lg" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
                                 <div className="flex items-center gap-2">
                                   <span className="text-[9px] text-orange-500 font-bold uppercase tracking-wide w-20 shrink-0">Duración real</span>
                                   <input
