@@ -120,6 +120,88 @@ function getJudgeSheetStatus(sheetType: SheetType, sheet: ScoreSheet): { scored:
   }
 }
 
+function getJudgeSheetFields(sheetType: SheetType, sheet: ScoreSheet): Array<{ label: string; value: string | null }> {
+  switch (sheetType) {
+    case 'building':
+    case 'building_combined':
+      return [
+        { label: 'Stunts Dif.',      value: sheet.stunts_difficulty },
+        { label: 'Stunts Ejec.',     value: sheet.stunts_execution },
+        { label: 'Pirámides Dif.',   value: sheet.pyramids_difficulty },
+        { label: 'Pirámides Ejec.',  value: sheet.pyramids_execution },
+        { label: 'Tosses Dif.',      value: sheet.tosses_difficulty },
+        { label: 'Tosses Ejec.',     value: sheet.tosses_execution },
+        { label: 'Creatividad',      value: sheet.creativity_building },
+        { label: 'Showmanship',      value: sheet.showmanship_building },
+      ];
+    case 'building_difficulty':
+      return [
+        { label: 'Stunts',      value: sheet.stunts_difficulty },
+        { label: 'Pirámides',   value: sheet.pyramids_difficulty },
+        { label: 'Tosses',      value: sheet.tosses_difficulty },
+      ];
+    case 'building_execution':
+      return [
+        { label: 'Stunts Ejec.',     value: sheet.stunts_execution },
+        { label: 'Pirámides Ejec.',  value: sheet.pyramids_execution },
+        { label: 'Tosses Ejec.',     value: sheet.tosses_execution },
+        { label: 'Creatividad',      value: sheet.creativity_building },
+        { label: 'Showmanship',      value: sheet.showmanship_building },
+      ];
+    case 'tumbling':
+    case 'tumbling_combined':
+      return [
+        { label: 'Parado Dif.',      value: sheet.standing_difficulty },
+        { label: 'Parado Ejec.',     value: sheet.standing_execution },
+        { label: 'Corriendo Dif.',   value: sheet.running_difficulty },
+        { label: 'Corriendo Ejec.',  value: sheet.running_execution },
+        { label: 'Saltos Dif.',      value: sheet.jumps_difficulty },
+        { label: 'Saltos Ejec.',     value: sheet.jumps_execution },
+        { label: 'Creatividad',      value: sheet.creativity_tumbling },
+        { label: 'Showmanship',      value: sheet.showmanship_tumbling },
+      ];
+    case 'tumbling_difficulty':
+      return [
+        { label: 'Parado',     value: sheet.standing_difficulty },
+        { label: 'Corriendo',  value: sheet.running_difficulty },
+        { label: 'Saltos',     value: sheet.jumps_difficulty },
+      ];
+    case 'tumbling_execution':
+      return [
+        { label: 'Parado Ejec.',     value: sheet.standing_execution },
+        { label: 'Corriendo Ejec.',  value: sheet.running_execution },
+        { label: 'Saltos Ejec.',     value: sheet.jumps_execution },
+        { label: 'Creatividad',      value: sheet.creativity_tumbling },
+        { label: 'Showmanship',      value: sheet.showmanship_tumbling },
+      ];
+    case 'overall':
+      return [
+        { label: 'Formaciones',  value: sheet.formations_score },
+        { label: 'Baile Dif.',   value: sheet.dance_difficulty },
+        { label: 'Baile Ejec.',  value: sheet.dance_execution },
+        { label: 'Creatividad',  value: sheet.creativity_overall },
+        { label: 'Showmanship',  value: sheet.showmanship_overall },
+      ];
+    case 'partner_stunt':
+      return [
+        { label: 'Técnica',       value: sheet.pg_technique },
+        { label: 'Dificultad',    value: sheet.pg_difficulty },
+        { label: 'Forma',         value: sheet.pg_form_appearance },
+        { label: 'Transiciones',  value: sheet.pg_transitions },
+        { label: 'Expresividad',  value: sheet.pg_expressiveness },
+      ];
+    case 'rangos':
+      return [
+        { label: 'Stunts',      value: sheet.stunts_drivers },
+        { label: 'Pirámides',   value: sheet.pyramids_drivers },
+        { label: 'Parado',      value: sheet.standing_drivers },
+        { label: 'Corriendo',   value: sheet.running_drivers },
+      ];
+    default:
+      return [];
+  }
+}
+
 export default function DivisionDetailPage() {
   const confirm = useConfirm();
   const dispatch = useDispatch();
@@ -707,23 +789,36 @@ export default function DivisionDetailPage() {
                       {Object.keys(judgesBySheet).length > 0 && !isIcuDanceMode && (
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-2">Jueces</p>
-                          <div className="flex flex-col gap-1.5">
+                          <div className="flex flex-col gap-2">
                             {(Object.entries(judgesBySheet) as [SheetType, JudgeAssignment[]][])
                               .sort(([a], [b]) => SHEET_TYPE_ORDER.indexOf(a) - SHEET_TYPE_ORDER.indexOf(b))
                               .flatMap(([sheetType, judges]) => {
                                 const { scored, score } = getJudgeSheetStatus(sheetType, sheet);
+                                const fields = getJudgeSheetFields(sheetType, sheet);
+                                const scoredFields = fields.filter(f => f.value != null && parseFloat(f.value) !== 0);
                                 const Icon = SHEET_TYPE_ICONS[sheetType] ?? Star;
                                 return judges.map((judge) => (
-                                  <div key={`${sheetType}-${judge.id}`} className="flex items-center gap-2 text-xs">
-                                    <Icon className={`h-3 w-3 shrink-0 ${SHEET_TYPE_COLORS[sheetType]}`} />
-                                    <span className="w-28 shrink-0 text-zinc-500">{SHEET_TYPE_LABELS[sheetType]}</span>
-                                    <span className="flex-1 text-zinc-700 font-medium truncate">{judge.user_name}</span>
-                                    {scored ? (
-                                      <span className="text-emerald-600 font-semibold tabular-nums">
-                                        ✓ {score > 0 ? score.toFixed(2) : 'Calificado'}
-                                      </span>
-                                    ) : (
-                                      <span className="text-amber-500">Pendiente</span>
+                                  <div key={`${sheetType}-${judge.id}`} className="flex flex-col gap-1">
+                                    <div className="flex items-center gap-2 text-xs">
+                                      <Icon className={`h-3 w-3 shrink-0 ${SHEET_TYPE_COLORS[sheetType]}`} />
+                                      <span className="w-28 shrink-0 text-zinc-500">{SHEET_TYPE_LABELS[sheetType]}</span>
+                                      <span className="flex-1 text-zinc-700 font-medium truncate">{judge.user_name}</span>
+                                      {scored ? (
+                                        <span className="text-emerald-600 font-semibold tabular-nums">
+                                          ✓ {score > 0 ? score.toFixed(2) : 'Calificado'}
+                                        </span>
+                                      ) : (
+                                        <span className="text-amber-500">Pendiente</span>
+                                      )}
+                                    </div>
+                                    {scored && scoredFields.length > 0 && (
+                                      <div className="pl-5 flex flex-wrap gap-x-3 gap-y-0.5">
+                                        {scoredFields.map(f => (
+                                          <span key={f.label} className="text-[10px] text-zinc-400">
+                                            {f.label}:&nbsp;<span className="text-zinc-600 font-medium tabular-nums">{parseFloat(f.value!).toFixed(2)}</span>
+                                          </span>
+                                        ))}
+                                      </div>
                                     )}
                                   </div>
                                 ));
