@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Trash2, AlertCircle, X, Eye } from 'lucide-react';
+import { ArrowLeft, Trash2, AlertCircle, X, Eye, Save } from 'lucide-react';
 import { InfoButton } from '@/components/ui/InfoButton';
 import { toast } from 'sonner';
 import { PageSpinner } from '@/components/ui/spinner';
@@ -120,8 +120,9 @@ function DeductionCard({ ded, onDelete, isDeleting, confirm }: {
   const [tiempo,      setTiempo]      = useState(ded.routine_time);
   const [descripcion, setDescripcion] = useState(ded.description);
   const [saving,      setSaving]      = useState(false);
+  const settledRef = useRef(false);
 
-  const saveAnnotation = async (nextRegla: string, nextTiempo: string, nextDesc: string) => {
+  const saveAnnotation = useCallback(async (nextRegla: string, nextTiempo: string, nextDesc: string) => {
     if (nextRegla === ded.notes && nextTiempo === ded.routine_time && nextDesc === ded.description) return;
     setSaving(true);
     try {
@@ -132,7 +133,21 @@ function DeductionCard({ ded, onDelete, isDeleting, confirm }: {
       setTiempo(ded.routine_time);
       setDescripcion(ded.description);
     } finally { setSaving(false); }
-  };
+  }, [ded.notes, ded.routine_time, ded.description, ded.id]);
+
+  useEffect(() => {
+    const t = setTimeout(() => { settledRef.current = true; }, 500);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (!settledRef.current) return;
+    const r = regla;
+    const t = normalizeTime(tiempo);
+    const d = descripcion;
+    const timer = setTimeout(() => { saveAnnotation(r, t, d); }, 1500);
+    return () => clearTimeout(timer);
+  }, [regla, tiempo, descripcion, saveAnnotation]);
 
   const badgeCls = ck === 'amber' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-zinc-100 text-zinc-700 border-zinc-200';
 
@@ -263,6 +278,13 @@ export default function DeduccionesSheetPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const [isSaving, setIsSaving] = useState(false);
+  const handleSaveAll = useCallback(async () => {
+    setIsSaving(true);
+    try { await load(); toast.success('Cambios guardados'); }
+    finally { setIsSaving(false); }
+  }, [load]);
+
   useEffect(() => {
     if (!readOnly || loading) return;
     const interval = setInterval(async () => {
@@ -370,6 +392,18 @@ export default function DeduccionesSheetPage() {
         </div>
         {sheet && (
           <div className="flex items-center gap-5">
+            {!readOnly && (
+              <button
+                onClick={handleSaveAll}
+                disabled={isSaving}
+                className="flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-700 disabled:opacity-50 transition-colors"
+              >
+                {isSaving
+                  ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  : <Save className="h-3.5 w-3.5" />}
+                Guardar
+              </button>
+            )}
             <PrintButton />
             <div className="text-right">
               <p className="text-[10px] text-zinc-400 uppercase tracking-wide">Descuentos</p>

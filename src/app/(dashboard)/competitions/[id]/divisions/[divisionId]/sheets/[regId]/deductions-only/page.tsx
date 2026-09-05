@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Trash2, AlertCircle, X, Eye } from 'lucide-react';
+import { ArrowLeft, Trash2, AlertCircle, X, Eye, Save } from 'lucide-react';
 import { InfoButton } from '@/components/ui/InfoButton';
 import { toast } from 'sonner';
 import { PageSpinner } from '@/components/ui/spinner';
@@ -105,6 +105,13 @@ export default function DeductionsOnlyPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const [isSaving, setIsSaving] = useState(false);
+  const handleSaveAll = useCallback(async () => {
+    setIsSaving(true);
+    try { await load(); toast.success('Cambios guardados'); }
+    finally { setIsSaving(false); }
+  }, [load]);
+
   useEffect(() => {
     if (!readOnly || loading) return;
     const interval = setInterval(async () => {
@@ -181,6 +188,18 @@ export default function DeductionsOnlyPage() {
         </div>
         {sheet && (
           <div className="flex items-center gap-5">
+            {!readOnly && (
+              <button
+                onClick={handleSaveAll}
+                disabled={isSaving}
+                className="flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-700 disabled:opacity-50 transition-colors"
+              >
+                {isSaving
+                  ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  : <Save className="h-3.5 w-3.5" />}
+                Guardar
+              </button>
+            )}
             <div className="text-right">
               <p className="text-[10px] text-zinc-400 uppercase tracking-wide">Descuentos</p>
               <p className={`text-xl font-bold tabular-nums ${totalDed > 0 ? 'text-red-600' : 'text-zinc-300'}`}>−{totalDed.toFixed(2)}</p>
