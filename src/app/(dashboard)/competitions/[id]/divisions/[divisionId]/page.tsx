@@ -24,6 +24,7 @@ import {
   REGISTRATION_STATUS_LABELS,
   SHEET_TYPE_LABELS,
   type Division,
+  type JudgeAssignment,
   type Registration,
   type RankingEntry,
   type ScoreSheet,
@@ -103,6 +104,22 @@ const STATUS_VARIANT: Record<RegistrationStatus, 'default' | 'success' | 'warnin
   withdrawn: 'danger',
 };
 
+function getJudgeSheetStatus(sheetType: SheetType, sheet: ScoreSheet): { scored: boolean; score: number } {
+  const f = (v: string | null | undefined) => parseFloat(v ?? '0');
+  switch (sheetType) {
+    case 'building_difficulty': return { scored: f(sheet.stunts_difficulty) > 0, score: f(sheet.building_total) };
+    case 'building_execution':  return { scored: f(sheet.stunts_execution)  > 0, score: f(sheet.building_total) };
+    case 'tumbling_difficulty': return { scored: f(sheet.standing_difficulty) > 0 || f(sheet.running_difficulty) > 0, score: f(sheet.tumbling_total) };
+    case 'tumbling_execution':  return { scored: f(sheet.standing_execution)  > 0 || f(sheet.running_execution)  > 0, score: f(sheet.tumbling_total) };
+    case 'building': case 'building_combined': return { scored: f(sheet.building_total) > 0, score: f(sheet.building_total) };
+    case 'tumbling': case 'tumbling_combined': return { scored: f(sheet.tumbling_total) > 0, score: f(sheet.tumbling_total) };
+    case 'overall':       return { scored: f(sheet.overall_total)       > 0, score: f(sheet.overall_total) };
+    case 'partner_stunt': return { scored: f(sheet.partner_stunt_total) > 0, score: f(sheet.partner_stunt_total) };
+    case 'rangos':        return { scored: f(sheet.stunts_drivers) > 0, score: 0 };
+    default:              return { scored: f(sheet.total_deductions) > 0, score: f(sheet.total_deductions) };
+  }
+}
+
 export default function DivisionDetailPage() {
   const confirm = useConfirm();
   const dispatch = useDispatch();
@@ -141,6 +158,7 @@ export default function DivisionDetailPage() {
   const [scoringReg, setScoringReg]           = useState<Registration | undefined>();
   const [deductionModalOpen, setDeductionModalOpen] = useState(false);
   const [deductionSheetId, setDeductionSheetId]     = useState<number | null>(null);
+  const [judgesBySheet, setJudgesBySheet] = useState<Partial<Record<SheetType, JudgeAssignment[]>>>({});
 
 
   const loadIcuRankings = useCallback(async () => {
@@ -166,11 +184,19 @@ export default function DivisionDetailPage() {
       const divRes = await competitionsRepository.getDivision(divisionId);
       setDivision(divRes.data);
       isIcuDanceModeRef.current = divRes.data.competition_sheet_mode === 'icu_dance';
-      const regRes = await competitionsRepository.listRegistrations({
-        division: String(divRes.data.id),
-        page_size: '100',
-      });
+      const [regRes, assignRes] = await Promise.all([
+        competitionsRepository.listRegistrations({ division: String(divRes.data.id), page_size: '100' }),
+        competitionsRepository.listJudgeAssignments({ competition: String(divRes.data.competition), page_size: '200' }),
+      ]);
       setRegistrations(regRes.data.results);
+      const bySheet: Partial<Record<SheetType, JudgeAssignment[]>> = {};
+      assignRes.data.results.forEach((a) => {
+        if (!a.divisions.length || a.divisions.includes(divRes.data.id)) {
+          if (!bySheet[a.sheet_type]) bySheet[a.sheet_type] = [];
+          bySheet[a.sheet_type]!.push(a);
+        }
+      });
+      setJudgesBySheet(bySheet);
       await loadSheets();
     } finally {
       setLoading(false);
@@ -676,6 +702,36 @@ export default function DivisionDetailPage() {
                   {/* Expanded: score breakdown (admin only, when judging enabled) */}
                   {isExpanded && !isJudge && hasJudging && sheet && (
                     <div className="border-t border-zinc-100 bg-zinc-50 px-5 py-4 flex flex-col gap-4">
+
+                      {/* Judge status */}
+                      {Object.keys(judgesBySheet).length > 0 && !isIcuDanceMode && (
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-2">Jueces</p>
+                          <div className="flex flex-col gap-1.5">
+                            {(Object.entries(judgesBySheet) as [SheetType, JudgeAssignment[]][])
+                              .sort(([a], [b]) => SHEET_TYPE_ORDER.indexOf(a) - SHEET_TYPE_ORDER.indexOf(b))
+                              .flatMap(([sheetType, judges]) => {
+                                const { scored, score } = getJudgeSheetStatus(sheetType, sheet);
+                                const Icon = SHEET_TYPE_ICONS[sheetType] ?? Star;
+                                return judges.map((judge) => (
+                                  <div key={`${sheetType}-${judge.id}`} className="flex items-center gap-2 text-xs">
+                                    <Icon className={`h-3 w-3 shrink-0 ${SHEET_TYPE_COLORS[sheetType]}`} />
+                                    <span className="w-28 shrink-0 text-zinc-500">{SHEET_TYPE_LABELS[sheetType]}</span>
+                                    <span className="flex-1 text-zinc-700 font-medium truncate">{judge.user_name}</span>
+                                    {scored ? (
+                                      <span className="text-emerald-600 font-semibold tabular-nums">
+                                        ✓ {score > 0 ? score.toFixed(2) : 'Calificado'}
+                                      </span>
+                                    ) : (
+                                      <span className="text-amber-500">Pendiente</span>
+                                    )}
+                                  </div>
+                                ));
+                              })}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Section totals */}
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-2">Desglose de puntaje</p>
