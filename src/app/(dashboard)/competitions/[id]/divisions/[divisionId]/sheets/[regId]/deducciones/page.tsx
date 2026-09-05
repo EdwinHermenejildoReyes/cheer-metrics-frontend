@@ -414,7 +414,7 @@ export default function DeduccionesSheetPage() {
             <div className="grid grid-cols-[200px_1fr] gap-4 items-start">
 
               {/* ═══ LEFT — Caídas + Tiempos palette (direct-add) ═══════════ */}
-              <div className="flex flex-col gap-3 sticky top-20 max-h-[calc(100vh-5rem)] overflow-y-auto">
+              <div className="flex flex-col gap-3 sticky top-20 max-h-[calc(100vh-5rem)] overflow-y-auto overflow-x-hidden pr-3">
                 {[
                   { key: 'CAÍDAS', types: FALLS, color: 'red'    as ColorKey, label: 'Caídas'  },
                   { key: 'TIEMPO', types: TIME,  color: 'orange' as ColorKey, label: 'Tiempo'  },
