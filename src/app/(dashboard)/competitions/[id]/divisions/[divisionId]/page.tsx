@@ -111,10 +111,10 @@ function getJudgeSheetStatus(sheetType: SheetType, sheet: ScoreSheet): { scored:
     case 'building_execution':  return { scored: f(sheet.stunts_execution)  > 0, score: f(sheet.building_total) };
     case 'tumbling_difficulty': return { scored: f(sheet.standing_difficulty) > 0 || f(sheet.running_difficulty) > 0, score: f(sheet.tumbling_total) };
     case 'tumbling_execution':  return { scored: f(sheet.standing_execution)  > 0 || f(sheet.running_execution)  > 0, score: f(sheet.tumbling_total) };
-    case 'building': case 'building_combined': return { scored: f(sheet.building_total) > 0, score: f(sheet.building_total) };
-    case 'tumbling': case 'tumbling_combined': return { scored: f(sheet.tumbling_total) > 0, score: f(sheet.tumbling_total) };
-    case 'overall':       return { scored: f(sheet.overall_total)       > 0, score: f(sheet.overall_total) };
-    case 'partner_stunt': return { scored: f(sheet.partner_stunt_total) > 0, score: f(sheet.partner_stunt_total) };
+    case 'building': case 'building_combined': return { scored: f(sheet.building_total) > 0, score: f(sheet.final_score) };
+    case 'tumbling': case 'tumbling_combined': return { scored: f(sheet.tumbling_total) > 0, score: f(sheet.final_score) };
+    case 'overall':       return { scored: f(sheet.overall_total)       > 0, score: f(sheet.final_score) };
+    case 'partner_stunt': return { scored: f(sheet.partner_stunt_total) > 0, score: f(sheet.final_score) };
     case 'rangos':        return { scored: f(sheet.stunts_drivers) > 0, score: 0 };
     default:              return { scored: f(sheet.total_deductions) > 0, score: f(sheet.total_deductions) };
   }
