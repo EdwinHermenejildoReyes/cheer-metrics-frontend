@@ -171,7 +171,7 @@ function ExecSection({
 
       <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-t border-zinc-200">
         <span className="text-xs text-zinc-400">
-          Descuentos: −{fmt(totalDed)}
+          {totalDed > 0 ? `Descuentos: −${fmt(totalDed)}` : 'Sin errores seleccionados'}
         </span>
         <span className={`text-lg font-bold tabular-nums ${totalDed > 0 ? 'text-red-700' : 'text-zinc-900'}`}>
           {fmt(score)}
@@ -349,12 +349,9 @@ export default function BuildingSheetPage() {
       setCreativityBuilding(cfg.creativityMin);
       setShowmanshipBuilding(cfg.showmanshipMin);
 
-      // Set config-based defaults
-      if (cfg.stuntsHasDiff && cfg.stuntsRango.length > 0) {
-        setStuntsRango(cfg.stuntsRango[0].value);
-      } else {
-        setStuntsRango(0);
-      }
+      // Don't auto-select the first rango — leave at 0 so fresh sheets start with no selection.
+      // Saved sheets restore the rango from notes._scores.stuntsRango below.
+      if (!cfg.stuntsHasDiff) setStuntsRango(0);
 
       if (sheetRes.data.results.length > 0) {
         const sheet = sheetRes.data.results[0];
@@ -522,10 +519,10 @@ export default function BuildingSheetPage() {
   }, [loading]);
 
   // Stable ref so auto-save effect can call the latest handleSave without it as a dep
-  const handleSaveRef = useRef<(silent?: boolean) => Promise<void>>(async () => {});
+  const handleSaveRef = useRef<(silent?: boolean) => Promise<boolean>>(async () => false);
 
   // ── Save ──────────────────────────────────────────────────────────────────
-  const handleSave = async (silent = false) => {
+  const handleSave = async (silent = false): Promise<boolean> => {
     setSaving(true);
     try {
       const payload: Partial<ScoreSheet> = {
@@ -569,8 +566,10 @@ export default function BuildingSheetPage() {
       }
       setExistingSheet(saved);
       if (!silent) toast.success('Planilla guardada');
+      return true;
     } catch (err) {
       if (!silent) toastApiError(err);
+      return false;
     } finally {
       setSaving(false);
     }
@@ -655,7 +654,10 @@ export default function BuildingSheetPage() {
               Solo lectura
             </span>
           ) : (
-            <Button onClick={() => handleSave()} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
+            <Button onClick={async () => {
+              const ok = await handleSave();
+              if (ok) router.push(`/competitions/${id}/divisions/${divisionId}`);
+            }} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
               <Save className="h-4 w-4" />
               Guardar
             </Button>
