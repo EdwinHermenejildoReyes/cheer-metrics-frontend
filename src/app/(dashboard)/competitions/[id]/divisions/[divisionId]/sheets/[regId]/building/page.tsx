@@ -970,55 +970,77 @@ export default function BuildingSheetPage() {
                       </div>
                     </div>
 
-                    {/* Grado de Dificultad per skill */}
-                    {bCfg.stuntsSkillCount > 0 && (
-                      <div>
-                        <p className="text-xs font-medium text-zinc-500 mb-2">Grado de Dificultad — Habilidades (+0.10 / +0.20)</p>
-                        <div className="flex flex-col gap-2">
-                          {stuntSkillLabels.map((skill, i) => {
-                            const skillDisabled = i >= activeSkillCount;
-                            return (
-                              <div key={skill} className="flex items-center gap-3">
-                                <span className={`w-28 shrink-0 text-sm ${skillDisabled ? 'text-zinc-400' : 'text-zinc-700'}`}>{skill}</span>
-                                <div className="flex flex-1 gap-1.5">
-                                  {bCfg.stuntsSkillGrades.map(({ label, value }) => (
-                                    <button
-                                      key={label}
-                                      type="button"
-                                      disabled={skillDisabled}
-                                      onClick={() => {
-                                        const next = [...stuntsSkills];
-                                        next[i] = value;
-                                        setStuntsSkills(next);
-                                      }}
-                                      className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors border ${
-                                        skillDisabled
-                                          ? 'bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed opacity-50'
-                                          : stuntsSkills[i] !== null && stuntsSkills[i] === value
-                                            ? 'border-transparent'
-                                            : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-600'
-                                      }`}
-                                      style={!skillDisabled && stuntsSkills[i] !== null && stuntsSkills[i] === value ? { backgroundColor: '#2563eb', color: '#ffffff', borderColor: '#2563eb' } : undefined}
-                                    >
-                                      {label}
-                                      {value > 0 && (
-                                        <span className="ml-1 opacity-70">+{value.toFixed(2)}</span>
-                                      )}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            );
-                          })}
+                    {/* Grado de Dificultad per skill — tabla estilo PDF */}
+                    {bCfg.stuntsSkillCount > 0 && (() => {
+                      const gradeOpts = bCfg.stuntsSkillGrades.filter(g => g.value > 0);
+                      const maxGrade  = bCfg.stuntsSkillCount * Math.max(...gradeOpts.map(g => g.value));
+                      return (
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-wide text-zinc-700 mb-2">
+                            Drivers de Dificultad en Elevación (0 – {fmt(maxGrade)})
+                          </p>
+                          <table className="w-full border-collapse text-xs">
+                            <thead>
+                              <tr className="bg-zinc-100">
+                                <th className="text-left px-3 py-2 border border-zinc-200 font-semibold text-zinc-600">
+                                  Habilidad
+                                </th>
+                                {gradeOpts.map(({ label, value }) => (
+                                  <th key={value} className="text-center px-3 py-2 border border-zinc-200 font-semibold text-zinc-600">
+                                    Hab. <span className="font-bold text-zinc-800">{label}</span> por Gran Parte
+                                    <span className="ml-1 text-zinc-400 font-normal">(+{value.toFixed(2)})</span>
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {stuntSkillLabels.map((skill, i) => {
+                                const skillDisabled = i >= activeSkillCount;
+                                const currentVal    = stuntsSkills[i] ?? 0;
+                                return (
+                                  <tr key={skill} className={`${skillDisabled ? 'opacity-40' : ''} ${i % 2 === 1 ? 'bg-zinc-50' : 'bg-white'}`}>
+                                    <td className={`px-3 py-2.5 border border-zinc-200 font-medium ${skillDisabled ? 'text-zinc-400' : 'text-zinc-700'}`}>
+                                      {skill}
+                                    </td>
+                                    {gradeOpts.map(({ value }) => {
+                                      const isSelected = currentVal === value;
+                                      return (
+                                        <td key={value} className="border border-zinc-200 text-center p-0">
+                                          <button
+                                            type="button"
+                                            disabled={skillDisabled}
+                                            onClick={() => {
+                                              const next = [...stuntsSkills];
+                                              next[i] = isSelected ? null : value;
+                                              setStuntsSkills(next);
+                                            }}
+                                            className={`w-full py-2.5 font-bold text-sm transition-colors ${
+                                              isSelected
+                                                ? 'bg-blue-600 text-white'
+                                                : skillDisabled
+                                                  ? 'cursor-not-allowed text-zinc-200'
+                                                  : 'hover:bg-blue-50 hover:text-blue-700 text-zinc-300 cursor-pointer'
+                                            }`}
+                                          >
+                                            {isSelected ? '✓' : '—'}
+                                          </button>
+                                        </td>
+                                      );
+                                    })}
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                          <div className="mt-3 flex justify-between text-xs border-t border-zinc-100 pt-2">
+                            <span className="text-zinc-500">
+                              Rango {fmt(stuntsRango)} + Grado Dif {fmt(stuntsSkillsTotal)}
+                            </span>
+                            <span className="font-semibold text-zinc-900">Total Drivers: {fmt(stuntsDriversTotal)}</span>
+                          </div>
                         </div>
-                        <div className="mt-3 flex justify-between text-xs border-t border-zinc-100 pt-2">
-                          <span className="text-zinc-500">
-                            Rango {fmt(stuntsRango)} + Grado Dif {fmt(stuntsSkillsTotal)}
-                          </span>
-                          <span className="font-semibold text-zinc-900">Total Drivers: {fmt(stuntsDriversTotal)}</span>
-                        </div>
-                      </div>
-                    )}
+                      );
+                    })()}
 
                     {/* Part Max */}
                     {bCfg.stuntsPartMaxOpts.length > 0 && (
