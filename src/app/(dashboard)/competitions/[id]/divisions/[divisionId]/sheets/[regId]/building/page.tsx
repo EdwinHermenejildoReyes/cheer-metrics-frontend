@@ -307,8 +307,12 @@ export default function BuildingSheetPage() {
   const activeStuntsRangoOpt = activeStuntsRango.find(r => r.value === stuntsRango);
   const activeSkillCount = activeStuntsRangoOpt?.skillCount ?? bCfg.stuntsSkillCount;
 
-  // Reset all skill grades whenever the rango changes.
+  // Reset skill grades when the judge manually changes the rango — but not on initial load.
+  // initialValuesSettled.current is false during the load sequence, preventing the reset from
+  // wiping skills that were just loaded from the saved sheet (stuntsRango 0→saved value triggers
+  // this effect on load, which would overwrite the loaded skills with nulls).
   useEffect(() => {
+    if (!initialValuesSettled.current) return;
     setStuntsSkills(Array(bCfg.stuntsSkillCount).fill(null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stuntsRango]);
@@ -609,7 +613,10 @@ export default function BuildingSheetPage() {
       <div className="print:hidden sticky top-0 z-10 flex items-center justify-between gap-4 bg-white border-b border-zinc-200 px-6 py-3 shadow-sm">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}`)}
+            onClick={async () => {
+              if (!readOnly && initialValuesSettled.current) await handleSaveRef.current(true);
+              router.push(`/competitions/${id}/divisions/${divisionId}`);
+            }}
             className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />

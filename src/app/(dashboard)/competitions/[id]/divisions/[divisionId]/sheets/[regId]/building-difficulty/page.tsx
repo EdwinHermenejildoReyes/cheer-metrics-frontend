@@ -111,7 +111,9 @@ export default function BuildingDifficultyPage() {
     (_, i) => i === 4 && isCoed ? 'Habilidad #5 / Coed' : `Habilidad #${i + 1}`
   );
 
+  // Same guard as building/page.tsx: suppress reset during initial load.
   useEffect(() => {
+    if (!initialValuesSettled.current) return;
     setStuntsSkills(Array(bCfg.stuntsSkillCount).fill(null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stuntsRango]);
@@ -383,7 +385,10 @@ export default function BuildingDifficultyPage() {
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="print:hidden sticky top-0 z-10 flex items-center justify-between gap-4 bg-white border-b border-zinc-200 px-6 py-3 shadow-sm">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}`)} className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 transition-colors">
+          <button onClick={async () => {
+            if (!readOnly && initialValuesSettled.current) await handleSaveRef.current(true);
+            router.push(`/competitions/${id}/divisions/${divisionId}`);
+          }} className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 transition-colors">
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div>

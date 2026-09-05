@@ -358,8 +358,10 @@ export default function IcuDanceSheetPage() {
       {/* Sticky top bar */}
       <div className="print:hidden sticky top-0 z-10 flex items-center justify-between gap-4 bg-white border-b border-zinc-200 px-6 py-3 shadow-sm">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}`)}
-            className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 transition-colors">
+          <button onClick={async () => {
+            if (!readOnly && initialValuesSettled.current) await handleSaveRef.current(true);
+            router.push(`/competitions/${id}/divisions/${divisionId}`);
+          }} className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 transition-colors">
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div>
