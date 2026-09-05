@@ -823,9 +823,15 @@ export default function DivisionDetailPage() {
       {ranked.length > 0 && (() => {
         const f = (v: string | null | undefined) => v ? parseFloat(v) : 0;
 
-        const hasBuilding    = ranked.some(({ sheet }) => f(sheet.building_total)      > 0);
-        const hasTumbling    = ranked.some(({ sheet }) => f(sheet.tumbling_total)      > 0);
-        const hasOverall     = ranked.some(({ sheet }) => f(sheet.overall_total)       > 0);
+        // When division restricts sheet types, respect that over data presence
+        const allowedSheets = division?.allowed_sheet_types ?? null;
+        const allowsBuilding = !allowedSheets || allowedSheets.includes('building');
+        const allowsTumbling = !allowedSheets || allowedSheets.includes('tumbling');
+        const allowsOverall  = !allowedSheets || allowedSheets.includes('overall');
+
+        const hasBuilding    = allowsBuilding && ranked.some(({ sheet }) => f(sheet.building_total)      > 0);
+        const hasTumbling    = allowsTumbling && ranked.some(({ sheet }) => f(sheet.tumbling_total)      > 0);
+        const hasOverall     = allowsOverall  && ranked.some(({ sheet }) => f(sheet.overall_total)       > 0);
         const hasCreativity  = ranked.some(({ sheet }) => f(sheet.avg_creativity)      > 0);
         const hasShowmanship = ranked.some(({ sheet }) => f(sheet.avg_showmanship)     > 0);
         const hasPartner     = ranked.some(({ sheet }) => f(sheet.partner_stunt_total) > 0);
@@ -833,15 +839,20 @@ export default function DivisionDetailPage() {
           ? Object.values(icuRankings).some((e) => e.has_score)
           : ranked.some(({ sheet }) => f(sheet.icu_dance_total) > 0);
 
-        const hasBuildingDetail = ranked.some(({ sheet }) =>
+        const hasBuildingData = ranked.some(({ sheet }) =>
           f(sheet.stunts_difficulty) > 0 || f(sheet.pyramids_difficulty) > 0 || f(sheet.tosses_difficulty) > 0
         );
-        const hasTumblingDetail = ranked.some(({ sheet }) =>
+        const hasTumblingData = ranked.some(({ sheet }) =>
           f(sheet.standing_difficulty) > 0 || f(sheet.running_difficulty) > 0 || f(sheet.jumps_difficulty) > 0
         );
-        const hasOverallDetail = ranked.some(({ sheet }) =>
+        const hasOverallData = ranked.some(({ sheet }) =>
           f(sheet.formations_score) > 0 || f(sheet.dance_difficulty) > 0
         );
+
+        // Show section if allowed AND (has data OR is the only allowed section)
+        const hasBuildingDetail = allowsBuilding && (hasBuildingData || (allowedSheets?.length === 1 && allowedSheets[0] === 'building'));
+        const hasTumblingDetail = allowsTumbling && (hasTumblingData || (allowedSheets?.length === 1 && allowedSheets[0] === 'tumbling'));
+        const hasOverallDetail  = allowsOverall  && (hasOverallData  || (allowedSheets?.length === 1 && allowedSheets[0] === 'overall'));
         const hasPyrDrivers   = ranked.some(({ sheet }) => f(sheet.pyramids_drivers)  > 0);
         const hasStandDrivers = ranked.some(({ sheet }) => f(sheet.standing_drivers)  > 0);
         const hasRunDrivers   = ranked.some(({ sheet }) => f(sheet.running_drivers)   > 0);
