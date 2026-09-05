@@ -630,7 +630,7 @@ export default function BuildingSheetPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={async () => {
-              if (!readOnly && initialValuesSettled.current) await handleSaveRef.current(true);
+              if (!readOnly && dataLoaded.current) await handleSaveRef.current(true);
               router.push(`/competitions/${id}/divisions/${divisionId}`);
             }}
             className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 transition-colors"

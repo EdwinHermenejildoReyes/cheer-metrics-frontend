@@ -294,6 +294,15 @@ export default function DivisionDetailPage() {
     return () => clearInterval(interval);
   }, [isJudge, loadSheets]);
 
+  // One-shot delayed refresh on mount for everyone: covers the race condition where the
+  // browser-back gesture unmounts a score sheet and its async save races with this page's
+  // initial load(). 1.5 s gives in-flight PATCHes time to land before we re-fetch.
+  useEffect(() => {
+    const t = setTimeout(() => { loadSheets(); }, 1500);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleRegSaved = (saved: Registration) => {
     setRegistrations((prev) =>
       prev.some((r) => r.id === saved.id)
