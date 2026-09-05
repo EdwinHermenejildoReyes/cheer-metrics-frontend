@@ -341,6 +341,10 @@ export default function BuildingSheetPage() {
       setDivision(divRes.data);
       setCompetitionIntId(divRes.data.competition);
 
+      // Initialize cross-sheet defaults from config so INTL divisions start at 8.0/3.5, not 1.5/1.0
+      setCreativityBuilding(cfg.creativityMin);
+      setShowmanshipBuilding(cfg.showmanshipMin);
+
       // Set config-based defaults
       if (cfg.stuntsHasDiff && cfg.stuntsRango.length > 0) {
         setStuntsRango(cfg.stuntsRango[0].value);
