@@ -396,7 +396,7 @@ export default function OverallSheetPage() {
       setExistingSheet(saved);
       if (!silent) toast.success('Planilla guardada');
     } catch (err) {
-      toastApiError(err);
+      if (!silent) toastApiError(err);
     } finally {
       setSaving(false);
     }
@@ -408,7 +408,7 @@ export default function OverallSheetPage() {
   // Auto-save 2 s after the last change (judge mode only)
   useEffect(() => {
     if (readOnly || !hasSettled) return;
-    const timer = setTimeout(() => { handleSaveRef.current(true); }, 2000);
+    const timer = setTimeout(() => { handleSaveRef.current(true); }, 500);
     return () => clearTimeout(timer);
   }, [readOnly, hasSettled, formationsScore, danceDifficulty, danceExecution, creativityOverall, showmanshipOverall, comments, animacionCriteria, formationErrors]);
 

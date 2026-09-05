@@ -148,7 +148,7 @@ export default function IcuDanceDeductionsPage() {
       }
       if (!silent) toast.success('Deducciones guardadas.');
     } catch (err) {
-      toastApiError(err, 'Error al guardar deducciones.');
+      if (!silent) toastApiError(err, 'Error al guardar deducciones.');
     } finally {
       setSaving(false);
     }
@@ -162,7 +162,7 @@ export default function IcuDanceDeductionsPage() {
   useEffect(() => {
     if (!initialSettled.current || readOnly) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => { handleSaveRef.current(true); }, 2000);
+    debounceRef.current = setTimeout(() => { handleSaveRef.current(true); }, 500);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [skillCounts, timeInfraction, safetyDeduction, imagePolicyCount, conductDeduction, registrationDeduction, notes, readOnly]);
 

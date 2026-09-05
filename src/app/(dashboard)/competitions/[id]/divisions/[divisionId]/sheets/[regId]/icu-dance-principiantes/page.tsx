@@ -244,7 +244,7 @@ export default function IcuDancePrincPage() {
       setMyScore(saved);
       if (!silent) toast.success('Planilla guardada.');
     } catch (err) {
-      toastApiError(err, 'Error al guardar planilla.');
+      if (!silent) toastApiError(err, 'Error al guardar planilla.');
     } finally {
       setSaving(false);
     }
@@ -258,7 +258,7 @@ export default function IcuDancePrincPage() {
   useEffect(() => {
     if (!initialSettled.current || readOnly) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => { handleSaveRef.current(true); }, 2000);
+    debounceRef.current = setTimeout(() => { handleSaveRef.current(true); }, 500);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [scores, comments, notes, readOnly]);
 

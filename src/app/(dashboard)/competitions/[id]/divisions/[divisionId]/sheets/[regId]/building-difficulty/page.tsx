@@ -336,7 +336,7 @@ export default function BuildingDifficultyPage() {
       setExistingSheet(saved);
       if (!silent) toast.success('Planilla guardada');
     } catch (err) {
-      toastApiError(err);
+      if (!silent) toastApiError(err);
     } finally {
       setSaving(false);
     }
@@ -348,7 +348,7 @@ export default function BuildingDifficultyPage() {
   // Auto-save 2 s after the last change (judge mode only)
   useEffect(() => {
     if (readOnly || !initialValuesSettled.current) return;
-    const timer = setTimeout(() => { handleSaveRef.current(true); }, 2000);
+    const timer = setTimeout(() => { handleSaveRef.current(true); }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readOnly, stuntsRango, stuntsSkills, stuntsPartMax, pyramidsRangeIdx, pyramidsFine, pyramidsDrivers, tossesDiff, creativityBuilding, showmanshipBuilding, stuntsNotes, pyramidsNotes, tossesNotes]);

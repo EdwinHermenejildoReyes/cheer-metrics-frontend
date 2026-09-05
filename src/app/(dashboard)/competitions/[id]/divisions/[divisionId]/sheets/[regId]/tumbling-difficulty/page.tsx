@@ -300,7 +300,7 @@ export default function TumblingDifficultyPage() {
       setExistingSheet(saved);
       if (!silent) toast.success('Planilla guardada');
     } catch (err) {
-      toastApiError(err);
+      if (!silent) toastApiError(err);
     } finally { setSaving(false); }
   };
 
@@ -310,7 +310,7 @@ export default function TumblingDifficultyPage() {
   // Auto-save 2 s after the last change (judge mode only)
   useEffect(() => {
     if (readOnly || !initialValuesSettled.current) return;
-    const timer = setTimeout(() => { handleSaveRef.current(true); }, 2000);
+    const timer = setTimeout(() => { handleSaveRef.current(true); }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readOnly, standingRango, standingHabilidad, runningRango, runningHabilidad, jumpsDiff, creativityTumbling, showmanshipTumbling, standingNotes, runningNotes, jumpsNotes]);
