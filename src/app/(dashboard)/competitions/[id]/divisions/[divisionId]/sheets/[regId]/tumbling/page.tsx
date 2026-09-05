@@ -246,7 +246,7 @@ function TumblingDiffCard({
         {/* Habilidad Realizada */}
         {habilidadOpts.length > 0 && (
           <div>
-            <p className="text-xs font-medium text-zinc-500 mb-2">Habilidad Realizada o Gran Parte</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-zinc-700 mb-2">DRIVERS — Habilidad Realizada o Gran Parte</p>
             <div className="flex gap-1.5">
               {habilidadOpts.map(({ label: lbl, value }) => (
                 <button
