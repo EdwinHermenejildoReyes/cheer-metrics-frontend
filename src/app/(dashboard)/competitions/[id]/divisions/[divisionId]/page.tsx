@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, Link2, ChevronsUp, RotateCw, Star, CircleMinus, Gauge, Users2, TrendingUp, BadgeCheck, Sparkles, Timer, ShieldCheck, ChevronUp, ChevronDown, Mail, MessageCircle, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, Link2, ChevronsUp, RotateCw, Star, CircleMinus, Gauge, Users2, TrendingUp, BadgeCheck, Sparkles, Timer, ShieldCheck, ChevronUp, ChevronDown, Mail, MessageCircle, Lock, Info, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -396,6 +396,31 @@ export default function DivisionDetailPage() {
             )}
           </div>
         </div>
+
+        {/* Banner: juez sin acceso a planillas en esta división */}
+        {isJudge && hasJudging && judgeExpandedSheets.length === 0 && (() => {
+          const hasActiveForComp = assignments.some((a) => a.competition === compId && a.is_access_active);
+          if (!hasActiveForComp) {
+            return (
+              <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5">
+                <Lock className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-amber-800">Acceso expirado</p>
+                  <p className="text-xs text-amber-700 mt-0.5">Tu ventana de acceso a esta competencia ha finalizado. Contacta al administrador para que renueve tu asignación.</p>
+                </div>
+              </div>
+            );
+          }
+          return (
+            <div className="flex items-start gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3.5">
+              <Info className="h-4 w-4 text-zinc-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-zinc-700">Sin planillas asignadas para esta división</p>
+                <p className="text-xs text-zinc-500 mt-0.5">No tienes una planilla asignada para esta división. Si crees que es un error, contacta al administrador.</p>
+              </div>
+            </div>
+          );
+        })()}
 
         {registrations.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-14 text-zinc-400 rounded-xl border border-dashed border-zinc-200">
