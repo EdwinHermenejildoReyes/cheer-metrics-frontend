@@ -411,10 +411,10 @@ export default function DeduccionesSheetPage() {
                 SECCIÓN 1 — Caídas, Tiempos y Pista
                 ══════════════════════════════════════════════════════════════ */}
             <h2 className="text-2xl font-bold text-zinc-900 mb-4">Deducciones</h2>
-            <div className="grid grid-cols-[200px_1fr] gap-4 items-start">
+            <div className="grid grid-cols-[260px_1fr] gap-4 items-start">
 
               {/* ═══ LEFT — Caídas + Tiempos palette (direct-add) ═══════════ */}
-              <div className="flex flex-col gap-3 sticky top-20 max-h-[calc(100vh-5rem)] overflow-y-auto overflow-x-hidden pr-3">
+              <div className="flex flex-col gap-3 sticky top-20 max-h-[calc(100vh-5rem)] overflow-y-auto overflow-x-hidden pr-2.5">
                 {[
                   { key: 'CAÍDAS', types: FALLS, color: 'red'    as ColorKey, label: 'Caídas'  },
                   { key: 'TIEMPO', types: TIME,  color: 'orange' as ColorKey, label: 'Tiempo'  },
