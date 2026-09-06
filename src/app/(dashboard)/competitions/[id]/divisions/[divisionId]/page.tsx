@@ -25,6 +25,7 @@ import {
   SHEET_TYPE_LABELS,
   type Division,
   type JudgeAssignment,
+  type JudgeScoreRecord,
   type Registration,
   type RankingEntry,
   type ScoreSheet,
@@ -104,6 +105,8 @@ const STATUS_VARIANT: Record<RegistrationStatus, 'default' | 'success' | 'warnin
   withdrawn: 'danger',
 };
 
+type ScoreSource = ScoreSheet | JudgeScoreRecord;
+
 function getJudgeSheetStatus(sheetType: SheetType, sheet: ScoreSheet): { scored: boolean; score: number } {
   const f = (v: string | null | undefined) => parseFloat(v ?? '0');
   switch (sheetType) {
@@ -120,7 +123,53 @@ function getJudgeSheetStatus(sheetType: SheetType, sheet: ScoreSheet): { scored:
   }
 }
 
-function getJudgeSheetFields(sheetType: SheetType, sheet: ScoreSheet): Array<{ label: string; value: string | null }> {
+function getJudgeRecordStatus(sheetType: SheetType, r: JudgeScoreRecord): { scored: boolean; score: number } {
+  const f = (v: string | null | undefined) => parseFloat(v ?? '0');
+  switch (sheetType) {
+    case 'building_difficulty': {
+      const s = f(r.stunts_difficulty) + f(r.pyramids_difficulty) + f(r.tosses_difficulty);
+      return { scored: f(r.stunts_difficulty) > 0, score: s };
+    }
+    case 'building_execution': {
+      const s = f(r.stunts_execution) + f(r.pyramids_execution) + f(r.tosses_execution);
+      return { scored: f(r.stunts_execution) > 0, score: s };
+    }
+    case 'tumbling_difficulty': {
+      const s = f(r.standing_difficulty) + f(r.running_difficulty) + f(r.jumps_difficulty);
+      return { scored: f(r.standing_difficulty) > 0 || f(r.running_difficulty) > 0, score: s };
+    }
+    case 'tumbling_execution': {
+      const s = f(r.standing_execution) + f(r.running_execution) + f(r.jumps_execution);
+      return { scored: f(r.standing_execution) > 0 || f(r.running_execution) > 0, score: s };
+    }
+    case 'building': case 'building_combined': {
+      const s = f(r.stunts_difficulty) + f(r.stunts_execution) + f(r.stunts_drivers) +
+                f(r.pyramids_difficulty) + f(r.pyramids_execution) + f(r.pyramids_drivers) +
+                f(r.tosses_difficulty) + f(r.tosses_execution);
+      return { scored: s > 0, score: s };
+    }
+    case 'tumbling': case 'tumbling_combined': {
+      const s = f(r.standing_difficulty) + f(r.standing_execution) + f(r.standing_drivers) +
+                f(r.running_difficulty) + f(r.running_execution) + f(r.running_drivers) +
+                f(r.jumps_difficulty) + f(r.jumps_execution);
+      return { scored: s > 0, score: s };
+    }
+    case 'overall': {
+      const s = f(r.formations_score) + f(r.dance_difficulty) + f(r.dance_execution);
+      return { scored: s > 0, score: s };
+    }
+    case 'partner_stunt': {
+      const s = f(r.pg_technique) + f(r.pg_difficulty) + f(r.pg_form_appearance) + f(r.pg_transitions) + f(r.pg_expressiveness);
+      return { scored: s > 0, score: s };
+    }
+    case 'rangos':
+      return { scored: f(r.stunts_drivers) > 0, score: 0 };
+    default:
+      return { scored: false, score: 0 };
+  }
+}
+
+function getJudgeSheetFields(sheetType: SheetType, sheet: ScoreSource): Array<{ label: string; value: string | null }> {
   switch (sheetType) {
     case 'building':
     case 'building_combined':
@@ -219,6 +268,8 @@ export default function DivisionDetailPage() {
   }, []);
 
   const [division, setDivision]       = useState<Division | null>(null);
+  const isJudgeRef = useRef(isJudge);
+  isJudgeRef.current = isJudge;
 
   useEffect(() => {
     if (!division) return;
@@ -228,8 +279,10 @@ export default function DivisionDetailPage() {
     }
   }, [isJudge, division, isCompetitionActive, router, id]);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
-  const [scoreSheets, setScoreSheets]     = useState<Record<number, ScoreSheet>>({});
-  const [icuRankings, setIcuRankings]     = useState<Record<number, RankingEntry>>({});
+  const [scoreSheets, setScoreSheets]         = useState<Record<number, ScoreSheet>>({});
+  // registrationId → judgeAssignmentId → JudgeScoreRecord (admin view only)
+  const [judgeRecordsMap, setJudgeRecordsMap] = useState<Record<number, Record<number, JudgeScoreRecord>>>({});
+  const [icuRankings, setIcuRankings]         = useState<Record<number, RankingEntry>>({});
   const isIcuDanceModeRef                 = useRef(false);
   const [loading, setLoading]             = useState(true);
   const [expandedRow, setExpandedRow]     = useState<number | null>(null);
@@ -258,6 +311,18 @@ export default function DivisionDetailPage() {
     const map: Record<number, ScoreSheet> = {};
     res.data.results.forEach((s) => { map[s.registration] = s; });
     setScoreSheets(map);
+    if (!isJudgeRef.current) {
+      const jrRes = await competitionsRepository.listJudgeScoreRecords({
+        registration__division__public_id: divisionId,
+        page_size: '500',
+      });
+      const jrMap: Record<number, Record<number, JudgeScoreRecord>> = {};
+      jrRes.data.results.forEach((r) => {
+        if (!jrMap[r.registration]) jrMap[r.registration] = {};
+        jrMap[r.registration][r.judge_assignment] = r;
+      });
+      setJudgeRecordsMap(jrMap);
+    }
     if (isIcuDanceModeRef.current) await loadIcuRankings();
   }, [divisionId, loadIcuRankings]);
 
@@ -802,35 +867,42 @@ export default function DivisionDetailPage() {
                             {(Object.entries(judgesBySheet) as [SheetType, JudgeAssignment[]][])
                               .sort(([a], [b]) => SHEET_TYPE_ORDER.indexOf(a) - SHEET_TYPE_ORDER.indexOf(b))
                               .flatMap(([sheetType, judges]) => {
-                                const { scored, score } = getJudgeSheetStatus(sheetType, sheet);
-                                const fields = getJudgeSheetFields(sheetType, sheet);
-                                const scoredFields = fields.filter(f => f.value != null && parseFloat(f.value) !== 0);
                                 const Icon = SHEET_TYPE_ICONS[sheetType] ?? Star;
-                                return judges.map((judge) => (
-                                  <div key={`${sheetType}-${judge.id}`} className="flex flex-col gap-1">
-                                    <div className="flex items-center gap-2 text-xs">
-                                      <Icon className={`h-3 w-3 shrink-0 ${SHEET_TYPE_COLORS[sheetType]}`} />
-                                      <span className="w-28 shrink-0 text-zinc-500">{SHEET_TYPE_LABELS[sheetType]}</span>
-                                      <span className="flex-1 text-zinc-700 font-medium truncate">{judge.user_name}</span>
-                                      {scored ? (
-                                        <span className="text-emerald-600 font-semibold tabular-nums">
-                                          ✓ {score > 0 ? score.toFixed(2) : 'Calificado'}
-                                        </span>
-                                      ) : (
-                                        <span className="text-amber-500">Pendiente</span>
+                                return judges.map((judge) => {
+                                  const judgeRecord = judgeRecordsMap[reg.id]?.[judge.id];
+                                  const { scored, score } = judgeRecord
+                                    ? getJudgeRecordStatus(sheetType, judgeRecord)
+                                    : { scored: false, score: 0 };
+                                  const fields = judgeRecord ? getJudgeSheetFields(sheetType, judgeRecord) : [];
+                                  const scoredFields = fields.filter(f => f.value != null && parseFloat(f.value) !== 0);
+                                  return (
+                                    <div key={`${sheetType}-${judge.id}`} className="flex flex-col gap-1">
+                                      <div className="flex items-center gap-2 text-xs">
+                                        <Icon className={`h-3 w-3 shrink-0 ${SHEET_TYPE_COLORS[sheetType]}`} />
+                                        <span className="w-28 shrink-0 text-zinc-500">{SHEET_TYPE_LABELS[sheetType]}</span>
+                                        <span className="flex-1 text-zinc-700 font-medium truncate">{judge.user_name}</span>
+                                        {judgeRecord === undefined ? (
+                                          <span className="text-zinc-400 text-[10px]">Sin registro</span>
+                                        ) : scored ? (
+                                          <span className="text-emerald-600 font-semibold tabular-nums">
+                                            ✓ {score > 0 ? score.toFixed(2) : 'Calificado'}
+                                          </span>
+                                        ) : (
+                                          <span className="text-amber-500">Pendiente</span>
+                                        )}
+                                      </div>
+                                      {scored && scoredFields.length > 0 && (
+                                        <div className="pl-5 flex flex-wrap gap-x-3 gap-y-0.5">
+                                          {scoredFields.map(f => (
+                                            <span key={f.label} className="text-[10px] text-zinc-400">
+                                              {f.label}:&nbsp;<span className="text-zinc-600 font-medium tabular-nums">{parseFloat(f.value!).toFixed(2)}</span>
+                                            </span>
+                                          ))}
+                                        </div>
                                       )}
                                     </div>
-                                    {scored && scoredFields.length > 0 && (
-                                      <div className="pl-5 flex flex-wrap gap-x-3 gap-y-0.5">
-                                        {scoredFields.map(f => (
-                                          <span key={f.label} className="text-[10px] text-zinc-400">
-                                            {f.label}:&nbsp;<span className="text-zinc-600 font-medium tabular-nums">{parseFloat(f.value!).toFixed(2)}</span>
-                                          </span>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                ));
+                                  );
+                                });
                               })}
                           </div>
                         </div>

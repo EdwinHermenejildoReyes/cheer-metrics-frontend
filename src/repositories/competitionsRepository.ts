@@ -272,6 +272,9 @@ class CompetitionsRepository {
   updateJudgeScoreRecord = (id: number, data: Partial<JudgeScoreRecord>) =>
     api.patch<JudgeScoreRecord>(`/judge-score-records/${id}/`, data);
 
+  listJudgeScoreRecords = (params: Record<string, string>) =>
+    api.get<PaginatedResponse<JudgeScoreRecord>>('/judge-score-records/', { params });
+
   // Deductions
   createDeduction = (data: Partial<Deduction>) =>
     api.post<Deduction>('/deductions/', data);
