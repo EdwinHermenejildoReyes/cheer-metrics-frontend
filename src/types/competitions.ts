@@ -455,6 +455,51 @@ export interface ScoreSheet {
   percentage:           string;
 }
 
+export interface JudgeScoreRecord {
+  id: number;
+  registration: number;
+  judge_assignment: number;
+  judge_name: string;
+  sheet_type: SheetType;
+  notes: string;
+  updated_at: string;
+  // Building
+  stunts_difficulty:    string | null;
+  stunts_execution:     string | null;
+  stunts_drivers:       string | null;
+  pyramids_difficulty:  string | null;
+  pyramids_execution:   string | null;
+  pyramids_drivers:     string | null;
+  tosses_difficulty:    string | null;
+  tosses_execution:     string | null;
+  creativity_building:  string | null;
+  showmanship_building: string | null;
+  // Tumbling
+  standing_difficulty:  string | null;
+  standing_execution:   string | null;
+  standing_drivers:     string | null;
+  running_difficulty:   string | null;
+  running_execution:    string | null;
+  running_drivers:      string | null;
+  jumps_difficulty:     string | null;
+  jumps_execution:      string | null;
+  creativity_tumbling:  string | null;
+  showmanship_tumbling: string | null;
+  // Overall
+  formations_score:     string | null;
+  dance_difficulty:     string | null;
+  dance_execution:      string | null;
+  creativity_overall:   string | null;
+  showmanship_overall:  string | null;
+  animacion_escolar:    string | null;
+  // Partner Stunt
+  pg_technique:         string | null;
+  pg_difficulty:        string | null;
+  pg_form_appearance:   string | null;
+  pg_transitions:       string | null;
+  pg_expressiveness:    string | null;
+}
+
 export interface RankingEntry {
   rank: number | null;
   registration_id: number;

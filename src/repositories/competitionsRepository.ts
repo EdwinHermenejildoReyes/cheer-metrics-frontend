@@ -1,5 +1,5 @@
 import api from '@/services/api';
-import type { AthleteInvoiceLine, FanPackage, FanPackageLine, GymInvoice, IcuAggregate, IcuDanceDeductionSheet, IcuJudgeScore, IcuSheetType, JudgePanel } from '@/types/competitions';
+import type { AthleteInvoiceLine, FanPackage, FanPackageLine, GymInvoice, IcuAggregate, IcuDanceDeductionSheet, IcuJudgeScore, IcuSheetType, JudgePanel, JudgeScoreRecord } from '@/types/competitions';
 
 export interface PublicResultDeduction {
   type: string;
@@ -262,6 +262,15 @@ class CompetitionsRepository {
 
   updateScoreSheet = (id: number, data: Partial<ScoreSheet>) =>
     api.patch<ScoreSheet>(`/score-sheets/${id}/`, data);
+
+  // Judge score records (per-judge independent scoring)
+  getMyJudgeScoreRecord = (registrationPublicId: string, judgeAssignmentId: number) =>
+    api.get<JudgeScoreRecord>('/judge-score-records/my-record/', {
+      params: { registration: registrationPublicId, judge_assignment: judgeAssignmentId },
+    });
+
+  updateJudgeScoreRecord = (id: number, data: Partial<JudgeScoreRecord>) =>
+    api.patch<JudgeScoreRecord>(`/judge-score-records/${id}/`, data);
 
   // Deductions
   createDeduction = (data: Partial<Deduction>) =>

@@ -12,7 +12,7 @@ import { IasfSheetPrintView } from '@/components/print/IasfSheetPrintView';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
 import { toastApiError } from '@/utils/apiErrors';
-import type { ScoreSheet, UnpaidAthlete } from '@/types/competitions';
+import type { JudgeScoreRecord, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 
 // ── IASF World: Tumbling categories ───────────────────────────────────────────
@@ -190,7 +190,7 @@ export default function IasfTumblingSheetPage() {
   const router  = useRouter();
   const { id, divisionId, regId } = useParams<{ id: string; divisionId: string; regId: string }>();
 
-  const { isJudge, isCompetitionActive } = useJudge();
+  const { isJudge, isCompetitionActive, assignments } = useJudge();
   const [competitionIntId, setCompetitionIntId] = useState<number | null>(null);
   const [regIntId, setRegIntId] = useState<number | null>(null);
   const readOnly = !isJudge;
@@ -205,6 +205,7 @@ export default function IasfTumblingSheetPage() {
 
   const [teamName,       setTeamName]       = useState<string>('');
   const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
+  const [judgeRecord,    setJudgeRecord]    = useState<JudgeScoreRecord | null>(null);
   const [skillLevel,     setSkillLevel]     = useState<string | undefined>(undefined);
   const [loading,        setLoading]        = useState(true);
   const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
@@ -223,10 +224,26 @@ export default function IasfTumblingSheetPage() {
   const total = Object.values(scores).reduce((s, v) => s + v, 0);
   const pct   = MAX_TOTAL > 0 ? (total / MAX_TOTAL) * 100 : 0;
 
+  const assignmentsRef = useRef(assignments);
+  assignmentsRef.current = assignments;
+  const isJudgeRef = useRef(isJudge);
+  isJudgeRef.current = isJudge;
+
+  const populateFromScoreSource = useCallback((source: Partial<ScoreSheet | JudgeScoreRecord> & { notes?: string | null }) => {
+    setScores({
+      standing_difficulty: source.standing_difficulty ? parseFloat(source.standing_difficulty as string) : 0,
+      standing_execution:  source.standing_execution  ? parseFloat(source.standing_execution  as string) : 0,
+      running_difficulty:  source.running_difficulty  ? parseFloat(source.running_difficulty  as string) : 0,
+      jumps_difficulty:    source.jumps_difficulty    ? parseFloat(source.jumps_difficulty    as string) : 0,
+      jumps_execution:     source.jumps_execution     ? parseFloat(source.jumps_execution     as string) : 0,
+    });
+    if (source.notes) setNotes(source.notes as string);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const load = useCallback(async () => {
     try {
-      const [sheetRes, regRes, divRes] = await Promise.all([
-        competitionsRepository.listScoreSheets({ registration__public_id: regId }),
+      const [regRes, divRes] = await Promise.all([
         competitionsRepository.listRegistrations({ division__public_id: divisionId, page_size: '100' }),
         competitionsRepository.getDivision(divisionId),
       ]);
@@ -238,23 +255,32 @@ export default function IasfTumblingSheetPage() {
         setRequirePayment(reg.competition_require_payment);
       }
       setSkillLevel(divRes.data.skill_level);
-      if (sheetRes.data.results.length > 0) {
-        const sheet = sheetRes.data.results[0];
-        setExistingSheet(sheet);
-        if (!reg) setTeamName(sheet.team_name);
-        setScores({
-          standing_difficulty: sheet.standing_difficulty ? parseFloat(sheet.standing_difficulty) : 0,
-          standing_execution:  sheet.standing_execution  ? parseFloat(sheet.standing_execution)  : 0,
-          running_difficulty:  sheet.running_difficulty  ? parseFloat(sheet.running_difficulty)  : 0,
-          jumps_difficulty:    sheet.jumps_difficulty    ? parseFloat(sheet.jumps_difficulty)    : 0,
-          jumps_execution:     sheet.jumps_execution     ? parseFloat(sheet.jumps_execution)     : 0,
-        });
-        if (sheet.notes) setNotes(sheet.notes);
+      setCompetitionIntId(divRes.data.competition);
+
+      if (isJudgeRef.current) {
+        const myAssignment = assignmentsRef.current.find(
+          a => a.competition === divRes.data.competition && a.sheet_type === 'tumbling'
+        );
+        if (myAssignment) {
+          const recordRes = await competitionsRepository.getMyJudgeScoreRecord(regId, myAssignment.id);
+          const record = recordRes.data;
+          setJudgeRecord(record);
+          if (!reg) setTeamName('');
+          populateFromScoreSource(record);
+        }
+      } else {
+        const sheetRes = await competitionsRepository.listScoreSheets({ registration__public_id: regId });
+        if (sheetRes.data.results.length > 0) {
+          const sheet = sheetRes.data.results[0];
+          setExistingSheet(sheet);
+          if (!reg) setTeamName(sheet.team_name);
+          populateFromScoreSource(sheet);
+        }
       }
     } finally {
       setLoading(false);
     }
-  }, [regId, divisionId]);
+  }, [regId, divisionId, populateFromScoreSource]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -296,7 +322,7 @@ export default function IasfTumblingSheetPage() {
   const handleSave = async (silent = false) => {
     setSaving(true);
     try {
-      const payload: Partial<ScoreSheet> = {
+      const scorePayload = {
         standing_difficulty: String(scores.standing_difficulty),
         standing_execution:  String(scores.standing_execution),
         running_difficulty:  String(scores.running_difficulty),
@@ -304,18 +330,16 @@ export default function IasfTumblingSheetPage() {
         jumps_execution:     String(scores.jumps_execution),
         notes,
       };
-      let saved: ScoreSheet;
-      if (existingSheet) {
-        const res = await competitionsRepository.updateScoreSheet(existingSheet.id, payload);
-        saved = res.data;
+      if (judgeRecord) {
+        const res = await competitionsRepository.updateJudgeScoreRecord(judgeRecord.id, scorePayload);
+        setJudgeRecord(res.data);
+      } else if (existingSheet) {
+        const res = await competitionsRepository.updateScoreSheet(existingSheet.id, scorePayload as Partial<ScoreSheet>);
+        setExistingSheet(res.data);
       } else {
-        const res = await competitionsRepository.createScoreSheet({
-          registration: regIntId!,
-          ...payload,
-        } as Partial<ScoreSheet>);
-        saved = res.data;
+        const res = await competitionsRepository.createScoreSheet({ registration: regIntId!, ...scorePayload } as Partial<ScoreSheet>);
+        setExistingSheet(res.data);
       }
-      setExistingSheet(saved);
       if (!silent) toast.success('Planilla guardada');
     } catch (err) {
       if (!silent) toastApiError(err);

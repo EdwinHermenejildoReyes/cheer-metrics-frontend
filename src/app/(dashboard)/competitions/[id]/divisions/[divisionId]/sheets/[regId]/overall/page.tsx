@@ -13,7 +13,7 @@ import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
 import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
-import type { ScoreSheet, ScoringSystem, UnpaidAthlete } from '@/types/competitions';
+import type { JudgeScoreRecord, ScoreSheet, ScoringSystem, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 
 // ── Formations scale (standard: 2.0 → 1.0 in steps of −0.1) ─────────────────
@@ -172,7 +172,7 @@ export default function OverallSheetPage() {
   const router  = useRouter();
   const { id, divisionId, regId } = useParams<{ id: string; divisionId: string; regId: string }>();
 
-  const { isJudge, isCompetitionActive } = useJudge();
+  const { isJudge, isCompetitionActive, assignments } = useJudge();
   const [competitionIntId, setCompetitionIntId] = useState<number | null>(null);
   const [regIntId, setRegIntId] = useState<number | null>(null);
   const { organization } = useBranding();
@@ -189,6 +189,7 @@ export default function OverallSheetPage() {
 
   const [teamName,       setTeamName]       = useState<string>('');
   const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
+  const [judgeRecord,    setJudgeRecord]    = useState<JudgeScoreRecord | null>(null);
   const [scoringSystem,  setScoringSystem]  = useState<ScoringSystem | ''>('');
   const [skillLevel,     setSkillLevel]     = useState<string | undefined>(undefined);
   const [loading,        setLoading]        = useState(true);
@@ -225,10 +226,58 @@ export default function OverallSheetPage() {
   const animacionFilled = isEscolar && animacionCriteria.some(v => v > 0);
 
   // ── Load ──────────────────────────────────────────────────────────────────
+  const assignmentsRef = useRef(assignments);
+  assignmentsRef.current = assignments;
+  const isJudgeRef = useRef(isJudge);
+  isJudgeRef.current = isJudge;
+
+  const populateFromScoreSource = useCallback((
+    source: Partial<ScoreSheet | JudgeScoreRecord> & { notes?: string | null },
+    sysKey: string,
+    isIntlSys: boolean,
+  ) => {
+    if (source.formations_score) {
+      setFormationsScore(parseFloat(source.formations_score as string));
+    }
+    if (source.dance_difficulty) {
+      const v = parseFloat(source.dance_difficulty as string);
+      setDanceDifficulty(v >= 0.5 && v <= 2.0 ? v : 0);
+    }
+    if (source.dance_execution) {
+      const v = parseFloat(source.dance_execution as string);
+      setDanceExecution(v >= 0.5 && v <= 2.0 ? v : 0);
+    }
+    if (source.creativity_overall) {
+      const [cMin, cMax] = isIntlSys ? [8.0, 10.0] : [1.5, 2.0];
+      setCreativityOverall(Math.min(cMax, Math.max(cMin, parseFloat(source.creativity_overall as string))));
+    }
+    if (source.showmanship_overall) {
+      const sMax    = (sysKey === 'escolar_ab' || isIntlSys) ? 5.0 : 2.0;
+      const showMin = sysKey === 'escolar_ab' ? 0 : isIntlSys ? 3.5 : 1.0;
+      setShowmanshipOverall(Math.min(sMax, Math.max(showMin, parseFloat(source.showmanship_overall as string))));
+    }
+    if (source.notes) {
+      try {
+        const p = JSON.parse(source.notes as string);
+        setComments(p.comments ?? [p.formations, p.dance].filter(Boolean).join('\n'));
+        if (Array.isArray(p.formationErrors)) setFormationErrors(p.formationErrors);
+        if (Array.isArray(p.animacion) && p.animacion.length === 5) {
+          setAnimacionCriteria(p.animacion as number[]);
+        }
+        if (p.protest_started_at) {
+          const elapsed = Date.now() - new Date(p.protest_started_at).getTime();
+          if (elapsed >= 15 * 60 * 1000) setProtestExpired(true);
+        }
+      } catch {
+        setComments(source.notes as string);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const load = useCallback(async () => {
     try {
-      const [sheetRes, regRes, divRes] = await Promise.all([
-        competitionsRepository.listScoreSheets({ registration__public_id: regId }),
+      const [regRes, divRes] = await Promise.all([
         competitionsRepository.listRegistrations({ division__public_id: divisionId, page_size: '100' }),
         competitionsRepository.getDivision(divisionId),
       ]);
@@ -236,6 +285,7 @@ export default function OverallSheetPage() {
       const div = divRes.data;
       setScoringSystem((div.scoring_system || div.suggested_scoring_system) as ScoringSystem);
       setSkillLevel(div.skill_level);
+      setCompetitionIntId(div.competition);
 
       const reg = regRes.data.results.find((r) => r.public_id === regId);
       if (reg) {
@@ -248,56 +298,45 @@ export default function OverallSheetPage() {
       const sysKey = (div.scoring_system || div.suggested_scoring_system) as string;
       const isIntlSys = sysKey === 'intl_l1' || sysKey === 'intl_l2' || sysKey === 'intl_l2_7' || sysKey === 'intl_nt' || sysKey === 'prep' || sysKey === 'escolar';
 
-      if (sheetRes.data.results.length > 0) {
-        const sheet = sheetRes.data.results[0];
-        setExistingSheet(sheet);
-        if (!reg) setTeamName(sheet.team_name);
-
-        if (sheet.formations_score) {
-          setFormationsScore(parseFloat(sheet.formations_score));
-        }
-        if (sheet.dance_difficulty) {
-          const v = parseFloat(sheet.dance_difficulty);
-          setDanceDifficulty(v >= 0.5 && v <= 2.0 ? v : 0);
-        }
-        if (sheet.dance_execution) {
-          const v = parseFloat(sheet.dance_execution);
-          setDanceExecution(v >= 0.5 && v <= 2.0 ? v : 0);
-        }
-        if (sheet.creativity_overall) {
-          const [cMin, cMax] = isIntlSys ? [8.0, 10.0] : [1.5, 2.0];
-          setCreativityOverall(Math.min(cMax, Math.max(cMin, parseFloat(sheet.creativity_overall))));
-        }
-        if (sheet.showmanship_overall) {
-          const sMax    = (sysKey === 'escolar_ab' || isIntlSys) ? 5.0 : 2.0;
-          const showMin = sysKey === 'escolar_ab' ? 0 : isIntlSys ? 3.5 : 1.0;
-          setShowmanshipOverall(Math.min(sMax, Math.max(showMin, parseFloat(sheet.showmanship_overall))));
-        }
-        if (sheet.notes) {
-          try {
-            const p = JSON.parse(sheet.notes);
-            setComments(p.comments ?? [p.formations, p.dance].filter(Boolean).join('\n'));
-            if (Array.isArray(p.formationErrors)) setFormationErrors(p.formationErrors);
-            if (Array.isArray(p.animacion) && p.animacion.length === 5) {
-              setAnimacionCriteria(p.animacion as number[]);
-            }
-            if (p.protest_started_at) {
-              const elapsed = Date.now() - new Date(p.protest_started_at).getTime();
-              if (elapsed >= 15 * 60 * 1000) setProtestExpired(true);
-            }
-          } catch {
-            setComments(sheet.notes);
+      if (isJudgeRef.current) {
+        // Judge: load from own JudgeScoreRecord (isolated per judge)
+        const myAssignment = assignmentsRef.current.find(
+          a => a.competition === div.competition && a.sheet_type === 'overall'
+        );
+        if (myAssignment) {
+          const recordRes = await competitionsRepository.getMyJudgeScoreRecord(regId, myAssignment.id);
+          const record = recordRes.data;
+          setJudgeRecord(record);
+          if (!reg) setTeamName('');
+          populateFromScoreSource(record, sysKey, isIntlSys);
+          if (isIntlSys && !record.formations_score) {
+            setFormationsScore(5.0);
+            setCreativityOverall(8.0);
+            setShowmanshipOverall(3.5);
           }
+        } else if (isIntlSys) {
+          setFormationsScore(5.0);
+          setCreativityOverall(8.0);
+          setShowmanshipOverall(3.5);
         }
-      } else if (isIntlSys) {
-        setFormationsScore(5.0);
-        setCreativityOverall(8.0);
-        setShowmanshipOverall(3.5);
+      } else {
+        // Admin: load aggregated ScoreSheet for display
+        const sheetRes = await competitionsRepository.listScoreSheets({ registration__public_id: regId });
+        if (sheetRes.data.results.length > 0) {
+          const sheet = sheetRes.data.results[0];
+          setExistingSheet(sheet);
+          if (!reg) setTeamName(sheet.team_name);
+          populateFromScoreSource(sheet, sysKey, isIntlSys);
+        } else if (isIntlSys) {
+          setFormationsScore(5.0);
+          setCreativityOverall(8.0);
+          setShowmanshipOverall(3.5);
+        }
       }
     } finally {
       setLoading(false);
     }
-  }, [regId, divisionId]);
+  }, [regId, divisionId, populateFromScoreSource]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -366,7 +405,8 @@ export default function OverallSheetPage() {
   const handleSave = async (silent = false) => {
     setSaving(true);
     try {
-      const payload: Partial<ScoreSheet> = {
+      const notesSource = judgeRecord?.notes ?? existingSheet?.notes ?? '{}';
+      const scorePayload = {
         formations_score:    String(formationsScore),
         dance_difficulty:    String(danceDifficulty),
         dance_execution:     String(danceExecution),
@@ -375,25 +415,26 @@ export default function OverallSheetPage() {
         animacion_escolar:   animacionFilled ? String(animacionTotal) : null,
         notes: (() => {
           let existing: Record<string, unknown> = {};
-          try { existing = JSON.parse(existingSheet?.notes ?? '{}'); } catch { /* noop */ }
+          try { existing = JSON.parse(notesSource); } catch { /* noop */ }
           const n: Record<string, unknown> = { ...existing, comments, formationErrors };
           if (isEscolar) n.animacion = animacionCriteria;
           return JSON.stringify(n);
         })(),
       };
 
-      let saved: ScoreSheet;
-      if (existingSheet) {
-        const res = await competitionsRepository.updateScoreSheet(existingSheet.id, payload);
-        saved = res.data;
+      if (judgeRecord) {
+        const res = await competitionsRepository.updateJudgeScoreRecord(judgeRecord.id, scorePayload);
+        setJudgeRecord(res.data);
+      } else if (existingSheet) {
+        const res = await competitionsRepository.updateScoreSheet(existingSheet.id, scorePayload as Partial<ScoreSheet>);
+        setExistingSheet(res.data);
       } else {
         const res = await competitionsRepository.createScoreSheet({
           registration: regIntId!,
-          ...payload,
+          ...scorePayload,
         } as Partial<ScoreSheet>);
-        saved = res.data;
+        setExistingSheet(res.data);
       }
-      setExistingSheet(saved);
       if (!silent) toast.success('Planilla guardada');
     } catch (err) {
       if (!silent) toastApiError(err);

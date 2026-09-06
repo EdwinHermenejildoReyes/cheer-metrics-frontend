@@ -13,7 +13,7 @@ import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
 import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
-import type { ScoreSheet, UnpaidAthlete } from '@/types/competitions';
+import type { JudgeScoreRecord, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 
 // ── Per-category config (regulation: UCA National Experience 2025) ────────────
@@ -224,7 +224,7 @@ export default function PartnerStuntSheetPage() {
   const router  = useRouter();
   const { id, divisionId, regId } = useParams<{ id: string; divisionId: string; regId: string }>();
 
-  const { isJudge, isCompetitionActive } = useJudge();
+  const { isJudge, isCompetitionActive, assignments } = useJudge();
   const [competitionIntId, setCompetitionIntId] = useState<number | null>(null);
   const [regIntId, setRegIntId] = useState<number | null>(null);
   const readOnly = !isJudge;
@@ -240,6 +240,7 @@ export default function PartnerStuntSheetPage() {
 
   const [teamName,       setTeamName]       = useState<string>('');
   const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
+  const [judgeRecord,    setJudgeRecord]    = useState<JudgeScoreRecord | null>(null);
   const [skillLevel,     setSkillLevel]     = useState<string | undefined>(undefined);
   const [loading,        setLoading]        = useState(true);
   const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
@@ -263,10 +264,25 @@ export default function PartnerStuntSheetPage() {
     setScores(prev => ({ ...prev, [key]: value }));
   };
 
+  const assignmentsRef = useRef(assignments);
+  assignmentsRef.current = assignments;
+  const isJudgeRef = useRef(isJudge);
+  isJudgeRef.current = isJudge;
+
+  const populateFromScoreSource = useCallback((source: ScoreSheet | JudgeScoreRecord) => {
+    setScores({
+      pg_technique:       source.pg_technique       ? parseFloat(String(source.pg_technique))       : 0,
+      pg_difficulty:      source.pg_difficulty      ? parseFloat(String(source.pg_difficulty))      : 0,
+      pg_form_appearance: source.pg_form_appearance ? parseFloat(String(source.pg_form_appearance)) : 0,
+      pg_transitions:     source.pg_transitions     ? parseFloat(String(source.pg_transitions))     : 0,
+      pg_expressiveness:  source.pg_expressiveness  ? parseFloat(String(source.pg_expressiveness))  : 0,
+    });
+    if (source.notes) setNotes(source.notes);
+  }, []);
+
   const load = useCallback(async () => {
     try {
-      const [sheetRes, regRes, divRes] = await Promise.all([
-        competitionsRepository.listScoreSheets({ registration__public_id: regId }),
+      const [regRes, divRes] = await Promise.all([
         competitionsRepository.listRegistrations({ division__public_id: divisionId, page_size: '100' }),
         competitionsRepository.getDivision(divisionId),
       ]);
@@ -279,24 +295,30 @@ export default function PartnerStuntSheetPage() {
         setRequirePayment(reg.competition_require_payment);
       }
       setSkillLevel(divRes.data.skill_level);
+      setCompetitionIntId(divRes.data.competition);
 
-      if (sheetRes.data.results.length > 0) {
-        const sheet = sheetRes.data.results[0];
-        setExistingSheet(sheet);
-        if (!reg) setTeamName(sheet.team_name);
-        setScores({
-          pg_technique:       sheet.pg_technique       ? parseFloat(sheet.pg_technique)       : 0,
-          pg_difficulty:      sheet.pg_difficulty      ? parseFloat(sheet.pg_difficulty)      : 0,
-          pg_form_appearance: sheet.pg_form_appearance ? parseFloat(sheet.pg_form_appearance) : 0,
-          pg_transitions:     sheet.pg_transitions     ? parseFloat(sheet.pg_transitions)     : 0,
-          pg_expressiveness:  sheet.pg_expressiveness  ? parseFloat(sheet.pg_expressiveness)  : 0,
-        });
-        if (sheet.notes) setNotes(sheet.notes);
+      if (isJudgeRef.current) {
+        const myAssignment = assignmentsRef.current.find(
+          a => a.competition === divRes.data.competition && a.sheet_type === 'partner_stunt'
+        );
+        if (myAssignment) {
+          const recordRes = await competitionsRepository.getMyJudgeScoreRecord(regId, myAssignment.id);
+          setJudgeRecord(recordRes.data);
+          populateFromScoreSource(recordRes.data);
+        }
+      } else {
+        const sheetRes = await competitionsRepository.listScoreSheets({ registration__public_id: regId });
+        if (sheetRes.data.results.length > 0) {
+          const sheet = sheetRes.data.results[0];
+          setExistingSheet(sheet);
+          if (!reg) setTeamName(sheet.team_name);
+          populateFromScoreSource(sheet);
+        }
       }
     } finally {
       setLoading(false);
     }
-  }, [regId, divisionId]);
+  }, [regId, divisionId, populateFromScoreSource]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -347,18 +369,16 @@ export default function PartnerStuntSheetPage() {
         notes,
       };
 
-      let saved: ScoreSheet;
-      if (existingSheet) {
+      if (judgeRecord) {
+        const res = await competitionsRepository.updateJudgeScoreRecord(judgeRecord.id, payload);
+        setJudgeRecord(res.data);
+      } else if (existingSheet) {
         const res = await competitionsRepository.updateScoreSheet(existingSheet.id, payload);
-        saved = res.data;
+        setExistingSheet(res.data);
       } else {
-        const res = await competitionsRepository.createScoreSheet({
-          registration: regIntId!,
-          ...payload,
-        } as Partial<ScoreSheet>);
-        saved = res.data;
+        const res = await competitionsRepository.createScoreSheet({ registration: regIntId!, ...payload } as Partial<ScoreSheet>);
+        setExistingSheet(res.data);
       }
-      setExistingSheet(saved);
       if (!silent) toast.success('Planilla guardada');
     } catch (err) {
       if (!silent) toastApiError(err);

@@ -12,7 +12,7 @@ import { IasfSheetPrintView } from '@/components/print/IasfSheetPrintView';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
 import { toastApiError } from '@/utils/apiErrors';
-import type { ScoreSheet, UnpaidAthlete } from '@/types/competitions';
+import type { JudgeScoreRecord, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 
 // ── IASF World: Overall categories ────────────────────────────────────────────
@@ -193,7 +193,7 @@ export default function IasfOverallSheetPage() {
   const router  = useRouter();
   const { id, divisionId, regId } = useParams<{ id: string; divisionId: string; regId: string }>();
 
-  const { isJudge, isCompetitionActive } = useJudge();
+  const { isJudge, isCompetitionActive, assignments } = useJudge();
   const [competitionIntId, setCompetitionIntId] = useState<number | null>(null);
   const [regIntId, setRegIntId] = useState<number | null>(null);
   const readOnly = !isJudge;
@@ -208,6 +208,7 @@ export default function IasfOverallSheetPage() {
 
   const [teamName,       setTeamName]       = useState<string>('');
   const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
+  const [judgeRecord,    setJudgeRecord]    = useState<JudgeScoreRecord | null>(null);
   const [skillLevel,     setSkillLevel]     = useState<string | undefined>(undefined);
   const [loading,        setLoading]        = useState(true);
   const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
@@ -226,10 +227,26 @@ export default function IasfOverallSheetPage() {
   const total = Object.values(scores).reduce((s, v) => s + v, 0);
   const pct   = MAX_TOTAL > 0 ? (total / MAX_TOTAL) * 100 : 0;
 
+  const assignmentsRef = useRef(assignments);
+  assignmentsRef.current = assignments;
+  const isJudgeRef = useRef(isJudge);
+  isJudgeRef.current = isJudge;
+
+  const populateFromScoreSource = useCallback((source: Partial<ScoreSheet | JudgeScoreRecord> & { notes?: string | null }) => {
+    setScores({
+      creativity_overall:  source.creativity_overall  ? parseFloat(source.creativity_overall  as string) : 0,
+      formations_score:    source.formations_score    ? parseFloat(source.formations_score    as string) : 0,
+      dance_difficulty:    source.dance_difficulty    ? parseFloat(source.dance_difficulty    as string) : 0,
+      dance_execution:     source.dance_execution     ? parseFloat(source.dance_execution     as string) : 0,
+      showmanship_overall: source.showmanship_overall ? parseFloat(source.showmanship_overall as string) : 0,
+    });
+    if (source.notes) setNotes(source.notes as string);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const load = useCallback(async () => {
     try {
-      const [sheetRes, regRes, divRes] = await Promise.all([
-        competitionsRepository.listScoreSheets({ registration__public_id: regId }),
+      const [regRes, divRes] = await Promise.all([
         competitionsRepository.listRegistrations({ division__public_id: divisionId, page_size: '100' }),
         competitionsRepository.getDivision(divisionId),
       ]);
@@ -241,23 +258,32 @@ export default function IasfOverallSheetPage() {
         setRequirePayment(reg.competition_require_payment);
       }
       setSkillLevel(divRes.data.skill_level);
-      if (sheetRes.data.results.length > 0) {
-        const sheet = sheetRes.data.results[0];
-        setExistingSheet(sheet);
-        if (!reg) setTeamName(sheet.team_name);
-        setScores({
-          creativity_overall:  sheet.creativity_overall  ? parseFloat(sheet.creativity_overall)  : 0,
-          formations_score:    sheet.formations_score    ? parseFloat(sheet.formations_score)    : 0,
-          dance_difficulty:    sheet.dance_difficulty    ? parseFloat(sheet.dance_difficulty)    : 0,
-          dance_execution:     sheet.dance_execution     ? parseFloat(sheet.dance_execution)     : 0,
-          showmanship_overall: sheet.showmanship_overall ? parseFloat(sheet.showmanship_overall) : 0,
-        });
-        if (sheet.notes) setNotes(sheet.notes);
+      setCompetitionIntId(divRes.data.competition);
+
+      if (isJudgeRef.current) {
+        const myAssignment = assignmentsRef.current.find(
+          a => a.competition === divRes.data.competition && a.sheet_type === 'overall'
+        );
+        if (myAssignment) {
+          const recordRes = await competitionsRepository.getMyJudgeScoreRecord(regId, myAssignment.id);
+          const record = recordRes.data;
+          setJudgeRecord(record);
+          if (!reg) setTeamName('');
+          populateFromScoreSource(record);
+        }
+      } else {
+        const sheetRes = await competitionsRepository.listScoreSheets({ registration__public_id: regId });
+        if (sheetRes.data.results.length > 0) {
+          const sheet = sheetRes.data.results[0];
+          setExistingSheet(sheet);
+          if (!reg) setTeamName(sheet.team_name);
+          populateFromScoreSource(sheet);
+        }
       }
     } finally {
       setLoading(false);
     }
-  }, [regId, divisionId]);
+  }, [regId, divisionId, populateFromScoreSource]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -299,7 +325,7 @@ export default function IasfOverallSheetPage() {
   const handleSave = async (silent = false) => {
     setSaving(true);
     try {
-      const payload: Partial<ScoreSheet> = {
+      const scorePayload = {
         creativity_overall:  String(scores.creativity_overall),
         formations_score:    String(scores.formations_score),
         dance_difficulty:    String(scores.dance_difficulty),
@@ -307,18 +333,16 @@ export default function IasfOverallSheetPage() {
         showmanship_overall: String(scores.showmanship_overall),
         notes,
       };
-      let saved: ScoreSheet;
-      if (existingSheet) {
-        const res = await competitionsRepository.updateScoreSheet(existingSheet.id, payload);
-        saved = res.data;
+      if (judgeRecord) {
+        const res = await competitionsRepository.updateJudgeScoreRecord(judgeRecord.id, scorePayload);
+        setJudgeRecord(res.data);
+      } else if (existingSheet) {
+        const res = await competitionsRepository.updateScoreSheet(existingSheet.id, scorePayload as Partial<ScoreSheet>);
+        setExistingSheet(res.data);
       } else {
-        const res = await competitionsRepository.createScoreSheet({
-          registration: regIntId!,
-          ...payload,
-        } as Partial<ScoreSheet>);
-        saved = res.data;
+        const res = await competitionsRepository.createScoreSheet({ registration: regIntId!, ...scorePayload } as Partial<ScoreSheet>);
+        setExistingSheet(res.data);
       }
-      setExistingSheet(saved);
       if (!silent) toast.success('Planilla guardada');
     } catch (err) {
       if (!silent) toastApiError(err);

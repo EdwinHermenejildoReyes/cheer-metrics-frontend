@@ -15,7 +15,7 @@ import { useJudge } from '@/hooks/useJudge';
 import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
 import type { BuildingConfig } from '@/lib/scoringConfig';
-import type { Division, DivisionCategory, Registration, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
+import type { Division, DivisionCategory, JudgeScoreRecord, Registration, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 import type { BuildingPrintData } from '@/components/print/BuildingSheetPrintView';
@@ -207,7 +207,7 @@ export default function BuildingSheetPage() {
   const router  = useRouter();
   const { id, divisionId, regId } = useParams<{ id: string; divisionId: string; regId: string }>();
 
-  const { isJudge, isCompetitionActive } = useJudge();
+  const { isJudge, isCompetitionActive, assignments } = useJudge();
   const [competitionIntId, setCompetitionIntId] = useState<number | null>(null);
   const [regIntId, setRegIntId] = useState<number | null>(null);
   const { organization } = useBranding();
@@ -224,6 +224,7 @@ export default function BuildingSheetPage() {
 
   const [teamName,      setTeamName]      = useState<string>('');
   const [existingSheet, setExistingSheet] = useState<ScoreSheet | null>(null);
+  const [judgeRecord,   setJudgeRecord]   = useState<JudgeScoreRecord | null>(null);
   const [division,      setDivision]      = useState<Division | null>(null);
   const [loading,       setLoading]       = useState(true);
   const [saving,        setSaving]        = useState(false);
@@ -318,10 +319,76 @@ export default function BuildingSheetPage() {
   }, [stuntsRango]);
 
   // ── Load ──────────────────────────────────────────────────────────────────
+  // Ref so load() always sees latest assignments without being a closure dep
+  const assignmentsRef = useRef(assignments);
+  assignmentsRef.current = assignments;
+  const isJudgeRef = useRef(isJudge);
+  isJudgeRef.current = isJudge;
+
+  const populateFromScoreSource = useCallback((
+    source: { notes?: string | null } & Partial<ScoreSheet | JudgeScoreRecord>,
+    cfg: BuildingConfig,
+  ) => {
+    if (source.stunts_difficulty) {
+      const v = parseFloat(source.stunts_difficulty as string);
+      if (cfg.stuntsRango.some(r => r.value === v)) setStuntsRango(v);
+    }
+    if (source.pyramids_difficulty) {
+      const v = parseFloat(source.pyramids_difficulty as string);
+      const idx = cfg.pyramidRango.findIndex(r => v >= r.low && v <= r.high);
+      if (idx >= 0) {
+        setPyramidsRangeIdx(idx);
+        setPyramidsFine(parseFloat((v - cfg.pyramidRango[idx].low).toFixed(1)));
+      }
+    }
+    if (source.tosses_difficulty) {
+      const v = parseFloat(source.tosses_difficulty as string);
+      setTossesDiff(cfg.tossDiffOpts.some(o => o.value === v) ? v : 0.0);
+    }
+    if (source.pyramids_drivers) {
+      const v = parseFloat(source.pyramids_drivers as string);
+      if (cfg.pyramidDriversOpts.some(o => o.value === v)) setPyramidsDrivers(v);
+    }
+    if (source.creativity_building) {
+      setCreativityBuilding(Math.min(cfg.creativityMax, Math.max(cfg.creativityMin, parseFloat(source.creativity_building as string))));
+    }
+    if (source.showmanship_building) {
+      setShowmanshipBuilding(Math.min(cfg.showmanshipMax, Math.max(cfg.showmanshipMin, parseFloat(source.showmanship_building as string))));
+    }
+    if (source.notes) {
+      try {
+        const parsed = JSON.parse(source.notes as string);
+        if (parsed._scores) {
+          const s = parsed._scores;
+          if (s.stuntsRango !== undefined && cfg.stuntsRango.some(r => r.value === s.stuntsRango)) setStuntsRango(s.stuntsRango);
+          if (Array.isArray(s.stuntsSkills)) {
+            setStuntsSkills(Array(5).fill(null).map((_, i) => s.stuntsSkills[i] ?? null));
+          }
+          if (s.stuntsPartMax !== undefined && s.stuntsPartMax !== null && cfg.stuntsPartMaxOpts.some(o => o.value === s.stuntsPartMax)) setStuntsPartMax(s.stuntsPartMax);
+          if (Array.isArray(s.stuntsExecDeds))  setStuntsExecDeds(s.stuntsExecDeds);
+          if (Array.isArray(s.pyramidsExecDeds)) setPyramidsExecDeds(s.pyramidsExecDeds);
+          if (Array.isArray(s.tossesExecDeds))  setTossesExecDeds(s.tossesExecDeds);
+          if (s.pyramidsRangeIdx !== undefined)  setPyramidsRangeIdx(s.pyramidsRangeIdx);
+          if (s.pyramidsFine !== undefined)       setPyramidsFine(s.pyramidsFine);
+        } else if (source.stunts_drivers) {
+          const v = parseFloat(source.stunts_drivers as string);
+          if (cfg.stuntsPartMaxOpts.some(o => o.value === v)) setStuntsPartMax(v);
+        }
+        setComments(parsed.comments ?? [parsed.stunts, parsed.pyramids, parsed.tosses].filter(Boolean).join('\n'));
+        if (parsed.protest_started_at) {
+          const elapsed = Date.now() - new Date(parsed.protest_started_at).getTime();
+          if (elapsed >= 15 * 60 * 1000) setProtestExpired(true);
+        }
+      } catch {
+        setComments(source.notes as string);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const load = useCallback(async () => {
     try {
-      const [sheetRes, regRes, divRes] = await Promise.all([
-        competitionsRepository.listScoreSheets({ registration__public_id: regId }),
+      const [regRes, divRes] = await Promise.all([
         competitionsRepository.listRegistrations({ division__public_id: divisionId, page_size: '100' }),
         competitionsRepository.getDivision(divisionId),
       ]);
@@ -350,73 +417,34 @@ export default function BuildingSheetPage() {
       setShowmanshipBuilding(cfg.showmanshipMin);
 
       // Don't auto-select the first rango — leave at 0 so fresh sheets start with no selection.
-      // Saved sheets restore the rango from notes._scores.stuntsRango below.
       if (!cfg.stuntsHasDiff) setStuntsRango(0);
 
-      if (sheetRes.data.results.length > 0) {
-        const sheet = sheetRes.data.results[0];
-        setExistingSheet(sheet);
-        if (!reg) setTeamName(sheet.team_name);
-
-        if (sheet.stunts_difficulty) {
-          const v = parseFloat(sheet.stunts_difficulty);
-          if (cfg.stuntsRango.some(r => r.value === v)) setStuntsRango(v);
+      if (isJudgeRef.current) {
+        // Judge: load from own JudgeScoreRecord (isolated per judge)
+        const myAssignment = assignmentsRef.current.find(
+          a => a.competition === divRes.data.competition && a.sheet_type === 'building'
+        );
+        if (myAssignment) {
+          const recordRes = await competitionsRepository.getMyJudgeScoreRecord(regId, myAssignment.id);
+          const record = recordRes.data;
+          setJudgeRecord(record);
+          if (!reg) setTeamName('');
+          populateFromScoreSource(record, cfg);
         }
-        if (sheet.pyramids_difficulty) {
-          const v = parseFloat(sheet.pyramids_difficulty);
-          const idx = cfg.pyramidRango.findIndex(r => v >= r.low && v <= r.high);
-          if (idx >= 0) {
-            setPyramidsRangeIdx(idx);
-            setPyramidsFine(parseFloat((v - cfg.pyramidRango[idx].low).toFixed(1)));
-          }
-        }
-        if (sheet.tosses_difficulty) {
-          const v = parseFloat(sheet.tosses_difficulty);
-          setTossesDiff(cfg.tossDiffOpts.some(o => o.value === v) ? v : 0.0);
-        }
-        if (sheet.pyramids_drivers) {
-          const v = parseFloat(sheet.pyramids_drivers);
-          if (cfg.pyramidDriversOpts.some(o => o.value === v)) setPyramidsDrivers(v);
-        }
-        if (sheet.creativity_building) {
-          setCreativityBuilding(Math.min(cfg.creativityMax, Math.max(cfg.creativityMin, parseFloat(sheet.creativity_building))));
-        }
-        if (sheet.showmanship_building) {
-          setShowmanshipBuilding(Math.min(cfg.showmanshipMax, Math.max(cfg.showmanshipMin, parseFloat(sheet.showmanship_building))));
-        }
-        if (sheet.notes) {
-          try {
-            const parsed = JSON.parse(sheet.notes);
-            if (parsed._scores) {
-              const s = parsed._scores;
-              if (s.stuntsRango !== undefined && cfg.stuntsRango.some(r => r.value === s.stuntsRango)) setStuntsRango(s.stuntsRango);
-              if (Array.isArray(s.stuntsSkills)) {
-                setStuntsSkills(Array(5).fill(null).map((_, i) => s.stuntsSkills[i] ?? null));
-              }
-              if (s.stuntsPartMax !== undefined && s.stuntsPartMax !== null && cfg.stuntsPartMaxOpts.some(o => o.value === s.stuntsPartMax)) setStuntsPartMax(s.stuntsPartMax);
-              if (Array.isArray(s.stuntsExecDeds))   setStuntsExecDeds(s.stuntsExecDeds);
-              if (Array.isArray(s.pyramidsExecDeds))  setPyramidsExecDeds(s.pyramidsExecDeds);
-              if (Array.isArray(s.tossesExecDeds))    setTossesExecDeds(s.tossesExecDeds);
-              if (s.pyramidsRangeIdx !== undefined)   setPyramidsRangeIdx(s.pyramidsRangeIdx);
-              if (s.pyramidsFine !== undefined)        setPyramidsFine(s.pyramidsFine);
-            } else if (sheet.stunts_drivers) {
-              const v = parseFloat(sheet.stunts_drivers);
-              if (cfg.stuntsPartMaxOpts.some(o => o.value === v)) setStuntsPartMax(v);
-            }
-            setComments(parsed.comments ?? [parsed.stunts, parsed.pyramids, parsed.tosses].filter(Boolean).join('\n'));
-            if (parsed.protest_started_at) {
-              const elapsed = Date.now() - new Date(parsed.protest_started_at).getTime();
-              if (elapsed >= 15 * 60 * 1000) setProtestExpired(true);
-            }
-          } catch {
-            setComments(sheet.notes);
-          }
+      } else {
+        // Admin: load aggregated ScoreSheet for display
+        const sheetRes = await competitionsRepository.listScoreSheets({ registration__public_id: regId });
+        if (sheetRes.data.results.length > 0) {
+          const sheet = sheetRes.data.results[0];
+          setExistingSheet(sheet);
+          if (!reg) setTeamName(sheet.team_name);
+          populateFromScoreSource(sheet, cfg);
         }
       }
     } finally {
       setLoading(false);
     }
-  }, [regId, divisionId]);
+  }, [regId, divisionId, populateFromScoreSource]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -525,7 +553,8 @@ export default function BuildingSheetPage() {
   const handleSave = async (silent = false): Promise<boolean> => {
     setSaving(true);
     try {
-      const payload: Partial<ScoreSheet> = {
+      const notesSource = judgeRecord?.notes ?? existingSheet?.notes ?? '{}';
+      const scorePayload = {
         stunts_difficulty:    String(stuntsRango),
         stunts_execution:     String(stuntsExecTotal),
         stunts_drivers:       String(stuntsDriversTotal),
@@ -538,7 +567,7 @@ export default function BuildingSheetPage() {
         showmanship_building: String(showmanshipBuilding),
         notes: (() => {
           let existing: Record<string, unknown> = {};
-          try { existing = JSON.parse(existingSheet?.notes ?? '{}'); } catch { /* noop */ }
+          try { existing = JSON.parse(notesSource); } catch { /* noop */ }
           const existingScores = (existing._scores as Record<string, unknown>) ?? {};
           return JSON.stringify({
             ...existing,
@@ -553,18 +582,20 @@ export default function BuildingSheetPage() {
         })(),
       };
 
-      let saved: ScoreSheet;
-      if (existingSheet) {
-        const res = await competitionsRepository.updateScoreSheet(existingSheet.id, payload);
-        saved = res.data;
+      if (judgeRecord) {
+        // Judge: save to own isolated JudgeScoreRecord
+        const res = await competitionsRepository.updateJudgeScoreRecord(judgeRecord.id, scorePayload);
+        setJudgeRecord(res.data);
+      } else if (existingSheet) {
+        const res = await competitionsRepository.updateScoreSheet(existingSheet.id, scorePayload as Partial<ScoreSheet>);
+        setExistingSheet(res.data);
       } else {
         const res = await competitionsRepository.createScoreSheet({
           registration: regIntId!,
-          ...payload,
+          ...scorePayload,
         } as Partial<ScoreSheet>);
-        saved = res.data;
+        setExistingSheet(res.data);
       }
-      setExistingSheet(saved);
       if (!silent) toast.success('Planilla guardada');
       return true;
     } catch (err) {

@@ -13,7 +13,7 @@ import { getGymGroups } from '@/lib/constructionTable';
 import { useJudge } from '@/hooks/useJudge';
 import { toastApiError } from '@/utils/apiErrors';
 import type { TumblingConfig } from '@/lib/scoringConfig';
-import type { Division, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
+import type { Division, JudgeScoreRecord, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 
@@ -109,7 +109,7 @@ export default function TumblingExecutionPage() {
   const router = useRouter();
   const { id, divisionId, regId } = useParams<{ id: string; divisionId: string; regId: string }>();
 
-  const { isJudge, isCompetitionActive } = useJudge();
+  const { isJudge, isCompetitionActive, assignments } = useJudge();
   const [competitionIntId, setCompetitionIntId] = useState<number | null>(null);
   const [regIntId, setRegIntId] = useState<number | null>(null);
   const readOnly = !isJudge;
@@ -124,6 +124,7 @@ export default function TumblingExecutionPage() {
 
   const [teamName,       setTeamName]       = useState('');
   const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
+  const [judgeRecord,    setJudgeRecord]    = useState<JudgeScoreRecord | null>(null);
   const [division,       setDivision]       = useState<Division | null>(null);
   const [loading,        setLoading]        = useState(true);
   const [saving,         setSaving]         = useState(false);
@@ -152,10 +153,29 @@ export default function TumblingExecutionPage() {
     (tCfg.hasJumps    ? jumpsExecTotal    : 0)
   ).toFixed(2));
 
+  const assignmentsRef = useRef(assignments);
+  assignmentsRef.current = assignments;
+  const isJudgeRef = useRef(isJudge);
+  isJudgeRef.current = isJudge;
+
+  const populateFromScoreSource = useCallback((source: ScoreSheet | JudgeScoreRecord) => {
+    if (source.notes) {
+      try {
+        const p = JSON.parse(source.notes);
+        setStandingNotes(p.te_standing ?? '');
+        setRunningNotes(p.te_running ?? '');
+        setJumpsNotes(p.te_jumps ?? '');
+        const s = p._scores ?? {};
+        if (Array.isArray(s.te_standingExecDeds)) setStandingExecDeds(s.te_standingExecDeds);
+        if (Array.isArray(s.te_runningExecDeds))  setRunningExecDeds(s.te_runningExecDeds);
+        if (Array.isArray(s.te_jumpsExecDeds))    setJumpsExecDeds(s.te_jumpsExecDeds);
+      } catch { /* noop */ }
+    }
+  }, []);
+
   const load = useCallback(async () => {
     try {
-      const [sheetRes, regRes, divRes] = await Promise.all([
-        competitionsRepository.listScoreSheets({ registration__public_id: regId }),
+      const [regRes, divRes] = await Promise.all([
         competitionsRepository.listRegistrations({ division__public_id: divisionId, page_size: '100' }),
         competitionsRepository.getDivision(divisionId),
       ]);
@@ -166,25 +186,27 @@ export default function TumblingExecutionPage() {
       setTCfg(tcfg);
       setDivision(divRes.data);
       setCompetitionIntId(divRes.data.competition);
-      if (sheetRes.data.results.length > 0) {
-        const sheet = sheetRes.data.results[0];
-        setExistingSheet(sheet);
-        if (!reg) setTeamName(sheet.team_name);
-        if (sheet.notes) {
-          try {
-            const p = JSON.parse(sheet.notes);
-            setStandingNotes(p.te_standing ?? '');
-            setRunningNotes(p.te_running ?? '');
-            setJumpsNotes(p.te_jumps ?? '');
-            const s = p._scores ?? {};
-            if (Array.isArray(s.te_standingExecDeds)) setStandingExecDeds(s.te_standingExecDeds);
-            if (Array.isArray(s.te_runningExecDeds))  setRunningExecDeds(s.te_runningExecDeds);
-            if (Array.isArray(s.te_jumpsExecDeds))    setJumpsExecDeds(s.te_jumpsExecDeds);
-          } catch { /* noop */ }
+
+      if (isJudgeRef.current) {
+        const myAssignment = assignmentsRef.current.find(
+          a => a.competition === divRes.data.competition && a.sheet_type === 'tumbling_execution'
+        );
+        if (myAssignment) {
+          const recordRes = await competitionsRepository.getMyJudgeScoreRecord(regId, myAssignment.id);
+          setJudgeRecord(recordRes.data);
+          populateFromScoreSource(recordRes.data);
+        }
+      } else {
+        const sheetRes = await competitionsRepository.listScoreSheets({ registration__public_id: regId });
+        if (sheetRes.data.results.length > 0) {
+          const sheet = sheetRes.data.results[0];
+          setExistingSheet(sheet);
+          if (!reg) setTeamName(sheet.team_name);
+          populateFromScoreSource(sheet);
         }
       }
     } finally { setLoading(false); }
-  }, [regId, divisionId]);
+  }, [regId, divisionId, populateFromScoreSource]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -257,7 +279,7 @@ export default function TumblingExecutionPage() {
     try {
       const notesPayload = (() => {
         let existing: Record<string, unknown> = {};
-        try { existing = JSON.parse(existingSheet?.notes ?? '{}'); } catch { /* noop */ }
+        try { existing = JSON.parse(judgeRecord?.notes ?? existingSheet?.notes ?? '{}'); } catch { /* noop */ }
         const existingScores = (existing._scores as Record<string, unknown>) ?? {};
         return JSON.stringify({
           ...existing,
@@ -273,15 +295,16 @@ export default function TumblingExecutionPage() {
         notes: notesPayload,
       };
 
-      let saved: ScoreSheet;
-      if (existingSheet) {
+      if (judgeRecord) {
+        const res = await competitionsRepository.updateJudgeScoreRecord(judgeRecord.id, payload);
+        setJudgeRecord(res.data);
+      } else if (existingSheet) {
         const res = await competitionsRepository.updateScoreSheet(existingSheet.id, payload);
-        saved = res.data;
+        setExistingSheet(res.data);
       } else {
         const res = await competitionsRepository.createScoreSheet({ registration: regIntId!, ...payload } as Partial<ScoreSheet>);
-        saved = res.data;
+        setExistingSheet(res.data);
       }
-      setExistingSheet(saved);
       if (!silent) toast.success('Planilla guardada');
     } catch (err) {
       if (!silent) toastApiError(err);

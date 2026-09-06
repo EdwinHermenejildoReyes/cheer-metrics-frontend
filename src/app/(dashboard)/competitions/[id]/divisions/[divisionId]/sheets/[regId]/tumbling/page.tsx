@@ -16,7 +16,7 @@ import { useJudge } from '@/hooks/useJudge';
 import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError } from '@/utils/apiErrors';
 import type { TumblingConfig } from '@/lib/scoringConfig';
-import type { Division, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
+import type { Division, JudgeScoreRecord, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 import type { TumblingPrintData } from '@/components/print/TumblingSheetPrintView';
@@ -286,7 +286,7 @@ export default function TumblingSheetPage() {
   const router  = useRouter();
   const { id, divisionId, regId } = useParams<{ id: string; divisionId: string; regId: string }>();
 
-  const { isJudge, isCompetitionActive } = useJudge();
+  const { isJudge, isCompetitionActive, assignments } = useJudge();
   const [competitionIntId, setCompetitionIntId] = useState<number | null>(null);
   const [regIntId, setRegIntId] = useState<number | null>(null);
   const { organization } = useBranding();
@@ -303,6 +303,7 @@ export default function TumblingSheetPage() {
 
   const [teamName,       setTeamName]       = useState<string>('');
   const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
+  const [judgeRecord,    setJudgeRecord]    = useState<JudgeScoreRecord | null>(null);
   const [division,       setDivision]       = useState<Division | null>(null);
   const [loading,        setLoading]        = useState(true);
   const [saving,         setSaving]         = useState(false);
@@ -361,10 +362,70 @@ export default function TumblingSheetPage() {
   const maxJumpsDiff      = tCfg.jumpsDiffOpts.length > 0 ? Math.max(...tCfg.jumpsDiffOpts.map(o => o.value)) : 0;
 
   // ── Load ─────────────────────────────────────────────────────────────────
+  const assignmentsRef = useRef(assignments);
+  assignmentsRef.current = assignments;
+  const isJudgeRef = useRef(isJudge);
+  isJudgeRef.current = isJudge;
+
+  const populateFromScoreSource = useCallback((
+    source: Partial<ScoreSheet | JudgeScoreRecord> & { notes?: string | null },
+    tcfg: TumblingConfig,
+  ) => {
+    if (source.standing_difficulty) {
+      const v = parseFloat(source.standing_difficulty as string);
+      const match = tcfg.standingRango.find((o) => o.value === v);
+      setStandingRango(match ? v : (tcfg.standingRango[0]?.value ?? 0));
+    }
+    if (source.standing_drivers) {
+      const v = parseFloat(source.standing_drivers as string);
+      const match = tcfg.standingHabilidad.find((o) => o.value === v);
+      setStandingHabilidad(match ? v : 0.0);
+    }
+    if (source.running_difficulty) {
+      const v = parseFloat(source.running_difficulty as string);
+      const match = tcfg.runningRango.find((o) => o.value === v);
+      setRunningRango(match ? v : (tcfg.runningRango[0]?.value ?? 0));
+    }
+    if (source.running_drivers) {
+      const v = parseFloat(source.running_drivers as string);
+      const match = tcfg.runningHabilidad.find((o) => o.value === v);
+      setRunningHabilidad(match ? v : 0.0);
+    }
+    if (source.jumps_difficulty) {
+      const v = parseFloat(source.jumps_difficulty as string);
+      const match = tcfg.jumpsDiffOpts.find((o) => o.value === v);
+      setJumpsDiff(match ? v : (tcfg.jumpsDiffOpts[0]?.value ?? 0));
+    }
+    if (source.creativity_tumbling) {
+      setCreativityTumbling(Math.min(tcfg.creativityMax, Math.max(tcfg.creativityMin, parseFloat(source.creativity_tumbling as string))));
+    }
+    if (source.showmanship_tumbling) {
+      setShowmanshipTumbling(Math.min(tcfg.showmanshipMax, Math.max(tcfg.showmanshipMin, parseFloat(source.showmanship_tumbling as string))));
+    }
+    if (source.notes) {
+      try {
+        const p = JSON.parse(source.notes as string);
+        setComments(p.comments ?? [p.standing, p.running, p.jumps].filter(Boolean).join('\n'));
+        if (p._scores) {
+          const s = p._scores;
+          if (Array.isArray(s.standingExecDeds)) setStandingExecDeds(s.standingExecDeds);
+          if (Array.isArray(s.runningExecDeds))  setRunningExecDeds(s.runningExecDeds);
+          if (Array.isArray(s.jumpsExecDeds))    setJumpsExecDeds(s.jumpsExecDeds);
+        }
+        if (p.protest_started_at) {
+          const elapsed = Date.now() - new Date(p.protest_started_at).getTime();
+          if (elapsed >= 15 * 60 * 1000) setProtestExpired(true);
+        }
+      } catch {
+        setComments(source.notes as string);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const load = useCallback(async () => {
     try {
-      const [sheetRes, regRes, divRes] = await Promise.all([
-        competitionsRepository.listScoreSheets({ registration__public_id: regId }),
+      const [regRes, divRes] = await Promise.all([
         competitionsRepository.listRegistrations({ division__public_id: divisionId, page_size: '100' }),
         competitionsRepository.getDivision(divisionId),
       ]);
@@ -391,69 +452,35 @@ export default function TumblingSheetPage() {
       else setRunningRango(0);
       if (tcfg.jumpsHasDiff && tcfg.jumpsDiffOpts.length > 0) setJumpsDiff(tcfg.jumpsDiffOpts[0].value);
       else setJumpsDiff(0);
-      // Cross-sheet defaults from config (ensures INTL range 8–10 / 3.5–5 for new sheets)
       setCreativityTumbling(tcfg.creativityMin);
       setShowmanshipTumbling(tcfg.showmanshipMin);
 
-      if (sheetRes.data.results.length > 0) {
-        const sheet = sheetRes.data.results[0];
-        setExistingSheet(sheet);
-        if (!reg) setTeamName(sheet.team_name);
-
-        if (sheet.standing_difficulty) {
-          const v = parseFloat(sheet.standing_difficulty);
-          const match = tcfg.standingRango.find((o) => o.value === v);
-          setStandingRango(match ? v : (tcfg.standingRango[0]?.value ?? 0));
+      if (isJudgeRef.current) {
+        // Judge: load from own JudgeScoreRecord (isolated per judge)
+        const myAssignment = assignmentsRef.current.find(
+          a => a.competition === divRes.data.competition && a.sheet_type === 'tumbling'
+        );
+        if (myAssignment) {
+          const recordRes = await competitionsRepository.getMyJudgeScoreRecord(regId, myAssignment.id);
+          const record = recordRes.data;
+          setJudgeRecord(record);
+          if (!reg) setTeamName('');
+          populateFromScoreSource(record, tcfg);
         }
-        if (sheet.standing_drivers) {
-          const v = parseFloat(sheet.standing_drivers);
-          const match = tcfg.standingHabilidad.find((o) => o.value === v);
-          setStandingHabilidad(match ? v : 0.0);
-        }
-        if (sheet.running_difficulty) {
-          const v = parseFloat(sheet.running_difficulty);
-          const match = tcfg.runningRango.find((o) => o.value === v);
-          setRunningRango(match ? v : (tcfg.runningRango[0]?.value ?? 0));
-        }
-        if (sheet.running_drivers) {
-          const v = parseFloat(sheet.running_drivers);
-          const match = tcfg.runningHabilidad.find((o) => o.value === v);
-          setRunningHabilidad(match ? v : 0.0);
-        }
-        if (sheet.jumps_difficulty) {
-          const v = parseFloat(sheet.jumps_difficulty);
-          const match = tcfg.jumpsDiffOpts.find((o) => o.value === v);
-          setJumpsDiff(match ? v : (tcfg.jumpsDiffOpts[0]?.value ?? 0));
-        }
-        if (sheet.creativity_tumbling) {
-          setCreativityTumbling(Math.min(tcfg.creativityMax, Math.max(tcfg.creativityMin, parseFloat(sheet.creativity_tumbling))));
-        }
-        if (sheet.showmanship_tumbling) {
-          setShowmanshipTumbling(Math.min(tcfg.showmanshipMax, Math.max(tcfg.showmanshipMin, parseFloat(sheet.showmanship_tumbling))));
-        }
-        if (sheet.notes) {
-          try {
-            const p = JSON.parse(sheet.notes);
-            setComments(p.comments ?? [p.standing, p.running, p.jumps].filter(Boolean).join('\n'));
-            if (p._scores) {
-              const s = p._scores;
-              if (Array.isArray(s.standingExecDeds)) setStandingExecDeds(s.standingExecDeds);
-              if (Array.isArray(s.runningExecDeds))  setRunningExecDeds(s.runningExecDeds);
-              if (Array.isArray(s.jumpsExecDeds))    setJumpsExecDeds(s.jumpsExecDeds);
-            }
-            if (p.protest_started_at) {
-              const elapsed = Date.now() - new Date(p.protest_started_at).getTime();
-              if (elapsed >= 15 * 60 * 1000) setProtestExpired(true);
-            }
-          } catch {
-            setComments(sheet.notes);
-          }
+      } else {
+        // Admin: load aggregated ScoreSheet for display
+        const sheetRes = await competitionsRepository.listScoreSheets({ registration__public_id: regId });
+        if (sheetRes.data.results.length > 0) {
+          const sheet = sheetRes.data.results[0];
+          setExistingSheet(sheet);
+          if (!reg) setTeamName(sheet.team_name);
+          populateFromScoreSource(sheet, tcfg);
         }
       }
     } finally {
       setLoading(false);
     }
-  }, [regId, divisionId]);
+  }, [regId, divisionId, populateFromScoreSource]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -546,7 +573,8 @@ export default function TumblingSheetPage() {
   const handleSave = async (silent = false) => {
     setSaving(true);
     try {
-      const payload: Partial<ScoreSheet> = {
+      const notesSource = judgeRecord?.notes ?? existingSheet?.notes ?? '{}';
+      const scorePayload = {
         standing_difficulty:  String(tCfg.hasStanding ? standingDiffEff    : 0),
         standing_drivers:     String(tCfg.hasStanding ? standingHabEff     : 0),
         standing_execution:   String(tCfg.hasStanding ? standingExecTotal  : 0),
@@ -559,7 +587,7 @@ export default function TumblingSheetPage() {
         showmanship_tumbling: String(showmanshipTumbling),
         notes: (() => {
           let existing: Record<string, unknown> = {};
-          try { existing = JSON.parse(existingSheet?.notes ?? '{}'); } catch { /* noop */ }
+          try { existing = JSON.parse(notesSource); } catch { /* noop */ }
           const existingScores = (existing._scores as Record<string, unknown>) ?? {};
           return JSON.stringify({
             ...existing,
@@ -569,18 +597,19 @@ export default function TumblingSheetPage() {
         })(),
       };
 
-      let saved: ScoreSheet;
-      if (existingSheet) {
-        const res = await competitionsRepository.updateScoreSheet(existingSheet.id, payload);
-        saved = res.data;
+      if (judgeRecord) {
+        const res = await competitionsRepository.updateJudgeScoreRecord(judgeRecord.id, scorePayload);
+        setJudgeRecord(res.data);
+      } else if (existingSheet) {
+        const res = await competitionsRepository.updateScoreSheet(existingSheet.id, scorePayload as Partial<ScoreSheet>);
+        setExistingSheet(res.data);
       } else {
         const res = await competitionsRepository.createScoreSheet({
           registration: regIntId!,
-          ...payload,
+          ...scorePayload,
         } as Partial<ScoreSheet>);
-        saved = res.data;
+        setExistingSheet(res.data);
       }
-      setExistingSheet(saved);
       if (!silent) toast.success('Planilla guardada');
     } catch (err) {
       if (!silent) toastApiError(err);

@@ -12,7 +12,7 @@ import { IasfSheetPrintView } from '@/components/print/IasfSheetPrintView';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { useJudge } from '@/hooks/useJudge';
 import { toastApiError } from '@/utils/apiErrors';
-import type { ScoreSheet, UnpaidAthlete } from '@/types/competitions';
+import type { JudgeScoreRecord, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 
 // ── IASF World: Building categories (regulation maxima) ───────────────────────
@@ -210,7 +210,7 @@ export default function IasfBuildingSheetPage() {
   const router  = useRouter();
   const { id, divisionId, regId } = useParams<{ id: string; divisionId: string; regId: string }>();
 
-  const { isJudge, isCompetitionActive } = useJudge();
+  const { isJudge, isCompetitionActive, assignments } = useJudge();
   const [competitionIntId, setCompetitionIntId] = useState<number | null>(null);
   const [regIntId, setRegIntId] = useState<number | null>(null);
   const readOnly = !isJudge;
@@ -225,6 +225,7 @@ export default function IasfBuildingSheetPage() {
 
   const [teamName,       setTeamName]       = useState<string>('');
   const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
+  const [judgeRecord,    setJudgeRecord]    = useState<JudgeScoreRecord | null>(null);
   const [skillLevel,     setSkillLevel]     = useState<string | undefined>(undefined);
   const [loading,        setLoading]        = useState(true);
   const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
@@ -244,10 +245,27 @@ export default function IasfBuildingSheetPage() {
   const total = Object.values(scores).reduce((s, v) => s + v, 0);
   const pct   = MAX_TOTAL > 0 ? (total / MAX_TOTAL) * 100 : 0;
 
+  const assignmentsRef = useRef(assignments);
+  assignmentsRef.current = assignments;
+  const isJudgeRef = useRef(isJudge);
+  isJudgeRef.current = isJudge;
+
+  const populateFromScoreSource = useCallback((source: Partial<ScoreSheet | JudgeScoreRecord> & { notes?: string | null }) => {
+    setScores({
+      stunts_difficulty:   source.stunts_difficulty   ? parseFloat(source.stunts_difficulty   as string) : 0,
+      stunts_execution:    source.stunts_execution    ? parseFloat(source.stunts_execution    as string) : 0,
+      pyramids_difficulty: source.pyramids_difficulty ? parseFloat(source.pyramids_difficulty as string) : 0,
+      pyramids_execution:  source.pyramids_execution  ? parseFloat(source.pyramids_execution  as string) : 0,
+      tosses_difficulty:   source.tosses_difficulty   ? parseFloat(source.tosses_difficulty   as string) : 0,
+      tosses_execution:    source.tosses_execution    ? parseFloat(source.tosses_execution    as string) : 0,
+    });
+    if (source.notes) setNotes(source.notes as string);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const load = useCallback(async () => {
     try {
-      const [sheetRes, regRes, divRes] = await Promise.all([
-        competitionsRepository.listScoreSheets({ registration__public_id: regId }),
+      const [regRes, divRes] = await Promise.all([
         competitionsRepository.listRegistrations({ division__public_id: divisionId, page_size: '100' }),
         competitionsRepository.getDivision(divisionId),
       ]);
@@ -259,24 +277,32 @@ export default function IasfBuildingSheetPage() {
         setRequirePayment(reg.competition_require_payment);
       }
       setSkillLevel(divRes.data.skill_level);
-      if (sheetRes.data.results.length > 0) {
-        const sheet = sheetRes.data.results[0];
-        setExistingSheet(sheet);
-        if (!reg) setTeamName(sheet.team_name);
-        setScores({
-          stunts_difficulty:   sheet.stunts_difficulty   ? parseFloat(sheet.stunts_difficulty)   : 0,
-          stunts_execution:    sheet.stunts_execution    ? parseFloat(sheet.stunts_execution)    : 0,
-          pyramids_difficulty: sheet.pyramids_difficulty ? parseFloat(sheet.pyramids_difficulty) : 0,
-          pyramids_execution:  sheet.pyramids_execution  ? parseFloat(sheet.pyramids_execution)  : 0,
-          tosses_difficulty:   sheet.tosses_difficulty   ? parseFloat(sheet.tosses_difficulty)   : 0,
-          tosses_execution:    sheet.tosses_execution    ? parseFloat(sheet.tosses_execution)    : 0,
-        });
-        if (sheet.notes) setNotes(sheet.notes);
+      setCompetitionIntId(divRes.data.competition);
+
+      if (isJudgeRef.current) {
+        const myAssignment = assignmentsRef.current.find(
+          a => a.competition === divRes.data.competition && a.sheet_type === 'building'
+        );
+        if (myAssignment) {
+          const recordRes = await competitionsRepository.getMyJudgeScoreRecord(regId, myAssignment.id);
+          const record = recordRes.data;
+          setJudgeRecord(record);
+          if (!reg) setTeamName('');
+          populateFromScoreSource(record);
+        }
+      } else {
+        const sheetRes = await competitionsRepository.listScoreSheets({ registration__public_id: regId });
+        if (sheetRes.data.results.length > 0) {
+          const sheet = sheetRes.data.results[0];
+          setExistingSheet(sheet);
+          if (!reg) setTeamName(sheet.team_name);
+          populateFromScoreSource(sheet);
+        }
       }
     } finally {
       setLoading(false);
     }
-  }, [regId, divisionId]);
+  }, [regId, divisionId, populateFromScoreSource]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -319,7 +345,7 @@ export default function IasfBuildingSheetPage() {
   const handleSave = async (silent = false) => {
     setSaving(true);
     try {
-      const payload: Partial<ScoreSheet> = {
+      const scorePayload = {
         stunts_difficulty:   String(scores.stunts_difficulty),
         stunts_execution:    String(scores.stunts_execution),
         pyramids_difficulty: String(scores.pyramids_difficulty),
@@ -328,18 +354,16 @@ export default function IasfBuildingSheetPage() {
         tosses_execution:    String(scores.tosses_execution),
         notes,
       };
-      let saved: ScoreSheet;
-      if (existingSheet) {
-        const res = await competitionsRepository.updateScoreSheet(existingSheet.id, payload);
-        saved = res.data;
+      if (judgeRecord) {
+        const res = await competitionsRepository.updateJudgeScoreRecord(judgeRecord.id, scorePayload);
+        setJudgeRecord(res.data);
+      } else if (existingSheet) {
+        const res = await competitionsRepository.updateScoreSheet(existingSheet.id, scorePayload as Partial<ScoreSheet>);
+        setExistingSheet(res.data);
       } else {
-        const res = await competitionsRepository.createScoreSheet({
-          registration: regIntId!,
-          ...payload,
-        } as Partial<ScoreSheet>);
-        saved = res.data;
+        const res = await competitionsRepository.createScoreSheet({ registration: regIntId!, ...scorePayload } as Partial<ScoreSheet>);
+        setExistingSheet(res.data);
       }
-      setExistingSheet(saved);
       if (!silent) toast.success('Planilla guardada');
     } catch (err) {
       if (!silent) toastApiError(err);
