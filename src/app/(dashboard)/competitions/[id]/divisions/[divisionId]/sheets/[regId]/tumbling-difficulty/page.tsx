@@ -201,6 +201,14 @@ export default function TumblingDifficultyPage() {
           const recordRes = await competitionsRepository.getMyJudgeScoreRecord(regId, myAssignment.id);
           setJudgeRecord(recordRes.data);
           populateFromScoreSource(recordRes.data, tcfg);
+        } else {
+          // No assignment found: fall back to loading the shared ScoreSheet
+          const sheetRes = await competitionsRepository.listScoreSheets({ registration__public_id: regId });
+          if (sheetRes.data.results.length > 0) {
+            const sheet = sheetRes.data.results[0];
+            setExistingSheet(sheet);
+            populateFromScoreSource(sheet, tcfg);
+          }
         }
       } else {
         const sheetRes = await competitionsRepository.listScoreSheets({ registration__public_id: regId });

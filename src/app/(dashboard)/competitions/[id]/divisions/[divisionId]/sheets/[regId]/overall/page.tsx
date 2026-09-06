@@ -314,10 +314,18 @@ export default function OverallSheetPage() {
             setCreativityOverall(8.0);
             setShowmanshipOverall(3.5);
           }
-        } else if (isIntlSys) {
-          setFormationsScore(5.0);
-          setCreativityOverall(8.0);
-          setShowmanshipOverall(3.5);
+        } else {
+          // No assignment found: fall back to loading the shared ScoreSheet
+          const sheetRes = await competitionsRepository.listScoreSheets({ registration__public_id: regId });
+          if (sheetRes.data.results.length > 0) {
+            const sheet = sheetRes.data.results[0];
+            setExistingSheet(sheet);
+            populateFromScoreSource(sheet, sysKey, isIntlSys);
+          } else if (isIntlSys) {
+            setFormationsScore(5.0);
+            setCreativityOverall(8.0);
+            setShowmanshipOverall(3.5);
+          }
         }
       } else {
         // Admin: load aggregated ScoreSheet for display
