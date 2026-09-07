@@ -952,15 +952,21 @@ export default function DivisionDetailPage() {
                   {isExpanded && !isJudge && hasJudging && sheet && (
                     <div className="border-t border-zinc-100 bg-zinc-50 px-5 py-4 flex flex-col gap-4">
 
-                      {/* Judge status */}
-                      {Object.keys(effectiveJudgesBySheet).length > 0 && !isIcuDanceMode && (
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-3">Jueces</p>
-                          <div className="flex flex-col gap-4">
-                            {(Object.entries(effectiveJudgesBySheet) as [SheetType, JudgeAssignment[]][])
-                              .sort(([a], [b]) => SHEET_TYPE_ORDER.indexOf(a) - SHEET_TYPE_ORDER.indexOf(b))
-                              .filter(([sheetType]) => JUDGE_TABLE_SHEET_TYPES.has(sheetType))
-                              .map(([sheetType, judges]) => {
+                      {/* Judge status — only render when this team has actual records */}
+                      {!isIcuDanceMode && (() => {
+                        const regRecords = judgeRecordsMap[reg.id] ?? {};
+                        const judgeEntries = (Object.entries(effectiveJudgesBySheet) as [SheetType, JudgeAssignment[]][])
+                          .sort(([a], [b]) => SHEET_TYPE_ORDER.indexOf(a) - SHEET_TYPE_ORDER.indexOf(b))
+                          .filter(([sheetType, judges]) =>
+                            JUDGE_TABLE_SHEET_TYPES.has(sheetType) &&
+                            judges.some(j => regRecords[j.id] !== undefined)
+                          );
+                        if (judgeEntries.length === 0) return null;
+                        return (
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-3">Jueces</p>
+                            <div className="flex flex-col gap-4">
+                              {judgeEntries.map(([sheetType, judges]) => {
                                 const Icon = SHEET_TYPE_ICONS[sheetType] ?? Star;
                                 return (
                                   <div key={sheetType}>
@@ -973,14 +979,15 @@ export default function DivisionDetailPage() {
                                     <JudgeScoreTable
                                       sheetType={sheetType}
                                       judges={judges}
-                                      records={judgeRecordsMap[reg.id] ?? {}}
+                                      records={regRecords}
                                     />
                                   </div>
                                 );
                               })}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
 
                       {/* Section totals */}
                       <div>
