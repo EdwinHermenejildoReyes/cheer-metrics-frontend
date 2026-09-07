@@ -14,6 +14,7 @@ import { useDispatch } from 'react-redux';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import authRepository from '@/repositories/authRepository';
 import { exportDivisionScores } from '@/lib/exportDivisionScores';
+import { JudgeScoreTable } from '@/components/competitions/JudgeScoreTable';
 import { setUser } from '@/store/auth/slices';
 import { useJudge } from '@/hooks/useJudge';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -919,47 +920,27 @@ export default function DivisionDetailPage() {
                       {/* Judge status */}
                       {Object.keys(judgesBySheet).length > 0 && !isIcuDanceMode && (
                         <div>
-                          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-2">Jueces</p>
-                          <div className="flex flex-col gap-2">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-3">Jueces</p>
+                          <div className="flex flex-col gap-4">
                             {(Object.entries(judgesBySheet) as [SheetType, JudgeAssignment[]][])
                               .sort(([a], [b]) => SHEET_TYPE_ORDER.indexOf(a) - SHEET_TYPE_ORDER.indexOf(b))
-                              .flatMap(([sheetType, judges]) => {
+                              .map(([sheetType, judges]) => {
                                 const Icon = SHEET_TYPE_ICONS[sheetType] ?? Star;
-                                return judges.map((judge) => {
-                                  const judgeRecord = judgeRecordsMap[reg.id]?.[judge.id];
-                                  const { scored, score } = judgeRecord
-                                    ? getJudgeRecordStatus(sheetType, judgeRecord)
-                                    : { scored: false, score: 0 };
-                                  const fields = judgeRecord ? getJudgeSheetFields(sheetType, judgeRecord) : [];
-                                  const scoredFields = fields.filter(f => f.value != null && parseFloat(f.value) !== 0);
-                                  return (
-                                    <div key={`${sheetType}-${judge.id}`} className="flex flex-col gap-1">
-                                      <div className="flex items-center gap-2 text-xs">
-                                        <Icon className={`h-3 w-3 shrink-0 ${SHEET_TYPE_COLORS[sheetType]}`} />
-                                        <span className="w-28 shrink-0 text-zinc-500">{SHEET_TYPE_LABELS[sheetType]}</span>
-                                        <span className="flex-1 text-zinc-700 font-medium truncate">{judge.user_name}</span>
-                                        {judgeRecord === undefined ? (
-                                          <span className="text-zinc-400 text-[10px]">Sin registro</span>
-                                        ) : scored ? (
-                                          <span className="text-emerald-600 font-semibold tabular-nums">
-                                            ✓ {score > 0 ? score.toFixed(2) : 'Calificado'}
-                                          </span>
-                                        ) : (
-                                          <span className="text-amber-500">Pendiente</span>
-                                        )}
-                                      </div>
-                                      {scored && scoredFields.length > 0 && (
-                                        <div className="pl-5 flex flex-wrap gap-x-3 gap-y-0.5">
-                                          {scoredFields.map(f => (
-                                            <span key={f.label} className="text-[10px] text-zinc-400">
-                                              {f.label}:&nbsp;<span className="text-zinc-600 font-medium tabular-nums">{parseFloat(f.value!).toFixed(2)}</span>
-                                            </span>
-                                          ))}
-                                        </div>
-                                      )}
+                                return (
+                                  <div key={sheetType}>
+                                    <div className="flex items-center gap-1.5 mb-2">
+                                      <Icon className={`h-3 w-3 ${SHEET_TYPE_COLORS[sheetType]}`} />
+                                      <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">
+                                        {SHEET_TYPE_LABELS[sheetType]}
+                                      </span>
                                     </div>
-                                  );
-                                });
+                                    <JudgeScoreTable
+                                      sheetType={sheetType}
+                                      judges={judges}
+                                      records={judgeRecordsMap[reg.id] ?? {}}
+                                    />
+                                  </div>
+                                );
                               })}
                           </div>
                         </div>
