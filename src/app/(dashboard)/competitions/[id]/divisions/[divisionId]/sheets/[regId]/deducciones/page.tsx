@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Trash2, AlertCircle, X, Eye, Save } from 'lucide-react';
+import { ArrowLeft, Trash2, AlertCircle, X, Eye, Save, Lock } from 'lucide-react';
 import { InfoButton } from '@/components/ui/InfoButton';
 import { toast } from 'sonner';
 import { PageSpinner } from '@/components/ui/spinner';
@@ -226,7 +226,8 @@ export default function DeduccionesSheetPage() {
   const { isJudge, isCompetitionActive } = useJudge();
   const [competitionIntId, setCompetitionIntId] = useState<number | null>(null);
   const [regIntId, setRegIntId] = useState<number | null>(null);
-  const readOnly = !isJudge;
+  const [scoringLocked, setScoringLocked] = useState(false);
+  const readOnly = !isJudge || scoringLocked;
   const { organization } = useBranding();
 
   useEffect(() => {
@@ -255,9 +256,10 @@ export default function DeduccionesSheetPage() {
 
   const load = useCallback(async () => {
     try {
-      const [sheetRes, regRes] = await Promise.all([
+      const [sheetRes, regRes, divRes] = await Promise.all([
         competitionsRepository.listScoreSheets({ registration__public_id: regId }),
         competitionsRepository.listRegistrations({ division__public_id: divisionId, page_size: '100' }),
+        competitionsRepository.getDivision(divisionId),
       ]);
       const reg = regRes.data.results.find(r => r.public_id === regId);
       if (reg) {
@@ -266,6 +268,8 @@ export default function DeduccionesSheetPage() {
         setUnpaidAthletes(reg.unpaid_athletes);
         setRequirePayment(reg.competition_require_payment);
       }
+      setCompetitionIntId(divRes.data.competition);
+      setScoringLocked(divRes.data.scoring_locked ?? false);
       if (sheetRes.data.results.length > 0) {
         const s = sheetRes.data.results[0];
         setSheet(s);
@@ -419,7 +423,13 @@ export default function DeduccionesSheetPage() {
         )}
       </div>
 
-      {readOnly && (
+      {scoringLocked && (
+        <div className="print:hidden bg-red-50 border-b border-red-200 px-6 py-2 flex items-center gap-2">
+          <Lock className="w-4 h-4 text-red-600 shrink-0" />
+          <p className="text-sm text-red-700 font-medium">La división está bloqueada. No se pueden registrar nuevos descuentos.</p>
+        </div>
+      )}
+      {!scoringLocked && readOnly && (
         <div className="print:hidden bg-amber-50 border-b border-amber-200 px-6 py-2 flex items-center gap-2">
           <Eye className="w-4 h-4 text-amber-600 shrink-0" />
           <p className="text-sm text-amber-700 font-medium">Solo lectura — solo los jueces asignados pueden calificar.</p>
