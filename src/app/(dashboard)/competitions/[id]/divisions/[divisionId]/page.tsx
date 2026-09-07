@@ -508,6 +508,41 @@ export default function DivisionDetailPage() {
   const hasJudging = division.competition_service_type !== 'registration_only';
   const hasRegistration = division.competition_service_type !== 'judging_only';
   const compId = division.competition;
+
+  // Supplement formal judgesBySheet with judges discovered from submitted JudgeScoreRecords.
+  // This makes the JUECES section visible even when judge assignments exist for a different
+  // division scope (e.g. judges assigned to Elevaciones division but scoring Gimnasia too).
+  const effectiveJudgesBySheet: Partial<Record<SheetType, JudgeAssignment[]>> = { ...judgesBySheet };
+  if (!isJudge) {
+    Object.values(judgeRecordsMap).forEach(regRecords => {
+      Object.values(regRecords).forEach(record => {
+        const st = record.sheet_type;
+        if (!JUDGE_TABLE_SHEET_TYPES.has(st)) return;
+        if (!effectiveJudgesBySheet[st]) effectiveJudgesBySheet[st] = [];
+        if (!effectiveJudgesBySheet[st]!.find(j => j.id === record.judge_assignment)) {
+          effectiveJudgesBySheet[st]!.push({
+            id: record.judge_assignment,
+            user_name: record.judge_name,
+            sheet_type: st,
+            user: 0,
+            competition: compId,
+            competition_public_id: '',
+            competition_name: '',
+            competition_date: '',
+            competition_end_datetime: null,
+            competition_is_active: true,
+            panel: null,
+            panel_name: null,
+            divisions: [],
+            access_from: null,
+            access_until: null,
+            is_access_active: true,
+          });
+        }
+      });
+    });
+  }
+
   const isSheetAllowedInDivision = (st: SheetType) =>
     !division.allowed_sheet_types || division.allowed_sheet_types.includes(st);
   const canViewSheetInDivision = (st: SheetType) =>
@@ -575,7 +610,7 @@ export default function DivisionDetailPage() {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => exportDivisionScores(division, registrations, judgesBySheet, judgeRecordsMap)}
+              onClick={() => exportDivisionScores(division, registrations, effectiveJudgesBySheet, judgeRecordsMap)}
             >
               <Download className="h-4 w-4" />
               Exportar
@@ -918,11 +953,11 @@ export default function DivisionDetailPage() {
                     <div className="border-t border-zinc-100 bg-zinc-50 px-5 py-4 flex flex-col gap-4">
 
                       {/* Judge status */}
-                      {Object.keys(judgesBySheet).length > 0 && !isIcuDanceMode && (
+                      {Object.keys(effectiveJudgesBySheet).length > 0 && !isIcuDanceMode && (
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-3">Jueces</p>
                           <div className="flex flex-col gap-4">
-                            {(Object.entries(judgesBySheet) as [SheetType, JudgeAssignment[]][])
+                            {(Object.entries(effectiveJudgesBySheet) as [SheetType, JudgeAssignment[]][])
                               .sort(([a], [b]) => SHEET_TYPE_ORDER.indexOf(a) - SHEET_TYPE_ORDER.indexOf(b))
                               .filter(([sheetType]) => JUDGE_TABLE_SHEET_TYPES.has(sheetType))
                               .map(([sheetType, judges]) => {
