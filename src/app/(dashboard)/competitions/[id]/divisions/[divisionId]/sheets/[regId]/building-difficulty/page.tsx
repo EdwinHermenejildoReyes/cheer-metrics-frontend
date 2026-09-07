@@ -45,8 +45,9 @@ export default function BuildingDifficultyPage() {
   const { isJudge, isCompetitionActive, assignments } = useJudge();
   const [competitionIntId, setCompetitionIntId] = useState<number | null>(null);
   const [regIntId, setRegIntId] = useState<number | null>(null);
+  const [scoringLocked, setScoringLocked] = useState(false);
   const { organization } = useBranding();
-  const readOnly = !isJudge;
+  const readOnly = !isJudge || (isJudge && scoringLocked);
 
   useEffect(() => {
 
@@ -186,6 +187,7 @@ export default function BuildingDifficultyPage() {
       setBCfg(cfg);
       setDivision(divRes.data);
       setCompetitionIntId(divRes.data.competition);
+      setScoringLocked(divRes.data.scoring_locked ?? false);
 
       if (cfg.stuntsHasDiff && cfg.stuntsRango.length > 0) setStuntsRango(cfg.stuntsRango[0].value);
 

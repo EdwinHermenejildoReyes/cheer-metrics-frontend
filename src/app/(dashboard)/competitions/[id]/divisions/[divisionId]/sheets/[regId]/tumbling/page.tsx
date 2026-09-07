@@ -291,7 +291,8 @@ export default function TumblingSheetPage() {
   const [regIntId, setRegIntId] = useState<number | null>(null);
   const { organization } = useBranding();
   const [protestExpired, setProtestExpired] = useState(false);
-  const readOnly = !isJudge || protestExpired;
+  const [scoringLocked, setScoringLocked] = useState(false);
+  const readOnly = !isJudge || protestExpired || (isJudge && scoringLocked);
 
   useEffect(() => {
 
@@ -444,6 +445,7 @@ export default function TumblingSheetPage() {
       setTCfg(tcfg);
       setDivision(divRes.data);
       setCompetitionIntId(divRes.data.competition);
+      setScoringLocked(divRes.data.scoring_locked ?? false);
 
       // Config-based defaults
       if (tcfg.standingHasDiff && tcfg.standingRango.length > 0) setStandingRango(tcfg.standingRango[0].value);

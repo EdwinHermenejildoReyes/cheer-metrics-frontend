@@ -177,7 +177,8 @@ export default function OverallSheetPage() {
   const [regIntId, setRegIntId] = useState<number | null>(null);
   const { organization } = useBranding();
   const [protestExpired, setProtestExpired] = useState(false);
-  const readOnly = !isJudge || protestExpired;
+  const [scoringLocked, setScoringLocked] = useState(false);
+  const readOnly = !isJudge || protestExpired || (isJudge && scoringLocked);
 
   useEffect(() => {
 
@@ -286,6 +287,7 @@ export default function OverallSheetPage() {
       setScoringSystem((div.scoring_system || div.suggested_scoring_system) as ScoringSystem);
       setSkillLevel(div.skill_level);
       setCompetitionIntId(div.competition);
+      setScoringLocked(div.scoring_locked ?? false);
 
       const reg = regRes.data.results.find((r) => r.public_id === regId);
       if (reg) {

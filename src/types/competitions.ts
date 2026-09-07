@@ -303,6 +303,7 @@ export interface Division {
   is_enable: boolean;
   allowed_sheet_types: SheetType[] | null;
   order: number;
+  scoring_locked: boolean;
 }
 
 export interface Gym {

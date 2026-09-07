@@ -227,7 +227,8 @@ export default function PartnerStuntSheetPage() {
   const { isJudge, isCompetitionActive, assignments } = useJudge();
   const [competitionIntId, setCompetitionIntId] = useState<number | null>(null);
   const [regIntId, setRegIntId] = useState<number | null>(null);
-  const readOnly = !isJudge;
+  const [scoringLocked, setScoringLocked] = useState(false);
+  const readOnly = !isJudge || (isJudge && scoringLocked);
   const { organization } = useBranding();
 
   useEffect(() => {
@@ -296,6 +297,7 @@ export default function PartnerStuntSheetPage() {
       }
       setSkillLevel(divRes.data.skill_level);
       setCompetitionIntId(divRes.data.competition);
+      setScoringLocked(divRes.data.scoring_locked ?? false);
 
       if (isJudgeRef.current) {
         const myAssignment = assignmentsRef.current.find(

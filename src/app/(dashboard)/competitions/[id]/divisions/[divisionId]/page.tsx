@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, Link2, ChevronsUp, RotateCw, Star, CircleMinus, Gauge, Users2, TrendingUp, BadgeCheck, Sparkles, Timer, ShieldCheck, ChevronUp, ChevronDown, Mail, MessageCircle, Lock, Info, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Trophy, MinusCircle, Link2, ChevronsUp, RotateCw, Star, CircleMinus, Gauge, Users2, TrendingUp, BadgeCheck, Sparkles, Timer, ShieldCheck, ChevronUp, ChevronDown, Mail, MessageCircle, Lock, Unlock, Info, Download, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import { DeductionModal } from '@/components/competitions/DeductionModal';
 import { useDispatch } from 'react-redux';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import authRepository from '@/repositories/authRepository';
+import { exportDivisionScores } from '@/lib/exportDivisionScores';
 import { setUser } from '@/store/auth/slices';
 import { useJudge } from '@/hooks/useJudge';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -409,6 +410,26 @@ export default function DivisionDetailPage() {
     }
   };
 
+  const handleToggleLock = async () => {
+    if (!division) return;
+    const newLocked = !division.scoring_locked;
+    const label = newLocked ? 'bloquear' : 'desbloquear';
+    if (!await confirm({
+      title: newLocked ? 'Bloquear calificación' : 'Desbloquear calificación',
+      message: newLocked
+        ? 'Los jueces no podrán guardar ni editar sus calificaciones en esta división. ¿Continuar?'
+        : 'Los jueces podrán volver a editar sus calificaciones. ¿Continuar?',
+      confirmLabel: newLocked ? 'Bloquear' : 'Desbloquear',
+    })) return;
+    try {
+      const res = await competitionsRepository.updateDivision(String(division.id), { scoring_locked: newLocked });
+      setDivision(res.data);
+      toast.success(newLocked ? 'División bloqueada' : 'División desbloqueada');
+    } catch {
+      toast.error(`No se pudo ${label} la división`);
+    }
+  };
+
   const handleScoreSaved = (sheet: ScoreSheet) => {
     setScoreSheets((prev) => ({ ...prev, [sheet.registration]: sheet }));
   };
@@ -549,12 +570,33 @@ export default function DivisionDetailPage() {
           </div>
         </div>
         {!isJudge && (
-          <div className="flex items-center gap-1.5 shrink-0 mt-1">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-            </span>
-            <span className="text-xs text-zinc-400">En vivo</span>
+          <div className="flex items-center gap-2 shrink-0 mt-1">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => exportDivisionScores(division, registrations, judgesBySheet, judgeRecordsMap)}
+            >
+              <Download className="h-4 w-4" />
+              Exportar
+            </Button>
+            <Button
+              size="sm"
+              variant={division.scoring_locked ? 'danger' : 'outline'}
+              onClick={handleToggleLock}
+            >
+              {division.scoring_locked
+                ? <><Lock className="h-4 w-4" /> Bloqueado</>
+                : <><Unlock className="h-4 w-4" /> Bloquear</>}
+            </Button>
+            {!division.scoring_locked && (
+              <div className="flex items-center gap-1.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                </span>
+                <span className="text-xs text-zinc-400">En vivo</span>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -578,6 +620,21 @@ export default function DivisionDetailPage() {
             )}
           </div>
         </div>
+
+        {/* Banner: división bloqueada */}
+        {division.scoring_locked && (
+          <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3.5">
+            <Lock className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-red-800">Calificación bloqueada</p>
+              <p className="text-xs text-red-700 mt-0.5">
+                {isJudge
+                  ? 'El administrador ha cerrado la calificación. Ya no puedes guardar cambios en esta división.'
+                  : 'La calificación de esta división está bloqueada. Los jueces no pueden editar sus planillas.'}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Banner: juez sin acceso a planillas en esta división */}
         {isJudge && hasJudging && judgeExpandedSheets.length === 0 && (() => {

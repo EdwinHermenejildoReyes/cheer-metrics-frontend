@@ -112,7 +112,8 @@ export default function TumblingExecutionPage() {
   const { isJudge, isCompetitionActive, assignments } = useJudge();
   const [competitionIntId, setCompetitionIntId] = useState<number | null>(null);
   const [regIntId, setRegIntId] = useState<number | null>(null);
-  const readOnly = !isJudge;
+  const [scoringLocked, setScoringLocked] = useState(false);
+  const readOnly = !isJudge || (isJudge && scoringLocked);
 
   useEffect(() => {
 
@@ -186,6 +187,7 @@ export default function TumblingExecutionPage() {
       setTCfg(tcfg);
       setDivision(divRes.data);
       setCompetitionIntId(divRes.data.competition);
+      setScoringLocked(divRes.data.scoring_locked ?? false);
 
       if (isJudgeRef.current) {
         const myAssignment = assignmentsRef.current.find(

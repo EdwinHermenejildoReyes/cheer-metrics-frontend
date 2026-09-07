@@ -92,7 +92,8 @@ export default function TumblingDifficultyPage() {
   const { isJudge, isCompetitionActive, assignments } = useJudge();
   const [competitionIntId, setCompetitionIntId] = useState<number | null>(null);
   const [regIntId, setRegIntId] = useState<number | null>(null);
-  const readOnly = !isJudge;
+  const [scoringLocked, setScoringLocked] = useState(false);
+  const readOnly = !isJudge || (isJudge && scoringLocked);
 
   useEffect(() => {
 
@@ -188,6 +189,7 @@ export default function TumblingDifficultyPage() {
       setTCfg(tcfg);
       setDivision(divRes.data);
       setCompetitionIntId(divRes.data.competition);
+      setScoringLocked(divRes.data.scoring_locked ?? false);
 
       if (tcfg.standingHasDiff && tcfg.standingRango.length > 0) setStandingRango(tcfg.standingRango[0].value);
       if (tcfg.runningHasDiff  && tcfg.runningRango.length  > 0) setRunningRango(tcfg.runningRango[0].value);

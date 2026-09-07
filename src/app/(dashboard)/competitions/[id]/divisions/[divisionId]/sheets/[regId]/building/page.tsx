@@ -212,7 +212,8 @@ export default function BuildingSheetPage() {
   const [regIntId, setRegIntId] = useState<number | null>(null);
   const { organization } = useBranding();
   const [protestExpired, setProtestExpired] = useState(false);
-  const readOnly = !isJudge || protestExpired;
+  const [scoringLocked, setScoringLocked] = useState(false);
+  const readOnly = !isJudge || protestExpired || (isJudge && scoringLocked);
 
   useEffect(() => {
 
@@ -411,6 +412,7 @@ export default function BuildingSheetPage() {
       setBCfg(cfg);
       setDivision(divRes.data);
       setCompetitionIntId(divRes.data.competition);
+      setScoringLocked(divRes.data.scoring_locked ?? false);
 
       // Initialize cross-sheet defaults from config so INTL divisions start at 8.0/3.5, not 1.5/1.0
       setCreativityBuilding(cfg.creativityMin);
