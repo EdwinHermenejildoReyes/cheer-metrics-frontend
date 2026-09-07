@@ -100,7 +100,15 @@ const GROUPS: Partial<Record<SheetType, ColGroup[]>> = {
     { label: 'Transiciones', color: 'orange', showSubtotal: false, fields: [{ key: 'pg_transitions',     label: '' }] },
     { label: 'Expresividad', color: 'orange', showSubtotal: false, fields: [{ key: 'pg_expressiveness',  label: '' }] },
   ],
+  rangos: [
+    { label: 'STUNTS',    color: 'orange', showSubtotal: false, fields: [{ key: 'stunts_drivers',   label: '' }] },
+    { label: 'PIRÁMIDES', color: 'orange', showSubtotal: false, fields: [{ key: 'pyramids_drivers', label: '' }] },
+    { label: 'ESTÁTICA',  color: 'orange', showSubtotal: false, fields: [{ key: 'standing_drivers', label: '' }] },
+    { label: 'CORRIENDO', color: 'orange', showSubtotal: false, fields: [{ key: 'running_drivers',  label: '' }] },
+  ],
 };
+
+export const JUDGE_TABLE_SHEET_TYPES = new Set(Object.keys(GROUPS) as SheetType[]);
 
 function groupTotal(group: ColGroup, rec: JudgeScoreRecord): number {
   return group.fields.reduce((s, fld) => s + f(rec[fld.key] as string | null), 0);

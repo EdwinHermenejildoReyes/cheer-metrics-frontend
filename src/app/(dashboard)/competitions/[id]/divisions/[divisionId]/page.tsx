@@ -14,7 +14,7 @@ import { useDispatch } from 'react-redux';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import authRepository from '@/repositories/authRepository';
 import { exportDivisionScores } from '@/lib/exportDivisionScores';
-import { JudgeScoreTable } from '@/components/competitions/JudgeScoreTable';
+import { JudgeScoreTable, JUDGE_TABLE_SHEET_TYPES } from '@/components/competitions/JudgeScoreTable';
 import { setUser } from '@/store/auth/slices';
 import { useJudge } from '@/hooks/useJudge';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -924,6 +924,7 @@ export default function DivisionDetailPage() {
                           <div className="flex flex-col gap-4">
                             {(Object.entries(judgesBySheet) as [SheetType, JudgeAssignment[]][])
                               .sort(([a], [b]) => SHEET_TYPE_ORDER.indexOf(a) - SHEET_TYPE_ORDER.indexOf(b))
+                              .filter(([sheetType]) => JUDGE_TABLE_SHEET_TYPES.has(sheetType))
                               .map(([sheetType, judges]) => {
                                 const Icon = SHEET_TYPE_ICONS[sheetType] ?? Star;
                                 return (
