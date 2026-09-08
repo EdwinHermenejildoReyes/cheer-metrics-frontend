@@ -116,6 +116,57 @@ const LAYOUTS: Partial<Record<SheetType, LayoutDef>> = {
     creativity:  r => f(r.creativity_building),
     showmanship: r => f(r.showmanship_building),
   },
+
+  partner_stunt: {
+    tab: 'Parejas',
+    sections: [
+      { label: 'TÉCNICA',       fields: [{ label: 'Puntos', get: r => f(r.pg_technique) }],        withSum: false },
+      { label: 'DIFICULTAD',    fields: [{ label: 'Puntos', get: r => f(r.pg_difficulty) }],       withSum: false },
+      { label: 'FORMA',         fields: [{ label: 'Puntos', get: r => f(r.pg_form_appearance) }],  withSum: false },
+      { label: 'TRANSICIONES',  fields: [{ label: 'Puntos', get: r => f(r.pg_transitions) }],     withSum: false },
+      { label: 'EXPRESIVIDAD',  fields: [{ label: 'Puntos', get: r => f(r.pg_expressiveness) }],  withSum: false },
+    ],
+  },
+
+  building_difficulty: {
+    tab: 'Elev. Dificultad',
+    sections: [
+      { label: 'STUNTS',        fields: [{ label: 'Dif', get: r => f(r.stunts_difficulty) }],    withSum: false },
+      { label: 'PIRÁMIDES',     fields: [{ label: 'Dif', get: r => f(r.pyramids_difficulty) }],  withSum: false },
+      { label: 'LANZAMIENTOS',  fields: [{ label: 'Dif', get: r => f(r.tosses_difficulty) }],    withSum: false },
+    ],
+  },
+
+  building_execution: {
+    tab: 'Elev. Ejecución',
+    sections: [
+      { label: 'STUNTS',        fields: [{ label: 'Ejec', get: r => f(r.stunts_execution) }],    withSum: false },
+      { label: 'PIRÁMIDES',     fields: [{ label: 'Ejec', get: r => f(r.pyramids_execution) }],  withSum: false },
+      { label: 'LANZAMIENTOS',  fields: [{ label: 'Ejec', get: r => f(r.tosses_execution) }],    withSum: false },
+    ],
+    creativity:  r => f(r.creativity_building),
+    showmanship: r => f(r.showmanship_building),
+  },
+
+  tumbling_difficulty: {
+    tab: 'Gim. Dificultad',
+    sections: [
+      { label: 'ESTÁTICA',      fields: [{ label: 'Dif', get: r => f(r.standing_difficulty) }],  withSum: false },
+      { label: 'CON CARRERA',   fields: [{ label: 'Dif', get: r => f(r.running_difficulty) }],   withSum: false },
+      { label: 'SALTOS',        fields: [{ label: 'Dif', get: r => f(r.jumps_difficulty) }],     withSum: false },
+    ],
+  },
+
+  tumbling_execution: {
+    tab: 'Gim. Ejecución',
+    sections: [
+      { label: 'ESTÁTICA',      fields: [{ label: 'Ejec', get: r => f(r.standing_execution) }],  withSum: false },
+      { label: 'CON CARRERA',   fields: [{ label: 'Ejec', get: r => f(r.running_execution) }],   withSum: false },
+      { label: 'SALTOS',        fields: [{ label: 'Ejec', get: r => f(r.jumps_execution) }],     withSum: false },
+    ],
+    creativity:  r => f(r.creativity_tumbling),
+    showmanship: r => f(r.showmanship_tumbling),
+  },
 };
 
 // ── Total per judge (sum of all base fields + creativity + showmanship) ─────────
