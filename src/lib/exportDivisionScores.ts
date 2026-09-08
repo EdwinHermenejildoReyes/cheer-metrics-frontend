@@ -1,53 +1,253 @@
 import type { Division, JudgeAssignment, JudgeScoreRecord, Registration, SheetType } from '@/types/competitions';
 
-const SHEET_TYPE_ES: Partial<Record<SheetType, string>> = {
-  building:            'Elevaciones',
-  tumbling:            'Gimnasia',
-  overall:             'General',
-  partner_stunt:       'Parejas',
-  building_difficulty: 'Elev. Dificultad',
-  building_execution:  'Elev. Ejecución',
-  tumbling_difficulty: 'Gim. Dificultad',
-  tumbling_execution:  'Gim. Ejecución',
-  deducciones:         'Deducciones',
-  deductions_only:     'Deducciones',
-  safety_rules:        'Reglas/Seguridad',
-  rangos:              'Rangos',
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+const f = (v: string | null | undefined): number => parseFloat(v ?? '0') || 0;
+const n2 = (v: number): number => parseFloat(v.toFixed(2));
+
+// ── Layout definitions per sheet type ─────────────────────────────────────────
+
+interface FieldDef {
+  label: string;
+  get: (r: JudgeScoreRecord) => number;
+}
+
+interface SectionDef {
+  label: string;
+  fields: FieldDef[];
+  withSum: boolean;
+}
+
+interface LayoutDef {
+  tab: string;
+  sections: SectionDef[];
+  creativity?: (r: JudgeScoreRecord) => number;
+  showmanship?: (r: JudgeScoreRecord) => number;
+}
+
+const LAYOUTS: Partial<Record<SheetType, LayoutDef>> = {
+  tumbling: {
+    tab: 'Gimnasia',
+    sections: [
+      {
+        label: 'ESTÁTICA',
+        fields: [
+          { label: 'Dif',  get: r => f(r.standing_difficulty) },
+          { label: 'Ejec', get: r => f(r.standing_execution) },
+          { label: 'Dr',   get: r => f(r.standing_drivers) },
+        ],
+        withSum: true,
+      },
+      {
+        label: 'CON CARRERA',
+        fields: [
+          { label: 'Dif',  get: r => f(r.running_difficulty) },
+          { label: 'Ejec', get: r => f(r.running_execution) },
+          { label: 'Dr',   get: r => f(r.running_drivers) },
+        ],
+        withSum: true,
+      },
+      {
+        label: 'SALTOS',
+        fields: [
+          { label: 'Dif',  get: r => f(r.jumps_difficulty) },
+          { label: 'Ejec', get: r => f(r.jumps_execution) },
+        ],
+        withSum: true,
+      },
+    ],
+    creativity:  r => f(r.creativity_tumbling),
+    showmanship: r => f(r.showmanship_tumbling),
+  },
+
+  overall: {
+    tab: 'General',
+    sections: [
+      {
+        label: 'FORMACIONES',
+        fields: [
+          { label: 'Puntos', get: r => f(r.formations_score) },
+        ],
+        withSum: false,
+      },
+      {
+        label: 'BAILE',
+        fields: [
+          { label: 'Dif',  get: r => f(r.dance_difficulty) },
+          { label: 'Ejec', get: r => f(r.dance_execution) },
+        ],
+        withSum: true,
+      },
+    ],
+    creativity:  r => f(r.creativity_overall),
+    showmanship: r => f(r.showmanship_overall),
+  },
+
+  building: {
+    tab: 'Elevaciones',
+    sections: [
+      {
+        label: 'STUNTS',
+        fields: [
+          { label: 'Dif',  get: r => f(r.stunts_difficulty) },
+          { label: 'Ejec', get: r => f(r.stunts_execution) },
+          { label: 'Dr',   get: r => f(r.stunts_drivers) },
+        ],
+        withSum: true,
+      },
+      {
+        label: 'PIRÁMIDES',
+        fields: [
+          { label: 'Dif',  get: r => f(r.pyramids_difficulty) },
+          { label: 'Ejec', get: r => f(r.pyramids_execution) },
+          { label: 'Dr',   get: r => f(r.pyramids_drivers) },
+        ],
+        withSum: true,
+      },
+      {
+        label: 'LANZAMIENTOS',
+        fields: [
+          { label: 'Dif',  get: r => f(r.tosses_difficulty) },
+          { label: 'Ejec', get: r => f(r.tosses_execution) },
+        ],
+        withSum: true,
+      },
+    ],
+    creativity:  r => f(r.creativity_building),
+    showmanship: r => f(r.showmanship_building),
+  },
 };
 
-function f(v: string | null | undefined): number {
-  return parseFloat(v ?? '0') || 0;
+// ── Total per judge (sum of all base fields + creativity + showmanship) ─────────
+
+function judgeTotal(layout: LayoutDef, r: JudgeScoreRecord): number {
+  let t = 0;
+  for (const sec of layout.sections) {
+    for (const fd of sec.fields) t += fd.get(r);
+  }
+  if (layout.creativity)  t += layout.creativity(r);
+  if (layout.showmanship) t += layout.showmanship(r);
+  return t;
 }
 
-function judgeSubtotal(sheetType: SheetType, r: JudgeScoreRecord): number {
-  switch (sheetType) {
-    case 'building':
-    case 'building_combined':
-      return f(r.stunts_difficulty) + f(r.stunts_execution) + f(r.stunts_drivers)
-           + f(r.pyramids_difficulty) + f(r.pyramids_execution) + f(r.pyramids_drivers)
-           + f(r.tosses_difficulty) + f(r.tosses_execution);
-    case 'building_difficulty':
-      return f(r.stunts_difficulty) + f(r.pyramids_difficulty) + f(r.tosses_difficulty);
-    case 'building_execution':
-      return f(r.stunts_execution) + f(r.pyramids_execution) + f(r.tosses_execution);
-    case 'tumbling':
-    case 'tumbling_combined':
-      return f(r.standing_difficulty) + f(r.standing_execution) + f(r.standing_drivers)
-           + f(r.running_difficulty) + f(r.running_execution) + f(r.running_drivers)
-           + f(r.jumps_difficulty) + f(r.jumps_execution);
-    case 'tumbling_difficulty':
-      return f(r.standing_difficulty) + f(r.running_difficulty) + f(r.jumps_difficulty);
-    case 'tumbling_execution':
-      return f(r.standing_execution) + f(r.running_execution) + f(r.jumps_execution);
-    case 'overall':
-      return f(r.formations_score) + f(r.dance_difficulty) + f(r.dance_execution);
-    case 'partner_stunt':
-      return f(r.pg_technique) + f(r.pg_difficulty) + f(r.pg_form_appearance)
-           + f(r.pg_transitions) + f(r.pg_expressiveness);
-    default:
-      return 0;
-  }
+// ── Column spec (data columns only, Juez is always col 0) ────────────────────
+
+interface ColSpec {
+  sectionLabel: string;
+  fieldLabel:   string;
+  getValue:     (r: JudgeScoreRecord) => number;
 }
+
+function buildCols(layout: LayoutDef): ColSpec[] {
+  const cols: ColSpec[] = [];
+  for (const sec of layout.sections) {
+    const getters = sec.fields.map(fd => fd.get);
+    for (const fd of sec.fields) {
+      cols.push({ sectionLabel: sec.label, fieldLabel: fd.label, getValue: fd.get });
+    }
+    if (sec.withSum) {
+      cols.push({
+        sectionLabel: sec.label,
+        fieldLabel:   'Σ',
+        getValue:     r => getters.reduce((s, g) => s + g(r), 0),
+      });
+    }
+  }
+  if (layout.creativity) {
+    cols.push({ sectionLabel: 'CREATIVIDAD', fieldLabel: '', getValue: layout.creativity });
+  }
+  if (layout.showmanship) {
+    cols.push({ sectionLabel: 'SHOWMANSHIP', fieldLabel: '', getValue: layout.showmanship });
+  }
+  cols.push({ sectionLabel: 'TOTAL', fieldLabel: '', getValue: r => judgeTotal(layout, r) });
+  return cols;
+}
+
+// ── Worksheet builder ─────────────────────────────────────────────────────────
+
+type CellVal = string | number | null;
+type Row     = CellVal[];
+type Merge   = { s: { r: number; c: number }; e: { r: number; c: number } };
+
+function buildWorksheet(
+  layout: LayoutDef,
+  registrations: Registration[],
+  judges: JudgeAssignment[],
+  judgeRecordsMap: Record<number, Record<number, JudgeScoreRecord>>,
+) {
+  const cols      = buildCols(layout);
+  const totalCols = cols.length + 1; // +1 for Juez
+  const merges: Merge[] = [];
+
+  // ── Row 0: section labels ──────────────────────────────────────────────────
+  const sectionRow: Row = Array(totalCols).fill(null);
+  sectionRow[0] = 'Juez'; // merged down through row 1
+
+  let ci = 0;
+  while (ci < cols.length) {
+    const label = cols[ci].sectionLabel;
+    let end = ci;
+    while (end + 1 < cols.length && cols[end + 1].sectionLabel === label) end++;
+    const excelCol = ci + 1;
+    sectionRow[excelCol] = label;
+    if (end > ci) {
+      merges.push({ s: { r: 0, c: excelCol }, e: { r: 0, c: end + 1 } });
+    }
+    ci = end + 1;
+  }
+  // Merge Juez vertically across both header rows
+  merges.push({ s: { r: 0, c: 0 }, e: { r: 1, c: 0 } });
+
+  // ── Row 1: field labels ────────────────────────────────────────────────────
+  const fieldRow: Row = [''];
+  for (const col of cols) {
+    fieldRow.push(col.fieldLabel || col.sectionLabel);
+  }
+
+  const rows: Row[] = [sectionRow, fieldRow, Array(totalCols).fill(null)];
+  let rowIdx = 3;
+
+  // ── One block per registration ────────────────────────────────────────────
+  for (const reg of registrations) {
+    const regRecords = judgeRecordsMap[reg.id] ?? {};
+    const activeJudges = judges.filter(j => {
+      const rec = regRecords[j.id];
+      return rec && judgeTotal(layout, rec) > 0;
+    });
+    if (activeJudges.length === 0) continue;
+
+    // Team name row — merged across all columns
+    const teamRow: Row = Array(totalCols).fill(null);
+    teamRow[0] = `${reg.team_name}  ·  ${reg.gym_name}`;
+    merges.push({ s: { r: rowIdx, c: 0 }, e: { r: rowIdx, c: totalCols - 1 } });
+    rows.push(teamRow);
+    rowIdx++;
+
+    for (const judge of activeJudges) {
+      const rec  = regRecords[judge.id];
+      const judgeRow: Row = [judge.user_name];
+      for (const col of cols) judgeRow.push(n2(col.getValue(rec)));
+      rows.push(judgeRow);
+      rowIdx++;
+    }
+
+    rows.push(Array(totalCols).fill(null)); // blank separator
+    rowIdx++;
+  }
+
+  // ── Column widths ─────────────────────────────────────────────────────────
+  const colWidths = [{ wch: 24 }, ...cols.map(col => {
+    if (col.sectionLabel === 'TOTAL')        return { wch: 9 };
+    if (col.sectionLabel === 'CREATIVIDAD')  return { wch: 13 };
+    if (col.sectionLabel === 'SHOWMANSHIP')  return { wch: 13 };
+    if (col.fieldLabel === 'Σ')              return { wch: 8 };
+    return { wch: 7 };
+  })];
+
+  return { rows, merges, colWidths };
+}
+
+// ── Public export function ────────────────────────────────────────────────────
 
 export async function exportDivisionScores(
   division: Division,
@@ -56,118 +256,31 @@ export async function exportDivisionScores(
   judgeRecordsMap: Record<number, Record<number, JudgeScoreRecord>>,
 ): Promise<void> {
   const { utils, writeFile } = await import('xlsx');
-
   const wb = utils.book_new();
 
-  const sheetEntries = (Object.entries(judgesBySheet) as [SheetType, JudgeAssignment[]][])
-    .filter(([, judges]) => judges.length > 0);
+  const confirmed = registrations.filter(r => r.status === 'confirmed');
+  let hasData = false;
 
-  if (sheetEntries.length === 0) {
-    // No judges assigned — create a minimal sheet
-    const ws = utils.aoa_to_sheet([['Sin planillas asignadas para esta división']]);
-    utils.book_append_sheet(wb, ws, 'Sin datos');
-    writeFile(wb, `${division.name}_scores.xlsx`);
-    return;
-  }
+  for (const [sheetType, judges] of Object.entries(judgesBySheet) as [SheetType, JudgeAssignment[]][]) {
+    const layout = LAYOUTS[sheetType];
+    if (!layout || !judges?.length) continue;
 
-  // One Excel sheet per scoring sheet type
-  for (const [sheetType, judges] of sheetEntries) {
-    const label = SHEET_TYPE_ES[sheetType] ?? sheetType;
-
-    // Header row 1: section titles
-    const headerJudges = judges.map((j) => j.user_name);
-    const header = ['Pos.', 'Equipo', 'Gimnasio', ...headerJudges, 'Promedio'];
-
-    const rows: (string | number)[][] = [header];
-
-    const sorted = [...registrations]
-      .filter((r) => {
-        const records = judgeRecordsMap[r.id];
-        if (!records) return false;
-        return judges.some((j) => {
-          const rec = records[j.id];
-          return rec && judgeSubtotal(sheetType, rec) > 0;
-        });
-      })
-      .map((r) => {
-        const records = judgeRecordsMap[r.id] ?? {};
-        const scores = judges.map((j) => {
-          const rec = records[j.id];
-          return rec ? judgeSubtotal(sheetType, rec) : 0;
-        });
-        const avg = scores.length > 0
-          ? scores.reduce((s, x) => s + x, 0) / scores.length
-          : 0;
-        return { reg: r, scores, avg };
-      })
-      .sort((a, b) => b.avg - a.avg);
-
-    sorted.forEach(({ reg, scores, avg }, idx) => {
-      rows.push([
-        idx + 1,
-        reg.team_name,
-        reg.gym_name,
-        ...scores.map((s) => parseFloat(s.toFixed(2))),
-        parseFloat(avg.toFixed(2)),
-      ]);
-    });
-
+    const { rows, merges, colWidths } = buildWorksheet(layout, confirmed, judges, judgeRecordsMap);
     const ws = utils.aoa_to_sheet(rows);
+    ws['!merges'] = merges;
+    ws['!cols']   = colWidths;
 
-    // Column widths
-    ws['!cols'] = [
-      { wch: 5 },
-      { wch: 30 },
-      { wch: 22 },
-      ...judges.map(() => ({ wch: 18 })),
-      { wch: 12 },
-    ];
-
-    utils.book_append_sheet(wb, ws, label.slice(0, 31)); // Excel tab max 31 chars
+    utils.book_append_sheet(wb, ws, layout.tab.slice(0, 31));
+    hasData = true;
   }
 
-  // Summary sheet: all sheet types side by side
-  const allJudgeIds = new Map<number, string>();
-  for (const judges of Object.values(judgesBySheet)) {
-    judges?.forEach((j) => allJudgeIds.set(j.id, j.user_name));
+  if (!hasData) {
+    utils.book_append_sheet(
+      wb,
+      utils.aoa_to_sheet([['Sin planillas asignadas para esta división']]),
+      'Sin datos',
+    );
   }
-
-  const summaryHeader = ['Pos.', 'Equipo', 'Gimnasio'];
-  for (const [sheetType, judges] of sheetEntries) {
-    const label = SHEET_TYPE_ES[sheetType] ?? sheetType;
-    judges.forEach((j) => summaryHeader.push(`${label} — ${j.user_name}`));
-    summaryHeader.push(`${label} Prom.`);
-  }
-  summaryHeader.push('TOTAL');
-
-  const summaryRows: (string | number)[][] = [summaryHeader];
-
-  const regTotals = registrations.map((r) => {
-    const records = judgeRecordsMap[r.id] ?? {};
-    let grandTotal = 0;
-    const cells: (string | number)[] = [];
-    for (const [sheetType, judges] of sheetEntries) {
-      const scores = judges.map((j) => {
-        const rec = records[j.id];
-        return rec ? judgeSubtotal(sheetType, rec) : 0;
-      });
-      const avg = scores.length > 0 ? scores.reduce((s, x) => s + x, 0) / scores.length : 0;
-      scores.forEach((s) => cells.push(parseFloat(s.toFixed(2))));
-      cells.push(parseFloat(avg.toFixed(2)));
-      grandTotal += avg;
-    }
-    return { reg: r, cells, grandTotal };
-  })
-  .filter(({ grandTotal }) => grandTotal > 0)
-  .sort((a, b) => b.grandTotal - a.grandTotal);
-
-  regTotals.forEach(({ reg, cells, grandTotal }, idx) => {
-    summaryRows.push([idx + 1, reg.team_name, reg.gym_name, ...cells, parseFloat(grandTotal.toFixed(2))]);
-  });
-
-  const summaryWs = utils.aoa_to_sheet(summaryRows);
-  summaryWs['!cols'] = [{ wch: 5 }, { wch: 30 }, { wch: 22 }, ...summaryHeader.slice(3).map(() => ({ wch: 16 }))];
-  utils.book_append_sheet(wb, summaryWs, 'Resumen');
 
   const safeName = division.name.replace(/[/\\?%*:|"<>]/g, '-');
   writeFile(wb, `${safeName}_calificaciones.xlsx`);
