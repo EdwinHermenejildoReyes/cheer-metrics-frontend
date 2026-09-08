@@ -298,7 +298,192 @@ function buildWorksheet(
   return { rows, merges, colWidths };
 }
 
-// ── Public export function ────────────────────────────────────────────────────
+// ── PDF export (browser print window) ────────────────────────────────────────
+
+const SPECIAL_COLS = new Set(['CREATIVIDAD', 'SHOWMANSHIP', 'TOTAL']);
+
+const SECTION_COLORS: Record<string, string> = {
+  'Gimnasia':        '#f0fdf4',  // green-50
+  'General':         '#faf5ff',  // purple-50
+  'Elevaciones':     '#eff6ff',  // blue-50
+  'Parejas':         '#fff7ed',  // orange-50
+  'Elev. Dificultad':'#eff6ff',
+  'Elev. Ejecución': '#eff6ff',
+  'Gim. Dificultad': '#f0fdf4',
+  'Gim. Ejecución':  '#f0fdf4',
+};
+
+const SECTION_BORDER_COLORS: Record<string, string> = {
+  'Gimnasia':        '#86efac',
+  'General':         '#d8b4fe',
+  'Elevaciones':     '#93c5fd',
+  'Parejas':         '#fdba74',
+  'Elev. Dificultad':'#93c5fd',
+  'Elev. Ejecución': '#93c5fd',
+  'Gim. Dificultad': '#86efac',
+  'Gim. Ejecución':  '#86efac',
+};
+
+function buildSheetHtml(
+  layout: LayoutDef,
+  registrations: Registration[],
+  judges: JudgeAssignment[],
+  judgeRecordsMap: Record<number, Record<number, JudgeScoreRecord>>,
+): string {
+  const cols      = buildCols(layout);
+  const totalCols = cols.length + 1;
+
+  // Check if any section has >1 column (needs a second header row)
+  const needsRow2 = (() => {
+    let ci = 0;
+    while (ci < cols.length) {
+      if (SPECIAL_COLS.has(cols[ci].sectionLabel)) { ci++; continue; }
+      const label = cols[ci].sectionLabel;
+      let cnt = 0;
+      while (ci < cols.length && cols[ci].sectionLabel === label) { cnt++; ci++; }
+      if (cnt > 1) return true;
+    }
+    return false;
+  })();
+
+  const thBase = 'border:1px solid #d4d4d8;padding:4px 6px;font-size:10px;text-align:center;background:#f4f4f5;';
+  const thSec  = 'border:1px solid #d4d4d8;padding:4px 6px;font-size:10px;text-align:center;font-weight:700;letter-spacing:.04em;';
+  const tdBase = 'border:1px solid #e4e4e7;padding:3px 6px;font-size:10px;text-align:right;';
+
+  // ── Header row 1 ──────────────────────────────────────────────────────────
+  let row1 = `<th ${needsRow2 ? 'rowspan="2"' : ''} style="${thBase}text-align:left;">Juez</th>`;
+  let ci = 0;
+  while (ci < cols.length) {
+    const col = cols[ci];
+    if (SPECIAL_COLS.has(col.sectionLabel)) {
+      const label = col.sectionLabel === 'TOTAL' ? 'TOTAL'
+                  : col.sectionLabel === 'CREATIVIDAD' ? 'CREATIVIDAD'
+                  : 'SHOWMANSHIP';
+      row1 += `<th ${needsRow2 ? 'rowspan="2"' : ''} style="${thBase}font-weight:700;">${label}</th>`;
+      ci++;
+    } else {
+      const label = col.sectionLabel;
+      let cnt = 0;
+      while (ci + cnt < cols.length && cols[ci + cnt].sectionLabel === label) cnt++;
+      row1 += `<th colspan="${cnt}" style="${thSec}">${label}</th>`;
+      ci += cnt;
+    }
+  }
+
+  // ── Header row 2 (field labels for non-special cols) ─────────────────────
+  let row2 = '';
+  if (needsRow2) {
+    cols.forEach(col => {
+      if (!SPECIAL_COLS.has(col.sectionLabel)) {
+        row2 += `<th style="${thBase}">${col.fieldLabel}</th>`;
+      }
+    });
+  }
+
+  // ── Data rows ──────────────────────────────────────────────────────────────
+  let body = '';
+  for (const reg of registrations) {
+    const regRecords   = judgeRecordsMap[reg.id] ?? {};
+    const activeJudges = judges.filter(j => {
+      const rec = regRecords[j.id];
+      return rec && judgeTotal(layout, rec) > 0;
+    });
+    if (activeJudges.length === 0) continue;
+
+    body += `<tr>
+      <td colspan="${totalCols}" style="border:1px solid #d4d4d8;padding:5px 8px;font-size:11px;
+        font-weight:700;background:#27272a;color:#fff;">
+        ${reg.team_name}&nbsp;&nbsp;<span style="font-weight:400;font-size:9px;opacity:.7;">${reg.gym_name}</span>
+      </td>
+    </tr>`;
+
+    for (const judge of activeJudges) {
+      const rec = regRecords[judge.id];
+      body += `<tr>
+        <td style="${tdBase}text-align:left;color:#3f3f46;">${judge.user_name}</td>`;
+      cols.forEach((col, idx) => {
+        const val    = n2(col.getValue(rec));
+        const isSum  = col.fieldLabel === 'Σ';
+        const isTotal = col.sectionLabel === 'TOTAL';
+        const bg     = (isSum || isTotal) ? 'background:#f9fafb;font-weight:600;' : '';
+        body += `<td style="${tdBase}${bg}color:${isTotal ? '#111' : '#3f3f46'};">${val}</td>`;
+      });
+      body += '</tr>';
+    }
+
+    body += `<tr><td colspan="${totalCols}" style="height:6px;border:none;"></td></tr>`;
+  }
+
+  const bg     = SECTION_COLORS[layout.tab]         ?? '#f9fafb';
+  const border = SECTION_BORDER_COLORS[layout.tab]  ?? '#d4d4d8';
+
+  return `
+    <div style="margin-bottom:24px;">
+      <div style="background:${bg};border-left:4px solid ${border};padding:6px 12px;margin-bottom:6px;border-radius:4px;">
+        <span style="font-size:13px;font-weight:700;color:#18181b;">${layout.tab.toUpperCase()}</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;white-space:nowrap;">
+          <thead>
+            <tr>${row1}</tr>
+            ${needsRow2 ? `<tr>${row2}</tr>` : ''}
+          </thead>
+          <tbody>${body}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+export function exportDivisionScoresPdf(
+  division: Division,
+  registrations: Registration[],
+  judgesBySheet: Partial<Record<SheetType, JudgeAssignment[]>>,
+  judgeRecordsMap: Record<number, Record<number, JudgeScoreRecord>>,
+): void {
+  const confirmed = registrations.filter(r => r.status === 'confirmed');
+
+  let body = '';
+  for (const [sheetType, judges] of Object.entries(judgesBySheet) as [SheetType, JudgeAssignment[]][]) {
+    const layout = LAYOUTS[sheetType];
+    if (!layout || !judges?.length) continue;
+    body += buildSheetHtml(layout, confirmed, judges, judgeRecordsMap);
+  }
+
+  if (!body) body = '<p style="color:#71717a">Sin datos para exportar.</p>';
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <title>${division.name} — Calificaciones</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+           font-size: 11px; color: #18181b; padding: 24px 28px; }
+    h1 { font-size: 18px; font-weight: 700; color: #09090b; margin-bottom: 2px; }
+    .meta { font-size: 11px; color: #71717a; margin-bottom: 20px; }
+    @media print {
+      @page { margin: 1.2cm 1.5cm; size: A4 landscape; }
+      body { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <h1>${division.name}</h1>
+  <p class="meta">${division.competition_name ?? ''}</p>
+  ${body}
+</body>
+</html>`;
+
+  const win = window.open('', '_blank');
+  if (!win) { alert('Permite ventanas emergentes para exportar el PDF.'); return; }
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 600);
+}
+
+// ── XLSX export ────────────────────────────────────────────────────────────────
 
 export async function exportDivisionScores(
   division: Division,

@@ -13,7 +13,7 @@ import { DeductionModal } from '@/components/competitions/DeductionModal';
 import { useDispatch } from 'react-redux';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import authRepository from '@/repositories/authRepository';
-import { exportDivisionScores } from '@/lib/exportDivisionScores';
+import { exportDivisionScores, exportDivisionScoresPdf } from '@/lib/exportDivisionScores';
 import { JudgeScoreTable, JUDGE_TABLE_SHEET_TYPES } from '@/components/competitions/JudgeScoreTable';
 import { setUser } from '@/store/auth/slices';
 import { useJudge } from '@/hooks/useJudge';
@@ -613,7 +613,15 @@ export default function DivisionDetailPage() {
               onClick={() => exportDivisionScores(division, registrations, effectiveJudgesBySheet, judgeRecordsMap)}
             >
               <Download className="h-4 w-4" />
-              Exportar
+              Excel
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => exportDivisionScoresPdf(division, registrations, effectiveJudgesBySheet, judgeRecordsMap)}
+            >
+              <Download className="h-4 w-4" />
+              PDF
             </Button>
             <Button
               size="sm"
