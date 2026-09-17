@@ -331,7 +331,7 @@ export default function IcuDoublesSheetPage() {
 
   useEffect(() => {
     if (readOnly || !initialValuesSettled.current) return;
-    const timer = setTimeout(() => { handleSaveRef.current(true); }, 500);
+    const timer = setTimeout(() => { handleSaveRef.current(true); }, 2000);
     return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readOnly, scores, notes, comments]);

@@ -260,7 +260,7 @@ export default function IcuDanceSoloPage() {
   useEffect(() => {
     if (!initialSettled.current || readOnly) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => { handleSaveRef.current(true); }, 500);
+    debounceRef.current = setTimeout(() => { handleSaveRef.current(true); }, 2000);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [scores, comments, notes, readOnly]);
 
