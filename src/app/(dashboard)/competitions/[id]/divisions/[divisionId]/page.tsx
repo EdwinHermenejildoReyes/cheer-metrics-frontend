@@ -543,17 +543,22 @@ export default function DivisionDetailPage() {
     });
   }
 
-  const isSheetAllowedInDivision = (st: SheetType) =>
-    !division.allowed_sheet_types || division.allowed_sheet_types.includes(st);
-  const canViewSheetInDivision = (st: SheetType) =>
-    canViewSheetForDivision(compId, division.id, st) && isSheetAllowedInDivision(st);
-
   // Compound assignments expand to their component sheet types for icon/button display
   const COMPOUND_EXPANSION: Partial<Record<SheetType, SheetType[]>> = {
     building_combined:   ['building_difficulty', 'building_execution'],
     tumbling_combined:   ['tumbling_difficulty',  'tumbling_execution'],
     deductions_combined: ['deductions_only',       'safety_rules'],
   };
+
+  // A compound type (e.g. tumbling_combined) is allowed if any of its components is allowed.
+  const isSheetAllowedInDivision = (st: SheetType): boolean => {
+    if (!division.allowed_sheet_types) return true;
+    if (division.allowed_sheet_types.includes(st)) return true;
+    const components = COMPOUND_EXPANSION[st];
+    return !!components && components.some((c) => division.allowed_sheet_types!.includes(c));
+  };
+  const canViewSheetInDivision = (st: SheetType) =>
+    canViewSheetForDivision(compId, division.id, st) && isSheetAllowedInDivision(st);
   const ICU_SHEET_TYPES = ['icu_dance', 'icu_doubles', 'icu_dance_deductions', 'icu_dance_solo', 'icu_dance_principiantes'];
 
   // For icon display: every active assignment for this competition is shown,
