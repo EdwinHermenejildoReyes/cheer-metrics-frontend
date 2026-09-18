@@ -37,8 +37,10 @@ interface Props {
   initial?: Competition;
 }
 
+const normalizeScoringFamily = (f: string | null | undefined): ScoringFamily =>
+  !f || f === 'united' ? 'united_intl' : f as ScoringFamily;
+
 const SCORING_FAMILY_OPTIONS = [
-  { value: 'united',        label: 'United' },
   { value: 'united_intl',   label: 'United Internacional' },
   { value: 'iasf_567',      label: 'IASF (N5, N6, N7)' },
   { value: 'icu',           label: 'ICU' },
@@ -56,7 +58,7 @@ const SERVICE_TYPE_OPTIONS = [
 
 
 const DEFAULT_VALUES: Partial<FormValues> = {
-  scoring_family: 'united',
+  scoring_family: 'united_intl',
   service_type: 'full',
   sheet_mode: 'grupal',
   name: '', date: '', venue: '', city: '', notes: '', organization: '',
@@ -70,7 +72,7 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
   const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: initial
-      ? { ...initial, scoring_family: (initial.scoring_family ?? 'united') as ScoringFamily, sheet_mode: (initial.sheet_mode ?? 'grupal') as 'grupal' | 'individual' | 'icu_dance', organization: initial.organization ? String(initial.organization) : '' }
+      ? { ...initial, scoring_family: normalizeScoringFamily(initial.scoring_family), sheet_mode: (initial.sheet_mode ?? 'grupal') as 'grupal' | 'individual' | 'icu_dance', organization: initial.organization ? String(initial.organization) : '' }
       : DEFAULT_VALUES,
   });
 
@@ -88,7 +90,7 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
       const defaultOrg = user?.role === 'org_admin' && user.organization ? String(user.organization) : '';
       reset(
         initial
-          ? { ...initial, scoring_family: (initial.scoring_family ?? 'united') as ScoringFamily, sheet_mode: (initial.sheet_mode ?? 'grupal') as 'grupal' | 'individual' | 'icu_dance', organization: initial.organization ? String(initial.organization) : defaultOrg }
+          ? { ...initial, scoring_family: normalizeScoringFamily(initial.scoring_family), sheet_mode: (initial.sheet_mode ?? 'grupal') as 'grupal' | 'individual' | 'icu_dance', organization: initial.organization ? String(initial.organization) : defaultOrg }
           : { ...DEFAULT_VALUES, organization: defaultOrg },
       );
     }
