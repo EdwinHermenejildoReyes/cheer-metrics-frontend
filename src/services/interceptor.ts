@@ -57,11 +57,9 @@ export default (axiosClient: AxiosInstance): void => {
       processQueue(refreshError as Error);
       store.dispatch(clearAuth());
       toast('Su sesión ha expirado, por favor inicie sesión nuevamente.');
-      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-        persistor.flush().finally(() => {
-          window.location.href = '/login';
-        });
-      }
+      // Flush localStorage so the persisted state is up-to-date.
+      // DashboardShell's useEffect handles the navigation to /login via router.replace.
+      persistor.flush();
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;
