@@ -295,6 +295,7 @@ export interface Division {
   skill_level: SkillLevel;
   category: DivisionCategory;
   is_non_tumbling: boolean;
+  sub_group: string;
   scoring_system: ScoringSystem | '';
   suggested_scoring_system: ScoringSystem;
   athlete_fee: string;

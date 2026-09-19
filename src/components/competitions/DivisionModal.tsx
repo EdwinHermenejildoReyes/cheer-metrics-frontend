@@ -180,6 +180,7 @@ const schema = z.object({
   skill_level:     z.string().min(1, 'Requerido'),
   category:        z.string().min(1, 'Requerido'),
   is_non_tumbling: z.boolean().optional(),
+  sub_group:       z.string().optional(),
   scoring_system:  z.string().optional(),
   min_athletes:    z.coerce.number().nullable().optional(),
   max_athletes:    z.coerce.number().nullable().optional(),
@@ -235,11 +236,12 @@ export function DivisionModal({ open, onClose, onSaved, competitionId, sheetMode
         ? {
             ...initial,
             is_non_tumbling: initial.is_non_tumbling ?? false,
+            sub_group:       initial.sub_group ?? '',
             scoring_system:  initial.scoring_system || '',
             min_athletes:    initial.min_athletes ?? undefined,
             max_athletes:    initial.max_athletes ?? undefined,
           }
-        : { name: '', age_group: '', skill_level: '', category: '', is_non_tumbling: false, scoring_system: '' },
+        : { name: '', age_group: '', skill_level: '', category: '', is_non_tumbling: false, sub_group: '', scoring_system: '' },
     );
   }, [open, initial, reset]);
 
@@ -299,13 +301,23 @@ export function DivisionModal({ open, onClose, onSaved, competitionId, sheetMode
     <Modal open={open} onClose={onClose} title={isEdit ? 'Editar división' : 'Nueva división'} size="lg">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
 
-        <Input
-          label="Nombre de la división"
-          id="name"
-          placeholder="Senior Elite All Girl"
-          error={errors.name?.message}
-          {...register('name')}
-        />
+        <div className="grid grid-cols-3 gap-3">
+          <div className="col-span-2">
+            <Input
+              label="Nombre de la división"
+              id="name"
+              placeholder="Senior Elite All Girl"
+              error={errors.name?.message}
+              {...register('name')}
+            />
+          </div>
+          <Input
+            label="Sub-grupo"
+            id="sub_group"
+            placeholder="A, B, C…"
+            {...register('sub_group')}
+          />
+        </div>
 
         {/* Modality — UI-only; drives all filtered dropdowns below */}
         <Select

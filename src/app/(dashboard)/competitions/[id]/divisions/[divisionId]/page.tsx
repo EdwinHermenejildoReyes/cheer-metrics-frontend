@@ -597,7 +597,14 @@ export default function DivisionDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div>
-            <h1 className="text-2xl font-semibold text-zinc-900">{division.name}</h1>
+            <h1 className="text-2xl font-semibold text-zinc-900">
+              {division.name}
+              {division.sub_group && (
+                <span className="ml-2 rounded-full bg-zinc-100 px-2.5 py-0.5 text-base font-semibold text-zinc-600 align-middle">
+                  {division.sub_group}
+                </span>
+              )}
+            </h1>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <Badge variant="default">{AGE_GROUP_LABELS[division.age_group]}</Badge>
               <Badge variant="violet">{SKILL_LEVEL_LABELS[division.skill_level]}</Badge>

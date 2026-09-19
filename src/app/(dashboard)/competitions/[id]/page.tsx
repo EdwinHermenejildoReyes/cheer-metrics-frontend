@@ -504,7 +504,14 @@ export default function CompetitionDetailPage() {
                     className="cursor-pointer hover:bg-zinc-50 transition-colors"
                     onClick={() => router.push(`/competitions/${id}/divisions/${div.public_id}`)}
                   >
-                    <td className="px-5 py-3.5 font-medium text-zinc-900">{div.name}</td>
+                    <td className="px-5 py-3.5 font-medium text-zinc-900">
+                      {div.name}
+                      {div.sub_group && (
+                        <span className="ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-600">
+                          {div.sub_group}
+                        </span>
+                      )}
+                    </td>
                     <td className="px-5 py-3.5 text-zinc-600">{AGE_GROUP_LABELS[div.age_group]}</td>
                     <td className="px-5 py-3.5">
                       <Badge variant="violet">{SKILL_LEVEL_LABELS[div.skill_level]}</Badge>
