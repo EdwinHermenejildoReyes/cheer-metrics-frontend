@@ -136,7 +136,7 @@ export default function TumblingDifficultyPage() {
     (tCfg.hasRunning  ? runningDiffEff + runningHabEff   : 0) +
     (tCfg.hasJumps    ? jumpsDiffEff                     : 0)
   ).toFixed(2));
-  const sheetTotal = parseFloat((diffSubtotal + creativityTumbling + showmanshipTumbling).toFixed(2));
+  const sheetTotal = diffSubtotal;
 
   const assignmentsRef = useRef(assignments);
   assignmentsRef.current = assignments;
@@ -630,7 +630,7 @@ export default function TumblingDifficultyPage() {
         <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg bg-zinc-800 text-white" style={{ marginTop: '2rem' }}>
           <div>
             <p className="text-base uppercase tracking-wide font-bold">Total Planilla — Dificultad Gimnasia</p>
-            <p className="text-xs opacity-70 mt-0.5">Dif. + Creatividad ({fmt(creativityTumbling)}) + Showmanship ({fmt(showmanshipTumbling)})</p>
+            <p className="text-xs opacity-70 mt-0.5">Creatividad ({fmt(creativityTumbling)}) y Showmanship ({fmt(showmanshipTumbling)}) se promedian en el puntaje final</p>
           </div>
           <span className="text-4xl font-bold tabular-nums">{fmt(sheetTotal)}</span>
         </div>

@@ -417,7 +417,7 @@ export default function BuildingDifficultyPage() {
   if (loading) return <PageSpinner />;
 
   const diffTotal = parseFloat((stuntsRango + stuntsDriversTotal + pyramidsDiff + (bCfg.hasTosses ? tossesDiff : 0)).toFixed(2));
-  const sheetTotal = parseFloat((diffTotal + creativityBuilding + showmanshipBuilding).toFixed(2));
+  const sheetTotal = diffTotal;
 
   return (
     <div className="min-h-screen bg-zinc-50 pb-16">
@@ -984,7 +984,7 @@ export default function BuildingDifficultyPage() {
         <div className="rounded-xl px-6 py-5 flex items-center justify-between shadow-lg bg-zinc-800 text-white" style={{ marginTop: '1rem' }}>
           <div>
             <p className="text-base uppercase tracking-wide font-bold">Total Planilla — Dificultad</p>
-            <p className="text-xs opacity-70 mt-0.5">Dif. + Creatividad ({fmt(creativityBuilding)}) + Showmanship ({fmt(showmanshipBuilding)})</p>
+            <p className="text-xs opacity-70 mt-0.5">Creatividad ({fmt(creativityBuilding)}) y Showmanship ({fmt(showmanshipBuilding)}) se promedian en el puntaje final</p>
           </div>
           <span className="text-4xl font-bold tabular-nums">{fmt(sheetTotal)}</span>
         </div>
