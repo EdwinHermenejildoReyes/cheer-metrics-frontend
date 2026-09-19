@@ -143,8 +143,8 @@ export default function BuildingDifficultyPage() {
       const v = parseFloat(String(source.pyramids_drivers));
       if (cfg.pyramidDriversOpts.some(o => o.value === v)) setPyramidsDrivers(v);
     }
-    if (source.creativity_building) setCreativityBuilding(Math.min(2.0, Math.max(1.5, parseFloat(String(source.creativity_building)))));
-    if (source.showmanship_building) setShowmanshipBuilding(Math.min(cfg.showmanshipMax, Math.max(1.0, parseFloat(String(source.showmanship_building)))));
+    if (source.creativity_building) setCreativityBuilding(Math.min(cfg.creativityMax, Math.max(cfg.creativityMin, parseFloat(String(source.creativity_building)))));
+    if (source.showmanship_building) setShowmanshipBuilding(Math.min(cfg.showmanshipMax, Math.max(cfg.showmanshipMin, parseFloat(String(source.showmanship_building)))));
     if (source.notes) {
       try {
         const p = JSON.parse(source.notes);
@@ -185,6 +185,8 @@ export default function BuildingDifficultyPage() {
       const sysConfig = getScoringConfig(divRes.data);
       const cfg = sysConfig.building;
       setBCfg(cfg);
+      setCreativityBuilding(cfg.creativityMin);
+      setShowmanshipBuilding(cfg.showmanshipMin);
       setDivision(divRes.data);
       setCompetitionIntId(divRes.data.competition);
       setScoringLocked(divRes.data.scoring_locked ?? false);
@@ -273,8 +275,8 @@ export default function BuildingDifficultyPage() {
           const v = parseFloat(sheet.pyramids_drivers);
           if (bCfg.pyramidDriversOpts.some(o => o.value === v)) setPyramidsDrivers(v);
         }
-        if (sheet.creativity_building) setCreativityBuilding(Math.min(2.0, Math.max(1.5, parseFloat(sheet.creativity_building))));
-        if (sheet.showmanship_building) setShowmanshipBuilding(Math.min(bCfg.showmanshipMax, Math.max(1.0, parseFloat(sheet.showmanship_building))));
+        if (sheet.creativity_building) setCreativityBuilding(Math.min(bCfg.creativityMax, Math.max(bCfg.creativityMin, parseFloat(sheet.creativity_building))));
+        if (sheet.showmanship_building) setShowmanshipBuilding(Math.min(bCfg.showmanshipMax, Math.max(bCfg.showmanshipMin, parseFloat(sheet.showmanship_building))));
         if (sheet.notes) {
           try {
             const p = JSON.parse(sheet.notes);
@@ -925,8 +927,8 @@ export default function BuildingDifficultyPage() {
                 </div>
                 <div className="p-4 flex flex-col gap-2">
                   <div className="flex items-center gap-3">
-                    <input type="range" min="1.5" max="2.0" step="0.1" value={creativityBuilding} onChange={e => setCreativityBuilding(parseFloat(e.target.value))} className="flex-1 accent-zinc-900" />
-                    <input type="number" min="1.5" max="2.0" step="0.1" value={creativityBuilding} onChange={e => setCreativityBuilding(parseFloat(Math.min(2.0, Math.max(1.5, parseFloat(e.target.value) || 1.5)).toFixed(2)))} className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                    <input type="range" min={bCfg.creativityMin} max={bCfg.creativityMax} step="0.1" value={creativityBuilding} onChange={e => setCreativityBuilding(parseFloat(e.target.value))} className="flex-1 accent-zinc-900" />
+                    <input type="number" min={bCfg.creativityMin} max={bCfg.creativityMax} step="0.1" value={creativityBuilding} onChange={e => setCreativityBuilding(parseFloat(Math.min(bCfg.creativityMax, Math.max(bCfg.creativityMin, parseFloat(e.target.value) || bCfg.creativityMin)).toFixed(2)))} className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900" />
                   </div>
                   <p className="text-[11px] text-zinc-400">Creatividad, Innovación y/o visual durante formaciones y construcciones</p>
                 </div>
@@ -951,8 +953,8 @@ export default function BuildingDifficultyPage() {
               </div>
               <div className="p-4 flex flex-col gap-2">
                 <div className="flex items-center gap-3">
-                  <input type="range" min="1.0" max={bCfg.showmanshipMax} step="0.1" value={showmanshipBuilding} onChange={e => setShowmanshipBuilding(parseFloat(e.target.value))} className="flex-1 accent-zinc-900" />
-                  <input type="number" min="1.0" max={bCfg.showmanshipMax} step="0.1" value={showmanshipBuilding} onChange={e => setShowmanshipBuilding(parseFloat(Math.min(bCfg.showmanshipMax, Math.max(1.0, parseFloat(e.target.value) || 1.0)).toFixed(2)))} className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                  <input type="range" min={bCfg.showmanshipMin} max={bCfg.showmanshipMax} step="0.1" value={showmanshipBuilding} onChange={e => setShowmanshipBuilding(parseFloat(e.target.value))} className="flex-1 accent-zinc-900" />
+                  <input type="number" min={bCfg.showmanshipMin} max={bCfg.showmanshipMax} step="0.1" value={showmanshipBuilding} onChange={e => setShowmanshipBuilding(parseFloat(Math.min(bCfg.showmanshipMax, Math.max(bCfg.showmanshipMin, parseFloat(e.target.value) || bCfg.showmanshipMin)).toFixed(2)))} className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900" />
                 </div>
                 <p className="text-[11px] text-zinc-400">{bCfg.hasCreativity ? 'Ritmo, Confianza y Conexión durante la rutina' : 'Cheer / Animación — máx 5.0'}</p>
               </div>

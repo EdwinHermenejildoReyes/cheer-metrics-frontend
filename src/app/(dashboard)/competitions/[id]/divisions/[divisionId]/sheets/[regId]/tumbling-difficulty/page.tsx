@@ -164,8 +164,8 @@ export default function TumblingDifficultyPage() {
       const v = parseFloat(String(source.jumps_difficulty));
       if (tcfg.jumpsDiffOpts.some(o => o.value === v)) setJumpsDiff(v);
     }
-    if (source.creativity_tumbling)  setCreativityTumbling(Math.min(2.0, Math.max(1.5, parseFloat(String(source.creativity_tumbling)))));
-    if (source.showmanship_tumbling) setShowmanshipTumbling(Math.min(tcfg.showmanshipMax, Math.max(1.0, parseFloat(String(source.showmanship_tumbling)))));
+    if (source.creativity_tumbling)  setCreativityTumbling(Math.min(tcfg.creativityMax, Math.max(tcfg.creativityMin, parseFloat(String(source.creativity_tumbling)))));
+    if (source.showmanship_tumbling) setShowmanshipTumbling(Math.min(tcfg.showmanshipMax, Math.max(tcfg.showmanshipMin, parseFloat(String(source.showmanship_tumbling)))));
     if (source.notes) {
       try {
         const p = JSON.parse(source.notes);
@@ -187,6 +187,8 @@ export default function TumblingDifficultyPage() {
         setRegIntId(reg.id); setTeamName(reg.team_name); setAthleteCount(reg.athlete_count ?? null); setUnpaidAthletes(reg.unpaid_athletes); setRequirePayment(reg.competition_require_payment); }
       const tcfg = getScoringConfig(divRes.data).tumbling;
       setTCfg(tcfg);
+      setCreativityTumbling(tcfg.creativityMin);
+      setShowmanshipTumbling(tcfg.showmanshipMin);
       setDivision(divRes.data);
       setCompetitionIntId(divRes.data.competition);
       setScoringLocked(divRes.data.scoring_locked ?? false);
@@ -560,8 +562,8 @@ export default function TumblingDifficultyPage() {
                 </div>
                 <div className="p-4 flex flex-col gap-2">
                   <div className="flex items-center gap-3">
-                    <input type="range" min="1.5" max="2.0" step="0.1" value={creativityTumbling} onChange={e => setCreativityTumbling(parseFloat(e.target.value))} className="flex-1 accent-zinc-900" />
-                    <input type="number" min="1.5" max="2.0" step="0.1" value={creativityTumbling} onChange={e => setCreativityTumbling(parseFloat(Math.min(2.0, Math.max(1.5, parseFloat(e.target.value) || 1.5)).toFixed(2)))} className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                    <input type="range" min={tCfg.creativityMin} max={tCfg.creativityMax} step="0.1" value={creativityTumbling} onChange={e => setCreativityTumbling(parseFloat(e.target.value))} className="flex-1 accent-zinc-900" />
+                    <input type="number" min={tCfg.creativityMin} max={tCfg.creativityMax} step="0.1" value={creativityTumbling} onChange={e => setCreativityTumbling(parseFloat(Math.min(tCfg.creativityMax, Math.max(tCfg.creativityMin, parseFloat(e.target.value) || tCfg.creativityMin)).toFixed(2)))} className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900" />
                   </div>
                   <p className="text-[11px] text-zinc-400">Creatividad, Innovación y/o visual durante la rutina</p>
                 </div>
@@ -597,8 +599,8 @@ export default function TumblingDifficultyPage() {
               </div>
               <div className="p-4 flex flex-col gap-2">
                 <div className="flex items-center gap-3">
-                  <input type="range" min="1.0" max={tCfg.showmanshipMax} step="0.1" value={showmanshipTumbling} onChange={e => setShowmanshipTumbling(parseFloat(e.target.value))} className="flex-1 accent-zinc-900" />
-                  <input type="number" min="1.0" max={tCfg.showmanshipMax} step="0.1" value={showmanshipTumbling} onChange={e => setShowmanshipTumbling(parseFloat(Math.min(tCfg.showmanshipMax, Math.max(1.0, parseFloat(e.target.value) || 1.0)).toFixed(2)))} className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900" />
+                  <input type="range" min={tCfg.showmanshipMin} max={tCfg.showmanshipMax} step="0.1" value={showmanshipTumbling} onChange={e => setShowmanshipTumbling(parseFloat(e.target.value))} className="flex-1 accent-zinc-900" />
+                  <input type="number" min={tCfg.showmanshipMin} max={tCfg.showmanshipMax} step="0.1" value={showmanshipTumbling} onChange={e => setShowmanshipTumbling(parseFloat(Math.min(tCfg.showmanshipMax, Math.max(tCfg.showmanshipMin, parseFloat(e.target.value) || tCfg.showmanshipMin)).toFixed(2)))} className="w-16 h-9 rounded-lg border border-zinc-300 px-2 text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-zinc-900" />
                 </div>
                 <p className="text-[11px] text-zinc-400">{tCfg.hasCreativity ? 'Confianza, Limpieza y Conexión' : 'Cheer / Animación — máx 5.0'}</p>
               </div>
