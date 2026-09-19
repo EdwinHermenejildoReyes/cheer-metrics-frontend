@@ -201,12 +201,19 @@ export default function TumblingDifficultyPage() {
         const myAssignment = assignmentsRef.current.find(
           a => a.competition === divRes.data.competition && a.sheet_type === 'tumbling_difficulty'
         );
+        let loadedFromRecord = false;
         if (myAssignment) {
-          const recordRes = await competitionsRepository.getMyJudgeScoreRecord(regId, myAssignment.id);
-          setJudgeRecord(recordRes.data);
-          populateFromScoreSource(recordRes.data, tcfg);
-        } else {
-          // No assignment found: fall back to loading the shared ScoreSheet
+          try {
+            const recordRes = await competitionsRepository.getMyJudgeScoreRecord(regId, myAssignment.id);
+            setJudgeRecord(recordRes.data);
+            populateFromScoreSource(recordRes.data, tcfg);
+            loadedFromRecord = true;
+          } catch {
+            // Fall through to ScoreSheet fallback below
+          }
+        }
+        if (!loadedFromRecord) {
+          // No assignment found or record fetch failed: load the shared ScoreSheet
           const sheetRes = await competitionsRepository.listScoreSheets({ registration__public_id: regId });
           if (sheetRes.data.results.length > 0) {
             const sheet = sheetRes.data.results[0];
@@ -294,6 +301,7 @@ export default function TumblingDifficultyPage() {
 
   // Stable ref so auto-save effect can call the latest handleSave without it as a dep
   const handleSaveRef = useRef<(silent?: boolean) => Promise<void>>(async () => {});
+  const lastSaveErrorRef = useRef<string | null>(null);
 
   const handleSave = async (silent = false) => {
     setSaving(true);
@@ -325,9 +333,21 @@ export default function TumblingDifficultyPage() {
         const res = await competitionsRepository.createScoreSheet({ registration: regIntId!, ...payload } as Partial<ScoreSheet>);
         setExistingSheet(res.data);
       }
+      lastSaveErrorRef.current = null;
       if (!silent) toast.success('Planilla guardada');
     } catch (err) {
-      if (!silent) toastApiError(err);
+      if (silent) {
+        const isAxiosErr = (err as { isAxiosError?: boolean }).isAxiosError;
+        const detail = isAxiosErr
+          ? ((err as { response?: { data?: { detail?: string } } }).response?.data?.detail ?? 'Error al guardar la planilla')
+          : 'Error al guardar la planilla';
+        if (detail !== lastSaveErrorRef.current) {
+          lastSaveErrorRef.current = detail;
+          toast.error(detail);
+        }
+      } else {
+        toastApiError(err);
+      }
     } finally { setSaving(false); }
   };
 

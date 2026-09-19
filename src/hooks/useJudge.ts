@@ -22,14 +22,23 @@ export function useJudge() {
       .filter((a) => a.competition === competitionId)
       .map((a) => a.sheet_type);
 
-  /** True when the judge has at least one assignment with an active access window. */
+  /**
+   * True when the judge has at least one assignment with an active access window.
+   * Mirrors backend `_is_judge_access_active`: for legacy assignments (null/null dates)
+   * falls back to `competition_is_active` (competition date check).
+   */
+  const _isAssignmentActive = (a: (typeof assignments)[0]): boolean => {
+    if (!a.access_from && !a.access_until) return a.competition_is_active;
+    return a.is_access_active;
+  };
+
   const isCompetitionActive = (competitionId: number): boolean =>
-    assignments.some((a) => a.competition === competitionId && a.is_access_active);
+    assignments.some((a) => a.competition === competitionId && _isAssignmentActive(a));
 
   const canViewSheet = (competitionId: number, sheetType: SheetType): boolean => {
     if (!isJudge) return true;
     return assignments.some((a) => {
-      if (a.competition !== competitionId || !a.is_access_active) return false;
+      if (a.competition !== competitionId || !_isAssignmentActive(a)) return false;
       // Exact match
       if (a.sheet_type === sheetType) return true;
       // Compound role: check if it expands to include the requested sheetType
@@ -62,7 +71,7 @@ export function useJudge() {
   const canViewSheetForDivision = (competitionId: number, divisionId: number, sheetType: SheetType): boolean => {
     if (!isJudge) return true;
     return assignments.some((a) => {
-      if (a.competition !== competitionId || !a.is_access_active) return false;
+      if (a.competition !== competitionId || !_isAssignmentActive(a)) return false;
       let matchesSheet = a.sheet_type === sheetType;
       if (!matchesSheet) {
         const expanded = COMPOUND_SHEET_MAP[a.sheet_type as SheetType];
