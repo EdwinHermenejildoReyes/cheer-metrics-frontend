@@ -565,6 +565,7 @@ export default function BuildingSheetPage() {
 
   // Stable ref so auto-save effect can call the latest handleSave without it as a dep
   const handleSaveRef = useRef<(silent?: boolean) => Promise<boolean>>(async () => false);
+  const lastSaveErrorRef = useRef<string | null>(null);
 
   // ── Save ──────────────────────────────────────────────────────────────────
   const handleSave = async (silent = false): Promise<boolean> => {
