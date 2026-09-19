@@ -38,6 +38,23 @@ function firstMessage(val: unknown): string {
   return String(val);
 }
 
+export function extractApiErrorText(err: unknown, fallback = 'Error al guardar la planilla'): string {
+  if (!isAxiosError(err)) return fallback;
+  const data = err.response?.data;
+  if (!data || typeof data !== 'object') return fallback;
+  const d = data as Record<string, unknown>;
+  if (typeof d.detail === 'string') return d.detail;
+  if (typeof d.non_field_errors !== 'undefined') {
+    const nfe = d.non_field_errors;
+    return Array.isArray(nfe) ? String(nfe[0]) : String(nfe);
+  }
+  const entries = Object.entries(d);
+  if (entries.length === 0) return fallback;
+  const [field, msg] = entries[0];
+  const label = FIELD_LABELS[field] ?? field;
+  return `${label}: ${Array.isArray(msg) ? String(msg[0]) : String(msg)}`;
+}
+
 export function toastApiError(err: unknown, fallback = 'No se pudo guardar') {
   if (!isAxiosError(err)) {
     toast.error(fallback);

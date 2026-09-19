@@ -11,7 +11,7 @@ import competitionsRepository from '@/repositories/competitionsRepository';
 import { getScoringConfig, DEFAULT_TUMBLING_CONFIG } from '@/lib/scoringConfig';
 import { getGymGroups } from '@/lib/constructionTable';
 import { useJudge } from '@/hooks/useJudge';
-import { toastApiError } from '@/utils/apiErrors';
+import { toastApiError, extractApiErrorText } from '@/utils/apiErrors';
 import type { TumblingConfig } from '@/lib/scoringConfig';
 import type { Division, JudgeScoreRecord, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
@@ -337,13 +337,10 @@ export default function TumblingDifficultyPage() {
       if (!silent) toast.success('Planilla guardada');
     } catch (err) {
       if (silent) {
-        const isAxiosErr = (err as { isAxiosError?: boolean }).isAxiosError;
-        const detail = isAxiosErr
-          ? ((err as { response?: { data?: { detail?: string } } }).response?.data?.detail ?? 'Error al guardar la planilla')
-          : 'Error al guardar la planilla';
-        if (detail !== lastSaveErrorRef.current) {
-          lastSaveErrorRef.current = detail;
-          toast.error(detail);
+        const msg = extractApiErrorText(err);
+        if (msg !== lastSaveErrorRef.current) {
+          lastSaveErrorRef.current = msg;
+          toast.error(msg);
         }
       } else {
         toastApiError(err);
