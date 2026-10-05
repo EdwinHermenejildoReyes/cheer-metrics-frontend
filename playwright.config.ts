@@ -53,5 +53,10 @@ export default defineConfig({
         storageState: 'e2e/.auth/admin.json',
       },
     },
+    {
+      name: 'session-loop-tests',
+      testMatch: '**/session-loop.spec.ts',
+      use: { ...devices['Desktop Chrome'] },
+    },
   ],
 });

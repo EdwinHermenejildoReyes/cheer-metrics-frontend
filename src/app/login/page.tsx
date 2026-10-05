@@ -14,6 +14,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import authRepository from '@/repositories/authRepository';
 
+function loginTarget(user: { is_staff: boolean; is_approved: boolean; role: string }): string {
+  if (!user.is_staff && !user.is_approved) return '/pending';
+  if (!user.is_staff && user.role === 'judge') return '/assignments';
+  return '/home';
+}
+
 const schema = z.object({
   email: z.string().email('Correo inválido'),
   password: z.string().min(1, 'Requerido'),
@@ -32,8 +38,7 @@ export default function LoginPage() {
     authRepository.me()
       .then(res => {
         dispatch(setUser(res.data));
-        const target = (!res.data.is_staff && !res.data.is_approved) ? '/pending' : '/home';
-        window.location.replace(target);
+        window.location.replace(loginTarget(res.data));
       })
       .catch(() => {
         dispatch(clearAuth());
@@ -55,8 +60,7 @@ export default function LoginPage() {
       // Flush persistence to localStorage before hard-redirecting to avoid
       // a race where DashboardShell reads stale isAuthenticated=false on mount.
       await persistor.flush();
-      const target = (!meRes.data.is_staff && !meRes.data.is_approved) ? '/pending' : '/home';
-      window.location.replace(target);
+      window.location.replace(loginTarget(meRes.data));
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
       if (status === 401) {
