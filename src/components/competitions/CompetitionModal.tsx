@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,17 +14,19 @@ import { useSelector } from 'react-redux';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import { SCORING_FAMILY_REGULATION, type Competition, type Organization, type ScoringFamily } from '@/types/competitions';
 import type { RootState } from '@/core/rootReducer';
+import { useState } from 'react';
 
 const schema = z.object({
-  name:           z.string().min(2, 'Mínimo 2 caracteres'),
-  date:           z.string().min(1, 'Requerido'),
-  venue:          z.string().min(2, 'Requerido'),
-  city:           z.string().min(2, 'Requerido'),
-  scoring_family: z.enum(['united', 'united_intl', 'iasf_567', 'icu', 'partner_stunt', 'future_flyer', 'best_cheer', 'icu_dance']),
-  service_type:   z.enum(['full', 'registration_only', 'judging_only']),
-  sheet_mode:     z.enum(['grupal', 'individual', 'icu_dance']),
-  notes:          z.string().optional(),
-  organization:   z.string().optional(),
+  name:            z.string().min(2, 'Mínimo 2 caracteres'),
+  date:            z.string().min(1, 'Requerido'),
+  end_datetime:    z.string().optional(),
+  venue:           z.string().min(2, 'Requerido'),
+  city:            z.string().min(2, 'Requerido'),
+  scoring_family:  z.enum(['united', 'united_intl', 'iasf_567', 'icu', 'partner_stunt', 'future_flyer', 'best_cheer', 'icu_dance']),
+  sheet_mode:      z.enum(['grupal', 'individual', 'icu_dance']),
+  service_type:    z.enum(['full', 'registration_only', 'judging_only']),
+  notes:           z.string().optional(),
+  organization:    z.string().optional(),
   require_payment: z.boolean().optional(),
 });
 
@@ -40,8 +42,21 @@ interface Props {
 const normalizeScoringFamily = (f: string | null | undefined): ScoringFamily =>
   !f || f === 'united' ? 'united_intl' : f as ScoringFamily;
 
+// Default sheet_mode for each scoring_family
+const FAMILY_TO_SHEET_MODE: Record<string, 'grupal' | 'individual' | 'icu_dance'> = {
+  united:        'grupal',
+  united_intl:   'individual',
+  iasf_567:      'individual',
+  icu:           'individual',
+  partner_stunt: 'individual',
+  future_flyer:  'individual',
+  best_cheer:    'individual',
+  icu_dance:     'icu_dance',
+};
+
 const SCORING_FAMILY_OPTIONS = [
   { value: 'united_intl',   label: 'United Internacional' },
+  { value: 'united',        label: 'United (local / grupal)' },
   { value: 'iasf_567',      label: 'IASF (N5, N6, N7)' },
   { value: 'icu',           label: 'ICU' },
   { value: 'partner_stunt', label: 'Partner / Group Stunts' },
@@ -50,18 +65,23 @@ const SCORING_FAMILY_OPTIONS = [
   { value: 'icu_dance',     label: 'ICU Dance (POM / Hip Hop / Jazz / High Kick / Doubles HH)' },
 ];
 
+const SHEET_MODE_OPTIONS = [
+  { value: 'individual', label: 'Individual — Dificultad + Ejecución por hoja (DV Championship, IASF)' },
+  { value: 'grupal',     label: 'Grupal — Building / Tumbling / Overall (competencias locales)' },
+  { value: 'icu_dance',  label: 'ICU Dance (fijado por sistema de calificación)' },
+];
+
 const SERVICE_TYPE_OPTIONS = [
   { value: 'full',              label: 'Inscripción + Jueceo' },
   { value: 'registration_only', label: 'Solo Inscripción' },
   { value: 'judging_only',      label: 'Solo Jueceo' },
 ];
 
-
 const DEFAULT_VALUES: Partial<FormValues> = {
   scoring_family: 'united_intl',
-  service_type: 'full',
-  sheet_mode: 'grupal',
-  name: '', date: '', venue: '', city: '', notes: '', organization: '',
+  sheet_mode:     'individual',
+  service_type:   'full',
+  name: '', date: '', end_datetime: '', venue: '', city: '', notes: '', organization: '',
 };
 
 export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
@@ -69,15 +89,33 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
   const user   = useSelector((s: RootState) => s.auth.user);
   const [orgs, setOrgs] = useState<Organization[]>([]);
 
-  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<FormValues>({
+  const { register, handleSubmit, reset, control, setValue, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: initial
-      ? { ...initial, scoring_family: normalizeScoringFamily(initial.scoring_family), sheet_mode: (initial.sheet_mode ?? 'grupal') as 'grupal' | 'individual' | 'icu_dance', organization: initial.organization ? String(initial.organization) : '' }
+      ? {
+          ...initial,
+          scoring_family: normalizeScoringFamily(initial.scoring_family),
+          sheet_mode: (initial.sheet_mode ?? 'individual') as 'grupal' | 'individual' | 'icu_dance',
+          organization: initial.organization ? String(initial.organization) : '',
+          end_datetime: initial.end_datetime
+            ? new Date(initial.end_datetime).toISOString().slice(0, 16)
+            : '',
+        }
       : DEFAULT_VALUES,
   });
 
   const scoringFamily = useWatch({ control, name: 'scoring_family' });
+  const sheetMode     = useWatch({ control, name: 'sheet_mode' });
   const derivedRegulation = scoringFamily ? SCORING_FAMILY_REGULATION[scoringFamily] : null;
+
+  // Auto-derive sheet_mode when scoring_family changes (only if not already editing a saved value)
+  useEffect(() => {
+    if (!isEdit && scoringFamily) {
+      const suggested = FAMILY_TO_SHEET_MODE[scoringFamily];
+      if (suggested) setValue('sheet_mode', suggested);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scoringFamily]);
 
   useEffect(() => {
     competitionsRepository.listOrganizations({ page_size: '100' }).then((res) => {
@@ -90,7 +128,15 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
       const defaultOrg = user?.role === 'org_admin' && user.organization ? String(user.organization) : '';
       reset(
         initial
-          ? { ...initial, scoring_family: normalizeScoringFamily(initial.scoring_family), sheet_mode: (initial.sheet_mode ?? 'grupal') as 'grupal' | 'individual' | 'icu_dance', organization: initial.organization ? String(initial.organization) : defaultOrg }
+          ? {
+              ...initial,
+              scoring_family: normalizeScoringFamily(initial.scoring_family),
+              sheet_mode: (initial.sheet_mode ?? 'individual') as 'grupal' | 'individual' | 'icu_dance',
+              organization: initial.organization ? String(initial.organization) : defaultOrg,
+              end_datetime: initial.end_datetime
+                ? new Date(initial.end_datetime).toISOString().slice(0, 16)
+                : '',
+            }
           : { ...DEFAULT_VALUES, organization: defaultOrg },
       );
     }
@@ -101,6 +147,7 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
       const payload = {
         ...values,
         organization: values.organization ? Number(values.organization) : null,
+        end_datetime:  values.end_datetime || null,
       };
       const res = isEdit
         ? await competitionsRepository.updateCompetition(initial!.public_id, payload)
@@ -122,7 +169,17 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
     <Modal open={open} onClose={onClose} title={isEdit ? 'Editar competencia' : 'Nueva competencia'}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <Input label="Nombre" id="name" placeholder="Copa Nacional 2025" error={errors.name?.message} {...register('name')} />
-        <Input label="Fecha" id="date" type="date" error={errors.date?.message} {...register('date')} />
+
+        <div className="grid grid-cols-2 gap-3">
+          <Input label="Fecha" id="date" type="date" error={errors.date?.message} {...register('date')} />
+          <Input
+            label="Fecha / hora de cierre (opcional)"
+            id="end_datetime"
+            type="datetime-local"
+            error={errors.end_datetime?.message}
+            {...register('end_datetime')}
+          />
+        </div>
 
         {/* Sistema de calificación + Reglamento derivado */}
         <div>
@@ -143,6 +200,20 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
           )}
         </div>
 
+        <div>
+          <Select
+            label="Modo de planillas (jueceo)"
+            id="sheet_mode"
+            options={SHEET_MODE_OPTIONS}
+            disabled={sheetMode === 'icu_dance'}
+            error={errors.sheet_mode?.message}
+            {...register('sheet_mode')}
+          />
+          {sheetMode === 'icu_dance' && (
+            <p className="mt-1 text-xs text-zinc-400">Fijado automáticamente por el sistema ICU Dance.</p>
+          )}
+        </div>
+
         <Select
           label="Módulos"
           id="service_type"
@@ -150,9 +221,9 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
           error={errors.service_type?.message}
           {...register('service_type')}
         />
-        <input type="hidden" {...register('sheet_mode')} />
+
         <Input label="Sede" id="venue" placeholder="Coliseo Mayor" error={errors.venue?.message} {...register('venue')} />
-        <Input label="Ciudad" id="city" placeholder="Quito" error={errors.city?.message} {...register('city')} />
+        <Input label="Ciudad" id="city" placeholder="Guayaquil" error={errors.city?.message} {...register('city')} />
         <Select
           label="Organización"
           id="organization"
