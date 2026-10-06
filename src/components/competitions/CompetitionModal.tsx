@@ -42,6 +42,12 @@ interface Props {
 const normalizeScoringFamily = (f: string | null | undefined): ScoringFamily =>
   !f || f === 'united' ? 'united_intl' : f as ScoringFamily;
 
+function formatDateTimeLocal(d: Date): string {
+  // Format as "YYYY-MM-DDTHH:mm" for datetime-local input
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 // Default sheet_mode for each scoring_family
 const FAMILY_TO_SHEET_MODE: Record<string, 'grupal' | 'individual' | 'icu_dance'> = {
   united:        'grupal',
@@ -85,8 +91,8 @@ const DEFAULT_VALUES: Partial<FormValues> = {
 };
 
 export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
-  const isEdit = !!initial;
-  const user   = useSelector((s: RootState) => s.auth.user);
+  const isEdit     = !!initial;
+  const user       = useSelector((s: RootState) => s.auth.user);
   const [orgs, setOrgs] = useState<Organization[]>([]);
 
   const { register, handleSubmit, reset, control, setValue, formState: { errors, isSubmitting } } = useForm<FormValues>({
@@ -104,9 +110,15 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
       : DEFAULT_VALUES,
   });
 
-  const scoringFamily = useWatch({ control, name: 'scoring_family' });
-  const sheetMode     = useWatch({ control, name: 'sheet_mode' });
+  const scoringFamily  = useWatch({ control, name: 'scoring_family' });
+  const sheetMode      = useWatch({ control, name: 'sheet_mode' });
+  const endDatetimeVal = useWatch({ control, name: 'end_datetime' });
   const derivedRegulation = scoringFamily ? SCORING_FAMILY_REGULATION[scoringFamily] : null;
+
+  // Show inactive banner when editing a competition whose stored is_active=false
+  // AND the current end_datetime form value doesn't already fix that
+  const isInactive = isEdit && initial?.is_active === false &&
+    (!endDatetimeVal || new Date(endDatetimeVal) <= new Date());
 
   // Auto-derive sheet_mode when scoring_family changes (only if not already editing a saved value)
   useEffect(() => {
@@ -168,17 +180,41 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
   return (
     <Modal open={open} onClose={onClose} title={isEdit ? 'Editar competencia' : 'Nueva competencia'}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+
+        {/* ── Inactive competition warning ── */}
+        {isInactive && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <p className="font-semibold">Esta competencia está inactiva</p>
+            <p className="mt-0.5 text-amber-700">
+              Los jueces no pueden acceder porque la fecha de cierre ya pasó.
+              Para reactivarla, establece una fecha de cierre futura.
+            </p>
+            <button
+              type="button"
+              onClick={() => setValue('end_datetime', formatDateTimeLocal(new Date(Date.now() + 24 * 3600 * 1000)))}
+              className="mt-2 rounded-md bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900 hover:bg-amber-200 transition-colors"
+            >
+              Reactivar por 24 horas
+            </button>
+          </div>
+        )}
+
         <Input label="Nombre" id="name" placeholder="Copa Nacional 2025" error={errors.name?.message} {...register('name')} />
 
         <div className="grid grid-cols-2 gap-3">
           <Input label="Fecha" id="date" type="date" error={errors.date?.message} {...register('date')} />
-          <Input
-            label="Fecha / hora de cierre (opcional)"
-            id="end_datetime"
-            type="datetime-local"
-            error={errors.end_datetime?.message}
-            {...register('end_datetime')}
-          />
+          <div>
+            <Input
+              label="Fecha / hora de cierre (opcional)"
+              id="end_datetime"
+              type="datetime-local"
+              error={errors.end_datetime?.message}
+              {...register('end_datetime')}
+            />
+            <p className="mt-1 text-xs text-zinc-400">
+              Controla cuándo los jueces dejan de tener acceso. Sin valor: cierra a medianoche del día del evento.
+            </p>
+          </div>
         </div>
 
         {/* Sistema de calificación + Reglamento derivado */}
