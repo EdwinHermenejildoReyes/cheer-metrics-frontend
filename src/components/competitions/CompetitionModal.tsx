@@ -178,7 +178,7 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
   ];
 
   return (
-    <Modal open={open} onClose={onClose} title={isEdit ? 'Editar competencia' : 'Nueva competencia'}>
+    <Modal open={open} onClose={onClose} title={isEdit ? 'Editar competencia' : 'Nueva competencia'} size="xl">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
 
         {/* ── Inactive competition warning ── */}
@@ -199,84 +199,100 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
           </div>
         )}
 
+        {/* Fila 1: Nombre (full width) */}
         <Input label="Nombre" id="name" placeholder="Copa Nacional 2025" error={errors.name?.message} {...register('name')} />
 
-        <div className="grid grid-cols-2 gap-3">
-          <Input label="Fecha" id="date" type="date" error={errors.date?.message} {...register('date')} />
+        {/* Fila 2: Fechas */}
+        <div className="grid grid-cols-2 gap-4">
+          <Input label="Fecha del evento" id="date" type="date" error={errors.date?.message} {...register('date')} />
           <div>
             <Input
-              label="Fecha / hora de cierre (opcional)"
+              label="Cierre de acceso (opcional)"
               id="end_datetime"
               type="datetime-local"
               error={errors.end_datetime?.message}
               {...register('end_datetime')}
             />
             <p className="mt-1 text-xs text-zinc-400">
-              Controla cuándo los jueces dejan de tener acceso. Sin valor: cierra a medianoche del día del evento.
+              Sin valor: cierra a medianoche del día del evento.
             </p>
           </div>
         </div>
 
-        {/* Sistema de calificación + Reglamento derivado */}
-        <div>
-          <Select
-            label="Sistema de Calificación"
-            id="scoring_family"
-            options={SCORING_FAMILY_OPTIONS}
-            error={errors.scoring_family?.message}
-            {...register('scoring_family')}
-          />
-          {derivedRegulation && (
-            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-zinc-500">
-              Reglamento:
-              <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
-                {derivedRegulation}
-              </span>
-            </p>
-          )}
+        {/* Fila 3: Sistema de calificación | Modo de planillas */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Select
+              label="Sistema de Calificación"
+              id="scoring_family"
+              options={SCORING_FAMILY_OPTIONS}
+              error={errors.scoring_family?.message}
+              {...register('scoring_family')}
+            />
+            {derivedRegulation && (
+              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-zinc-500">
+                Reglamento:
+                <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                  {derivedRegulation}
+                </span>
+              </p>
+            )}
+          </div>
+          <div>
+            <Select
+              label="Modo de planillas"
+              id="sheet_mode"
+              options={SHEET_MODE_OPTIONS}
+              disabled={sheetMode === 'icu_dance'}
+              error={errors.sheet_mode?.message}
+              {...register('sheet_mode')}
+            />
+            {sheetMode === 'icu_dance' && (
+              <p className="mt-1 text-xs text-zinc-400">Fijado automáticamente por ICU Dance.</p>
+            )}
+          </div>
         </div>
 
-        <div>
+        {/* Fila 4: Módulos | Organización */}
+        <div className="grid grid-cols-2 gap-4">
           <Select
-            label="Modo de planillas (jueceo)"
-            id="sheet_mode"
-            options={SHEET_MODE_OPTIONS}
-            disabled={sheetMode === 'icu_dance'}
-            error={errors.sheet_mode?.message}
-            {...register('sheet_mode')}
+            label="Módulos"
+            id="service_type"
+            options={SERVICE_TYPE_OPTIONS}
+            error={errors.service_type?.message}
+            {...register('service_type')}
           />
-          {sheetMode === 'icu_dance' && (
-            <p className="mt-1 text-xs text-zinc-400">Fijado automáticamente por el sistema ICU Dance.</p>
-          )}
+          <Select
+            label="Organización"
+            id="organization"
+            options={orgOptions}
+            {...register('organization')}
+          />
         </div>
 
-        <Select
-          label="Módulos"
-          id="service_type"
-          options={SERVICE_TYPE_OPTIONS}
-          error={errors.service_type?.message}
-          {...register('service_type')}
-        />
+        {/* Fila 5: Sede | Ciudad */}
+        <div className="grid grid-cols-2 gap-4">
+          <Input label="Sede" id="venue" placeholder="Coliseo Mayor" error={errors.venue?.message} {...register('venue')} />
+          <Input label="Ciudad" id="city" placeholder="Guayaquil" error={errors.city?.message} {...register('city')} />
+        </div>
 
-        <Input label="Sede" id="venue" placeholder="Coliseo Mayor" error={errors.venue?.message} {...register('venue')} />
-        <Input label="Ciudad" id="city" placeholder="Guayaquil" error={errors.city?.message} {...register('city')} />
-        <Select
-          label="Organización"
-          id="organization"
-          options={orgOptions}
-          {...register('organization')}
-        />
+        {/* Fila 6: Notas (full width) */}
         <Textarea label="Notas" id="notes" placeholder="Información adicional..." {...register('notes')} />
-        <label className="flex items-center gap-3 cursor-pointer select-none">
-          <input type="checkbox" className="h-4 w-4 rounded" {...register('require_payment')} />
-          <span className="text-sm font-medium text-zinc-700">
-            Bloquear planilla si el atleta tiene pago pendiente
-          </span>
-        </label>
-        <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="secondary" onClick={onClose}>Cancelar</Button>
-          <Button type="submit" loading={isSubmitting}>{isEdit ? 'Guardar cambios' : 'Crear'}</Button>
+
+        {/* Fila 7: Checkbox + Botones */}
+        <div className="flex items-center justify-between pt-1">
+          <label className="flex items-center gap-2.5 cursor-pointer select-none">
+            <input type="checkbox" className="h-4 w-4 rounded" {...register('require_payment')} />
+            <span className="text-sm font-medium text-zinc-700">
+              Bloquear planilla si el atleta tiene pago pendiente
+            </span>
+          </label>
+          <div className="flex shrink-0 gap-2">
+            <Button type="button" variant="secondary" onClick={onClose}>Cancelar</Button>
+            <Button type="submit" loading={isSubmitting}>{isEdit ? 'Guardar cambios' : 'Crear'}</Button>
+          </div>
         </div>
+
       </form>
     </Modal>
   );

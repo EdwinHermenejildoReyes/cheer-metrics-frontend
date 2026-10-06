@@ -32,11 +32,11 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
       />
       <div
         className={cn(
-          'relative w-full rounded-xl bg-white shadow-xl',
+          'relative flex max-h-[calc(100vh-2rem)] w-full flex-col rounded-xl bg-white shadow-xl',
           sizes[size]
         )}
       >
-        <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-zinc-200 px-6 py-4">
           <h2 className="text-base font-semibold text-zinc-900">{title}</h2>
           <button
             onClick={onClose}
@@ -45,7 +45,7 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="px-6 py-5">{children}</div>
+        <div className="overflow-y-auto px-6 py-5">{children}</div>
       </div>
     </div>,
     document.body
