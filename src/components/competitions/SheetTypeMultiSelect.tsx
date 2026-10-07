@@ -4,18 +4,31 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown, X } from 'lucide-react';
 import {
   GRUPAL_SHEET_TYPES,
+  INDIVIDUAL_SHEET_TYPES,
+  ICU_DANCE_SHEET_TYPES,
   SHEET_TYPE_GROUPS,
   SHEET_TYPE_LABELS,
+  type SheetMode,
   type SheetType,
 } from '@/types/competitions';
+
+const GRUPAL_ALLOWED: SheetType[] = [...GRUPAL_SHEET_TYPES, 'deductions_only', 'safety_rules'];
+
+const MODE_ALLOWED: Record<SheetMode, SheetType[]> = {
+  grupal:    GRUPAL_ALLOWED,
+  individual: INDIVIDUAL_SHEET_TYPES,
+  icu_dance:  ICU_DANCE_SHEET_TYPES,
+};
 
 interface Props {
   value: SheetType[];
   onChange: (value: SheetType[]) => void;
   disabledTypes?: SheetType[];
+  sheetMode?: SheetMode;
 }
 
-export function SheetTypeMultiSelect({ value, onChange, disabledTypes = [] }: Props) {
+export function SheetTypeMultiSelect({ value, onChange, disabledTypes = [], sheetMode }: Props) {
+  const allowedTypes = sheetMode ? new Set(MODE_ALLOWED[sheetMode]) : null;
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -95,12 +108,17 @@ export function SheetTypeMultiSelect({ value, onChange, disabledTypes = [] }: Pr
       {/* Dropdown */}
       {open && (
         <div className="absolute z-50 bottom-full mb-1 w-full min-w-[220px] rounded-lg border border-zinc-200 bg-white shadow-lg overflow-y-auto max-h-72">
-          {SHEET_TYPE_GROUPS.map((group) => (
+          {SHEET_TYPE_GROUPS.map((group) => {
+            const visibleTypes = allowedTypes
+              ? group.types.filter((t) => allowedTypes.has(t))
+              : group.types;
+            if (visibleTypes.length === 0) return null;
+            return (
             <div key={group.label}>
               <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400 bg-zinc-50 sticky top-0 border-b border-zinc-100">
                 {group.label}
               </p>
-              {group.types.map((st) => {
+              {visibleTypes.map((st) => {
                 const selected = value.includes(st);
                 const disabled = disabledTypes.includes(st);
                 const isGrupal = GRUPAL_SHEET_TYPES.includes(st);
@@ -126,7 +144,8 @@ export function SheetTypeMultiSelect({ value, onChange, disabledTypes = [] }: Pr
                 );
               })}
             </div>
-          ))}
+          );
+          })}
         </div>
       )}
     </div>
