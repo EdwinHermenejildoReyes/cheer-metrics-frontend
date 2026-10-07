@@ -10,7 +10,8 @@ import { PageSpinner } from '@/components/ui/spinner';
 import { RegistrationModal } from '@/components/competitions/RegistrationModal';
 import { ScoringSheetModal } from '@/components/competitions/ScoringSheetModal';
 import { DeductionModal } from '@/components/competitions/DeductionModal';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import type { RootState } from '@/core/rootReducer';
 import competitionsRepository from '@/repositories/competitionsRepository';
 import authRepository from '@/repositories/authRepository';
 import { exportDivisionScores, exportDivisionScoresPdf } from '@/lib/exportDivisionScores';
@@ -260,6 +261,7 @@ export default function DivisionDetailPage() {
   const { id, divisionId } = useParams<{ id: string; divisionId: string }>();
 
   const { isJudge, isCompetitionActive, sheetTypesForCompetition, canViewSheetForDivision, assignments } = useJudge();
+  const user = useSelector((s: RootState) => s.auth.user);
 
   // Refresh judge assignments on mount so new assignments set by admin are visible
   // without requiring the judge to log out and back in.
@@ -272,6 +274,11 @@ export default function DivisionDetailPage() {
   const [division, setDivision]       = useState<Division | null>(null);
   const isJudgeRef = useRef(isJudge);
   isJudgeRef.current = isJudge;
+  // Keep a stable ref to userId so load() can filter without adding user to its deps
+  const userIdRef = useRef<number | undefined>(user?.id);
+  userIdRef.current = user?.id;
+  // Fresh judge assignments fetched from the API in load() — avoids stale Redux state
+  const [myApiAssignments, setMyApiAssignments] = useState<JudgeAssignment[]>([]);
 
   useEffect(() => {
     if (!division) return;
@@ -346,6 +353,11 @@ export default function DivisionDetailPage() {
         }
       });
       setJudgesBySheet(bySheet);
+      // Capture the current judge's own assignments from the fresh API response so that
+      // judgeVisibleSheets is never stale (avoids race condition with me() on mount).
+      if (isJudgeRef.current) {
+        setMyApiAssignments(assignRes.data.results.filter((a) => a.user === userIdRef.current));
+      }
       await loadSheets();
     } finally {
       setLoading(false);
@@ -564,7 +576,9 @@ export default function DivisionDetailPage() {
   // For icon display: every active assignment for this competition is shown,
   // regardless of the assignment's division scope. Division scope enforcement
   // is a backend concern when the judge actually opens the scoresheet.
-  const judgeVisibleSheets = assignments
+  // Prefer myApiAssignments (fresh from load()) over possibly-stale Redux assignments.
+  const judgeEffectiveAssignments = isJudge && myApiAssignments.length > 0 ? myApiAssignments : assignments;
+  const judgeVisibleSheets = judgeEffectiveAssignments
     .filter((a) => a.competition === compId && a.is_access_active)
     .map((a) => a.sheet_type)
     .filter((sheetType, idx, arr) => arr.indexOf(sheetType) === idx) // dedupe
@@ -694,7 +708,7 @@ export default function DivisionDetailPage() {
 
         {/* Banner: juez sin acceso a planillas en esta división */}
         {isJudge && hasJudging && judgeExpandedSheets.length === 0 && (() => {
-          const hasActiveForComp = assignments.some((a) => a.competition === compId && a.is_access_active);
+          const hasActiveForComp = judgeEffectiveAssignments.some((a) => a.competition === compId && a.is_access_active);
           if (!hasActiveForComp) {
             return (
               <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5">
