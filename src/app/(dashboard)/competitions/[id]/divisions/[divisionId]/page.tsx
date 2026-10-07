@@ -17,6 +17,7 @@ import authRepository from '@/repositories/authRepository';
 import { exportDivisionScores, exportDivisionScoresPdf } from '@/lib/exportDivisionScores';
 import { JudgeScoreTable, JUDGE_TABLE_SHEET_TYPES } from '@/components/competitions/JudgeScoreTable';
 import { setUser } from '@/store/auth/slices';
+import type { AuthUser } from '@/store/auth/slices';
 import { useJudge } from '@/hooks/useJudge';
 import { useConfirm } from '@/hooks/useConfirm';
 import {
@@ -263,13 +264,6 @@ export default function DivisionDetailPage() {
   const { isJudge, isCompetitionActive, sheetTypesForCompetition, canViewSheetForDivision, assignments } = useJudge();
   const user = useSelector((s: RootState) => s.auth.user);
 
-  // Refresh judge assignments on mount so new assignments set by admin are visible
-  // without requiring the judge to log out and back in.
-  useEffect(() => {
-    if (!isJudge) return;
-    authRepository.me().then((res) => dispatch(setUser(res.data))).catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const [division, setDivision]       = useState<Division | null>(null);
   const isJudgeRef = useRef(isJudge);
@@ -340,9 +334,12 @@ export default function DivisionDetailPage() {
       const divRes = await competitionsRepository.getDivision(divisionId);
       setDivision(divRes.data);
       isIcuDanceModeRef.current = divRes.data.competition_sheet_mode === 'icu_dance';
-      const [regRes, assignRes] = await Promise.all([
+      const [regRes, assignRes, meRes] = await Promise.all([
         competitionsRepository.listRegistrations({ division: String(divRes.data.id), page_size: '100' }),
         competitionsRepository.listJudgeAssignments({ competition: String(divRes.data.competition), page_size: '200' }),
+        // Fetch fresh user data for judges so myApiAssignments is never stale or org-filtered.
+        // /auth/users/me/ always returns the judge's own assignments regardless of organization.
+        isJudgeRef.current ? authRepository.me() : Promise.resolve(null),
       ]);
       setRegistrations(regRes.data.results);
       const bySheet: Partial<Record<SheetType, JudgeAssignment[]>> = {};
@@ -353,10 +350,10 @@ export default function DivisionDetailPage() {
         }
       });
       setJudgesBySheet(bySheet);
-      // Capture the current judge's own assignments from the fresh API response so that
-      // judgeVisibleSheets is never stale (avoids race condition with me() on mount).
-      if (isJudgeRef.current) {
-        setMyApiAssignments(assignRes.data.results.filter((a) => a.user === userIdRef.current));
+      if (isJudgeRef.current && meRes) {
+        const freshUser = meRes.data as AuthUser;
+        dispatch(setUser(freshUser));
+        setMyApiAssignments(freshUser.judge_assignments ?? []);
       }
       await loadSheets();
     } finally {
