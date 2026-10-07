@@ -579,8 +579,15 @@ export default function DivisionDetailPage() {
   // ICU score sheet types (scoring, not deductions)
   const ICU_SCORE_TYPES = ICU_SHEET_TYPES.filter((t) => t !== 'icu_dance_deductions');
 
+  // Mirror _isAssignmentActive from useJudge: when dates are not set fall back to
+  // competition_is_active; when dates are set use is_access_active.
+  const isAssignmentActive = (a: JudgeAssignment) => {
+    if (!a.access_from && !a.access_until) return a.competition_is_active;
+    return a.is_access_active;
+  };
+
   const judgeVisibleSheets = judgeEffectiveAssignments
-    .filter((a) => a.competition === compId && a.is_access_active)
+    .filter((a) => a.competition === compId && isAssignmentActive(a))
     .map((a) => {
       // In ICU Dance mode, any ICU scoring assignment maps to the division's active scoring system.
       // This way admins can assign 'icu_dance' and judges see the correct form for each division
@@ -717,7 +724,7 @@ export default function DivisionDetailPage() {
 
         {/* Banner: juez sin acceso a planillas en esta división */}
         {isJudge && hasJudging && judgeExpandedSheets.length === 0 && (() => {
-          const hasActiveForComp = judgeEffectiveAssignments.some((a) => a.competition === compId && a.is_access_active);
+          const hasActiveForComp = judgeEffectiveAssignments.some((a) => a.competition === compId && isAssignmentActive(a));
           if (!hasActiveForComp) {
             return (
               <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5">
