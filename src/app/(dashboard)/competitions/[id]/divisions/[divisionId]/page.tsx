@@ -578,9 +578,21 @@ export default function DivisionDetailPage() {
   // is a backend concern when the judge actually opens the scoresheet.
   // Prefer myApiAssignments (fresh from load()) over possibly-stale Redux assignments.
   const judgeEffectiveAssignments = isJudge && myApiAssignments.length > 0 ? myApiAssignments : assignments;
+
+  // ICU score sheet types (scoring, not deductions)
+  const ICU_SCORE_TYPES = ICU_SHEET_TYPES.filter((t) => t !== 'icu_dance_deductions');
+
   const judgeVisibleSheets = judgeEffectiveAssignments
     .filter((a) => a.competition === compId && a.is_access_active)
-    .map((a) => a.sheet_type)
+    .map((a) => {
+      // In ICU Dance mode, any ICU scoring assignment maps to the division's active scoring system.
+      // This way admins can assign 'icu_dance' and judges see the correct form for each division
+      // (e.g. icu_dance_principiantes, icu_dance_solo) without needing separate assignments per subtype.
+      if (isIcuDanceMode && ICU_SCORE_TYPES.includes(a.sheet_type)) {
+        return activeScoringSystem as SheetType;
+      }
+      return a.sheet_type;
+    })
     .filter((sheetType, idx, arr) => arr.indexOf(sheetType) === idx) // dedupe
     .filter((sheetType) => {
       if (!isSheetAllowedInDivision(sheetType)) return false;
