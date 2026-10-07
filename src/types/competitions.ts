@@ -158,8 +158,8 @@ export interface IcuAggregate {
   scores: IcuJudgeScore[];
 }
 
-export type SheetMode = 'grupal' | 'individual' | 'icu_dance';
-export type CompetitionSheetMode = 'grupal' | 'individual' | 'icu_dance';
+export type SheetMode = 'grupal' | 'individual' | 'icu_dance' | 'hybrid';
+export type CompetitionSheetMode = 'grupal' | 'individual' | 'icu_dance' | 'hybrid';
 export type ServiceType = 'full' | 'registration_only' | 'judging_only';
 export type ScoringFamily =
   | 'united'

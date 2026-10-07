@@ -13,11 +13,13 @@ import {
 } from '@/types/competitions';
 
 const GRUPAL_ALLOWED: SheetType[] = [...GRUPAL_SHEET_TYPES, 'deductions_only', 'safety_rules'];
+const HYBRID_ALLOWED: SheetType[] = [...new Set([...GRUPAL_ALLOWED, ...INDIVIDUAL_SHEET_TYPES])];
 
 const MODE_ALLOWED: Record<SheetMode, SheetType[]> = {
   grupal:    GRUPAL_ALLOWED,
   individual: INDIVIDUAL_SHEET_TYPES,
   icu_dance:  ICU_DANCE_SHEET_TYPES,
+  hybrid:     HYBRID_ALLOWED,
 };
 
 interface Props {

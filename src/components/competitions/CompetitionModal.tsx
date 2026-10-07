@@ -23,7 +23,7 @@ const schema = z.object({
   venue:           z.string().min(2, 'Requerido'),
   city:            z.string().min(2, 'Requerido'),
   scoring_family:  z.enum(['united', 'united_intl', 'iasf_567', 'icu', 'partner_stunt', 'future_flyer', 'best_cheer', 'icu_dance']),
-  sheet_mode:      z.enum(['grupal', 'individual', 'icu_dance']),
+  sheet_mode:      z.enum(['grupal', 'individual', 'icu_dance', 'hybrid']),
   service_type:    z.enum(['full', 'registration_only', 'judging_only']),
   notes:           z.string().optional(),
   organization:    z.string().optional(),
@@ -49,7 +49,7 @@ function formatDateTimeLocal(d: Date): string {
 }
 
 // Default sheet_mode for each scoring_family
-const FAMILY_TO_SHEET_MODE: Record<string, 'grupal' | 'individual' | 'icu_dance'> = {
+const FAMILY_TO_SHEET_MODE: Record<string, 'grupal' | 'individual' | 'icu_dance' | 'hybrid'> = {
   united:        'grupal',
   united_intl:   'individual',
   iasf_567:      'individual',
@@ -74,6 +74,7 @@ const SCORING_FAMILY_OPTIONS = [
 const SHEET_MODE_OPTIONS = [
   { value: 'individual', label: 'Individual — Dificultad + Ejecución por hoja (DV Championship, IASF)' },
   { value: 'grupal',     label: 'Grupal — Building / Tumbling / Overall (competencias locales)' },
+  { value: 'hybrid',     label: 'Híbrida — Mezcla de planillas grupales e individuales' },
   { value: 'icu_dance',  label: 'ICU Dance (fijado por sistema de calificación)' },
 ];
 
@@ -101,7 +102,7 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
       ? {
           ...initial,
           scoring_family: normalizeScoringFamily(initial.scoring_family),
-          sheet_mode: (initial.sheet_mode ?? 'individual') as 'grupal' | 'individual' | 'icu_dance',
+          sheet_mode: (initial.sheet_mode ?? 'individual') as 'grupal' | 'individual' | 'icu_dance' | 'hybrid',
           organization: initial.organization ? String(initial.organization) : '',
           end_datetime: initial.end_datetime
             ? new Date(initial.end_datetime).toISOString().slice(0, 16)
@@ -143,7 +144,7 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
           ? {
               ...initial,
               scoring_family: normalizeScoringFamily(initial.scoring_family),
-              sheet_mode: (initial.sheet_mode ?? 'individual') as 'grupal' | 'individual' | 'icu_dance',
+              sheet_mode: (initial.sheet_mode ?? 'individual') as 'grupal' | 'individual' | 'icu_dance' | 'hybrid',
               organization: initial.organization ? String(initial.organization) : defaultOrg,
               end_datetime: initial.end_datetime
                 ? new Date(initial.end_datetime).toISOString().slice(0, 16)
