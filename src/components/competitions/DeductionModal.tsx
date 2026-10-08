@@ -110,7 +110,7 @@ export function DeductionModal({ open, onClose, onSaved, scoreSheetId }: Props) 
 
         <div className="grid grid-cols-2 gap-3">
           <Input
-            label={selectedType === 'tiempo' ? 'Segundos de exceso' : 'Cantidad'}
+            label={selectedType === 'tiempo' ? 'Ocurrencias' : 'Cantidad'}
             id="count"
             type="number"
             min={1}

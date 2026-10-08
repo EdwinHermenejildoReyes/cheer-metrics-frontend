@@ -604,22 +604,22 @@ export const REGISTRATION_STATUS_LABELS: Record<RegistrationStatus, string> = {
   pending: 'Pendiente', confirmed: 'Confirmada', withdrawn: 'Retirada',
 };
 
-// Deduction labels — format: "CODE  Description"
+// Deduction labels — FECU Ecuador 2026 (Descuentos-FECU-2026.pdf, 17 Sep 2026)
 export const DEDUCTION_TYPE_LABELS: Record<DeductionType, string> = {
-  x:           'Salida de superficie',
+  x:           'Infracción de límite de área',
   ca:          'Caída de atleta',
   csa:         'Caída grave de atleta',
   ec:          'Error de construcción',
   cc:          'Caída de construcción',
   csc:         'Caída grave de construcción',
-  tiempo:      'Exceso de tiempo (por segundo)',
+  tiempo:      'Infracción de tiempo',
   pi:          'Política de imagen',
   eap:         'Estándares atléticos de presentación',
   rg:          'Reglas generales',
   gfn:         'Gimnasia fuera del nivel',
   bfn:         'Construcción fuera del nivel',
-  seg:         'Infracción de seguridad',
-  ad:          'Actitud antideportiva',
+  seg:         'Infracción de legalidad',
+  ad:          'Conducta antideportiva',
   div:         'Infracción de división',
 };
 
@@ -630,21 +630,23 @@ export const DEDUCTION_CODES: Record<DeductionType, string> = {
   ad: 'AD', div: 'DIV',
 };
 
+// Unit amounts — FECU Ecuador 2026 (Descuentos-FECU-2026.pdf, 17 Sep 2026)
+// AD is variable: 2.00, 3.00, 4.00 or 5.00 — determined by competition officials.
 export const DEDUCTION_AMOUNTS: Record<DeductionType, string> = {
-  x:           '0.05',
-  ca:          '0.15',
-  csa:         '0.25',
-  ec:          '0.25',
-  cc:          '0.75',
-  csc:         '1.25',
-  tiempo:      '0.05',
-  pi:          '0.01',
-  eap:         '0.25',
-  rg:          '0.05',
-  gfn:         '0.05',
-  bfn:         '0.10',
-  seg:         '0.50',
-  ad:          '3.00',
+  x:           '0.50',
+  ca:          '0.25',
+  csa:         '0.50',
+  ec:          '0.50',
+  cc:          '1.00',
+  csc:         '1.50',
+  tiempo:      '0.50',
+  pi:          '0.50',
+  eap:         '0.50',
+  rg:          '0.50',
+  gfn:         '0.50',
+  bfn:         '0.50',
+  seg:         '1.00',
+  ad:          '2.00 – 5.00',
   div:         '5.00',
 };
 
