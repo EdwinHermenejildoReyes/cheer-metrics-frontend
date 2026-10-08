@@ -1,5 +1,5 @@
 export type SheetType =
-  | 'building' | 'tumbling' | 'rangos' | 'overall' | 'partner_stunt' | 'deducciones'
+  | 'building' | 'tumbling' | 'rangos' | 'overall' | 'partner_stunt' | 'best_cheer' | 'deducciones'
   | 'building_difficulty' | 'building_execution'
   | 'tumbling_difficulty' | 'tumbling_execution'
   | 'deductions_only' | 'safety_rules'
@@ -13,6 +13,7 @@ export const SHEET_TYPE_LABELS: Record<SheetType, string> = {
   rangos:               'Rangos (Dificultad)',
   overall:              'Overall (General)',
   partner_stunt:        'Partner Stunt',
+  best_cheer:           'Best Cheerleader',
   deducciones:          'Deducciones',
   building_difficulty:  'Building (Dificultad)',
   building_execution:   'Building (Elevaciones)',
@@ -35,6 +36,7 @@ export const SHEET_TYPE_GROUPS: { label: string; types: SheetType[] }[] = [
   { label: 'Tumbling',      types: ['tumbling', 'tumbling_difficulty', 'tumbling_execution'] },
   { label: 'Overall',       types: ['overall'] },
   { label: 'Partner Stunt', types: ['partner_stunt'] },
+  { label: 'Best Cheer',   types: ['best_cheer'] },
   { label: 'Rangos',        types: ['rangos'] },
   { label: 'Deducciones',   types: ['deducciones', 'deductions_only', 'safety_rules'] },
   { label: 'ICU Dance',     types: ['icu_dance', 'icu_doubles', 'icu_dance_deductions', 'icu_dance_solo', 'icu_dance_principiantes'] },
@@ -197,7 +199,7 @@ export const GRUPAL_SHEET_TYPES: SheetType[] = [
   'building', 'tumbling', 'overall', 'rangos', 'deducciones',
 ];
 export const INDIVIDUAL_SHEET_TYPES: SheetType[] = [
-  'partner_stunt',
+  'partner_stunt', 'best_cheer',
   'building_difficulty', 'building_execution',
   'tumbling_difficulty', 'tumbling_execution',
   'overall',
@@ -227,7 +229,7 @@ export type DeductionType =
 
 export type ScoringSystem =
   | 'tiny_novice' | 'mini_novice' | 'novice_plus' | 'prep' | 'escolar' | 'escolar_univ' | 'escolar_ab'
-  | 'elite_l1' | 'elite_l2_7' | 'elite_nt' | 'partner_stunt' | 'iasf_l6_7'
+  | 'elite_l1' | 'elite_l2_7' | 'elite_nt' | 'partner_stunt' | 'best_cheer' | 'iasf_l6_7'
   | 'iasf_world_l6_7'
   | 'intl_l1' | 'intl_l2' | 'intl_l2_7' | 'intl_nt'
   | 'icu_dance' | 'icu_doubles' | 'icu_dance_solo' | 'icu_dance_principiantes';
@@ -245,6 +247,9 @@ export type ScoreFieldKey =
   | 'showmanship_building' | 'showmanship_tumbling' | 'showmanship_overall'
   | 'pg_technique' | 'pg_difficulty' | 'pg_form_appearance'
   | 'pg_transitions' | 'pg_expressiveness'
+  | 'bc_gym_difficulty' | 'bc_gym_execution'
+  | 'bc_jumps_difficulty' | 'bc_jumps_execution'
+  | 'bc_dance' | 'bc_overall'
   | 'icu_style_execution' | 'icu_movement_technique' | 'icu_skill_technique'
   | 'icu_synchronization' | 'icu_uniformity' | 'icu_spacing'
   | 'icu_musicality' | 'icu_staging' | 'icu_complexity' | 'icu_audience_appeal'
@@ -410,6 +415,13 @@ export interface ScoreSheet {
   pg_form_appearance:   string | null;
   pg_transitions:       string | null;
   pg_expressiveness:    string | null;
+  // Best Cheer
+  bc_gym_difficulty:    string | null;
+  bc_gym_execution:     string | null;
+  bc_jumps_difficulty:  string | null;
+  bc_jumps_execution:   string | null;
+  bc_dance:             string | null;
+  bc_overall:           string | null;
   // ICU Dance — teams
   icu_style_execution:    string | null;
   icu_movement_technique: string | null;
@@ -500,6 +512,13 @@ export interface JudgeScoreRecord {
   pg_form_appearance:   string | null;
   pg_transitions:       string | null;
   pg_expressiveness:    string | null;
+  // Best Cheer
+  bc_gym_difficulty:    string | null;
+  bc_gym_execution:     string | null;
+  bc_jumps_difficulty:  string | null;
+  bc_jumps_execution:   string | null;
+  bc_dance:             string | null;
+  bc_overall:           string | null;
 }
 
 export interface RankingEntry {
@@ -675,6 +694,7 @@ export const SCORING_SYSTEM_LABELS: Record<ScoringSystem, string> = {
   elite_l2_7:      'Elite Nivel 2–7',
   elite_nt:        'Elite Non-Tumbling',
   partner_stunt:   'Partner Stunt',
+  best_cheer:      'Best Cheerleader',
   iasf_l6_7:       'IASF Nivel 6–7',
   iasf_world_l6_7: 'IASF World L6-L7',
   intl_l1:         'Internacional Nivel 1',
@@ -729,6 +749,7 @@ export const SCORING_SYSTEM_FIELDS: Record<ScoringSystem, ScoreFieldKey[]> = {
   elite_l2_7:    [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   elite_nt:      [..._BUILDING_BASE, ..._TOSSES, ..._JUMPS, ..._OVERALL, ..._CROSS],
   partner_stunt:   _PARTNER,
+  best_cheer:      ['bc_gym_difficulty', 'bc_gym_execution', 'bc_jumps_difficulty', 'bc_jumps_execution', 'bc_dance', 'bc_overall'],
   iasf_l6_7:       [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   intl_l1:         [..._BUILDING_BASE, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   intl_l2:         [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
@@ -795,6 +816,13 @@ export const FIELD_MAXIMA: Record<ScoreFieldKey, number> = {
   pg_form_appearance:   20,
   pg_transitions:       15,
   pg_expressiveness:    10,
+  // Best Cheer
+  bc_gym_difficulty:    25,
+  bc_gym_execution:     20,
+  bc_jumps_difficulty:  20,
+  bc_jumps_execution:   20,
+  bc_dance:             5,
+  bc_overall:           10,
   // ICU Dance (all criteria max 10)
   icu_style_execution:      10,
   icu_movement_technique:   10,
