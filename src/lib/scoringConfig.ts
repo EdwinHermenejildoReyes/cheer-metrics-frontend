@@ -381,7 +381,68 @@ const PREP_BUILDING: BuildingConfig = {
   showmanshipMin:     1.0,
 };
 
+// INTL 2026 execution deduction amounts per driver (FECU 2026 International PDF):
+// - Stunts/Pyramids (max 15.0): −0.1 Mínimos / −0.3 Menores / −0.5 Múltiples / −0.7 Generalizados
+// - Tosses/Tumbling/Jumps (max 2.0): −0.1 / −0.2 / −0.3 / −0.4
+const INTL_BUILDING_EXEC_DEDS = [0.10, 0.30, 0.50, 0.70];
+const INTL_SMALL_EXEC_DEDS    = [0.10, 0.20, 0.30, 0.40];
+
+// FECU 2026 Novice: Mini/Youth — stunts+pyramids exec only, no diff/drivers/tosses/tumbling
+// max_raw=56: stunts_exec(15)+pyramids_exec(15)+jumps(2)+formations(5)+dance(4)+creativity_avg(10)+showmanship_avg(5)
 const MINI_NOVICE_BUILDING: BuildingConfig = {
+  hasStunts:           true,
+  stuntsHasDiff:       false,
+  stuntsRango:         [],
+  stuntsSkillCount:    0,
+  stuntsSkillGrades:   [],
+  stuntsPartMaxOpts:   [],
+  stuntsExecMax:       15.0,
+  buildingExecDedOpts: INTL_BUILDING_EXEC_DEDS,
+  hasPyramids:         true,
+  pyramidsHasDiff:     false,
+  pyramidRango:        [],
+  pyramidFineSteps:    [],
+  pyramidsExecMax:     15.0,
+  pyramidDriversOpts:  [],
+  hasTosses:           false,
+  tossDiffOpts:        [],
+  tossesExecMax:       2.0,
+  hasCreativity:       true,
+  showmanshipMax:      5.0,
+  creativityMin:       8.0,
+  creativityMax:       10.0,
+  showmanshipMin:      3.5,
+};
+
+// FECU 2026 Novice: Tiny — no stunts/pyramids; jumps exec only
+// max_raw=26: jumps(2)+formations(5)+dance(4)+creativity_avg(10)+showmanship_avg(5)
+const TINY_NOVICE_BUILDING: BuildingConfig = {
+  hasStunts:          false,
+  stuntsHasDiff:      false,
+  stuntsRango:        [],
+  stuntsSkillCount:   0,
+  stuntsSkillGrades:  [],
+  stuntsPartMaxOpts:  [],
+  stuntsExecMax:      2.0,
+  hasPyramids:        false,
+  pyramidsHasDiff:    false,
+  pyramidRango:       [],
+  pyramidFineSteps:   [],
+  pyramidsExecMax:    2.0,
+  pyramidDriversOpts: [],
+  hasTosses:          false,
+  tossDiffOpts:       [],
+  tossesExecMax:      2.0,
+  hasCreativity:      true,
+  showmanshipMax:     5.0,
+  creativityMin:      8.0,
+  creativityMax:      10.0,
+  showmanshipMin:     3.5,
+};
+
+// NOVICE_PLUS backend still uses _INTL_FIELD_MAXIMA with _AVG_MAX=2.0 fallback (no avg_maxima).
+// Keep values decoupled from MINI_NOVICE until the backend is updated.
+const NOVICE_PLUS_BUILDING: BuildingConfig = {
   hasStunts:          true,
   stuntsHasDiff:      false,
   stuntsRango:        [],
@@ -404,32 +465,6 @@ const MINI_NOVICE_BUILDING: BuildingConfig = {
   creativityMax:      2.0,
   showmanshipMin:     1.0,
 };
-
-const TINY_NOVICE_BUILDING: BuildingConfig = {
-  hasStunts:          false,
-  stuntsHasDiff:      false,
-  stuntsRango:        [],
-  stuntsSkillCount:   0,
-  stuntsSkillGrades:  [],
-  stuntsPartMaxOpts:  [],
-  stuntsExecMax:      4.0,
-  hasPyramids:        false,
-  pyramidsHasDiff:    false,
-  pyramidRango:       [],
-  pyramidFineSteps:   [],
-  pyramidsExecMax:    4.0,
-  pyramidDriversOpts: [],
-  hasTosses:          false,
-  tossDiffOpts:       [],
-  tossesExecMax:      2.0,
-  hasCreativity:      true,
-  showmanshipMax:     2.0,
-  creativityMin:      1.5,
-  creativityMax:      2.0,
-  showmanshipMin:     1.0,
-};
-
-const NOVICE_PLUS_BUILDING: BuildingConfig = { ...MINI_NOVICE_BUILDING };
 
 const ESCOLAR_AB_BUILDING: BuildingConfig = {
   hasStunts:          true,
@@ -503,12 +538,6 @@ const PREP_TUMBLING: TumblingConfig = {
   showmanshipMin:   1.0,
 };
 
-// INTL 2026 execution deduction amounts per driver (FECU 2026 International PDF):
-// - Stunts/Pyramids (max 15.0): −0.1 Mínimos / −0.3 Menores / −0.5 Múltiples / −0.7 Generalizados
-// - Tosses/Tumbling/Jumps (max 2.0): −0.1 / −0.2 / −0.3 / −0.4
-const INTL_BUILDING_EXEC_DEDS = [0.10, 0.30, 0.50, 0.70];
-const INTL_SMALL_EXEC_DEDS    = [0.10, 0.20, 0.30, 0.40];
-
 // All Star Prep FECU 2026 — raw max 91.5, same overall/cross sheet behavior as INTL
 const PREP_BUILDING_2026: BuildingConfig = {
   hasStunts:          true,
@@ -574,12 +603,13 @@ const MINI_NOVICE_TUMBLING: TumblingConfig = {
   jumpsHasDiff:     false,
   jumpsDiffOpts:    [],
   jumpsExecMax:     2.0,
+  execDedOpts:      INTL_SMALL_EXEC_DEDS,
   isCombinedSR:     false,
   hasCreativity:    true,
-  showmanshipMax:   2.0,
-  creativityMin:    1.5,
-  creativityMax:    2.0,
-  showmanshipMin:   1.0,
+  showmanshipMax:   5.0,
+  creativityMin:    8.0,
+  creativityMax:    10.0,
+  showmanshipMin:   3.5,
 };
 
 const NOVICE_PLUS_TUMBLING: TumblingConfig = {
