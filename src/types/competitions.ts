@@ -222,7 +222,7 @@ export type RegistrationStatus = 'pending' | 'confirmed' | 'withdrawn';
 export type DeductionType =
   | 'x' | 'ca' | 'csa' | 'ec' | 'cc' | 'csc'
   | 'tiempo'
-  | 'pi' | 'eap' | 'rg' | 'gfn' | 'bfn' | 'seg'
+  | 'pi' | 'eap' | 'rg' | 'gfn' | 'bfn' | 'hfn' | 'seg'
   | 'ad' | 'div';
 
 export type ScoringSystem =
@@ -618,6 +618,7 @@ export const DEDUCTION_TYPE_LABELS: Record<DeductionType, string> = {
   rg:          'Reglas generales',
   gfn:         'Gimnasia fuera del nivel',
   bfn:         'Construcción fuera del nivel',
+  hfn:         'Habilidad restringida del nivel',
   seg:         'Infracción de legalidad',
   ad:          'Conducta antideportiva',
   div:         'Infracción de división',
@@ -626,7 +627,7 @@ export const DEDUCTION_TYPE_LABELS: Record<DeductionType, string> = {
 export const DEDUCTION_CODES: Record<DeductionType, string> = {
   x: 'X', ca: 'CA', csa: 'CSA', ec: 'EC', cc: 'CC', csc: 'CSC',
   tiempo: 'TIEMPO',
-  pi: 'PI', eap: 'EAP', rg: 'RG', gfn: 'GFN', bfn: 'BFN', seg: 'SEG',
+  pi: 'PI', eap: 'EAP', rg: 'RG', gfn: 'GFN', bfn: 'BFN', hfn: 'HFN', seg: 'SEG',
   ad: 'AD', div: 'DIV',
 };
 
@@ -645,6 +646,7 @@ export const DEDUCTION_AMOUNTS: Record<DeductionType, string> = {
   rg:          '0.50',
   gfn:         '0.50',
   bfn:         '0.50',
+  hfn:         '2.00',
   seg:         '1.00',
   ad:          '2.00 – 5.00',
   div:         '5.00',

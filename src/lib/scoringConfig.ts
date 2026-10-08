@@ -173,6 +173,13 @@ const PREP_SKILL_GRADES: RangoOpt[] = [
   { value: 0.20, label: 'Avanzada/Elite' },
 ];
 
+// FECU 2026 Prep stunt skill grades: 0.3 = Del Nivel por GRAN PARTE, 0.5 = Avanzada/Elite por GRAN PARTE
+const PREP_2026_SKILL_GRADES: RangoOpt[] = [
+  { value: 0.00, label: 'No Cumple' },
+  { value: 0.30, label: 'Del Nivel por GRAN PARTE' },
+  { value: 0.50, label: 'Avanzada/Elite por GRAN PARTE' },
+];
+
 const PREP_PART_MAX: RangoOpt[] = [
   { value: 0.0, label: 'No Cumple' },
   { value: 0.4, label: 'Nivel x MÁX · Avz x GRAN PARTE' },
@@ -219,6 +226,13 @@ const PREP_HABILIDAD: RangoOpt[] = [
   { value: 0.0, label: 'No Cumple' },
   { value: 0.3, label: 'Nivel x MÁX / Avanzada x GRAN PARTE' },
   { value: 0.5, label: 'Avanzada x MÁX' },
+];
+
+// FECU 2026 Prep gymnastics skill grade: 0.3 = Del Nivel por MÁX, 0.5 = Avanzada por GRAN PARTE
+const PREP_2026_HABILIDAD: RangoOpt[] = [
+  { value: 0.0, label: 'No Cumple' },
+  { value: 0.3, label: 'Del Nivel por MÁX' },
+  { value: 0.5, label: 'Avanzada por GRAN PARTE' },
 ];
 
 // Prep jumps: sync required but NOT connected nor variety
@@ -544,7 +558,7 @@ const PREP_BUILDING_2026: BuildingConfig = {
   stuntsHasDiff:      true,
   stuntsRango:        PREP_2026_STUNT_RANGO,
   stuntsSkillCount:   3,
-  stuntsSkillGrades:  INTL_SKILL_GRADES,   // 0 / 0.3 / 0.5 per skill
+  stuntsSkillGrades:  PREP_2026_SKILL_GRADES,  // 0 / 0.3 (Del Nivel) / 0.5 (Avanzada/Elite)
   stuntsPartMaxOpts:  PREP_2026_PART_MAX,
   stuntsExecMax:      15.0,
   buildingExecDedOpts: INTL_BUILDING_EXEC_DEDS,
@@ -568,12 +582,12 @@ const PREP_TUMBLING_2026: TumblingConfig = {
   hasStanding:       true,
   standingHasDiff:   true,
   standingRango:     PREP_2026_TUMBLING_RANGO,
-  standingHabilidad: PREP_HABILIDAD,   // [0.0, 0.3, 0.5] — unchanged
+  standingHabilidad: PREP_2026_HABILIDAD,  // Del Nivel x MÁX (0.3) / Avanzada x GRAN PARTE (0.5)
   standingExecMax:   2.0,
   hasRunning:        true,
   runningHasDiff:    true,
   runningRango:      PREP_2026_TUMBLING_RANGO,
-  runningHabilidad:  PREP_HABILIDAD,
+  runningHabilidad:  PREP_2026_HABILIDAD,
   runningExecMax:    2.0,
   hasJumps:          true,
   jumpsHasDiff:      true,
