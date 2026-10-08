@@ -226,7 +226,7 @@ export type DeductionType =
   | 'ad' | 'div';
 
 export type ScoringSystem =
-  | 'tiny_novice' | 'mini_novice' | 'novice_plus' | 'prep' | 'escolar' | 'escolar_ab'
+  | 'tiny_novice' | 'mini_novice' | 'novice_plus' | 'prep' | 'escolar' | 'escolar_univ' | 'escolar_ab'
   | 'elite_l1' | 'elite_l2_7' | 'elite_nt' | 'partner_stunt' | 'iasf_l6_7'
   | 'iasf_world_l6_7'
   | 'intl_l1' | 'intl_l2' | 'intl_l2_7' | 'intl_nt'
@@ -669,6 +669,7 @@ export const SCORING_SYSTEM_LABELS: Record<ScoringSystem, string> = {
   novice_plus:     'Novice Plus',
   prep:            'Prep',
   escolar:         'Escolar',
+  escolar_univ:    'Escolar Universitario N2',
   escolar_ab:      'Escolar (Adventure Brands)',
   elite_l1:        'Elite Nivel 1',
   elite_l2_7:      'Elite Nivel 2–7',
@@ -717,6 +718,7 @@ export const SCORING_SYSTEM_FIELDS: Record<ScoringSystem, ScoreFieldKey[]> = {
   novice_plus:   ['stunts_execution', 'pyramids_execution', 'standing_execution', 'running_execution', 'jumps_execution', ..._OVERALL, ..._CROSS],
   prep:          [..._BUILDING_BASE, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   escolar:       [..._BUILDING_BASE, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
+  escolar_univ:  [..._BUILDING_BASE, ..._TOSSES, ..._TUMBLING_FULL, ..._JUMPS, ..._OVERALL, ..._CROSS],
   escolar_ab:    [
     ..._BUILDING_BASE_AB,
     'standing_difficulty', 'standing_execution', 'standing_drivers',

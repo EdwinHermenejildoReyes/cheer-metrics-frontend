@@ -578,6 +578,14 @@ const PREP_BUILDING_2026: BuildingConfig = {
   showmanshipMin:     3.5,
 };
 
+// Escolar Universitario N2: same as Prep 2026 building but with tosses (diff 2.0 + exec 2.0)
+const ESCOLAR_UNIV_BUILDING: BuildingConfig = {
+  ...PREP_BUILDING_2026,
+  hasTosses:        true,
+  tossDiffOpts:     ELITE_TOSS_DIFF,
+  tossesExecDedOpts: INTL_SMALL_EXEC_DEDS,
+};
+
 const PREP_TUMBLING_2026: TumblingConfig = {
   hasStanding:       true,
   standingHasDiff:   true,
@@ -749,8 +757,9 @@ const CONFIGS: Record<ScoringSystem, ScoringConfig> = {
   elite_l2_7:    { building: ELITE_BUILDING,        tumbling: ELITE_TUMBLING },
   elite_nt:      { building: ELITE_BUILDING,        tumbling: { ...ELITE_TUMBLING, hasStanding: false, hasRunning: false } },
   prep:          { building: PREP_BUILDING_2026,     tumbling: PREP_TUMBLING_2026 },
-  escolar:       { building: PREP_BUILDING_2026,    tumbling: PREP_TUMBLING_2026 },
-  escolar_ab:    { building: ESCOLAR_AB_BUILDING,   tumbling: ESCOLAR_AB_TUMBLING },
+  escolar:       { building: PREP_BUILDING_2026,     tumbling: PREP_TUMBLING_2026 },
+  escolar_univ:  { building: ESCOLAR_UNIV_BUILDING,  tumbling: PREP_TUMBLING_2026 },
+  escolar_ab:    { building: ESCOLAR_AB_BUILDING,    tumbling: ESCOLAR_AB_TUMBLING },
   tiny_novice:   { building: TINY_NOVICE_BUILDING,  tumbling: MINI_NOVICE_TUMBLING },
   mini_novice:   { building: MINI_NOVICE_BUILDING,  tumbling: MINI_NOVICE_TUMBLING },
   novice_plus:   { building: NOVICE_PLUS_BUILDING,  tumbling: NOVICE_PLUS_TUMBLING },
