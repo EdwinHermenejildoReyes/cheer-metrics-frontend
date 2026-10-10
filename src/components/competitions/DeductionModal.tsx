@@ -38,7 +38,7 @@ interface Props {
 // Group deductions by category for the select
 const FALL_TYPES:    DeductionType[] = ['x', 'ca', 'csa', 'ec', 'cc', 'csc'];
 const TIME_TYPES:    DeductionType[] = ['tiempo'];
-const ILLEGAL_TYPES: DeductionType[] = ['pi', 'eap', 'rg', 'gfn', 'bfn', 'hfn', 'seg'];
+const ILLEGAL_TYPES: DeductionType[] = ['pi', 'eap', 'rg', 'gfn', 'bfn', 'seg'];
 
 function makeOptions(types: DeductionType[]) {
   return types.map((key) => ({

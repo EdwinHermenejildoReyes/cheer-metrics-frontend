@@ -49,6 +49,18 @@ export interface LevelSkillTables {
   tosses:   TossTableData | null;
 }
 
+// ── Regulatory penalty constants ─────────────────────────────────────────────
+// Source: FECU 2026 scoring systems (Novice-Sistema, School-Tradicional)
+// These amounts appear in reference tables shown to judges; extract here so a
+// 2027 regulatory change only requires updating one value.
+
+/** Deducción por habilidad ilegal/restringida en Novice, Prep y Escolar (2.00 por habilidad diferente).
+ *  Aplica también a élites adicionales sobre el máximo permitido. */
+export const NOVICE_ILLEGAL_SKILL_PENALTY = 2.00;
+
+/** Deducción por habilidad élite adicional sobre el máximo (Escolar L1 y PREP: 2.00 por élite diferente extra) */
+export const ESCOLAR_EXTRA_ELITE_PENALTY = 2.00;
+
 // ── Shared footer ─────────────────────────────────────────────────────────────
 
 const GYM_FOOTER =
@@ -1124,6 +1136,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
               items: [
                 'Inversión suelta desde nivel prep o mano a mano hacia extensión',
                 'Subida de flic flac hacia extensión',
+                'Rewind hacia nivel de cintura (N6)',
               ],
             },
             {
@@ -1321,17 +1334,26 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
           elite: [
             'RONDADA (RO) – ARABIAN / 1/2 GIRO A 1 PIERNA – RO – A – GIRO',
             'HAND VAULT – MORTAL ADELANTE CON GIRO',
+            'HAND VAULT – MORTAL ADELANTE – RO – A – GIRO',
             'RONDADA – FLIC FLAC – GIRO',
+            'RONDADA – FLIC FLAC – GIRO – A – GIRO',
+            'RONDADA – A – GIRO – GIRO',
             'RONDADA – A – GIRO',
             'CAMINO ADELANTE – A – GIRO',
             'RO – A – 1.5 GIRO – A – GIRO / DOBLE GIRO',
             'EXTENDIDO ADELANTE CON 1.5 GIRO – A – GIRO / DOBLE GIRO',
+            'RONDADA – DOBLE GIRO',
             'RONDADA – A – DOBLE GIRO',
             'CAMINO ADELANTE – A – DOBLE GIRO',
+            'MORTAL ADELANTE A 1 PIERNA – A – DOBLE GIRO',
             'RONDADA – A – TEMPO – A – DOBLE GIRO',
+            'RONDADA – TEMPO – DOBLE GIRO',
             'RONDADA – ARABIAN – A – DOBLE GIRO',
+            'RONDADA – A – GIRO – A – DOBLE GIRO',
             'RONDADA – A – GIRO – A – TEMPO – DOBLE GIRO',
             'RONDADA – A – 1.5 GIRO A 1 PIERNA – A – DOBLE GIRO',
+            'RONDADA – A – DOBLE GIRO – TEMPO – DOBLE GIRO',
+            'MORTAL ADELANTE A 1 PIERNA – RO – ARABIAN – RO – A – TEMPO – DOBLE GIRO',
             'MORTAL ADELANTE A 1 PIERNA – RO – ARABIAN – A – TEMPO – A – DOBLE GIRO',
             'MORTAL ADELANTE A 1 PIERNA – RO – ARABIAN – A – TEMPO – DOBLE GIRO',
           ],
@@ -1401,7 +1423,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
           ],
         },
         {
-          title: 'HABILIDADES RESTRINGIDAS (−0.50 por ocurrencia)',
+          title: `HABILIDADES RESTRINGIDAS (−${NOVICE_ILLEGAL_SKILL_PENALTY} por habilidad diferente)`,
           columns: [
             {
               header: 'ESTILO RELEASE',
@@ -1452,7 +1474,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
       subTables: [
         {
           title: 'GIMNASIA ESTÁTICA',
-          colLabels: ['RECOMENDADAS DEL NIVEL', 'RESTRINGIDAS (−0.05 c/u)', ''],
+          colLabels: ['RECOMENDADAS DEL NIVEL', `RESTRINGIDAS/ILEGALES (−${NOVICE_ILLEGAL_SKILL_PENALTY} c/habilidad diferente)`, ''],
           delNivel: [
             'ROL ADELANTE',
             'ROL EN ESCUADRA',
@@ -1473,7 +1495,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
         },
         {
           title: 'GIMNASIA CON CARRERA',
-          colLabels: ['RECOMENDADAS DEL NIVEL', 'RESTRINGIDAS (−0.05 c/u)', ''],
+          colLabels: ['RECOMENDADAS DEL NIVEL', `RESTRINGIDAS/ILEGALES (−${NOVICE_ILLEGAL_SKILL_PENALTY} c/habilidad diferente)`, ''],
           delNivel: [
             'MEDIA LUNA',
             'MEDIA LUNA – ROL ATRÁS',
@@ -1736,17 +1758,26 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
           elite: [
             'RONDADA (RO) – ARABIAN / 1/2 GIRO A 1 PIERNA – RO – A – GIRO',
             'HAND VAULT – MORTAL ADELANTE CON GIRO',
+            'HAND VAULT – MORTAL ADELANTE – RO – A – GIRO',
             'RONDADA – FLIC FLAC – GIRO',
+            'RONDADA – FLIC FLAC – GIRO – A – GIRO',
+            'RONDADA – A – GIRO – GIRO',
             'RONDADA – A – GIRO',
             'CAMINO ADELANTE – A – GIRO',
             'RO – A – 1.5 GIRO – A – GIRO / DOBLE GIRO',
             'EXTENDIDO ADELANTE CON 1.5 GIRO – A – GIRO / DOBLE GIRO',
+            'RONDADA – DOBLE GIRO',
             'RONDADA – A – DOBLE GIRO',
             'CAMINO ADELANTE – A – DOBLE GIRO',
+            'MORTAL ADELANTE A 1 PIERNA – A – DOBLE GIRO',
             'RONDADA – A – TEMPO – A – DOBLE GIRO',
+            'RONDADA – TEMPO – DOBLE GIRO',
             'RONDADA – ARABIAN – A – DOBLE GIRO',
+            'RONDADA – A – GIRO – A – DOBLE GIRO',
             'RONDADA – A – GIRO – A – TEMPO – DOBLE GIRO',
             'RONDADA – A – 1.5 GIRO A 1 PIERNA – A – DOBLE GIRO',
+            'RONDADA – A – DOBLE GIRO – TEMPO – DOBLE GIRO',
+            'MORTAL ADELANTE A 1 PIERNA – RO – ARABIAN – RO – A – TEMPO – DOBLE GIRO',
             'MORTAL ADELANTE A 1 PIERNA – RO – ARABIAN – A – TEMPO – A – DOBLE GIRO',
             'MORTAL ADELANTE A 1 PIERNA – RO – ARABIAN – A – TEMPO – DOBLE GIRO',
           ],
@@ -1842,7 +1873,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
           ],
         },
         {
-          title: 'HABILIDADES ÉLITE — MÁX 1 POR GRAN PARTE/MÁX (−0.50 por élite adicional)',
+          title: `HABILIDADES ÉLITE — MÁX 1 POR GRAN PARTE/MÁX (−${ESCOLAR_EXTRA_ELITE_PENALTY} por élite adicional)`,
           columns: [
             {
               header: 'ESTILO SUELTO',
@@ -1877,7 +1908,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
       subTables: [
         {
           title: 'GIMNASIA ESTÁTICA',
-          colLabels: ['HABILIDADES DEL NIVEL', 'HABILIDADES AVANZADAS', 'RESTRINGIDAS (ILEGALES) −0.05 c/u'],
+          colLabels: ['HABILIDADES DEL NIVEL', 'HABILIDADES AVANZADAS', `RESTRINGIDAS (ILEGALES) −${NOVICE_ILLEGAL_SKILL_PENALTY} c/habilidad diferente`],
           delNivel: [
             'Rol adelante',
             'Rol en escuadra',
@@ -1903,7 +1934,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
         },
         {
           title: 'GIMNASIA CON CARRERA',
-          colLabels: ['HABILIDADES DEL NIVEL', 'HABILIDADES AVANZADAS', 'RESTRINGIDAS (ILEGALES) −0.05 c/u'],
+          colLabels: ['HABILIDADES DEL NIVEL', 'HABILIDADES AVANZADAS', `RESTRINGIDAS (ILEGALES) −${NOVICE_ILLEGAL_SKILL_PENALTY} c/habilidad diferente`],
           delNivel: [
             'Media luna',
             'Media luna – Rola atrás',

@@ -224,7 +224,7 @@ export type RegistrationStatus = 'pending' | 'confirmed' | 'withdrawn';
 export type DeductionType =
   | 'x' | 'ca' | 'csa' | 'ec' | 'cc' | 'csc'
   | 'tiempo'
-  | 'pi' | 'eap' | 'rg' | 'gfn' | 'bfn' | 'hfn' | 'seg'
+  | 'pi' | 'eap' | 'rg' | 'gfn' | 'bfn' | 'seg'
   | 'ad' | 'div';
 
 export type ScoringSystem =
@@ -625,50 +625,49 @@ export const REGISTRATION_STATUS_LABELS: Record<RegistrationStatus, string> = {
 
 // Deduction labels — FECU Ecuador 2026 (Descuentos-FECU-2026.pdf, 17 Sep 2026)
 export const DEDUCTION_TYPE_LABELS: Record<DeductionType, string> = {
-  x:           'Infracción de límite de área',
-  ca:          'Caída de atleta',
-  csa:         'Caída grave de atleta',
-  ec:          'Error de construcción',
-  cc:          'Caída de construcción',
-  csc:         'Caída grave de construcción',
-  tiempo:      'Infracción de tiempo',
-  pi:          'Política de imagen',
-  eap:         'Estándares atléticos de presentación',
-  rg:          'Reglas generales',
-  gfn:         'Gimnasia fuera del nivel',
-  bfn:         'Construcción fuera del nivel',
-  hfn:         'Habilidad restringida del nivel',
-  seg:         'Infracción de legalidad',
-  ad:          'Conducta antideportiva',
-  div:         'Infracción de división',
+  x:      'Infracción de límite de área',
+  ca:     'Caída de atleta',
+  csa:    'Caída grave de atleta',
+  ec:     'Error de construcción',
+  cc:     'Caída de construcción',
+  csc:    'Caída grave de construcción',
+  tiempo: 'Infracción de tiempo',
+  pi:     'Política de imagen',
+  eap:    'Estándares atléticos de presentación',
+  rg:     'Reglas generales',
+  gfn:    'Gimnasia fuera del nivel',
+  bfn:    'Construcción fuera del nivel',
+  seg:    'Infracción de legalidad',
+  ad:     'Conducta antideportiva',
+  div:    'Infracción de división',
 };
 
 export const DEDUCTION_CODES: Record<DeductionType, string> = {
   x: 'X', ca: 'CA', csa: 'CSA', ec: 'EC', cc: 'CC', csc: 'CSC',
   tiempo: 'TIEMPO',
-  pi: 'PI', eap: 'EAP', rg: 'RG', gfn: 'GFN', bfn: 'BFN', hfn: 'HFN', seg: 'SEG',
+  pi: 'PI', eap: 'EAP', rg: 'RG', gfn: 'GFN', bfn: 'BFN', seg: 'SEG',
   ad: 'AD', div: 'DIV',
 };
 
 // Unit amounts — FECU Ecuador 2026 (Descuentos-FECU-2026.pdf, 17 Sep 2026)
+// TIEMPO is a flat penalty (always count=1); actual routine time stored in Deduction.routine_time.
 // AD is variable: 2.00, 3.00, 4.00 or 5.00 — determined by competition officials.
 export const DEDUCTION_AMOUNTS: Record<DeductionType, string> = {
-  x:           '0.50',
-  ca:          '0.25',
-  csa:         '0.50',
-  ec:          '0.50',
-  cc:          '1.00',
-  csc:         '1.50',
-  tiempo:      '0.50',
-  pi:          '0.50',
-  eap:         '0.50',
-  rg:          '0.50',
-  gfn:         '0.50',
-  bfn:         '0.50',
-  hfn:         '2.00',
-  seg:         '1.00',
-  ad:          '2.00 – 5.00',
-  div:         '5.00',
+  x:      '0.50',
+  ca:     '0.25',
+  csa:    '0.50',
+  ec:     '0.50',
+  cc:     '1.00',
+  csc:    '1.50',
+  tiempo: '0.50',
+  pi:     '0.50',
+  eap:    '0.50',
+  rg:     '0.50',
+  gfn:    '0.50',
+  bfn:    '0.50',
+  seg:    '1.00',
+  ad:     '2.00 – 5.00',
+  div:    '5.00',
 };
 
 export const DEDUCTION_RULE_REFERENCE: Partial<Record<DeductionType, string>> = {
@@ -680,6 +679,16 @@ export const DEDUCTION_RULE_REFERENCE: Partial<Record<DeductionType, string>> = 
   seg: 'Reglas para Todos los Niveles / Habilidades Restringidas',
   ad:  'Actitud Antideportiva',
   div: 'Infracción de División',
+};
+
+// Time limits by division category — FECU Ecuador 2026 (Descuentos-FECU-2026.pdf, 17 Sep 2026)
+// Judges apply tolerance of +3 seconds before marking the deduction (human reaction + sound system variance).
+export const TIEMPO_TOLERANCE_SECS = 3;
+export const TIEMPO_LIMITS: Record<string, { label: string; seconds: number; display: string }> = {
+  novice:       { label: 'All Star Novice',              seconds: 90,  display: '1:30' },
+  prep:         { label: 'All Star Prep',                seconds: 120, display: '2:00' },
+  elite_intl:   { label: 'All Star Elite Internacional', seconds: 150, display: '2:30' },
+  non_tumbling: { label: 'All Star Non-Tumbling',        seconds: 120, display: '2:00' },
 };
 
 export const SCORING_SYSTEM_LABELS: Record<ScoringSystem, string> = {

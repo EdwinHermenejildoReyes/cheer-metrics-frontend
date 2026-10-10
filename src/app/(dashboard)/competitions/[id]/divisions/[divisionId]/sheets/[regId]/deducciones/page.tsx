@@ -17,6 +17,8 @@ import {
   DEDUCTION_TYPE_LABELS,
   DEDUCTION_AMOUNTS,
   DEDUCTION_RULE_REFERENCE,
+  TIEMPO_LIMITS,
+  TIEMPO_TOLERANCE_SECS,
   type DeductionType,
   type Deduction,
   type ScoreSheet,
@@ -250,7 +252,6 @@ export default function DeduccionesSheetPage() {
   const dragTypeRef = useRef<DeductionType | null>(null);
   const [pendingType, setPendingType]   = useState<DeductionType | null>(null);
   const [pendingRule, setPendingRule]   = useState('');
-  const [tiempoSecs, setTiempoSecs]    = useState(1);
   const [tiempoReal, setTiempoReal]    = useState('');
   const pendingRuleRef = useRef<HTMLInputElement>(null);
 
@@ -486,6 +487,16 @@ export default function DeduccionesSheetPage() {
                             ))}
                           </tbody>
                         </table>
+                        {key === 'CAÍDAS' && (
+                          <div className="mt-3 pt-2 border-t border-zinc-200 flex flex-col gap-1">
+                            <p className="text-[11px] text-zinc-600 leading-relaxed">
+                              <strong>X — Área (12.80 × 12.80 m):</strong> Aplica solo cuando <strong>ambos pies</strong> del atleta están completamente fuera del límite de la superficie. Pisar la cinta blanca o ligeramente pasado <strong>NO</strong> es infracción.
+                            </p>
+                            <p className="text-[11px] text-zinc-600 leading-relaxed">
+                              <strong>TIEMPO:</strong> Descuento plano −0.50 independiente de segundos de exceso. Tolerancia de +{TIEMPO_TOLERANCE_SECS} s por variación del cronómetro/sonido.
+                            </p>
+                          </div>
+                        )}
                       </InfoButton>
                     </div>
                     <div className="flex flex-col gap-1">
@@ -507,7 +518,7 @@ export default function DeduccionesSheetPage() {
                             onDragEnd={isDragGroup ? () => {
                               dragTypeRef.current = null;
                             } : undefined}
-                            onClick={isDragGroup ? undefined : () => handleDirectAdd(type, type === 'tiempo' ? tiempoSecs : 1, type === 'tiempo' ? normalizeTime(tiempoReal) : '')}
+                            onClick={isDragGroup ? undefined : () => handleDirectAdd(type, 1, type === 'tiempo' ? normalizeTime(tiempoReal) : '')}
                             className={`relative flex flex-col rounded-lg border transition-all select-none ${
                               isBusy
                                 ? 'cursor-wait bg-zinc-100 border-zinc-200 opacity-60'
@@ -531,7 +542,7 @@ export default function DeduccionesSheetPage() {
                               </span>
                             </div>
                             {type === 'tiempo' && (
-                              <div className="flex flex-col gap-1.5 px-3 py-2 bg-orange-50 border-t border-orange-100 rounded-b-lg" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
+                              <div className="flex flex-col gap-2 px-3 py-2 bg-orange-50 border-t border-orange-100 rounded-b-lg" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
                                 <div className="flex items-center gap-2">
                                   <span className="text-[9px] text-orange-500 font-bold uppercase tracking-wide w-20 shrink-0">Duración real</span>
                                   <input
@@ -544,17 +555,15 @@ export default function DeduccionesSheetPage() {
                                   />
                                   <span className="text-[9px] text-orange-300">(evidencia)</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[9px] text-orange-500 font-bold uppercase tracking-wide w-20 shrink-0">Seg. extra</span>
-                                  <input
-                                    type="number"
-                                    min={1}
-                                    max={60}
-                                    value={tiempoSecs}
-                                    onChange={e => setTiempoSecs(Math.max(1, parseInt(e.target.value) || 1))}
-                                    className="w-16 rounded-md border border-orange-200 bg-white px-2 py-0.5 text-xs text-center tabular-nums focus:outline-none focus:ring-1 focus:ring-orange-400"
-                                  />
-                                  <span className="text-[9px] text-orange-400">= −{(tiempoSecs * 0.05).toFixed(2)}</span>
+                                <p className="text-[9px] text-orange-500 leading-relaxed">
+                                  Descuento <strong>plano −0.50</strong> independiente de segundos extra · tolerancia +{TIEMPO_TOLERANCE_SECS} s
+                                </p>
+                                <div className="flex flex-col gap-0.5">
+                                  {Object.values(TIEMPO_LIMITS).map(({ label, display }) => (
+                                    <p key={label} className="text-[9px] text-orange-400 leading-tight">
+                                      {label}: <span className="font-bold tabular-nums">{display}</span>
+                                    </p>
+                                  ))}
                                 </div>
                               </div>
                             )}
