@@ -19,14 +19,19 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const dispatch        = useDispatch();
   const isAuthenticated = useSelector((s: RootState) => s.auth.isAuthenticated);
   const user            = useSelector((s: RootState) => s.auth.user);
+  // Wait for redux-persist rehydration before making auth-based redirect decisions.
+  // Without this guard, the useEffect fires with isAuthenticated=false (initial state)
+  // before localStorage is read, causing a redirect loop on slow machines.
+  const isRehydrated    = useSelector((s: RootState & { _persist?: { rehydrated: boolean } }) => s._persist?.rehydrated ?? false);
 
   useEffect(() => {
+    if (!isRehydrated) return;
     if (!isAuthenticated) {
       router.replace('/login');
     } else if (user && !user.is_staff && !user.is_approved) {
       router.replace('/pending');
     }
-  }, [isAuthenticated, user, router]);
+  }, [isRehydrated, isAuthenticated, user, router]);
 
   // Poll /me every 15s for judges so assignment changes by admin take effect immediately
   useEffect(() => {
@@ -42,7 +47,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [user?.role, user?.is_staff, dispatch]);
 
-  if (!isAuthenticated || (user && !user.is_staff && !user.is_approved)) {
+  if (!isRehydrated || !isAuthenticated || (user && !user.is_staff && !user.is_approved)) {
     return <PageSpinner />;
   }
 

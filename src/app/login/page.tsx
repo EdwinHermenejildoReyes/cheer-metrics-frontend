@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,7 +10,6 @@ import { toast } from 'sonner';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '@/core/rootReducer';
 import { setUser, clearAuth } from '@/store/auth/slices';
-import { persistor } from '@/core/store';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import authRepository from '@/repositories/authRepository';
@@ -28,6 +28,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function LoginPage() {
+  const router  = useRouter();
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((s: RootState) => s.auth.isAuthenticated);
 
@@ -38,13 +39,13 @@ export default function LoginPage() {
     authRepository.me()
       .then(res => {
         dispatch(setUser(res.data));
-        window.location.replace(loginTarget(res.data));
+        router.replace(loginTarget(res.data));
       })
       .catch(() => {
         dispatch(clearAuth());
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isAuthenticated]);
 
   const {
     register,
@@ -57,10 +58,7 @@ export default function LoginPage() {
       await authRepository.login(values);
       const meRes = await authRepository.me();
       dispatch(setUser(meRes.data));
-      // Flush persistence to localStorage before hard-redirecting to avoid
-      // a race where DashboardShell reads stale isAuthenticated=false on mount.
-      await persistor.flush();
-      window.location.replace(loginTarget(meRes.data));
+      router.replace(loginTarget(meRes.data));
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
       if (status === 401) {
