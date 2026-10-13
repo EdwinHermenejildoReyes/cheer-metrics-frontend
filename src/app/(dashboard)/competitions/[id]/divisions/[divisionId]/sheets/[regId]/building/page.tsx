@@ -526,8 +526,8 @@ export default function BuildingSheetPage() {
           } catch { /* noop */ }
         }
         if (sheet.tosses_difficulty != null) setTossesDiff(parseFloat(sheet.tosses_difficulty) || 0);
-        if (sheet.creativity_building  != null) setCreativityBuilding(parseFloat(sheet.creativity_building)  || 0);
-        if (sheet.showmanship_building != null) setShowmanshipBuilding(parseFloat(sheet.showmanship_building) || 0);
+        if (sheet.creativity_building  != null) setCreativityBuilding(Math.min(bCfg.creativityMax, Math.max(bCfg.creativityMin, parseFloat(sheet.creativity_building)  || 0)));
+        if (sheet.showmanship_building != null) setShowmanshipBuilding(Math.min(bCfg.showmanshipMax, Math.max(bCfg.showmanshipMin, parseFloat(sheet.showmanship_building) || 0)));
       } catch { /* noop */ }
     }, 5000);
     return () => clearInterval(interval);

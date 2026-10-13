@@ -550,8 +550,8 @@ export default function TumblingSheetPage() {
         if (sheet.running_difficulty  != null) setRunningRango(parseFloat(sheet.running_difficulty) || 0);
         if (sheet.running_drivers     != null) setRunningHabilidad(parseFloat(sheet.running_drivers) || 0);
         if (sheet.jumps_difficulty    != null) setJumpsDiff(parseFloat(sheet.jumps_difficulty) || 0);
-        if (sheet.creativity_tumbling  != null) setCreativityTumbling(parseFloat(sheet.creativity_tumbling)  || 0);
-        if (sheet.showmanship_tumbling != null) setShowmanshipTumbling(parseFloat(sheet.showmanship_tumbling) || 0);
+        if (sheet.creativity_tumbling  != null) setCreativityTumbling(Math.min(tCfg.creativityMax, Math.max(tCfg.creativityMin, parseFloat(sheet.creativity_tumbling)  || 0)));
+        if (sheet.showmanship_tumbling != null) setShowmanshipTumbling(Math.min(tCfg.showmanshipMax, Math.max(tCfg.showmanshipMin, parseFloat(sheet.showmanship_tumbling) || 0)));
       } catch { /* noop */ }
     }, 5000);
     return () => clearInterval(interval);

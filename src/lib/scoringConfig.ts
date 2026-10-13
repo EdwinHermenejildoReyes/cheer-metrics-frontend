@@ -72,6 +72,19 @@ export interface TumblingConfig {
   showmanshipMin:       number;
 }
 
+// ── Cross-sheet range constants (International-FECU-2026.pdf) ────────────────
+// INTL: Creativity 8.0–10.0, Showmanship 3.5–5.0 (each averaged across 3 judges)
+export const INTL_CREATIVITY_MIN   = 8.0;
+export const INTL_CREATIVITY_MAX   = 10.0;
+export const INTL_SHOWMANSHIP_MIN  = 3.5;
+export const INTL_SHOWMANSHIP_MAX  = 5.0;
+
+// Domestic (UCA Ecuador / FECU): Creativity 1.5–2.0, Showmanship 1.0–2.0
+const DOM_CREATIVITY_MIN   = 1.5;
+const DOM_CREATIVITY_MAX   = 2.0;
+const DOM_SHOWMANSHIP_MIN  = 1.0;
+const DOM_SHOWMANSHIP_MAX  = 2.0;
+
 // ── Shared option sets ────────────────────────────────────────────────────────
 
 const ELITE_STUNT_RANGO: RangoOpt[] = [
@@ -365,10 +378,10 @@ const ELITE_BUILDING: BuildingConfig = {
   tossDiffOpts:       ELITE_TOSS_DIFF,
   tossesExecMax:      2.0,
   hasCreativity:      true,
-  showmanshipMax:     2.0,
-  creativityMin:      1.5,
-  creativityMax:      2.0,
-  showmanshipMin:     1.0,
+  showmanshipMax:     DOM_SHOWMANSHIP_MAX,
+  creativityMin:      DOM_CREATIVITY_MIN,
+  creativityMax:      DOM_CREATIVITY_MAX,
+  showmanshipMin:     DOM_SHOWMANSHIP_MIN,
 };
 
 const PREP_BUILDING: BuildingConfig = {
@@ -389,10 +402,10 @@ const PREP_BUILDING: BuildingConfig = {
   tossDiffOpts:       [],
   tossesExecMax:      2.0,
   hasCreativity:      true,
-  showmanshipMax:     2.0,
-  creativityMin:      1.5,
-  creativityMax:      2.0,
-  showmanshipMin:     1.0,
+  showmanshipMax:     DOM_SHOWMANSHIP_MAX,
+  creativityMin:      DOM_CREATIVITY_MIN,
+  creativityMax:      DOM_CREATIVITY_MAX,
+  showmanshipMin:     DOM_SHOWMANSHIP_MIN,
 };
 
 // INTL 2026 execution deduction amounts per driver (FECU 2026 International PDF):
@@ -422,10 +435,10 @@ const MINI_NOVICE_BUILDING: BuildingConfig = {
   tossDiffOpts:        [],
   tossesExecMax:       2.0,
   hasCreativity:       true,
-  showmanshipMax:      5.0,
-  creativityMin:       8.0,
-  creativityMax:       10.0,
-  showmanshipMin:      3.5,
+  showmanshipMax:      INTL_SHOWMANSHIP_MAX,
+  creativityMin:       INTL_CREATIVITY_MIN,
+  creativityMax:       INTL_CREATIVITY_MAX,
+  showmanshipMin:      INTL_SHOWMANSHIP_MIN,
 };
 
 // FECU 2026 Novice: Tiny — no stunts/pyramids; jumps exec only
@@ -448,10 +461,10 @@ const TINY_NOVICE_BUILDING: BuildingConfig = {
   tossDiffOpts:       [],
   tossesExecMax:      2.0,
   hasCreativity:      true,
-  showmanshipMax:     5.0,
-  creativityMin:      8.0,
-  creativityMax:      10.0,
-  showmanshipMin:     3.5,
+  showmanshipMax:     INTL_SHOWMANSHIP_MAX,
+  creativityMin:      INTL_CREATIVITY_MIN,
+  creativityMax:      INTL_CREATIVITY_MAX,
+  showmanshipMin:     INTL_SHOWMANSHIP_MIN,
 };
 
 // NOVICE_PLUS backend still uses _INTL_FIELD_MAXIMA with _AVG_MAX=2.0 fallback (no avg_maxima).
@@ -474,10 +487,10 @@ const NOVICE_PLUS_BUILDING: BuildingConfig = {
   tossDiffOpts:       [],
   tossesExecMax:      2.0,
   hasCreativity:      true,
-  showmanshipMax:     2.0,
-  creativityMin:      1.5,
-  creativityMax:      2.0,
-  showmanshipMin:     1.0,
+  showmanshipMax:     DOM_SHOWMANSHIP_MAX,
+  creativityMin:      DOM_CREATIVITY_MIN,
+  creativityMax:      DOM_CREATIVITY_MAX,
+  showmanshipMin:     DOM_SHOWMANSHIP_MIN,
 };
 
 const ESCOLAR_AB_BUILDING: BuildingConfig = {
@@ -523,10 +536,10 @@ const ELITE_TUMBLING: TumblingConfig = {
   jumpsExecMax:     2.0,
   isCombinedSR:     false,
   hasCreativity:    true,
-  showmanshipMax:   2.0,
-  creativityMin:    1.5,
-  creativityMax:    2.0,
-  showmanshipMin:   1.0,
+  showmanshipMax:   DOM_SHOWMANSHIP_MAX,
+  creativityMin:    DOM_CREATIVITY_MIN,
+  creativityMax:    DOM_CREATIVITY_MAX,
+  showmanshipMin:   DOM_SHOWMANSHIP_MIN,
 };
 
 const PREP_TUMBLING: TumblingConfig = {
@@ -546,10 +559,10 @@ const PREP_TUMBLING: TumblingConfig = {
   jumpsExecMax:     2.0,
   isCombinedSR:     false,
   hasCreativity:    true,
-  showmanshipMax:   2.0,
-  creativityMin:    1.5,
-  creativityMax:    2.0,
-  showmanshipMin:   1.0,
+  showmanshipMax:   DOM_SHOWMANSHIP_MAX,
+  creativityMin:    DOM_CREATIVITY_MIN,
+  creativityMax:    DOM_CREATIVITY_MAX,
+  showmanshipMin:   DOM_SHOWMANSHIP_MIN,
 };
 
 // All Star Prep FECU 2026 — raw max 91.5, same overall/cross sheet behavior as INTL
@@ -572,10 +585,10 @@ const PREP_BUILDING_2026: BuildingConfig = {
   tossDiffOpts:       [],
   tossesExecMax:      2.0,
   hasCreativity:      true,
-  showmanshipMax:     5.0,
-  creativityMin:      8.0,
-  creativityMax:      10.0,
-  showmanshipMin:     3.5,
+  showmanshipMax:     INTL_SHOWMANSHIP_MAX,
+  creativityMin:      INTL_CREATIVITY_MIN,
+  creativityMax:      INTL_CREATIVITY_MAX,
+  showmanshipMin:     INTL_SHOWMANSHIP_MIN,
 };
 
 // Escolar Universitario N2: same as Prep 2026 building but with tosses (diff 2.0 + exec 2.0)
@@ -604,10 +617,10 @@ const PREP_TUMBLING_2026: TumblingConfig = {
   execDedOpts:       INTL_SMALL_EXEC_DEDS,
   isCombinedSR:      false,
   hasCreativity:     true,
-  showmanshipMax:    5.0,
-  creativityMin:     8.0,
-  creativityMax:     10.0,
-  showmanshipMin:    3.5,
+  showmanshipMax:    INTL_SHOWMANSHIP_MAX,
+  creativityMin:     INTL_CREATIVITY_MIN,
+  creativityMax:     INTL_CREATIVITY_MAX,
+  showmanshipMin:    INTL_SHOWMANSHIP_MIN,
 };
 
 const MINI_NOVICE_TUMBLING: TumblingConfig = {
@@ -628,10 +641,10 @@ const MINI_NOVICE_TUMBLING: TumblingConfig = {
   execDedOpts:      INTL_SMALL_EXEC_DEDS,
   isCombinedSR:     false,
   hasCreativity:    true,
-  showmanshipMax:   5.0,
-  creativityMin:    8.0,
-  creativityMax:    10.0,
-  showmanshipMin:   3.5,
+  showmanshipMax:   INTL_SHOWMANSHIP_MAX,
+  creativityMin:    INTL_CREATIVITY_MIN,
+  creativityMax:    INTL_CREATIVITY_MAX,
+  showmanshipMin:   INTL_SHOWMANSHIP_MIN,
 };
 
 const NOVICE_PLUS_TUMBLING: TumblingConfig = {
@@ -651,10 +664,10 @@ const NOVICE_PLUS_TUMBLING: TumblingConfig = {
   jumpsExecMax:     2.0,
   isCombinedSR:     false,
   hasCreativity:    true,
-  showmanshipMax:   2.0,
-  creativityMin:    1.5,
-  creativityMax:    2.0,
-  showmanshipMin:   1.0,
+  showmanshipMax:   DOM_SHOWMANSHIP_MAX,
+  creativityMin:    DOM_CREATIVITY_MIN,
+  creativityMax:    DOM_CREATIVITY_MAX,
+  showmanshipMin:   DOM_SHOWMANSHIP_MIN,
 };
 
 // Combined Standing/Running — uses standing_* fields only; running section hidden
@@ -715,10 +728,10 @@ const INTL_BUILDING: BuildingConfig = {
   tossesExecMax:      2.0,
   tossesExecDedOpts:  INTL_SMALL_EXEC_DEDS,
   hasCreativity:      true,
-  showmanshipMax:     5.0,
-  creativityMin:      8.0,
-  creativityMax:      10.0,
-  showmanshipMin:     3.5,
+  showmanshipMax:     INTL_SHOWMANSHIP_MAX,
+  creativityMin:      INTL_CREATIVITY_MIN,
+  creativityMax:      INTL_CREATIVITY_MAX,
+  showmanshipMin:     INTL_SHOWMANSHIP_MIN,
 };
 
 const INTL_TUMBLING: TumblingConfig = {
@@ -739,10 +752,10 @@ const INTL_TUMBLING: TumblingConfig = {
   execDedOpts:       INTL_SMALL_EXEC_DEDS,
   isCombinedSR:      false,
   hasCreativity:     true,
-  showmanshipMax:    5.0,
-  creativityMin:     8.0,
-  creativityMax:     10.0,
-  showmanshipMin:    3.5,
+  showmanshipMax:    INTL_SHOWMANSHIP_MAX,
+  creativityMin:     INTL_CREATIVITY_MIN,
+  creativityMax:     INTL_CREATIVITY_MAX,
+  showmanshipMin:    INTL_SHOWMANSHIP_MIN,
 };
 
 // ── Config map ────────────────────────────────────────────────────────────────
