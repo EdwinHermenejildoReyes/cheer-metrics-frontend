@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -31,19 +31,27 @@ export default function LoginPage() {
   const router  = useRouter();
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((s: RootState) => s.auth.isAuthenticated);
+  // Prevents the rehydration-check effect from re-running after onSubmit logs in.
+  const loginDoneRef = useRef(false);
 
   // If redux shows authenticated (persisted), verify the cookie is still valid
   // before redirecting. If the cookie is gone, clear stale state and stay.
   useEffect(() => {
     if (!isAuthenticated) return;
+    // Skip when onSubmit just completed — it already called me() and navigated.
+    if (loginDoneRef.current) return;
+    let cancelled = false;
     authRepository.me()
       .then(res => {
+        if (cancelled) return;
         dispatch(setUser(res.data));
         router.replace(loginTarget(res.data));
       })
       .catch(() => {
+        if (cancelled) return;
         dispatch(clearAuth());
       });
+    return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
@@ -57,6 +65,7 @@ export default function LoginPage() {
     try {
       await authRepository.login(values);
       const meRes = await authRepository.me();
+      loginDoneRef.current = true;
       dispatch(setUser(meRes.data));
       router.replace(loginTarget(meRes.data));
     } catch (err: unknown) {
