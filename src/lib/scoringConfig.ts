@@ -72,18 +72,20 @@ export interface TumblingConfig {
   showmanshipMin:       number;
 }
 
-// ── Cross-sheet range constants (International-FECU-2026.pdf) ────────────────
-// INTL: Creativity 8.0–10.0, Showmanship 3.5–5.0 (each averaged across 3 judges)
+// ── Cross-sheet range constants ───────────────────────────────────────────────
+// ALL FECU 2026 United systems (International, Prep, Novice, Elite) confirmed:
+//   Creativity 8.0–10.0, Showmanship 3.5–5.0 (each averaged across 3 judges)
+// Sources: International-FECU-2026.pdf, Prep-Sistema-FECU-2026.pdf, Novice-Sistema-FECU-2026.pdf
 export const INTL_CREATIVITY_MIN   = 8.0;
 export const INTL_CREATIVITY_MAX   = 10.0;
 export const INTL_SHOWMANSHIP_MIN  = 3.5;
 export const INTL_SHOWMANSHIP_MAX  = 5.0;
 
-// Domestic (UCA Ecuador / FECU): Creativity 1.5–2.0, Showmanship 1.0–2.0
-export const DOM_CREATIVITY_MIN   = 1.5;
-export const DOM_CREATIVITY_MAX   = 2.0;
-export const DOM_SHOWMANSHIP_MIN  = 1.0;
-export const DOM_SHOWMANSHIP_MAX  = 2.0;
+// DOM_* aliases kept for compatibility — values are identical to INTL_*
+export const DOM_CREATIVITY_MIN   = INTL_CREATIVITY_MIN;
+export const DOM_CREATIVITY_MAX   = INTL_CREATIVITY_MAX;
+export const DOM_SHOWMANSHIP_MIN  = INTL_SHOWMANSHIP_MIN;
+export const DOM_SHOWMANSHIP_MAX  = INTL_SHOWMANSHIP_MAX;
 
 // ── Shared option sets ────────────────────────────────────────────────────────
 

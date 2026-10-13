@@ -18,8 +18,6 @@ import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBa
 import {
   INTL_CREATIVITY_MIN, INTL_CREATIVITY_MAX,
   INTL_SHOWMANSHIP_MIN, INTL_SHOWMANSHIP_MAX,
-  DOM_CREATIVITY_MIN, DOM_CREATIVITY_MAX,
-  DOM_SHOWMANSHIP_MIN, DOM_SHOWMANSHIP_MAX,
 } from '@/lib/scoringConfig';
 
 // ── Formations scale (standard: 2.0 → 1.0 in steps of −0.1) ─────────────────
@@ -33,15 +31,6 @@ const FORMATIONS_VALUES_ESCOLAR = [
 ];
 
 // ── Dance levels ──────────────────────────────────────────────────────────────
-const DANCE_LEVELS_FULL = [
-  { label: 'Reducido',  sublabel: 'Bajo el Promedio',   value: 0.5 },
-  { label: 'Moderado',  sublabel: 'Promedio',            value: 1.0 },
-  { label: 'Elevado',   sublabel: 'Sobre el Promedio',   value: 1.5 },
-];
-const DANCE_LEVELS_ESCOLAR = [
-  { label: 'Reducido',  sublabel: 'Bajo el Promedio',   value: 0.5 },
-  { label: 'Elevado',   sublabel: 'Promedio / Alto',     value: 1.0 },
-];
 // International 2026: 4 levels for both difficulty and execution (max 2.0)
 const DANCE_LEVELS_INTL = [
   { label: 'Reducido',  sublabel: 'Bajo el Promedio',   value: 0.5 },
@@ -216,14 +205,13 @@ export default function OverallSheetPage() {
 
   // ── Computed ──────────────────────────────────────────────────────────────
   const isEscolarAB     = scoringSystem === 'escolar_ab';
-  const isEscolar       = scoringSystem === 'escolar';
-  const isIntl          = scoringSystem === 'intl_l1' || scoringSystem === 'intl_l2' || scoringSystem === 'intl_l2_7' || scoringSystem === 'intl_nt' || scoringSystem === 'prep' || isEscolar;
-  const hasDanceLimited = !isEscolarAB && !isIntl && (scoringSystem === 'tiny_novice' || scoringSystem === 'mini_novice' || scoringSystem === 'novice_plus' || scoringSystem === 'elite_l1');
-  const danceDiffLevels = isEscolarAB ? DANCE_DIFF_LEVELS_AB : isIntl ? DANCE_LEVELS_INTL : (hasDanceLimited ? DANCE_LEVELS_ESCOLAR : DANCE_LEVELS_FULL);
-  const danceExecLevels = isEscolarAB ? DANCE_EXEC_LEVELS_AB : isIntl ? DANCE_LEVELS_INTL : (hasDanceLimited ? DANCE_LEVELS_ESCOLAR : DANCE_LEVELS_FULL);
-  const showmanshipMax  = (isEscolarAB || isIntl) ? INTL_SHOWMANSHIP_MAX : DOM_SHOWMANSHIP_MAX;
-  const creativityMin   = isIntl ? INTL_CREATIVITY_MIN : DOM_CREATIVITY_MIN;
-  const creativityMax   = isIntl ? INTL_CREATIVITY_MAX : DOM_CREATIVITY_MAX;
+  const isEscolar       = scoringSystem === 'escolar' || scoringSystem === 'escolar_univ';
+  const isIntl          = !isEscolarAB; // all FECU 2026 United systems use INTL scale per regulatory PDFs
+  const danceDiffLevels = isEscolarAB ? DANCE_DIFF_LEVELS_AB : DANCE_LEVELS_INTL;
+  const danceExecLevels = isEscolarAB ? DANCE_EXEC_LEVELS_AB : DANCE_LEVELS_INTL;
+  const showmanshipMax  = INTL_SHOWMANSHIP_MAX;
+  const creativityMin   = INTL_CREATIVITY_MIN;
+  const creativityMax   = INTL_CREATIVITY_MAX;
   const formationsMax   = isIntl ? FORMATIONS_VALUES_INTL[0] : FORMATIONS_VALUES[0];
   const overallSubtotal = parseFloat((formationsScore + danceDifficulty + danceExecution).toFixed(2));
   const sheetTotal      = parseFloat((overallSubtotal + (isEscolarAB ? 0 : creativityOverall) + showmanshipOverall).toFixed(2));
@@ -258,12 +246,12 @@ export default function OverallSheetPage() {
       setDanceExecution(v >= 0.5 && v <= 2.0 ? v : 0);
     }
     if (source.creativity_overall) {
-      const [cMin, cMax] = isIntlSys ? [INTL_CREATIVITY_MIN, INTL_CREATIVITY_MAX] : [DOM_CREATIVITY_MIN, DOM_CREATIVITY_MAX];
+      const [cMin, cMax] = [INTL_CREATIVITY_MIN, INTL_CREATIVITY_MAX];
       setCreativityOverall(Math.min(cMax, Math.max(cMin, parseFloat(source.creativity_overall as string))));
     }
     if (source.showmanship_overall) {
-      const sMax    = (sysKey === 'escolar_ab' || isIntlSys) ? INTL_SHOWMANSHIP_MAX : DOM_SHOWMANSHIP_MAX;
-      const showMin = sysKey === 'escolar_ab' ? 0 : isIntlSys ? INTL_SHOWMANSHIP_MIN : DOM_SHOWMANSHIP_MIN;
+      const sMax    = INTL_SHOWMANSHIP_MAX;
+      const showMin = sysKey === 'escolar_ab' ? 0 : INTL_SHOWMANSHIP_MIN;
       setShowmanshipOverall(Math.min(sMax, Math.max(showMin, parseFloat(source.showmanship_overall as string))));
     }
     if (source.notes) {
@@ -389,11 +377,11 @@ export default function OverallSheetPage() {
         if (sheet.dance_difficulty    != null) setDanceDifficulty(parseFloat(sheet.dance_difficulty)    || 0);
         if (sheet.dance_execution     != null) setDanceExecution(parseFloat(sheet.dance_execution)      || 0);
         if (sheet.creativity_overall  != null) {
-          const [cMin, cMax] = isIntl ? [INTL_CREATIVITY_MIN, INTL_CREATIVITY_MAX] : [DOM_CREATIVITY_MIN, DOM_CREATIVITY_MAX];
+          const [cMin, cMax] = [INTL_CREATIVITY_MIN, INTL_CREATIVITY_MAX];
           setCreativityOverall(Math.min(cMax, Math.max(cMin, parseFloat(sheet.creativity_overall) || 0)));
         }
         if (sheet.showmanship_overall != null) {
-          const sMin = isEscolarAB ? 0 : isIntl ? INTL_SHOWMANSHIP_MIN : DOM_SHOWMANSHIP_MIN;
+          const sMin = isEscolarAB ? 0 : INTL_SHOWMANSHIP_MIN;
           setShowmanshipOverall(Math.min(showmanshipMax, Math.max(sMin, parseFloat(sheet.showmanship_overall) || 0)));
         }
       } catch { /* noop */ }
@@ -857,7 +845,7 @@ export default function OverallSheetPage() {
                 <div className="flex items-center gap-3">
                   <input
                     type="range"
-                    min={isEscolarAB ? '0' : String(isIntl ? INTL_SHOWMANSHIP_MIN : DOM_SHOWMANSHIP_MIN)}
+                    min={isEscolarAB ? '0' : String(INTL_SHOWMANSHIP_MIN)}
                     max={showmanshipMax}
                     step="0.1"
                     value={showmanshipOverall}
@@ -866,12 +854,12 @@ export default function OverallSheetPage() {
                   />
                   <input
                     type="number"
-                    min={isEscolarAB ? '0' : String(isIntl ? INTL_SHOWMANSHIP_MIN : DOM_SHOWMANSHIP_MIN)}
+                    min={isEscolarAB ? '0' : String(INTL_SHOWMANSHIP_MIN)}
                     max={showmanshipMax}
                     step="0.1"
                     value={showmanshipOverall}
                     onChange={(e) => {
-                      const showMin = isEscolarAB ? 0 : isIntl ? INTL_SHOWMANSHIP_MIN : DOM_SHOWMANSHIP_MIN;
+                      const showMin = isEscolarAB ? 0 : INTL_SHOWMANSHIP_MIN;
                       const v = Math.min(showmanshipMax, Math.max(showMin, parseFloat(e.target.value) || showMin));
                       setShowmanshipOverall(parseFloat(v.toFixed(2)));
                     }}
