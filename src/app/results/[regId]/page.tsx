@@ -327,7 +327,7 @@ export default function PublicResultPage() {
   const DANCE_EXEC_LEVELS_AB = [{label:'Reducido',sublabel:'Bajo el Promedio',value:0.5},{label:'Moderado',sublabel:'Promedio',value:1.0},{label:'Elevado',sublabel:'Sobre el Promedio',value:1.5},{label:'Superior',sublabel:'Nivel Alto',value:2.0}];
   const danceDiffLevels     = isEscolarAB ? DANCE_DIFF_LEVELS_AB : (hasDanceLimited ? DANCE_LEVELS_ESC : DANCE_LEVELS_FULL);
   const danceExecLevels     = isEscolarAB ? DANCE_EXEC_LEVELS_AB : (hasDanceLimited ? DANCE_LEVELS_ESC : DANCE_LEVELS_FULL);
-  const overallShowmanshipMax = isEscolarAB ? 5.0 : 2.0;
+  const overallShowmanshipMax = bCfg.showmanshipMax;
   const oFormationsScore    = n(data.formations_score);
   const oDanceDifficulty    = n(data.dance_difficulty);
   const oDanceExecution     = n(data.dance_execution);

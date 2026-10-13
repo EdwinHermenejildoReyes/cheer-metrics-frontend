@@ -80,10 +80,10 @@ export const INTL_SHOWMANSHIP_MIN  = 3.5;
 export const INTL_SHOWMANSHIP_MAX  = 5.0;
 
 // Domestic (UCA Ecuador / FECU): Creativity 1.5–2.0, Showmanship 1.0–2.0
-const DOM_CREATIVITY_MIN   = 1.5;
-const DOM_CREATIVITY_MAX   = 2.0;
-const DOM_SHOWMANSHIP_MIN  = 1.0;
-const DOM_SHOWMANSHIP_MAX  = 2.0;
+export const DOM_CREATIVITY_MIN   = 1.5;
+export const DOM_CREATIVITY_MAX   = 2.0;
+export const DOM_SHOWMANSHIP_MIN  = 1.0;
+export const DOM_SHOWMANSHIP_MAX  = 2.0;
 
 // ── Shared option sets ────────────────────────────────────────────────────────
 
