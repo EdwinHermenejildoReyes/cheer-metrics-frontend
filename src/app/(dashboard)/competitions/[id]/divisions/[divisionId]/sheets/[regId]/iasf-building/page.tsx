@@ -14,6 +14,7 @@ import { useJudge } from '@/hooks/useJudge';
 import { toastApiError, extractApiErrorText } from '@/utils/apiErrors';
 import type { JudgeScoreRecord, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
+import { IASF_WORLD_FIELD_MAXIMA } from '@/lib/scoringConfig';
 
 // ── IASF World: Building categories (regulation maxima) ───────────────────────
 
@@ -34,7 +35,7 @@ const CATEGORIES: {
   {
     key: 'stunts_difficulty',
     label: 'Elevaciones — Dificultad',
-    max: 20,
+    max: IASF_WORLD_FIELD_MAXIMA.stunts_difficulty,
     step: 1,
     description: 'Dificultad de las habilidades de elevación realizadas durante la rutina',
     bands: [
@@ -45,7 +46,7 @@ const CATEGORIES: {
   {
     key: 'stunts_execution',
     label: 'Elevaciones — Técnica',
-    max: 20,
+    max: IASF_WORLD_FIELD_MAXIMA.stunts_execution,
     step: 1,
     description: 'Ejecución técnica de las elevaciones: control, precisión y limpieza',
     bands: [
@@ -57,7 +58,7 @@ const CATEGORIES: {
   {
     key: 'pyramids_difficulty',
     label: 'Pirámides — Dificultad',
-    max: 20,
+    max: IASF_WORLD_FIELD_MAXIMA.pyramids_difficulty,
     step: 1,
     description: 'Dificultad de las estructuras de pirámide y sus conexiones',
     bands: [
@@ -68,7 +69,7 @@ const CATEGORIES: {
   {
     key: 'pyramids_execution',
     label: 'Pirámides — Técnica',
-    max: 20,
+    max: IASF_WORLD_FIELD_MAXIMA.pyramids_execution,
     step: 1,
     description: 'Ejecución técnica de las pirámides: control, fluidez y seguridad',
     bands: [
@@ -80,7 +81,7 @@ const CATEGORIES: {
   {
     key: 'tosses_difficulty',
     label: 'Lanzamientos — Dificultad',
-    max: 5,
+    max: IASF_WORLD_FIELD_MAXIMA.tosses_difficulty,
     step: 1,
     description: 'Dificultad de los lanzamientos realizados durante la rutina',
     bands: [
@@ -92,7 +93,7 @@ const CATEGORIES: {
   {
     key: 'tosses_execution',
     label: 'Lanzamientos — Técnica',
-    max: 5,
+    max: IASF_WORLD_FIELD_MAXIMA.tosses_execution,
     step: 1,
     description: 'Calidad técnica de los lanzamientos: altura, forma y recepción',
     bands: [

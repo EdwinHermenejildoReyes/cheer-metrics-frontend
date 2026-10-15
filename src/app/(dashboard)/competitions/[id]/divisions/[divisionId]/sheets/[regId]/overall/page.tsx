@@ -212,14 +212,15 @@ export default function OverallSheetPage() {
   const showmanshipMax  = INTL_SHOWMANSHIP_MAX;
   const creativityMin   = INTL_CREATIVITY_MIN;
   const creativityMax   = INTL_CREATIVITY_MAX;
-  const formationsMax   = isIntl ? FORMATIONS_VALUES_INTL[0] : FORMATIONS_VALUES[0];
+  const formationsMax   = isEscolar ? FORMATIONS_VALUES_ESCOLAR[0] : isIntl ? FORMATIONS_VALUES_INTL[0] : FORMATIONS_VALUES[0];
+  const formationsStep  = isEscolar
+    ? FORMATIONS_VALUES_ESCOLAR[0] - FORMATIONS_VALUES_ESCOLAR[1]
+    : isIntl
+    ? FORMATIONS_VALUES_INTL[0] - FORMATIONS_VALUES_INTL[1]
+    : FORMATIONS_VALUES[0] - FORMATIONS_VALUES[1];
   const overallSubtotal = parseFloat((formationsScore + danceDifficulty + danceExecution).toFixed(2));
   const sheetTotal      = parseFloat((overallSubtotal + (isEscolarAB ? 0 : creativityOverall) + showmanshipOverall).toFixed(2));
-  const errorsCount     = isEscolar
-    ? Math.round((5.0 - formationsScore) / 0.1)
-    : isIntl
-    ? Math.round((5.0 - formationsScore) / 0.2)
-    : Math.round((2.0 - formationsScore) * 10);
+  const errorsCount     = Math.round((formationsMax - formationsScore) / formationsStep);
   const animacionTotal  = parseFloat(animacionCriteria.reduce((s, v) => s + v, 0).toFixed(2));
   const animacionMax    = ANIMACION_CRITERIA_LABELS.length * ANIMACION_LEVELS[ANIMACION_LEVELS.length - 1].value;
   const animacionFilled = isEscolar && animacionCriteria.some(v => v > 0);
@@ -617,11 +618,7 @@ export default function OverallSheetPage() {
                 <div className="grid grid-cols-11 gap-1">
                   {(isEscolar ? FORMATIONS_VALUES_ESCOLAR : isIntl ? FORMATIONS_VALUES_INTL : FORMATIONS_VALUES).map((v) => {
                     const active = formationsScore === v;
-                    const errors = isEscolar
-                      ? Math.round((5.0 - v) / 0.1)
-                      : isIntl
-                      ? Math.round((5.0 - v) / 0.2)
-                      : Math.round((2.0 - v) * 10);
+                    const errors = Math.round((formationsMax - v) / formationsStep);
                     const isRed   = isIntl ? v < 3.6 : v < 1.5;
                     const isAmber = isIntl ? v < 4.6 : v < 1.8;
                     return (

@@ -810,3 +810,23 @@ export function getEffectiveScoringSystem(division: Division): ScoringSystem {
 
 export const DEFAULT_BUILDING_CONFIG: BuildingConfig = ELITE_BUILDING;
 export const DEFAULT_TUMBLING_CONFIG: TumblingConfig = ELITE_TUMBLING;
+
+// ── IASF World L6-L7 per-field maxima (mirrors backend _IASF_FIELD_MAXIMA) ───
+export const IASF_WORLD_FIELD_MAXIMA = {
+  stunts_difficulty:   20,
+  stunts_execution:    20,
+  pyramids_difficulty: 20,
+  pyramids_execution:  20,
+  tosses_difficulty:    5,
+  tosses_execution:     5,
+  standing_difficulty:  5,
+  standing_execution:  10,
+  running_difficulty:   5,
+  jumps_difficulty:     5,
+  jumps_execution:      5,
+  formations_score:    10,
+  dance_difficulty:     5,
+  dance_execution:      5,
+  creativity_overall:  10,
+  showmanship_overall:  5,
+} as const;

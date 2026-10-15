@@ -14,6 +14,7 @@ import { useJudge } from '@/hooks/useJudge';
 import { toastApiError, extractApiErrorText } from '@/utils/apiErrors';
 import type { JudgeScoreRecord, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
+import { IASF_WORLD_FIELD_MAXIMA } from '@/lib/scoringConfig';
 
 // ── IASF World: Tumbling categories ───────────────────────────────────────────
 
@@ -33,7 +34,7 @@ const CATEGORIES: {
   {
     key: 'standing_difficulty',
     label: 'Gimnasia en Parado — Dificultad',
-    max: 5,
+    max: IASF_WORLD_FIELD_MAXIMA.standing_difficulty,
     step: 1,
     description: 'Dificultad de los elementos de gimnasia en parado',
     bands: [
@@ -44,7 +45,7 @@ const CATEGORIES: {
   {
     key: 'standing_execution',
     label: 'Gimnasia — Técnica Global',
-    max: 10,
+    max: IASF_WORLD_FIELD_MAXIMA.standing_execution,
     step: 1,
     description: 'Calidad técnica de todos los elementos de gimnasia (parado y corriendo)',
     bands: [
@@ -56,7 +57,7 @@ const CATEGORIES: {
   {
     key: 'running_difficulty',
     label: 'Gimnasia Corriendo — Dificultad',
-    max: 5,
+    max: IASF_WORLD_FIELD_MAXIMA.running_difficulty,
     step: 1,
     description: 'Dificultad de los elementos de gimnasia con carrera',
     bands: [
@@ -67,7 +68,7 @@ const CATEGORIES: {
   {
     key: 'jumps_difficulty',
     label: 'Saltos — Dificultad',
-    max: 5,
+    max: IASF_WORLD_FIELD_MAXIMA.jumps_difficulty,
     step: 1,
     description: 'Dificultad de los saltos realizados durante la rutina',
     bands: [
@@ -78,7 +79,7 @@ const CATEGORIES: {
   {
     key: 'jumps_execution',
     label: 'Saltos — Técnica',
-    max: 5,
+    max: IASF_WORLD_FIELD_MAXIMA.jumps_execution,
     step: 1,
     description: 'Calidad técnica de los saltos: altura, forma y sincronización',
     bands: [

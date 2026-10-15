@@ -14,6 +14,7 @@ import { useJudge } from '@/hooks/useJudge';
 import { toastApiError, extractApiErrorText } from '@/utils/apiErrors';
 import type { JudgeScoreRecord, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
+import { IASF_WORLD_FIELD_MAXIMA } from '@/lib/scoringConfig';
 
 // ── IASF World: Overall categories ────────────────────────────────────────────
 
@@ -33,7 +34,7 @@ const CATEGORIES: {
   {
     key: 'creativity_overall',
     label: 'Creatividad',
-    max: 10,
+    max: IASF_WORLD_FIELD_MAXIMA.creativity_overall,
     step: 1,
     description: 'Originalidad, innovación y efecto visual de la rutina',
     bands: [
@@ -45,7 +46,7 @@ const CATEGORIES: {
   {
     key: 'formations_score',
     label: 'Formaciones y Transiciones',
-    max: 10,
+    max: IASF_WORLD_FIELD_MAXIMA.formations_score,
     step: 1,
     description: 'Uso del espacio, variedad de formaciones y fluidez en las transiciones',
     bands: [
@@ -57,7 +58,7 @@ const CATEGORIES: {
   {
     key: 'dance_difficulty',
     label: 'Baile — Dificultad',
-    max: 5,
+    max: IASF_WORLD_FIELD_MAXIMA.dance_difficulty,
     step: 1,
     description: 'Complejidad y variedad de los elementos de baile',
     bands: [
@@ -69,7 +70,7 @@ const CATEGORIES: {
   {
     key: 'dance_execution',
     label: 'Baile — Técnica',
-    max: 5,
+    max: IASF_WORLD_FIELD_MAXIMA.dance_execution,
     step: 1,
     description: 'Calidad técnica del baile: sincronización, energía y precisión',
     bands: [
@@ -81,7 +82,7 @@ const CATEGORIES: {
   {
     key: 'showmanship_overall',
     label: 'Performance / Showmanship',
-    max: 5,
+    max: IASF_WORLD_FIELD_MAXIMA.showmanship_overall,
     step: 1,
     description: 'Entusiasmo, expresividad, presentación y conexión con la audiencia',
     bands: [

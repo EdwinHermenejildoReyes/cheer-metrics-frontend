@@ -493,7 +493,7 @@ export default function DeduccionesSheetPage() {
                               <strong>X — Área (12.80 × 12.80 m):</strong> Aplica solo cuando <strong>ambos pies</strong> del atleta están completamente fuera del límite de la superficie. Pisar la cinta blanca o ligeramente pasado <strong>NO</strong> es infracción.
                             </p>
                             <p className="text-[11px] text-zinc-600 leading-relaxed">
-                              <strong>TIEMPO:</strong> Descuento plano −0.50 independiente de segundos de exceso. Tolerancia de +{TIEMPO_TOLERANCE_SECS} s por variación del cronómetro/sonido.
+                              <strong>TIEMPO:</strong> Descuento plano −{DEDUCTION_AMOUNTS['tiempo']} independiente de segundos de exceso. Tolerancia de +{TIEMPO_TOLERANCE_SECS} s por variación del cronómetro/sonido.
                             </p>
                           </div>
                         )}
@@ -556,7 +556,7 @@ export default function DeduccionesSheetPage() {
                                   <span className="text-[9px] text-orange-300">(evidencia)</span>
                                 </div>
                                 <p className="text-[9px] text-orange-500 leading-relaxed">
-                                  Descuento <strong>plano −0.50</strong> independiente de segundos extra · tolerancia +{TIEMPO_TOLERANCE_SECS} s
+                                  Descuento <strong>plano −{DEDUCTION_AMOUNTS['tiempo']}</strong> independiente de segundos extra · tolerancia +{TIEMPO_TOLERANCE_SECS} s
                                 </p>
                                 <div className="flex flex-col gap-0.5">
                                   {Object.values(TIEMPO_LIMITS).map(({ label, display }) => (
