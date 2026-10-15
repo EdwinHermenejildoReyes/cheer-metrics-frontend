@@ -73,7 +73,7 @@ const SHEET_TYPE_ICONS: Record<SheetType, LucideIcon> = {
 };
 
 const SHEET_TYPE_ORDER: SheetType[] = [
-  'building', 'tumbling', 'overall', 'partner_stunt', 'deducciones', 'rangos',
+  'building', 'tumbling', 'overall', 'partner_stunt', 'best_cheer', 'deducciones', 'rangos',
   'building_difficulty', 'building_execution', 'tumbling_difficulty', 'tumbling_execution',
   'deductions_only', 'safety_rules',
   'building_combined', 'tumbling_combined', 'deductions_combined',
@@ -562,7 +562,10 @@ export default function DivisionDetailPage() {
   };
 
   // A compound type (e.g. tumbling_combined) is allowed if any of its components is allowed.
+  // Partner stunt and best cheer divisions exclusively use their own sheet — no building/tumbling/etc.
   const isSheetAllowedInDivision = (st: SheetType): boolean => {
+    if (activeScoringSystem === 'partner_stunt' && st !== 'partner_stunt') return false;
+    if (activeScoringSystem === 'best_cheer' && st !== 'best_cheer') return false;
     if (!division.allowed_sheet_types) return true;
     if (division.allowed_sheet_types.includes(st)) return true;
     const components = COMPOUND_EXPANSION[st];
@@ -915,6 +918,18 @@ export default function DivisionDetailPage() {
                                 <Button size="icon" variant="ghost" title="Reglas y Seguridad"
                                   onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/safety-rules`)}>
                                   <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
+                                </Button>
+                              )}
+                              {isSheetAllowedInDivision('partner_stunt') && (
+                                <Button size="icon" variant="ghost" title="Planilla Partner/Group Stunt"
+                                  onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/partner-stunt`)}>
+                                  <Users2 className="h-3.5 w-3.5 text-orange-500" />
+                                </Button>
+                              )}
+                              {isSheetAllowedInDivision('best_cheer') && (
+                                <Button size="icon" variant="ghost" title="Planilla Best Cheer"
+                                  onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/best-cheer`)}>
+                                  <Star className="h-3.5 w-3.5 text-yellow-500" />
                                 </Button>
                               )}
                             </>

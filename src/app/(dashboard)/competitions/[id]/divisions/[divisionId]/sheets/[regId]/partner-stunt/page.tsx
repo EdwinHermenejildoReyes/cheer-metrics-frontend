@@ -18,7 +18,7 @@ import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBa
 
 // ── Per-category config (regulation: UCA National Experience 2025) ────────────
 
-type Band = { label: string; range: string; min: number; max: number; color: 'red' | 'amber' | 'emerald' };
+type Band = { label: string; range: string; min: number; max: number; color: 'red' | 'amber' | 'emerald' | 'gray' };
 
 const CATEGORIES: {
   key: keyof Pick<ScoreSheet,
@@ -47,9 +47,10 @@ const CATEGORIES: {
     max: 25,
     description: 'Dificultad y capacidad para realizar las elevaciones en la rutina',
     bands: [
-      { label: '3 habilidades del nivel', range: '0 – 10',  min: 0,  max: 10, color: 'red' },
-      { label: '4 habilidades del nivel', range: '15 – 20', min: 15, max: 20, color: 'amber' },
-      { label: '5+ habilidades del nivel', range: '20 – 25', min: 20, max: 25, color: 'emerald' },
+      { label: '3 habilidades del nivel',        range: '0 – 10',  min: 0,  max: 10, color: 'red' },
+      { label: 'Zona sin referencia en el reglamento', range: '10 – 15', min: 10, max: 15, color: 'gray' },
+      { label: '4 habilidades del nivel',        range: '15 – 20', min: 15, max: 20, color: 'amber' },
+      { label: '5+ habilidades del nivel',       range: '20 – 25', min: 20, max: 25, color: 'emerald' },
     ],
   },
   {
@@ -95,6 +96,7 @@ const BAND_COLORS: Record<Band['color'], { chip: string; bar: string }> = {
   red:     { chip: 'bg-red-50 text-red-700 border-red-300',       bar: 'bg-red-400' },
   amber:   { chip: 'bg-amber-50 text-amber-700 border-amber-300', bar: 'bg-amber-400' },
   emerald: { chip: 'bg-emerald-50 text-emerald-700 border-emerald-300', bar: 'bg-emerald-500' },
+  gray:    { chip: 'bg-zinc-50 text-zinc-500 border-zinc-300',    bar: 'bg-zinc-300' },
 };
 
 function ScoreSelector({
