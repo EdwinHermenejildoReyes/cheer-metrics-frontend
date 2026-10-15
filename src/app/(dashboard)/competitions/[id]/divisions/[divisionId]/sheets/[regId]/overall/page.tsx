@@ -221,6 +221,7 @@ export default function OverallSheetPage() {
     ? Math.round((5.0 - formationsScore) / 0.2)
     : Math.round((2.0 - formationsScore) * 10);
   const animacionTotal  = parseFloat(animacionCriteria.reduce((s, v) => s + v, 0).toFixed(2));
+  const animacionMax    = ANIMACION_CRITERIA_LABELS.length * ANIMACION_LEVELS[ANIMACION_LEVELS.length - 1].value;
   const animacionFilled = isEscolar && animacionCriteria.some(v => v > 0);
 
   // ── Load ──────────────────────────────────────────────────────────────────
@@ -900,7 +901,7 @@ export default function OverallSheetPage() {
                 <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Puntaje Animación</span>
                 <div className="flex items-center gap-3">
                   <span className="text-xl font-bold tabular-nums text-zinc-900">{animacionTotal.toFixed(2)}</span>
-                  <span className="text-xs text-zinc-400">/ 5.00</span>
+                  <span className="text-xs text-zinc-400">/ {fmt(animacionMax)}</span>
                 </div>
               </div>
               <div className="divide-y divide-zinc-100">
@@ -1090,7 +1091,7 @@ export default function OverallSheetPage() {
                   <td className="px-4 py-2.5 text-zinc-600">Animación / Porra (total)</td>
                   <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
                     <span className="font-semibold">{animacionTotal.toFixed(2)}</span>
-                    <span className="text-zinc-400 font-normal"> / 5.00</span>
+                    <span className="text-zinc-400 font-normal"> / {fmt(animacionMax)}</span>
                     {animacionTotal > showmanshipOverall && (
                       <span className="ml-2 text-[10px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">usa este</span>
                     )}
