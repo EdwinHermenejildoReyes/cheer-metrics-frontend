@@ -278,6 +278,7 @@ export interface Competition {
   city: string;
   scoring_family: ScoringFamily | null;
   regulation: Regulation;
+  regulation_year: number;
   sheet_mode: SheetMode;
   service_type: ServiceType;
   notes: string;
@@ -295,6 +296,7 @@ export interface Division {
   competition_name: string;
   competition_sheet_mode: CompetitionSheetMode;
   competition_service_type: ServiceType;
+  competition_regulation_year: number;
   name: string;
   age_group: AgeGroup;
   skill_level: SkillLevel;

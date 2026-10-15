@@ -799,9 +799,18 @@ const CONFIGS: Record<ScoringSystem, ScoringConfig> = {
   icu_dance_principiantes:  { building: ELITE_BUILDING, tumbling: ELITE_TUMBLING },
 };
 
+// Year-versioned scoring config overrides. 2026 is the base (CONFIGS above).
+// To introduce regulation changes for a new year, add an entry here with only
+// the ScoringSystem keys whose configs differ from the 2026 base.
+// Example: 2027: { elite_l2_7: { building: ELITE_BUILDING_2027, tumbling: ... }, ... }
+const CONFIGS_BY_YEAR: Record<number, Partial<Record<ScoringSystem, ScoringConfig>>> = {};
+
 export function getScoringConfig(division: Division): ScoringConfig {
-  const sys = (division.scoring_system || division.suggested_scoring_system) as ScoringSystem;
-  return CONFIGS[sys] ?? CONFIGS['elite_l2_7'];
+  const sys  = (division.scoring_system || division.suggested_scoring_system) as ScoringSystem;
+  const year = division.competition_regulation_year ?? 2026;
+  const overrides = CONFIGS_BY_YEAR[year];
+  const effective = overrides ? { ...CONFIGS, ...overrides } : CONFIGS;
+  return effective[sys] ?? effective['elite_l2_7'];
 }
 
 export function getEffectiveScoringSystem(division: Division): ScoringSystem {
