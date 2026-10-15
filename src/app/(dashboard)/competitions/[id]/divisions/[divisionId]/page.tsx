@@ -512,7 +512,19 @@ export default function DivisionDetailPage() {
   if (loading) return <PageSpinner />;
   if (!division) return <div className="p-8 text-zinc-500">División no encontrada.</div>;
 
-  const activeScoringSystem = (division.scoring_system || division.suggested_scoring_system) as ScoringSystem;
+  // These categories always use a fixed scoring system regardless of what's stored in scoring_system.
+  // This corrects divisions imported with a numeric skill level (e.g. L3) under a category like
+  // best_cheerleader, which would otherwise resolve to elite_l2_7 via the skill-level map.
+  const CATEGORY_FIXED_SYSTEM: Partial<Record<string, ScoringSystem>> = {
+    best_cheerleader: 'best_cheer',
+    group_stunt:      'partner_stunt',
+    future_flyer:     'partner_stunt',
+  };
+  const activeScoringSystem = (
+    CATEGORY_FIXED_SYSTEM[division.category] ??
+    division.scoring_system ??
+    division.suggested_scoring_system
+  ) as ScoringSystem;
   const isIasfWorld = activeScoringSystem === 'iasf_world_l6_7';
   const isIcuDanceMode = division.competition_sheet_mode === 'icu_dance';
   const isGrupalMode = !isIcuDanceMode && (division.competition_sheet_mode ?? 'grupal') !== 'individual';
@@ -598,6 +610,15 @@ export default function DivisionDetailPage() {
       // This way admins can assign 'icu_dance' and judges see the correct form for each division
       // (e.g. icu_dance_principiantes, icu_dance_solo) without needing separate assignments per subtype.
       if (isIcuDanceMode && ICU_SCORE_TYPES.includes(a.sheet_type)) {
+        return activeScoringSystem as SheetType;
+      }
+      // For partner_stunt / best_cheer divisions, remap any standard (non-ICU) assignment to the
+      // division's sheet. Judges assigned 'building' or 'tumbling' automatically get partner_stunt
+      // or best_cheer without needing a separate specific assignment.
+      if (
+        (activeScoringSystem === 'partner_stunt' || activeScoringSystem === 'best_cheer') &&
+        !ICU_SHEET_TYPES.includes(a.sheet_type)
+      ) {
         return activeScoringSystem as SheetType;
       }
       return a.sheet_type;
