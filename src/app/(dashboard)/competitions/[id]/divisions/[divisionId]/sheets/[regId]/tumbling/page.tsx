@@ -1212,7 +1212,7 @@ export default function TumblingSheetPage() {
                   <td className="px-4 py-2.5 text-zinc-600">Creatividad (este juez)</td>
                   <td className="px-4 py-2.5 text-right tabular-nums text-zinc-900 whitespace-nowrap">
                     <span className="font-semibold">{fmt(creativityTumbling)}</span>
-                    <span className="text-zinc-400 font-normal"> / 2.00</span>
+                    <span className="text-zinc-400 font-normal"> / {fmt(tCfg.creativityMax)}</span>
                   </td>
                 </tr>
               )}
