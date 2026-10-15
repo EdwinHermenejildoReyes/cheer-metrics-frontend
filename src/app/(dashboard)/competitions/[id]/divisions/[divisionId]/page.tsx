@@ -512,16 +512,16 @@ export default function DivisionDetailPage() {
   if (loading) return <PageSpinner />;
   if (!division) return <div className="p-8 text-zinc-500">División no encontrada.</div>;
 
-  // These categories always use a fixed scoring system regardless of what's stored in scoring_system.
-  // This corrects divisions imported with a numeric skill level (e.g. L3) under a category like
-  // best_cheerleader, which would otherwise resolve to elite_l2_7 via the skill-level map.
-  const CATEGORY_FIXED_SYSTEM: Partial<Record<string, ScoringSystem>> = {
+  // These skill levels always use a fixed scoring system regardless of what's stored in scoring_system.
+  // This corrects divisions where scoring_system was explicitly set to a generic value (e.g. elite_l2_7)
+  // but the skill_level unambiguously determines the sheet (best_cheerleader, group_stunt, future_flyer).
+  const SKILL_LEVEL_FIXED_SYSTEM: Partial<Record<string, ScoringSystem>> = {
     best_cheerleader: 'best_cheer',
     group_stunt:      'partner_stunt',
     future_flyer:     'partner_stunt',
   };
   const activeScoringSystem = (
-    CATEGORY_FIXED_SYSTEM[division.category] ??
+    SKILL_LEVEL_FIXED_SYSTEM[division.skill_level] ??
     division.scoring_system ??
     division.suggested_scoring_system
   ) as ScoringSystem;
