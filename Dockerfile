@@ -7,7 +7,8 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN --mount=type=cache,id=cheer-metrics-npm,target=/root/.npm \
+    npm ci
 
 # Build
 FROM base AS builder
@@ -18,7 +19,8 @@ ARG NEXT_PUBLIC_MAIN_API_URL
 ARG NEXT_PUBLIC_WEB_URL
 ENV NEXT_PUBLIC_MAIN_API_URL=$NEXT_PUBLIC_MAIN_API_URL
 ENV NEXT_PUBLIC_WEB_URL=$NEXT_PUBLIC_WEB_URL
-RUN npm run build
+RUN --mount=type=cache,id=cheer-metrics-next,target=/app/.next/cache \
+    npm run build
 
 # Production runner
 FROM base AS runner
