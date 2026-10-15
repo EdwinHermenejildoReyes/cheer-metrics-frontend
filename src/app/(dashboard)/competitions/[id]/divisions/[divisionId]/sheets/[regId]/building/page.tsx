@@ -26,9 +26,21 @@ const EXEC_CATS      = ['Flyer', 'Base/Spotter', 'Transición', 'Sincronización
 const TOSS_EXEC_CATS = ['Flyer', 'Base/Spotter', 'Altura'];
 const EXEC_DED_OPTS   = [0.05, 0.10, 0.20, 0.30];
 const EXEC_DED_LABELS = ['Mínimos', 'Menores', 'Múltiples', 'Generalizados'];
+const EXEC_DED_DESCS  = [
+  'Errores leves, casi imperceptibles; no afectan el conjunto',
+  'Errores claramente visibles pero controlados y aislados',
+  'Errores frecuentes o repetidos en varias ejecuciones',
+  'Errores graves o falta de control notoria en la categoría',
+];
+const GRADE_UI = [
+  { color: 'bg-zinc-100 text-zinc-600',    desc: 'Habilidad básica o no ejecutada al nivel requerido' },
+  { color: 'bg-blue-50 text-blue-700',     desc: 'Habilidad claramente de dificultad avanzada dentro del nivel' },
+  { color: 'bg-violet-50 text-violet-700', desc: 'Habilidad de máxima dificultad o complejidad Elite dentro del nivel' },
+];
 
 // ── Execution deduction rules info content ────────────────────────────────────
-function ExecInfoContent({ cats, note }: { cats: string[]; note?: string }) {
+function ExecInfoContent({ cats, note, dedOpts }: { cats: string[]; note?: string; dedOpts?: number[] }) {
+  const opts = dedOpts ?? EXEC_DED_OPTS;
   return (
     <div className="space-y-4 text-sm">
       <div>
@@ -42,16 +54,11 @@ function ExecInfoContent({ cats, note }: { cats: string[]; note?: string }) {
             </tr>
           </thead>
           <tbody>
-            {[
-              { label: 'Mínimos', amt: '−0.05', desc: 'Errores leves, casi imperceptibles; no afectan el conjunto' },
-              { label: 'Menores', amt: '−0.10', desc: 'Errores claramente visibles pero controlados y aislados' },
-              { label: 'Múltiples', amt: '−0.20', desc: 'Errores frecuentes o repetidos en varias ejecuciones' },
-              { label: 'Generalizados', amt: '−0.30', desc: 'Errores graves o falta de control notoria en la categoría' },
-            ].map(({ label, amt, desc }) => (
-              <tr key={label} className="even:bg-zinc-50">
-                <td className="px-3 py-1.5 border border-zinc-200 font-medium">{label}</td>
-                <td className="px-3 py-1.5 border border-zinc-200 text-center text-red-600 font-semibold tabular-nums">{amt}</td>
-                <td className="px-3 py-1.5 border border-zinc-200 text-zinc-500">{desc}</td>
+            {opts.map((amt, i) => (
+              <tr key={amt} className="even:bg-zinc-50">
+                <td className="px-3 py-1.5 border border-zinc-200 font-medium">{EXEC_DED_LABELS[i]}</td>
+                <td className="px-3 py-1.5 border border-zinc-200 text-center text-red-600 font-semibold tabular-nums">−{fmt(amt)}</td>
+                <td className="px-3 py-1.5 border border-zinc-200 text-zinc-500">{EXEC_DED_DESCS[i]}</td>
               </tr>
             ))}
           </tbody>
@@ -1001,22 +1008,23 @@ export default function BuildingSheetPage() {
                     </tbody>
                   </table>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-zinc-900 mb-1">Grado de Dificultad por Habilidad</h3>
-                  <p className="text-xs text-zinc-500 mb-2">Se aplica a cada habilidad individual ejecutada dentro del rango seleccionado.</p>
-                  <div className="flex flex-col gap-1.5">
-                    {[
-                      { label: 'No Cumple', desc: 'Habilidad básica o no ejecutada al nivel requerido', color: 'bg-zinc-100 text-zinc-600' },
-                      { label: 'Avanzado  +0.10', desc: 'Habilidad claramente de dificultad avanzada dentro del nivel', color: 'bg-blue-50 text-blue-700' },
-                      { label: 'Elite  +0.20', desc: 'Habilidad de máxima dificultad o complejidad Elite dentro del nivel', color: 'bg-violet-50 text-violet-700' },
-                    ].map(({ label, desc, color }) => (
-                      <div key={label} className={`rounded-lg px-3 py-2 ${color}`}>
-                        <p className="font-semibold text-xs">{label}</p>
-                        <p className="text-xs opacity-80 mt-0.5">{desc}</p>
-                      </div>
-                    ))}
+                {bCfg.stuntsSkillGrades.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-zinc-900 mb-1">Grado de Dificultad por Habilidad</h3>
+                    <p className="text-xs text-zinc-500 mb-2">Se aplica a cada habilidad individual ejecutada dentro del rango seleccionado.</p>
+                    <div className="flex flex-col gap-1.5">
+                      {bCfg.stuntsSkillGrades.map(({ value, label }, i) => {
+                        const ui = GRADE_UI[i] ?? { color: 'bg-amber-50 text-amber-700', desc: 'Habilidad de dificultad superior dentro del nivel' };
+                        return (
+                          <div key={value} className={`rounded-lg px-3 py-2 ${ui.color}`}>
+                            <p className="font-semibold text-xs">{value > 0 ? `${label}  +${fmt(value)}` : label}</p>
+                            <p className="text-xs opacity-80 mt-0.5">{ui.desc}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
+                )}
                 <div>
                   <h3 className="font-semibold text-zinc-900 mb-1">Part Max — Spotter / Base</h3>
                   <p className="text-xs text-zinc-500 leading-relaxed">
@@ -1184,7 +1192,7 @@ export default function BuildingSheetPage() {
               {/* RIGHT: Execution + Total + Comments */}
               <div className="flex flex-col gap-4">
                 <ExecSection label="Elevaciones" max={bCfg.stuntsExecMax} deds={stuntsExecDeds} onChange={setStuntsExecDeds} dedOpts={bCfg.buildingExecDedOpts}
-                  info={<ExecInfoContent cats={EXEC_CATS} note="Cada categoría se evalúa de forma independiente. Solo se puede seleccionar un nivel de deducción por categoría por vuelta." />}
+                  info={<ExecInfoContent cats={EXEC_CATS} dedOpts={bCfg.buildingExecDedOpts} note="Cada categoría se evalúa de forma independiente. Solo se puede seleccionar un nivel de deducción por categoría por vuelta." />}
                 />
                 <SectionTotal
                   label="Total Elevaciones"
@@ -1304,7 +1312,7 @@ export default function BuildingSheetPage() {
               {/* RIGHT: Execution + Drivers + Total + Comments */}
               <div className="flex flex-col gap-4">
                 <ExecSection label="Pirámides" max={bCfg.pyramidsExecMax} deds={pyramidsExecDeds} onChange={setPyramidsExecDeds} dedOpts={bCfg.buildingExecDedOpts}
-                  info={<ExecInfoContent cats={EXEC_CATS} note="En pirámides, la Sincronización evalúa la coordinación entre todos los stunts que forman la estructura simultáneamente." />}
+                  info={<ExecInfoContent cats={EXEC_CATS} dedOpts={bCfg.buildingExecDedOpts} note="En pirámides, la Sincronización evalúa la coordinación entre todos los stunts que forman la estructura simultáneamente." />}
                 />
 
                 {/* Pyramid drivers (escolar_ab only) */}
@@ -1410,7 +1418,7 @@ export default function BuildingSheetPage() {
               {/* RIGHT: Execution + Total + Comments */}
               <div className="flex flex-col gap-4">
                 <ExecSection label="Lanzamientos" max={bCfg.tossesExecMax} deds={tossesExecDeds} onChange={setTossesExecDeds} cats={TOSS_EXEC_CATS} dedOpts={bCfg.tossesExecDedOpts}
-                  info={<ExecInfoContent cats={TOSS_EXEC_CATS} note="En lanzamientos, la Altura evalúa el alcance del pico máximo y la limpieza de la trayectoria; no se evalúa Sincronización." />}
+                  info={<ExecInfoContent cats={TOSS_EXEC_CATS} dedOpts={bCfg.tossesExecDedOpts} note="En lanzamientos, la Altura evalúa el alcance del pico máximo y la limpieza de la trayectoria; no se evalúa Sincronización." />}
                 />
                 <SectionTotal
                   label="Total Lanzamientos"
@@ -1454,7 +1462,7 @@ export default function BuildingSheetPage() {
                     </div>
                   ) : (
                     <div className="rounded-lg border border-zinc-200 p-3">
-                      <p className="font-semibold text-zinc-900 text-xs mb-1">Cheer / Animación (0.0 – 5.0)</p>
+                      <p className="font-semibold text-zinc-900 text-xs mb-1">Cheer / Animación ({bCfg.showmanshipMin.toFixed(1)} – {bCfg.showmanshipMax.toFixed(1)})</p>
                       <p className="text-xs text-zinc-500 leading-relaxed">Evalúa la animación, energía, proyección y el espíritu general del equipo. Incluye vocalización de cheers, expresión corporal y conexión con el público.</p>
                     </div>
                   )}
@@ -1539,7 +1547,7 @@ export default function BuildingSheetPage() {
                 <p className="text-[11px] text-zinc-400 leading-snug">
                   {bCfg.hasCreativity
                     ? 'Ritmo, Confianza y Conexión durante la rutina'
-                    : 'Cheer / Animación — máx 5.0 (se promedia con los otros dos jueces)'}
+                    : `Cheer / Animación — máx ${bCfg.showmanshipMax.toFixed(1)} (se promedia con los otros dos jueces)`}
                 </p>
               </div>
             </div>

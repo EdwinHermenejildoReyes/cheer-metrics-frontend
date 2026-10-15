@@ -1088,7 +1088,7 @@ export default function TumblingSheetPage() {
                 <p className="text-[11px] text-zinc-400 leading-snug">
                   {tCfg.hasCreativity
                     ? 'Confianza, Limpieza y Conexión durante la rutina (Habilidades de Gimnasia)'
-                    : 'Cheer / Animación — máx 5.0 (se promedia con los otros dos jueces)'}
+                    : `Cheer / Animación — máx ${tCfg.showmanshipMax.toFixed(1)} (se promedia con los otros dos jueces)`}
                 </p>
               </div>
             </div>
