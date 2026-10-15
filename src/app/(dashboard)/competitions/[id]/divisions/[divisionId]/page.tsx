@@ -574,10 +574,13 @@ export default function DivisionDetailPage() {
   };
 
   // A compound type (e.g. tumbling_combined) is allowed if any of its components is allowed.
-  // Partner stunt and best cheer divisions exclusively use their own sheet — no building/tumbling/etc.
+  // partner_stunt and best_cheer sheets are exclusive to their own scoring system — in both directions:
+  // partner_stunt divisions only show partner_stunt, and partner_stunt sheet never shows in other divisions.
   const isSheetAllowedInDivision = (st: SheetType): boolean => {
+    if (st === 'partner_stunt' && activeScoringSystem !== 'partner_stunt') return false;
+    if (st === 'best_cheer'    && activeScoringSystem !== 'best_cheer')    return false;
     if (activeScoringSystem === 'partner_stunt' && st !== 'partner_stunt') return false;
-    if (activeScoringSystem === 'best_cheer' && st !== 'best_cheer') return false;
+    if (activeScoringSystem === 'best_cheer'    && st !== 'best_cheer')    return false;
     if (!division.allowed_sheet_types) return true;
     if (division.allowed_sheet_types.includes(st)) return true;
     const components = COMPOUND_EXPANSION[st];
