@@ -106,7 +106,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             {
               header: 'ESTILO SUELTO',
               items: [
-                'Estilo Release desde nivel del suelo (switch up) hacia lib debajo del nivel prep',
+                'Estilo suelto desde nivel del suelo (switch up) hacia lib debajo del nivel prep',
                 'Tic toc debajo del nivel prep (lib a lib)',
               ],
             },
@@ -147,11 +147,11 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             {
               header: 'ESTILO SUELTO',
               items: [
-                'Estilo Release desde nivel del suelo (switch up) hacia posición corporal debajo del nivel prep',
-                'Tic Tic toc debajo del nivel prep (lib a posición corporal)',
-                'Tic toc en nivel prep (lib a posición corporal) con un conector',
-                'Estilo Release desde nivel de cintura hacia lib en nivel prep con conector',
-                'Estilo Release desde nivel de suelo (switch up) hacia lib en nivel prep con conector',
+                'Estilo suelto desde nivel del suelo (switch up) hacia posición del cuerpo debajo del nivel prep',
+                'Tic Tic toc debajo del nivel prep (lib a posición del cuerpo)',
+                'Tic toc en nivel prep (lib a posición del cuerpo) con un conector',
+                'Estilo suelto desde nivel de cintura hacia lib en nivel prep con conector',
+                'Estilo suelto desde nivel de suelo (switch up) hacia lib en nivel prep con conector',
               ],
             },
             {
@@ -165,8 +165,8 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
               header: 'COMBINACIÓN / OTRAS HABILIDADES',
               items: [
                 'Tic toc con 1/4 de giro en nivel prep (lib a lib) con conector',
-                'Tic toc con 1/4 de giro debajo del nivel prep (lib a posición corporal)',
-                'Transición desde nivel inferior a prep hacia posición corporal en nivel prep con conector',
+                'Tic toc con 1/4 de giro debajo del nivel prep (lib a posición del cuerpo)',
+                'Transición desde nivel inferior a prep hacia posición del cuerpo en nivel prep con conector',
               ],
             },
             {
@@ -181,26 +181,26 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             {
               header: 'ESTILO SUELTO',
               items: [
-                'Estilo Release desde nivel de suelo (switch up) hacia posición corporal en nivel prep con conector',
-                'Tic Tic toc debajo del nivel prep (posición corporal a posición corporal)',
-                'Tic toc en nivel prep (posición corporal a posición corporal) con conector',
-                'Estilo Release desde nivel de cintura hacia posición corporal en nivel prep con conector',
+                'Estilo suelto desde nivel de suelo (switch up) hacia posición del cuerpo en nivel prep con conector',
+                'Tic Tic toc debajo del nivel prep (posición del cuerpo a posición del cuerpo)',
+                'Tic toc en nivel prep (posición del cuerpo a posición del cuerpo) con conector',
+                'Estilo suelto desde nivel de cintura hacia posición del cuerpo en nivel prep con conector',
               ],
             },
             {
               header: 'GIRO',
               items: [
                 'Transición con 1/4 de giro desde nivel inferior a prep hacia elevación prep',
-                'Transición con 1/4 desde nivel inferior a prep hacia posición corporal en nivel prep con conector',
+                'Transición con 1/4 desde nivel inferior a prep hacia posición del cuerpo en nivel prep con conector',
               ],
             },
             {
               header: 'COMBINACIÓN / OTRAS HABILIDADES',
               items: [
-                'Tic toc con 1/4 de giro en nivel prep (posición corporal a posición corporal) con conector',
-                'Estilo Release con 1/4 de giro desde nivel del suelo (switch up) hacia lib en nivel prep con conector',
-                'Estilo Release con 1/4 de giro desde nivel de cintura hacia lib en nivel prep con conector',
-                'Tic toc con 1/4 de giro debajo del nivel prep (posición corporal a posición corporal)',
+                'Tic toc con 1/4 de giro en nivel prep (posición del cuerpo a posición del cuerpo) con conector',
+                'Estilo suelto con 1/4 de giro desde nivel del suelo (switch up) hacia lib en nivel prep con conector',
+                'Estilo suelto con 1/4 de giro desde nivel de cintura hacia lib en nivel prep con conector',
+                'Tic toc con 1/4 de giro debajo del nivel prep (posición del cuerpo a posición del cuerpo)',
               ],
             },
             {
@@ -309,7 +309,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             },
             {
               header: 'DESMONTE',
-              items: ['Cuna recta desde posición corporal en nivel prep'],
+              items: ['Cuna recta desde posición del cuerpo en nivel prep'],
             },
           ],
         },
@@ -326,15 +326,15 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             {
               header: 'ESTILO SUELTO',
               items: [
-                'Tic toc en nivel prep (lib a posición corporal)',
-                'Estilo Release desde nivel de suelo (switch up) hacia lib en nivel prep',
-                'Estilo Release desde nivel de cintura hacia lib en nivel prep',
+                'Tic toc en nivel prep (lib a posición del cuerpo)',
+                'Estilo suelto desde nivel de suelo (switch up) hacia lib en nivel prep',
+                'Estilo suelto desde nivel de cintura hacia lib en nivel prep',
               ],
             },
             {
               header: 'GIRO',
               items: [
-                'Transición con 1/2 giro en nivel prep hacia posición corporal en nivel prep',
+                'Transición con 1/2 giro en nivel prep hacia posición del cuerpo en nivel prep',
                 'Transición con 1/2 giro hacia lib en nivel prep',
               ],
             },
@@ -359,30 +359,30 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
               header: 'ESTILO INVERSIÓN',
               items: [
                 'Inversión desde nivel de suelo hacia extensión',
-                'Inversión desde nivel de suelo hacia posición corporal en nivel prep',
+                'Inversión desde nivel de suelo hacia posición del cuerpo en nivel prep',
               ],
             },
             {
               header: 'ESTILO SUELTO',
               items: [
-                'Tic toc en nivel prep (posición corporal a posición corporal)',
-                'Estilo Release desde nivel de suelo (switch up) hacia posición corporal en nivel prep',
-                'Estilo Release desde nivel de cintura hacia posición corporal en nivel prep',
+                'Tic toc en nivel prep (posición del cuerpo a posición del cuerpo)',
+                'Estilo suelto desde nivel de suelo (switch up) hacia posición del cuerpo en nivel prep',
+                'Estilo suelto desde nivel de cintura hacia posición del cuerpo en nivel prep',
               ],
             },
             {
               header: 'GIRO',
               items: [
                 'Transición con 1/2 giro hacia extensión',
-                'Transición con 1/2 giro hacia posición corporal en nivel prep',
+                'Transición con 1/2 giro hacia posición del cuerpo en nivel prep',
               ],
             },
             {
               header: 'COMBINACIÓN / OTRAS HABILIDADES',
               items: [
                 'Inversión con 1/2 giro desde nivel de suelo hacia extensión',
-                'Inversión con 1/2 giro desde nivel de suelo hacia posición corporal en nivel prep',
-                'Tic toc con 1/2 giro en nivel prep (1 pierna a posición corporal)',
+                'Inversión con 1/2 giro desde nivel de suelo hacia posición del cuerpo en nivel prep',
+                'Tic toc con 1/2 giro en nivel prep (1 pierna a posición del cuerpo)',
               ],
             },
             {
@@ -403,12 +403,12 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
           avanzadas: [
             'CAMINO ATRÁS – FLIC FLAC',
             'CAMINO ATRÁS – FLIC FLAC A UNA PIERNA',
+            'C.ATRÁS – FF A UNA PIERNA – FF',
+            'C.ATRÁS CAMBIANDO PIERNA – FF',
             'FLIC FLAC A UNA PIERNA – C.ATRÁS',
             'VALDEZ – CAMINO ATRÁS – FF',
           ],
           elite: [
-            'C.ATRÁS – FF A UNA PIERNA – FF',
-            'C.ATRÁS CAMBIANDO PIERNA – FF',
             'FF A UNA PIERNA – C.ATRÁS – FF',
             'VALDEZ – FF / FF A UNA PIERNA',
             'ROL ATRÁS A INVERTIDA – FF / FF A UNA PIERNA',
@@ -422,10 +422,10 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             'MEDIA LUNA – FLIC FLAC A UNA PIERNA',
             'HAND VAULT (HV)',
             'CAMINO ADELANTE – HAND VAULT',
-          ],
-          elite: [
             'SERIE DE HAND VAULTS',
             'HV DOS A DOS / UNA PIERNA',
+          ],
+          elite: [
             'MEDIA LUNA – SERIE DE FLIC FLACS',
             'RONDADA – SERIE DE FLIC FLACS',
             'CAMINO ADELANTE – RONDADA – FF / SERIE DE FF',
@@ -521,16 +521,16 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
               items: [
                 'Soltar desde nivel de suelo (switch up) hacia lib en nivel prep',
                 'Soltar desde nivel de cintura (agrupado, posición X, etc.) hacia lib en nivel prep',
-                'Tic toc desde lib en nivel prep hacia posición corporal extendido',
+                'Tic toc desde lib en nivel prep hacia posición del cuerpo extendido',
               ],
             },
             {
               header: 'GIRO',
               items: [
-                'Transición con giro completo hacia posición corporal en nivel prep',
+                'Transición con giro completo hacia posición del cuerpo en nivel prep',
                 'Transición con giro completo en nivel prep (lib a lib)',
                 'Transición con 1/2 giro hacia lib extendido',
-                'Transición con giro completo en nivel prep hacia posición corporal en nivel prep',
+                'Transición con giro completo en nivel prep hacia posición del cuerpo en nivel prep',
               ],
             },
             {
@@ -562,29 +562,29 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
           columns: [
             {
               header: 'ESTILO INVERSIÓN',
-              items: ['Inversión desde nivel de suelo hacia posición corporal extendido'],
+              items: ['Inversión desde nivel de suelo hacia posición del cuerpo extendido'],
             },
             {
               header: 'ESTILO SUELTO',
               items: [
-                'Soltar desde nivel de suelo (switch up) hacia posición corporal en nivel prep',
-                'Soltar desde nivel de cintura (agrupado, posición X, etc.) hacia posición corporal en nivel prep',
+                'Soltar desde nivel de suelo (switch up) hacia posición del cuerpo en nivel prep',
+                'Soltar desde nivel de cintura (agrupado, posición X, etc.) hacia posición del cuerpo en nivel prep',
               ],
             },
             {
               header: 'GIRO',
               items: [
-                'Transición con giro completo en nivel prep (posición corporal a posición corporal)',
+                'Transición con giro completo en nivel prep (posición del cuerpo a posición del cuerpo)',
                 'Transición con giro completo hacia extensión',
-                'Transición con 1/2 giro hacia posición corporal extendido',
+                'Transición con 1/2 giro hacia posición del cuerpo extendido',
               ],
             },
             {
               header: 'COMBINACIÓN / OTRAS HABILIDADES',
               items: [
-                'Tic toc con giro completo en nivel prep (lib a posición corporal)',
+                'Tic toc con giro completo en nivel prep (lib a posición del cuerpo)',
                 'Inversión con giro completo desde nivel prep o inferior hacia 1 pierna en nivel prep',
-                'Inversión con 1/2 giro desde nivel de suelo hacia posición corporal extendido',
+                'Inversión con 1/2 giro desde nivel de suelo hacia posición del cuerpo extendido',
                 'Volteo adelante suspendido con giro completo',
               ],
             },
@@ -729,22 +729,22 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
               header: 'ESTILO SUELTO',
               items: [
                 'Soltar desde nivel de cintura hacia lib extendido',
-                'Tic toc desde nivel extendido hacia nivel prep o inferior (posición corporal a lib)',
-                'Soltar desde nivel de suelo (switch up) hacia posición corporal extendida',
+                'Tic toc desde nivel extendido hacia nivel prep o inferior (posición del cuerpo a lib)',
+                'Soltar desde nivel de suelo (switch up) hacia posición del cuerpo extendida',
               ],
             },
             {
               header: 'GIRO',
               items: [
                 'Transición con 1½ giro hacia / en nivel prep a lib',
-                'Transición con 1½ giro en nivel prep (lib a posición corporal)',
+                'Transición con 1½ giro en nivel prep (lib a posición del cuerpo)',
                 'Transición con giro completo hacia extensión',
               ],
             },
             {
               header: 'COMBINACIÓN / OTRAS HABILIDADES',
               items: [
-                'Con giro completo desde nivel de cintura (tic toc, agrupado o posición X) hacia lib en nivel prep',
+                'Soltar con giro completo desde nivel de cintura (tic toc, agrupado o posición X) hacia lib en nivel prep',
                 'Soltar con giro completo desde nivel de suelo (switch up) hacia lib en nivel prep',
                 'Soltar con giro completo en nivel prep (1 pierna a lib)',
                 'Soltar con 1½ giro desde nivel de suelo (switch up) hacia lib en nivel prep',
@@ -779,16 +779,16 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             {
               header: 'ESTILO SUELTO',
               items: [
-                'Soltar desde nivel de cintura hacia posición corporal extendida',
-                'Tic toc desde nivel extendido hacia nivel prep o inferior (posición corporal a posición corporal)',
-                'Soltar desde nivel prep hacia posición corporal extendida',
+                'Soltar desde nivel de cintura hacia posición del cuerpo extendida',
+                'Tic toc desde nivel extendido hacia nivel prep o inferior (posición del cuerpo a posición del cuerpo)',
+                'Soltar desde nivel prep hacia posición del cuerpo extendida',
               ],
             },
             {
               header: 'GIRO',
               items: [
-                'Transición con 1½ giro hacia / en nivel prep a posición corporal',
-                'Transición con 1½ giro en nivel prep (posición corporal a posición corporal)',
+                'Transición con 1½ giro hacia / en nivel prep a posición del cuerpo',
+                'Transición con 1½ giro en nivel prep (posición del cuerpo a posición del cuerpo)',
                 'Transición con 1½ giro hacia extensión',
                 'Transición con giro completo hacia 1 pierna extendida',
                 'Transición con giro completo en nivel extendido',
@@ -797,10 +797,10 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             {
               header: 'COMBINACIÓN / OTRAS HABILIDADES',
               items: [
-                'Soltar con giro completo desde nivel de cintura (tic toc, agrupado o posición X) hacia posición corporal en prep',
-                'Soltar con giro completo desde nivel de suelo (switch up) hacia posición corporal en nivel prep',
-                'Soltar con giro completo en nivel prep (1 pierna a posición corporal)',
-                'Soltar con 1½ giro desde nivel de suelo (switch up) hacia posición corporal en nivel prep',
+                'Soltar con giro completo desde nivel de cintura (tic toc, agrupado o posición X) hacia posición del cuerpo en prep',
+                'Soltar con giro completo desde nivel de suelo (switch up) hacia posición del cuerpo en nivel prep',
+                'Soltar con giro completo en nivel prep (1 pierna a posición del cuerpo)',
+                'Soltar con 1½ giro desde nivel de suelo (switch up) hacia posición del cuerpo en nivel prep',
                 'Soltar con 1½ giro desde nivel de cintura/prep (tic toc, agrupado o posición X) hacia lib en nivel prep',
                 'Inversión con giro completo hacia 1 pierna extendida',
               ],
@@ -841,7 +841,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             'SERIE DE FLIC FLACS – AGRUPADO',
             'MORTAL AGRUPADO',
             'CAMINO ATRÁS – AGRUPADO',
-            'ROL A INVERTIDA – AGRUPADO',
+            'ROLA INVERTIDA – AGRUPADO',
             'VALDEZ – AGRUPADO',
           ],
           elite: [
@@ -877,13 +877,15 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             'HAND VAULT – MORTAL ADELANTE A 1 PIERNA – RONDADA – A – AGRUPADO',
           ],
           elite: [
-            'HAND VAULT – MORTAL ADELANTE A 1 PIERNA – RONDADA – A – TEMPO / AGRUPADO – A – AGRUPADO',
+            'HAND VAULT – MORTAL ADELANTE A 1 PIERNA – RONDADA – A – TEMPO / AGRUPADO – AGRUPADO',
             'RONDADA – FLIC FLAC – EXTENDIDO / EXTENDIDO A 1 PIERNA / X-OUT / PATEO',
             'RONDADA – ONODI – A – EXTENDIDO',
             'CAMINO ADELANTE – RONDADA – A – EXTENDIDO',
-            'AERIAL ADELANTE – RONDADA – A – TEMPO – A – EXTENDIDO',
+            'MORTAL ADELANTE A 1 PIERNA – RONDADA – A – EXTENDIDO',
+            'AERIAL ADELANTE – RONDADA – A – TEMPO – EXTENDIDO',
             'MORTAL ADELANTE A 1 PIERNA – RONDADA – A – TEMPO / AGRUPADO – A – EXTENDIDO',
             'RONDADA – A – TEMPO / AGRUPADO – A – EXTENDIDO',
+            'CAMINO ADELANTE – RONDADA – A – TEMPO / AGRUPADO – A – EXTENDIDO',
             'HAND VAULT – MORTAL ADELANTE A 1 PIERNA – RONDADA – A – EXTENDIDO',
             'MORTAL ADELANTE A 1 PIERNA – RONDADA – A – EXTENDIDO / AGRUPADO – A – EXTENDIDO',
           ],
@@ -962,7 +964,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             },
             {
               header: 'ESTILO SUELTO',
-              items: ['Tic toc desde nivel prep hacia nivel extendido (lib a posición corporal)'],
+              items: ['Tic toc desde nivel prep hacia nivel extendido (lib a posición del cuerpo)'],
             },
             {
               header: 'GIRO',
@@ -976,7 +978,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
               header: 'COMBINACIÓN / OTRAS HABILIDADES',
               items: [
                 'Tic toc entre 1/4 y 3/4 de giro hacia lib extendido',
-                'Soltar con 1/2 giro desde nivel de suelo (switch up) hacia posición corporal extendido',
+                'Soltar con 1/2 giro desde nivel de suelo (switch up) hacia posición del cuerpo extendido',
                 'Soltar con 1/2 giro desde nivel de cintura (agrupado) hacia lib extendido',
                 'Soltar con giro completo desde nivel de suelo (switch up) hacia lib extendido',
               ],
@@ -1010,14 +1012,14 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             {
               header: 'ESTILO SUELTO',
               items: [
-                'Tic toc en nivel extendido (lib a posición corporal)',
-                'Tic toc en nivel extendido (posición corporal a posición corporal)',
+                'Tic toc en nivel extendido (lib a posición del cuerpo)',
+                'Tic toc en nivel extendido (posición del cuerpo a posición del cuerpo)',
               ],
             },
             {
               header: 'GIRO',
               items: [
-                'Transición con giro completo hacia posición corporal extendido',
+                'Transición con giro completo hacia posición del cuerpo extendido',
                 'Transición con 1½ giro hacia 1 pierna extendida',
                 'Transición con doble giro hacia / en extensión',
               ],
@@ -1025,9 +1027,9 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             {
               header: 'COMBINACIÓN / OTRAS HABILIDADES',
               items: [
-                'Tic toc entre 1/4 y 3/4 en nivel extendido (lib a posición corporal)',
-                'Soltar con 1/2 giro desde nivel de cintura (agrupado) hacia posición corporal extendido',
-                'Soltar con giro completo desde nivel de suelo (switch up) hacia posición corporal extendido',
+                'Tic toc entre 1/4 y 3/4 en nivel extendido (lib a posición del cuerpo)',
+                'Soltar con 1/2 giro desde nivel de cintura (agrupado) hacia posición del cuerpo extendido',
+                'Soltar con giro completo desde nivel de suelo (switch up) hacia posición del cuerpo extendido',
                 'Tic toc con giro completo hacia nivel extendido (1 pierna a lib)',
                 'Tic toc con giro completo en nivel extendido (1 pierna a lib)',
               ],
@@ -1044,7 +1046,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             },
             {
               header: 'DESMONTE',
-              items: ['Desmonte con doble giro desde posición corporal extendido hacia cuna'],
+              items: ['Desmonte con doble giro desde posición del cuerpo extendido hacia cuna'],
             },
           ],
         },
@@ -1134,38 +1136,46 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             {
               header: 'ESTILO INVERSIÓN',
               items: [
-                'Inversión suelta desde nivel prep o mano a mano hacia extensión',
-                'Subida de flic flac hacia extensión',
+                'Inversión descendente desde nivel extendido',
+                'Inversión descendente desde 1 pierna extendida',
+                'Inversión suelta desde nivel prep o superior hacia extensión',
+                'Inversión suelta desde nivel prep o superior hacia lib extendido',
                 'Rewind hacia nivel de cintura (N6)',
               ],
             },
             {
               header: 'ESTILO SUELTO',
-              items: ['Tic toc en nivel extendido (lib a lib)'],
+              items: [
+                'Tic toc en nivel extendido (lib a lib)',
+                'Tic toc desde nivel prep hacia nivel extendido (lib a lib)',
+                'Tic toc desde nivel prep hacia nivel extendido (lib a posición del cuerpo)',
+              ],
             },
             {
               header: 'GIRO',
               items: [
-                'Transición con giro completo hacia posición corporal extendido',
-                'Transición con 1¼ giro hacia lib extendido',
-                'Transición con 1½ giro hacia/en extensión',
+                'Transición con giro completo hacia posición del cuerpo extendido',
+                'Transición entre 1¼ y 1¾ de giro hacia extensión',
+                'Entre 1½ y 2 giros hacia prono',
+                'Movimientos sueltos de helicóptero con giro',
               ],
             },
             {
               header: 'COMBINACIÓN / OTRAS HABILIDADES',
               items: [
-                'Tic toc con giro completo en nivel extendido (1 pierna a lib)',
-                'Soltar con 1/2 giro desde nivel de suelo (switch up) hacia lib extendido',
-                'Entre 1½ y 2 giros hacia lib extendido',
+                'Tic toc entre 1/4 y 3/4 de giro hacia 1 pierna extendida',
+                'Soltar con 1/2 giro desde nivel de suelo (switch up) hacia 1 pierna extendida',
+                'Soltar con 1/2 giro desde nivel de cintura (agrupado) hacia 1 pierna extendida',
+                'Subida de flic flac entre 1/4 y 1/2 giro hacia elevación prep (N6)',
               ],
             },
             {
               header: 'ESTILO COED',
               items: [
                 'Asistido o No Asistido:',
-                'Toss hacia 1 pierna extendida',
-                'Toss hacia 1 brazo extendido',
                 'Walk in / toss hacia extensión',
+                'Walk in / toss a manos, impulso hacia 1 pierna extendida',
+                'Walk in hacia 1 pierna extendida',
               ],
             },
             {
@@ -1186,7 +1196,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             },
             {
               header: 'ESTILO SUELTO',
-              items: ['Tic toc en nivel extendido (lib a posición corporal)'],
+              items: ['Tic toc en nivel extendido (lib a posición del cuerpo)'],
             },
             {
               header: 'GIRO',
@@ -1202,7 +1212,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
               items: [
                 'Tic toc con giro completo hacia nivel extendido (1 pierna a lib)',
                 'Soltar con giro completo desde nivel de suelo (switch up) hacia lib extendido',
-                'Subida de flic flac con 1/4 de giro hacia posición corporal extendida (N6)',
+                'Subida de flic flac con 1/4 de giro hacia posición del cuerpo extendida (N6)',
                 'Inversión suelta entre 1/4 y 1/2 giro desde nivel prep hacia 1 pierna extendida (N6)',
                 'Soltar con 1½ giro desde nivel de suelo (switch up) hacia lib extendido',
               ],
@@ -1219,7 +1229,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             },
             {
               header: 'DESMONTE',
-              items: ['Desmonte con doble giro desde posición corporal extendido hacia cuna'],
+              items: ['Desmonte con doble giro desde posición del cuerpo extendido hacia cuna'],
             },
           ],
         },
@@ -1229,29 +1239,30 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             {
               header: 'ESTILO INVERSIÓN',
               items: [
-                'Inversión suelta desde mano a mano en nivel prep hacia posición corporal extendida (N6)',
-                'Rewind hacia extensión (N6)',
+                'Inversión suelta desde mano a mano en nivel prep hacia posición del cuerpo extendida',
+                'Inversión suelta desde mano a mano extendido hacia extensión',
+                'Rewind hacia elevación extendida (N6)',
               ],
             },
             {
               header: 'ESTILO SUELTO',
-              items: ['Tic toc en nivel extendido (posición corporal a lib)'],
+              items: ['Tic toc en nivel extendido (posición del cuerpo a posición del cuerpo)'],
             },
             {
               header: 'GIRO',
               items: [
-                'Transición con 1¾ giro hacia posición corporal extendido (N6)',
-                'Transición con 2¼ giros hacia posición corporal extendido (N6)',
-                'Transición con doble giro hacia posición corporal extendido',
+                'Transición con 1½ giro hacia/en nivel extendido a posición del cuerpo',
+                'Transición con 1¾ giro hacia/en nivel extendido a posición del cuerpo (N6)',
+                'Transición con doble giro hacia/en nivel extendido a 1 pierna (N6)',
               ],
             },
             {
               header: 'COMBINACIÓN / OTRAS HABILIDADES',
               items: [
-                'Tic toc con giro completo hacia nivel extendido (1 pierna a posición corporal) (N6)',
-                'Soltar con giro completo desde nivel de suelo (switch up) hacia posición corporal extendido',
-                'Soltar con 1½ giro desde nivel de suelo (switch up) hacia posición corporal extendido (N6)',
-                'Inversión suelta entre 1/4 y 1/2 giro desde nivel prep hacia posición corporal extendida (N6)',
+                'Tic toc con giro completo hacia nivel extendido (1 pierna a posición del cuerpo) (N6)',
+                'Soltar con giro completo desde nivel de suelo (switch up) hacia posición del cuerpo extendido',
+                'Soltar con 1½ giro desde nivel de suelo (switch up) hacia posición del cuerpo extendido (N6)',
+                'Inversión suelta entre 1/4 y 1/2 giro desde nivel prep hacia posición del cuerpo extendida (N6)',
               ],
             },
             {
@@ -1383,9 +1394,9 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
           title: 'HABILIDADES DEL NIVEL',
           columns: [
             {
-              header: 'ESTILO RELEASE',
+              header: 'ESTILO SUELTO',
               items: [
-                'Estilo Release desde nivel del suelo (switch up) hacia lib debajo del nivel prep',
+                'Estilo suelto desde nivel del suelo (switch up) hacia lib debajo del nivel prep',
                 'Tic toc debajo del nivel prep (lib a lib)',
               ],
             },
@@ -1426,17 +1437,17 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
           title: `HABILIDADES RESTRINGIDAS (−${NOVICE_ILLEGAL_SKILL_PENALTY} por habilidad diferente)`,
           columns: [
             {
-              header: 'ESTILO RELEASE',
+              header: 'ESTILO SUELTO',
               items: [
-                'Estilo Release desde nivel del suelo (switch up) hacia posición corporal debajo del nivel prep',
-                'Tic Tic toc debajo del nivel prep (lib a posición corporal)',
-                'Tic toc en nivel prep (lib a posición corporal) con un conector hacia lib en nivel prep con conector',
-                'Estilo Release desde nivel de cintura hacia lib en nivel prep con conector',
-                'Estilo Release desde nivel de suelo (switch up) hacia lib en nivel prep con conector',
-                'Estilo Release desde nivel de suelo (switch up) hacia posición corporal en nivel prep con conector',
-                'Tic Tic toc debajo del nivel prep (posición corporal a posición corporal)',
-                'Tic toc en nivel prep (posición corporal a posición corporal) con conector',
-                'Estilo Release desde nivel de cintura hacia posición corporal en nivel prep con conector',
+                'Estilo suelto desde nivel del suelo (switch up) hacia posición del cuerpo debajo del nivel prep',
+                'Tic Tic toc debajo del nivel prep (lib a posición del cuerpo)',
+                'Tic toc en nivel prep (lib a posición del cuerpo) con un conector hacia lib en nivel prep con conector',
+                'Estilo suelto desde nivel de cintura hacia lib en nivel prep con conector',
+                'Estilo suelto desde nivel de suelo (switch up) hacia lib en nivel prep con conector',
+                'Estilo suelto desde nivel de suelo (switch up) hacia posición del cuerpo en nivel prep con conector',
+                'Tic Tic toc debajo del nivel prep (posición del cuerpo a posición del cuerpo)',
+                'Tic toc en nivel prep (posición del cuerpo a posición del cuerpo) con conector',
+                'Estilo suelto desde nivel de cintura hacia posición del cuerpo en nivel prep con conector',
               ],
             },
             {
@@ -1445,19 +1456,19 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
                 'Transición con 1/4 de giro desde nivel prep hacia nivel prep',
                 'Transición con 1/4 desde nivel inferior a prep hacia lib en nivel prep con conector',
                 'Transición con 1/4 desde nivel inferior a prep hacia elevación prep',
-                'Transición con 1/4 desde nivel inferior a prep hacia posición corporal en nivel prep con conector',
+                'Transición con 1/4 desde nivel inferior a prep hacia posición del cuerpo en nivel prep con conector',
               ],
             },
             {
               header: 'COMBINACIÓN / OTRAS HABILIDADES',
               items: [
                 'Tic toc con 1/4 de giro en nivel prep (lib a lib) con conector',
-                'Tic toc con 1/4 de giro debajo del nivel prep (lib a posición corporal)',
-                'Transición desde nivel inferior a prep hacia posición corporal en nivel prep con conector',
-                'Tic toc con 1/4 de giro en nivel prep (posición corporal a posición corporal) con conector',
-                'Estilo Release con 1/4 de giro desde nivel del suelo (switch up) hacia lib en nivel prep con conector',
-                'Estilo Release con 1/4 de giro desde nivel de cintura hacia lib en nivel prep con conector',
-                'Tic toc con 1/4 de giro debajo del nivel prep (posición corporal a posición corporal)',
+                'Tic toc con 1/4 de giro debajo del nivel prep (lib a posición del cuerpo)',
+                'Transición desde nivel inferior a prep hacia posición del cuerpo en nivel prep con conector',
+                'Tic toc con 1/4 de giro en nivel prep (posición del cuerpo a posición del cuerpo) con conector',
+                'Estilo suelto con 1/4 de giro desde nivel del suelo (switch up) hacia lib en nivel prep con conector',
+                'Estilo suelto con 1/4 de giro desde nivel de cintura hacia lib en nivel prep con conector',
+                'Tic toc con 1/4 de giro debajo del nivel prep (posición del cuerpo a posición del cuerpo)',
               ],
             },
             {
@@ -1534,7 +1545,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
                 'Mortal libre desde nivel de suelo hacia extensión (N7) (excluyendo rewind)',
                 'Inversión suelta desde nivel prep o superior hacia extensión',
                 'Inversión suelta desde nivel prep o superior hacia lib extendido',
-                'Rewind con 1¾ rotación de mortal (N7)',
+                'Rewind con 1¼ rotación de mortal (N7)',
                 'Rewind hacia elevación prep',
               ],
             },
@@ -1542,21 +1553,22 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
               header: 'ESTILO SUELTO',
               items: [
                 'Tic toc en nivel extendido (lib a lib)',
-                'Tic toc a nivel extendido (1 pierna a posición corporal)',
+                'Tic toc hacia nivel extendido (lib a lib)',
+                'Tic toc hacia nivel extendido (1 pierna a posición del cuerpo)',
               ],
             },
             {
               header: 'GIRO',
               items: [
                 'Transición entre 1¼ y 1¾ de giro hacia extensión',
+                'Entre 1½ y 2 giros hacia prono',
                 'Transición con doble giro hacia extensión',
               ],
             },
             {
               header: 'COMBINACIÓN / OTRAS HABILIDADES',
               items: [
-                'Entre 1½ y 2 giros hacia prono',
-                'Movimientos de inversiones sueltas de prep/prep con giro',
+                'Movimientos sueltos de helicóptero con giro',
                 'Subida de hand vault con 1/2 giro hacia extensión',
                 'Tic toc entre 1/4 y 3/4 de giro hacia 1 pierna extendida',
                 'Soltar con 1/2 giro desde nivel de suelo (switch up) hacia 1 pierna extendida',
@@ -1597,7 +1609,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             },
             {
               header: 'ESTILO SUELTO',
-              items: ['Tic toc en nivel extendido (lib a posición corporal)'],
+              items: ['Tic toc en nivel extendido (lib a posición del cuerpo)'],
             },
             {
               header: 'GIRO',
@@ -1613,10 +1625,10 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
               items: [
                 'Tic toc con giro completo hacia nivel extendido (1 pierna a lib)',
                 'Soltar con giro completo desde nivel de suelo (switch up) hacia lib extendido',
-                'Subida de flic flac con 1/4 de giro hacia posición corporal extendida',
+                'Subida de flic flac con 1/4 de giro hacia posición del cuerpo extendida',
                 'Inversión suelta entre 1/4 y 1/2 giro desde nivel prep o superior hacia 1 pierna extendida',
                 'Soltar con 1½ giro desde nivel de suelo (switch up) hacia 1 pierna extendida',
-                'Mortal libre con giro desde nivel de suelo hacia elevación en prep (N7)',
+                'Mortal libre con giro desde nivel de suelo hacia elevación extendida (N7)',
                 'Rewind entre 1/4 y 1¼ de giro hacia nivel prep (N7)',
                 'Subida de flic flac con giro completo hacia nivel prep (N7)',
               ],
@@ -1644,7 +1656,7 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             {
               header: 'ESTILO INVERSIÓN',
               items: [
-                'Soltar desde mano a mano en nivel prep hacia posición corporal extendida',
+                'Soltar desde mano a mano en nivel prep hacia posición del cuerpo extendida',
                 'Inversión suelta desde mano a mano extendido hacia extensión',
                 'Rewind hacia 1 pierna extendida',
                 'Flic flac – rewind hacia elevación extendida (N7)',
@@ -1654,13 +1666,13 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
             },
             {
               header: 'ESTILO SUELTO',
-              items: ['Tic toc en nivel extendido (posición corporal a posición corporal)'],
+              items: ['Tic toc en nivel extendido (posición del cuerpo a posición del cuerpo)'],
             },
             {
               header: 'GIRO',
               items: [
-                'Transición con 1½ giro hacia/en nivel extendido a posición corporal',
-                'Transición con 1¾ de giro hacia/en nivel extendido a posición corporal',
+                'Transición con 1½ giro hacia/en nivel extendido a posición del cuerpo',
+                'Transición con 1¾ de giro hacia/en nivel extendido a posición del cuerpo',
                 'Transición con doble giro hacia/en nivel extendido a 1 pierna',
               ],
             },
@@ -1669,13 +1681,13 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
               items: [
                 'Tic toc con giro completo en nivel extendido (1 pierna a lib)',
                 'Subida de flic flac con giro completo hacia elevación extendida (N7)',
-                'Inversión suelta con 1/2 giro desde nivel prep o superior hacia posición corporal extendida',
-                'Soltar con 1½ giro hacia elevación extendida (N7)',
-                'Soltar entre 1 y 1½ giro desde nivel de suelo (switch up) hacia posición corporal',
-                'Tic toc entre 1/4 y 3/4 de giro en nivel extendido (posición corporal a posición corporal)',
-                'Tic toc con giro completo desde nivel de cintura (agrupado) hacia posición corporal extendida',
-                'Tic toc con giro completo hacia nivel extendido (1 pierna a posición corporal)',
-                'Mortal libre con giro desde nivel de suelo hacia elevación en prep (N7)',
+                'Inversión suelta con 1/2 giro desde nivel prep o superior hacia posición del cuerpo extendida',
+                'Subida de hand vault con 1½ giro hacia elevación extendida stunt (N7)',
+                'Soltar entre 1 y 1½ giro desde nivel de suelo (switch up) hacia posición del cuerpo extendida',
+                'Tic toc entre 1/4 y 3/4 de giro en nivel extendido (posición del cuerpo a posición del cuerpo)',
+                'Soltar con giro completo desde nivel de cintura (agrupado) hacia posición del cuerpo extendida',
+                'Tic toc con giro completo hacia nivel extendido (1 pierna a posición del cuerpo)',
+                'Mortal libre con giro desde nivel de suelo hacia elevación extendida (N7)',
                 'Rewind entre 1/4 y 1¼ giro hacia elevación extendida (N7)',
               ],
             },
@@ -1686,8 +1698,8 @@ const SKILL_TABLES: Record<string, LevelSkillTables> = {
                 'No Asistido:',
                 'Rewind hacia elevación extendida',
                 'Subida de hand vault con 1/2 giro hacia elevación extendida',
-                'Subida de flic flac con giro completo hacia elevación extendida',
-                'Inversión suelta desde mano a mano extendido hacia extensión',
+                'Subida de flic flac con giro completo hacia elevación extendida (N7)',
+                'Inversión suelta desde mano a mano extendido hacia elevación extendida',
               ],
             },
             {
