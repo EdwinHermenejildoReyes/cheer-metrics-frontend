@@ -60,7 +60,7 @@ const CATEGORIES: {
     bands: [
       { label: 'Le cuesta mucho mostrar', range: '0 – 7',   min: 0,  max: 7,  color: 'red' },
       { label: 'Le cuesta mostrar',       range: '7 – 15',  min: 7,  max: 15, color: 'amber' },
-      { label: 'No le cuesta mostrar',    range: '15 – 20', min: 15, max: 20, color: 'emerald' },
+      { label: 'No le cuesta mostrar',    range: '8 – 20',  min: 8,  max: 20, color: 'emerald' },
     ],
   },
   {
@@ -78,11 +78,9 @@ const CATEGORIES: {
     key: 'pg_expressiveness',
     label: 'Expresividad / Showmanship',
     max: 10,
-    description: 'Energía, coreografía adaptada a la música, expresiones faciales',
+    description: 'Nivel de entusiasmo, coreografía adaptada al ritmo musical, elementos creativos/visuales, expresiones faciales y energía',
     bands: [
-      { label: 'Reducido',  range: '0 – 4',  min: 0, max: 4,  color: 'red' },
-      { label: 'Moderado',  range: '4 – 7',  min: 4, max: 7,  color: 'amber' },
-      { label: 'Elevado',   range: '7 – 10', min: 7, max: 10, color: 'emerald' },
+      { label: '0 – 10 puntos (escala libre)',  range: '0 – 10',  min: 0, max: 10, color: 'emerald' },
     ],
   },
 ];
