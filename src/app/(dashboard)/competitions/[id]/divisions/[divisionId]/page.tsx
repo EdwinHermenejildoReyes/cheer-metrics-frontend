@@ -1195,7 +1195,9 @@ export default function DivisionDetailPage() {
         // Show section if allowed AND (has data OR is the only allowed section)
         const hasBuildingDetail = allowsBuilding && (hasBuildingData || (allowedSheets?.length === 1 && allowedSheets[0] === 'building'));
         const hasTumblingDetail = allowsTumbling && (hasTumblingData || (allowedSheets?.length === 1 && allowedSheets[0] === 'tumbling'));
-        const hasOverallDetail  = allowsOverall  && (hasOverallData  || (allowedSheets?.length === 1 && allowedSheets[0] === 'overall'));
+        // Suppress Overall detail when Best Cheer data is present — formations_score is irrelevant
+        // to BEST_CHEER scoring and would show a misleading "General" section.
+        const hasOverallDetail  = !hasBestCheer && allowsOverall  && (hasOverallData  || (allowedSheets?.length === 1 && allowedSheets[0] === 'overall'));
         const hasPyrDrivers   = ranked.some(({ sheet }) => f(sheet.pyramids_drivers)  > 0);
         const hasStandDrivers = ranked.some(({ sheet }) => f(sheet.standing_drivers)  > 0);
         const hasRunDrivers   = ranked.some(({ sheet }) => f(sheet.running_drivers)   > 0);
