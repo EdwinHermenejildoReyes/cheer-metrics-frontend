@@ -43,6 +43,11 @@ export function BuildingSkillTable({ data }: Props) {
                   className="bg-zinc-600 text-white text-center text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 border border-zinc-500"
                 >
                   {section.title}
+                  {['N1 – N3', 'N4 – N5', 'N6 – N7'][si] && (
+                    <span className="ml-2 font-normal normal-case opacity-70">
+                      ({['N1 – N3', 'N4 – N5', 'N6 – N7'][si]})
+                    </span>
+                  )}
                 </td>
               </tr>
               <tr key={`${section.title}-content`} className={si % 2 === 0 ? 'bg-white' : 'bg-zinc-50'}>

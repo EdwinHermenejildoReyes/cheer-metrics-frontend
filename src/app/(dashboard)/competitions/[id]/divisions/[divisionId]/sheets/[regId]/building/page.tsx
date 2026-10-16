@@ -18,6 +18,7 @@ import type { BuildingConfig } from '@/lib/scoringConfig';
 import type { Division, DivisionCategory, JudgeScoreRecord, Registration, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
+import { getSkillTables } from '@/lib/skillTables';
 import type { BuildingPrintData } from '@/components/print/BuildingSheetPrintView';
 import { InfoButton } from '@/components/ui/InfoButton';
 
@@ -306,9 +307,29 @@ export default function BuildingSheetPage() {
   const activeStuntsRango =
     (category && bCfg.stuntsRangoByCategory?.[category]) ?? bCfg.stuntsRango;
 
+  // Derive skill-slot labels from the FECU 2026 building column types for this level.
+  // L1: Suelto/Giro/Combinación/Desmonte (4). L2: +Inversión = 5. L3-7: +Estilo Coed = 6.
+  // Non-coed: omit ESTILO COED. Coed: omit DESMONTE (replaced by ESTILO COED at slot 4).
+  const _buildingSkillTables = getSkillTables(division?.skill_level);
+  const _rawBuildingCols = _buildingSkillTables?.building?.sections[0]?.columns?.map(c => c.header) ?? [];
+  const _filteredBuildingCols = isCoed
+    ? _rawBuildingCols.filter(h => h !== 'DESMONTE')
+    : _rawBuildingCols.filter(h => h !== 'ESTILO COED');
+  const SKILL_COL_SHORT: Record<string, string> = {
+    'ESTILO INVERSIÓN':              'Inversión',
+    'ESTILO SUELTO':                 'Estilo Suelto',
+    'GIRO':                          'Giro',
+    'COMBINACIÓN / OTRAS HABILIDADES': 'Combinación / Otras',
+    'ESTILO COED':                   'Estilo Coed',
+    'DESMONTE':                      'Desmonte',
+  };
   const stuntSkillLabels = Array.from(
     { length: bCfg.stuntsSkillCount },
-    (_, i) => i === 4 && isCoed ? 'Habilidad #5 / Coed' : `Habilidad #${i + 1}`
+    (_, i) => {
+      const col = _filteredBuildingCols[i];
+      if (col) return SKILL_COL_SHORT[col] ?? col;
+      return i === 4 && isCoed ? 'Habilidad #5 / Coed' : `Habilidad #${i + 1}`;
+    }
   );
 
   // Derive how many skill slots are active from the selected rango option's skillCount.
