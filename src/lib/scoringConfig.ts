@@ -89,74 +89,105 @@ export const DOM_SHOWMANSHIP_MAX  = INTL_SHOWMANSHIP_MAX;
 
 // ── Shared option sets ────────────────────────────────────────────────────────
 
+// ── FECU 2026 Elite Nacional (All Star Elite Internacional-FECU-2026.pdf) ─────
+// Stunt difficulty base range: 8.5 – 11.0 (all categories)
+const ELITE_STUNT_BASE_NO_CUMPLE     = 8.5;
+const ELITE_STUNT_BASE_4_HAB         = 9.0;
+const ELITE_STUNT_BASE_2_SIM         = 9.5;
+const ELITE_STUNT_BASE_3_SIM         = 10.0;
+const ELITE_STUNT_BASE_4_SIM         = 10.5;
+const ELITE_STUNT_BASE_5_SIM         = 11.0;
+
 const ELITE_STUNT_RANGO: RangoOpt[] = [
-  { value: 3.5, label: 'No cumple con 4.0',     skillCount: 0 },
-  { value: 4.0, label: '4 Acumulativas',         skillCount: 4 },
-  { value: 4.5, label: '2 Habilidades Diferentes', skillCount: 2 },
-  { value: 5.0, label: '3 Habilidades Diferentes', skillCount: 3 },
-  { value: 5.5, label: '4 Habilidades Diferentes', skillCount: 4 },
-  { value: 6.0, label: '5 Habilidades Diferentes', skillCount: 5 },
+  { value: ELITE_STUNT_BASE_NO_CUMPLE, label: 'No cumple con 9.0',                    skillCount: 0 },
+  { value: ELITE_STUNT_BASE_4_HAB,     label: '4 Hab Dif por Gran Parte',             skillCount: 4 },
+  { value: ELITE_STUNT_BASE_2_SIM,     label: '2 Hab Dif Simultáneas por Gran Parte', skillCount: 2 },
+  { value: ELITE_STUNT_BASE_3_SIM,     label: '3 Hab Dif Simultáneas por Gran Parte', skillCount: 3 },
+  { value: ELITE_STUNT_BASE_4_SIM,     label: '4 Hab Dif Simultáneas por Gran Parte', skillCount: 4 },
+  { value: ELITE_STUNT_BASE_5_SIM,     label: '5 Hab Dif Simultáneas por Gran Parte', skillCount: 5 },
 ];
 
-// All Girl: el 6.0 requiere además al menos 1 habilidad de ≥Nivel 3
-const ELITE_STUNT_RANGO_ALL_GIRL: RangoOpt[] = [
-  { value: 3.5, label: 'No cumple con 4.0',       skillCount: 0 },
-  { value: 4.0, label: '4 Acumulativas',           skillCount: 4 },
-  { value: 4.5, label: '2 Habilidades Diferentes', skillCount: 2 },
-  { value: 5.0, label: '3 Habilidades Diferentes', skillCount: 3 },
-  { value: 5.5, label: '4 Habilidades Diferentes', skillCount: 4 },
-  { value: 6.0, label: '5 Hab Dif / 1 Hab ≥Niv 3', skillCount: 5 },
-];
+// All Girl: sin restricción adicional en la fila superior (alineado con sistema Internacional 2026)
+const ELITE_STUNT_RANGO_ALL_GIRL: RangoOpt[] = ELITE_STUNT_RANGO;
 
-// All Male: tabla general, sin requisito adicional en 6.0
+// All Male: tabla general
 const ELITE_STUNT_RANGO_ALL_MALE: RangoOpt[] = ELITE_STUNT_RANGO;
 
-// Coed: el 6.0 requiere además al menos 1 habilidad Coed simultánea
+// Coed: la fila superior (11.0) requiere además al menos 1 elevación estilo Coed
 const ELITE_STUNT_RANGO_COED: RangoOpt[] = [
-  { value: 3.5, label: 'No cumple con 4.0',       skillCount: 0 },
-  { value: 4.0, label: '4 Acumulativas',           skillCount: 4 },
-  { value: 4.5, label: '2 Habilidades Diferentes', skillCount: 2 },
-  { value: 5.0, label: '3 Habilidades Diferentes', skillCount: 3 },
-  { value: 5.5, label: '4 Habilidades Diferentes', skillCount: 4 },
-  { value: 6.0, label: '5 Hab Dif / 1 Hab Coed',  skillCount: 5 },
+  { value: ELITE_STUNT_BASE_NO_CUMPLE, label: 'No cumple con 9.0',                         skillCount: 0 },
+  { value: ELITE_STUNT_BASE_4_HAB,     label: '4 Hab Dif por Gran Parte',                  skillCount: 4 },
+  { value: ELITE_STUNT_BASE_2_SIM,     label: '2 Hab Dif Simultáneas por Gran Parte',      skillCount: 2 },
+  { value: ELITE_STUNT_BASE_3_SIM,     label: '3 Hab Dif Simultáneas por Gran Parte',      skillCount: 3 },
+  { value: ELITE_STUNT_BASE_4_SIM,     label: '4 Hab Dif Simultáneas por Gran Parte',      skillCount: 4 },
+  { value: ELITE_STUNT_BASE_5_SIM,     label: '4 Hab Dif + 1 Estilo Coed por Gran Parte',  skillCount: 5 },
 ];
 
-// Non-Tumbling: tabla general, sin requisito adicional en 6.0
+// Non-Tumbling: tabla general
 const ELITE_STUNT_RANGO_NON_TUMBLING: RangoOpt[] = ELITE_STUNT_RANGO;
 
+// Skill grade per-habilidad (Grado de Dificultad en Elevación): 0.3 Avanzada / 0.5 Élite
+const ELITE_SKILL_GRADE_NO_CUMPLE = 0.00;
+const ELITE_SKILL_GRADE_AVANZADA  = 0.30;
+const ELITE_SKILL_GRADE_ELITE     = 0.50;
+
 const ELITE_SKILL_GRADES: RangoOpt[] = [
-  { value: 0.00, label: 'No Cumple' },
-  { value: 0.10, label: 'Avanzado' },
-  { value: 0.20, label: 'Elite' },
+  { value: ELITE_SKILL_GRADE_NO_CUMPLE, label: 'No Cumple' },
+  { value: ELITE_SKILL_GRADE_AVANZADA,  label: 'Avanzada' },
+  { value: ELITE_SKILL_GRADE_ELITE,     label: 'Élite' },
 ];
+
+// Participación Máxima en Elevación (0 – 1.5)
+const ELITE_PART_MAX_NO_CUMPLE     = 0.0;
+const ELITE_PART_MAX_NIV_MAX       = 0.5;   // Hab Nivel × MÁX ó Avanzada × Gran Parte
+const ELITE_PART_MAX_AVZ_MAX       = 1.0;   // Avanzada × MÁX ó Élite × Gran Parte
+const ELITE_PART_MAX_ELITE_MAX     = 1.5;   // Élite × MÁX
 
 const ELITE_PART_MAX: RangoOpt[] = [
-  { value: 0.0, label: 'No Cumple' },
-  { value: 0.1, label: 'Nivel x MÁX · Avz x GRAN PARTE' },
-  { value: 0.3, label: 'Avz x MÁX · Elite x GRAN PARTE' },
-  { value: 0.5, label: 'Elite x MÁX' },
+  { value: ELITE_PART_MAX_NO_CUMPLE, label: 'No Cumple' },
+  { value: ELITE_PART_MAX_NIV_MAX,   label: 'Nivel × MÁX ó Avz × GRAN PARTE' },
+  { value: ELITE_PART_MAX_AVZ_MAX,   label: 'Avz × MÁX ó Élite × GRAN PARTE' },
+  { value: ELITE_PART_MAX_ELITE_MAX, label: 'Élite × MÁX' },
 ];
+
+// Pyramid difficulty base range: 10.0 – 15.0
+const ELITE_PYRAMID_BASE_INFERIOR  = 10.0;
+const ELITE_PYRAMID_BASE_BAJO      = 11.0;
+const ELITE_PYRAMID_BASE_MEDIO     = 12.0;
+const ELITE_PYRAMID_BASE_ALTO      = 13.0;
+const ELITE_PYRAMID_BASE_MAX       = 14.0;
+const ELITE_PYRAMID_BASE_TOP       = 15.0;
 
 const ELITE_PYRAMID_RANGO: PyramidRangoOpt[] = [
-  { low: 3.0, high: 3.5, label: 'No cumple con 3.5' },
-  { low: 3.5, high: 4.0, label: '2 Hab Dif + 2 Estructuras' },
-  { low: 4.0, high: 4.5, label: '3 Hab Dif + 2 Estructuras' },
-  { low: 4.5, high: 5.0, label: '4 Hab Dif + 2 Estructuras' },
-  { low: 5.0, high: 5.5, label: '5 Hab Dif + 2 Estructuras' },
+  { low: ELITE_PYRAMID_BASE_INFERIOR, high: ELITE_PYRAMID_BASE_BAJO,  label: 'No cumple con 11.0' },
+  { low: ELITE_PYRAMID_BASE_BAJO,     high: ELITE_PYRAMID_BASE_MEDIO, label: '2 Hab Dif + 2 Estructuras' },
+  { low: ELITE_PYRAMID_BASE_MEDIO,    high: ELITE_PYRAMID_BASE_ALTO,  label: '3 Hab Dif + 2 Estructuras por Gran Parte' },
+  { low: ELITE_PYRAMID_BASE_ALTO,     high: ELITE_PYRAMID_BASE_MAX,   label: '4 Hab Dif + 2 Estructuras por Gran Parte' },
+  { low: ELITE_PYRAMID_BASE_MAX,      high: ELITE_PYRAMID_BASE_TOP,   label: '5 Hab Dif + 2 Estructuras por Gran Parte' },
 ];
+
+// Toss difficulty (0 = no toss; 1.0/1.5/2.0 per International-FECU-2026.pdf)
+const ELITE_TOSS_NO_REALIZA       = 0.0;
+const ELITE_TOSS_MENOS_MAYORIA    = 1.0;
+const ELITE_TOSS_MAYORIA          = 1.5;
+const ELITE_TOSS_MAYORIA_SINC     = 2.0;
 
 const ELITE_TOSS_DIFF: RangoOpt[] = [
-  { value: 0.0, label: 'No Realiza' },
-  { value: 1.0, label: 'Menos de la MAYORÍA' },
-  { value: 1.5, label: 'MAYORÍA del Nivel' },
-  { value: 2.0, label: 'MAYORÍA Sincronizado o en Canon' },
+  { value: ELITE_TOSS_NO_REALIZA,    label: 'No Realiza' },
+  { value: ELITE_TOSS_MENOS_MAYORIA, label: 'Menos de la MAYORÍA' },
+  { value: ELITE_TOSS_MAYORIA,       label: 'MAYORÍA del Nivel' },
+  { value: ELITE_TOSS_MAYORIA_SINC,  label: 'MAYORÍA del Nivel en Canon o Sincronizado (misma sección)' },
 ];
 
+// Tumbling/Gimnasia difficulty range: 0.5 – 1.5 (per International-FECU-2026.pdf)
+const ELITE_TUMBLING_BASE_NO_CUMPLE = 0.5;
+const ELITE_TUMBLING_BASE_MAYORIA   = 1.0;
+const ELITE_TUMBLING_BASE_GRAN_PARTE = 1.5;
+
 const ELITE_TUMBLING_RANGO: RangoOpt[] = [
-  { value: 0.5, label: 'No cumple con 1.0' },
-  { value: 1.0, label: 'Menos de la MAYORÍA: 1 pase del nivel' },
-  { value: 1.5, label: 'MAYORÍA: 1 pase del nivel' },
-  { value: 2.0, label: 'GRAN PARTE: 1 pase del nivel' },
+  { value: ELITE_TUMBLING_BASE_NO_CUMPLE,  label: 'No cumple con 1.0' },
+  { value: ELITE_TUMBLING_BASE_MAYORIA,    label: 'MAYORÍA: 1 pase del nivel' },
+  { value: ELITE_TUMBLING_BASE_GRAN_PARTE, label: 'GRAN PARTE: 1 pase del nivel' },
 ];
 
 const ELITE_HABILIDAD: RangoOpt[] = [
@@ -165,11 +196,17 @@ const ELITE_HABILIDAD: RangoOpt[] = [
   { value: 0.5, label: 'Elite x Gran Parte' },
 ];
 
+// Jumps difficulty: 0.5 – 2.0 (International-FECU-2026.pdf p.5)
+const ELITE_JUMPS_NO_CUMPLE  = 0.5;
+const ELITE_JUMPS_GRAN_PARTE = 1.0;  // GRAN PARTE: 1 Salto Avanzado
+const ELITE_JUMPS_2_CONEC    = 1.5;  // GRAN PARTE: 2 conectados + variedad
+const ELITE_JUMPS_MAX        = 2.0;  // MÁX: 3 conectados ó 2+1
+
 const ELITE_JUMPS: RangoOpt[] = [
-  { value: 0.5, label: 'No cumple con 1.0' },
-  { value: 1.0, label: 'MAYORÍA: 1 Salto Avanzado' },
-  { value: 1.5, label: 'GRAN PARTE: 2 Conectados + Variedad' },
-  { value: 2.0, label: 'GRAN PARTE: 3 Conectados ó 2+1 (variedad)' },
+  { value: ELITE_JUMPS_NO_CUMPLE,  label: 'No cumple con 1.0' },
+  { value: ELITE_JUMPS_GRAN_PARTE, label: 'GRAN PARTE: 1 Salto Avanzado' },
+  { value: ELITE_JUMPS_2_CONEC,    label: 'GRAN PARTE: 2 Conectados + Variedad' },
+  { value: ELITE_JUMPS_MAX,        label: 'MÁX: 3 Conectados ó 2+1 (variedad)' },
 ];
 
 const PYRAMID_FINE_STEPS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
@@ -354,6 +391,32 @@ const INTL_JUMPS: RangoOpt[] = [
 // INTL/Prep pyramid bands are 1.0 wide (e.g. 14.0–15.0), so fine steps must reach 1.0
 const INTL_PYRAMID_FINE_STEPS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
 
+// ── Execution deduction amounts ───────────────────────────────────────────────
+// FECU 2026 (International-FECU-2026.pdf p.6, applies to Elite Nacional too):
+// - Stunts/Pyramids exec (max 15.0): −0.1 Mínimos / −0.3 Menores / −0.5 Múltiples / −0.7 Generalizados
+// - Tosses/Tumbling/Jumps exec (max 2.0): −0.1 / −0.2 / −0.3 / −0.4
+const INTL_BUILDING_EXEC_DED_MINIMOS     = 0.10;
+const INTL_BUILDING_EXEC_DED_MENORES     = 0.30;
+const INTL_BUILDING_EXEC_DED_MULTIPLES   = 0.50;
+const INTL_BUILDING_EXEC_DED_GENERALIZADOS = 0.70;
+const INTL_SMALL_EXEC_DED_MINIMOS        = 0.10;
+const INTL_SMALL_EXEC_DED_MENORES        = 0.20;
+const INTL_SMALL_EXEC_DED_MULTIPLES      = 0.30;
+const INTL_SMALL_EXEC_DED_GENERALIZADOS  = 0.40;
+
+const INTL_BUILDING_EXEC_DEDS = [
+  INTL_BUILDING_EXEC_DED_MINIMOS,
+  INTL_BUILDING_EXEC_DED_MENORES,
+  INTL_BUILDING_EXEC_DED_MULTIPLES,
+  INTL_BUILDING_EXEC_DED_GENERALIZADOS,
+];
+const INTL_SMALL_EXEC_DEDS = [
+  INTL_SMALL_EXEC_DED_MINIMOS,
+  INTL_SMALL_EXEC_DED_MENORES,
+  INTL_SMALL_EXEC_DED_MULTIPLES,
+  INTL_SMALL_EXEC_DED_GENERALIZADOS,
+];
+
 // ── Building configs ──────────────────────────────────────────────────────────
 
 const ELITE_BUILDING: BuildingConfig = {
@@ -366,24 +429,26 @@ const ELITE_BUILDING: BuildingConfig = {
     coed:         ELITE_STUNT_RANGO_COED,
     non_tumbling: ELITE_STUNT_RANGO_NON_TUMBLING,
   },
-  stuntsSkillCount:   5,
-  stuntsSkillGrades:  ELITE_SKILL_GRADES,
-  stuntsPartMaxOpts:  ELITE_PART_MAX,
-  stuntsExecMax:      4.0,
-  hasPyramids:        true,
-  pyramidsHasDiff:    true,
-  pyramidRango:       ELITE_PYRAMID_RANGO,
-  pyramidFineSteps:   PYRAMID_FINE_STEPS,
-  pyramidsExecMax:    4.0,
-  pyramidDriversOpts: [],
-  hasTosses:          true,
-  tossDiffOpts:       ELITE_TOSS_DIFF,
-  tossesExecMax:      2.0,
-  hasCreativity:      true,
-  showmanshipMax:     DOM_SHOWMANSHIP_MAX,
-  creativityMin:      DOM_CREATIVITY_MIN,
-  creativityMax:      DOM_CREATIVITY_MAX,
-  showmanshipMin:     DOM_SHOWMANSHIP_MIN,
+  stuntsSkillCount:    5,
+  stuntsSkillGrades:   ELITE_SKILL_GRADES,
+  stuntsPartMaxOpts:   ELITE_PART_MAX,
+  stuntsExecMax:       15.0,
+  buildingExecDedOpts: INTL_BUILDING_EXEC_DEDS,
+  hasPyramids:         true,
+  pyramidsHasDiff:     true,
+  pyramidRango:        ELITE_PYRAMID_RANGO,
+  pyramidFineSteps:    INTL_PYRAMID_FINE_STEPS,
+  pyramidsExecMax:     15.0,
+  pyramidDriversOpts:  [],
+  hasTosses:           true,
+  tossDiffOpts:        ELITE_TOSS_DIFF,
+  tossesExecMax:       2.0,
+  tossesExecDedOpts:   INTL_SMALL_EXEC_DEDS,
+  hasCreativity:       true,
+  showmanshipMax:      DOM_SHOWMANSHIP_MAX,
+  creativityMin:       DOM_CREATIVITY_MIN,
+  creativityMax:       DOM_CREATIVITY_MAX,
+  showmanshipMin:      DOM_SHOWMANSHIP_MIN,
 };
 
 const PREP_BUILDING: BuildingConfig = {
@@ -409,12 +474,6 @@ const PREP_BUILDING: BuildingConfig = {
   creativityMax:      DOM_CREATIVITY_MAX,
   showmanshipMin:     DOM_SHOWMANSHIP_MIN,
 };
-
-// INTL 2026 execution deduction amounts per driver (FECU 2026 International PDF):
-// - Stunts/Pyramids (max 15.0): −0.1 Mínimos / −0.3 Menores / −0.5 Múltiples / −0.7 Generalizados
-// - Tosses/Tumbling/Jumps (max 2.0): −0.1 / −0.2 / −0.3 / −0.4
-const INTL_BUILDING_EXEC_DEDS = [0.10, 0.30, 0.50, 0.70];
-const INTL_SMALL_EXEC_DEDS    = [0.10, 0.20, 0.30, 0.40];
 
 // FECU 2026 Novice: Mini/Youth — stunts+pyramids exec only, no diff/drivers/tosses/tumbling
 // max_raw=56: stunts_exec(15)+pyramids_exec(15)+jumps(2)+formations(5)+dance(4)+creativity_avg(10)+showmanship_avg(5)
@@ -526,16 +585,17 @@ const ELITE_TUMBLING: TumblingConfig = {
   standingHasDiff:  true,
   standingRango:    ELITE_TUMBLING_RANGO,
   standingHabilidad: ELITE_HABILIDAD,
-  standingExecMax:  4.0,
+  standingExecMax:  2.0,
   hasRunning:       true,
   runningHasDiff:   true,
   runningRango:     ELITE_TUMBLING_RANGO,
   runningHabilidad: ELITE_HABILIDAD,
-  runningExecMax:   4.0,
+  runningExecMax:   2.0,
   hasJumps:         true,
   jumpsHasDiff:     true,
   jumpsDiffOpts:    ELITE_JUMPS,
   jumpsExecMax:     2.0,
+  execDedOpts:      INTL_SMALL_EXEC_DEDS,
   isCombinedSR:     false,
   hasCreativity:    true,
   showmanshipMax:   DOM_SHOWMANSHIP_MAX,
