@@ -5,7 +5,6 @@ import { Check, ChevronDown, X } from 'lucide-react';
 import {
   GRUPAL_SHEET_TYPES,
   INDIVIDUAL_SHEET_TYPES,
-  ICU_DANCE_SHEET_TYPES,
   SHEET_TYPE_GROUPS,
   SHEET_TYPE_LABELS,
   type SheetMode,
@@ -16,9 +15,8 @@ const GRUPAL_ALLOWED: SheetType[] = [...GRUPAL_SHEET_TYPES, 'deductions_only', '
 const HYBRID_ALLOWED: SheetType[] = [...new Set([...GRUPAL_ALLOWED, ...INDIVIDUAL_SHEET_TYPES])];
 
 const MODE_ALLOWED: Record<SheetMode, SheetType[]> = {
-  grupal:    GRUPAL_ALLOWED,
+  grupal:     GRUPAL_ALLOWED,
   individual: INDIVIDUAL_SHEET_TYPES,
-  icu_dance:  ICU_DANCE_SHEET_TYPES,
   hybrid:     HYBRID_ALLOWED,
 };
 

@@ -54,42 +54,6 @@ function ScoredRow({ entry }: { entry: RankingEntry }) {
   );
 }
 
-function IcuScoredRow({ entry, showDeductions }: { entry: RankingEntry; showDeductions: boolean }) {
-  const isTop3 = entry.rank !== null && entry.rank <= 3;
-  const hasDeductions = entry.total_deductions && Number(entry.total_deductions) > 0;
-  return (
-    <tr className={`border-b border-zinc-100 last:border-0 ${entry.rank === 1 ? 'bg-yellow-50' : entry.rank === 2 ? 'bg-zinc-50/60' : entry.rank === 3 ? 'bg-amber-50/40' : ''}`}>
-      <td className="px-4 py-3 text-center w-12">
-        <div className="flex justify-center items-center">
-          <RankIcon rank={entry.rank!} />
-        </div>
-      </td>
-      <td className="px-4 py-3">
-        <p className={`text-sm ${isTop3 ? 'font-semibold text-zinc-900' : 'font-medium text-zinc-800'}`}>
-          {entry.team_name}
-        </p>
-        <p className="text-xs text-zinc-400">{entry.gym_name}</p>
-      </td>
-      <td className="px-4 py-3 text-right tabular-nums text-sm text-zinc-400">
-        {entry.judge_count ?? '—'}
-      </td>
-      {showDeductions && (
-        <td className="px-4 py-3 text-right tabular-nums text-sm text-zinc-500">
-          {entry.raw_score ? Number(entry.raw_score).toFixed(2) : '—'}
-        </td>
-      )}
-      {showDeductions && (
-        <td className="px-4 py-3 text-right tabular-nums text-sm text-red-500">
-          {hasDeductions ? `−${Number(entry.total_deductions).toFixed(2)}` : '—'}
-        </td>
-      )}
-      <td className="px-4 py-3 text-right tabular-nums text-sm font-bold text-zinc-900">
-        {entry.final_score !== null ? Number(entry.final_score).toFixed(2) : '—'}
-      </td>
-    </tr>
-  );
-}
-
 export default function DivisionRankingsPage() {
   const router = useRouter();
   const { divisionId } = useParams<{ id: string; divisionId: string }>();
@@ -121,7 +85,6 @@ export default function DivisionRankingsPage() {
 
   const scored   = data.entries.filter(e => e.has_score);
   const unscored = data.entries.filter(e => !e.has_score);
-  const hasAnyDeductions = data.is_icu && scored.some(e => e.total_deductions && Number(e.total_deductions) > 0);
 
   const primary     = organization?.primary_color  ?? '#18181b';
   const primaryText = organization?.text_on_primary ?? '#ffffff';
@@ -196,28 +159,15 @@ export default function DivisionRankingsPage() {
                 <tr className="border-b border-zinc-100 bg-zinc-50">
                   <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-zinc-400 w-12">#</th>
                   <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-zinc-400">Equipo</th>
-                  {data.is_icu ? (
-                    <>
-                      <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-400">Jueces</th>
-                      {hasAnyDeductions && <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-400">Promedio</th>}
-                      {hasAnyDeductions && <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-400">Desc.</th>}
-                      <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-400">{hasAnyDeductions ? 'Final' : 'Promedio'}</th>
-                    </>
-                  ) : (
-                    <>
-                      <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-400">Bruto</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-400">Desc.</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-400">Final</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-400">%</th>
-                    </>
-                  )}
+                  <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-400">Bruto</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-400">Desc.</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-400">Final</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-400">%</th>
                 </tr>
               </thead>
               <tbody>
                 {scored.map(entry => (
-                  data.is_icu
-                    ? <IcuScoredRow key={entry.registration_id} entry={entry} showDeductions={hasAnyDeductions} />
-                    : <ScoredRow key={entry.registration_id} entry={entry} />
+                  <ScoredRow key={entry.registration_id} entry={entry} />
                 ))}
               </tbody>
             </table>

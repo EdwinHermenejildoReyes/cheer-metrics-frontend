@@ -25,15 +25,11 @@ import {
 
 // ── Modality system ───────────────────────────────────────────────────────────
 
-type CheerModality =
+type Modality =
   | 'novice' | 'prep' | 'escolar'
   | 'elite' | 'iasf'
   | 'group_stunt' | 'future_flyer'
   | 'best_cheerleader' | 'paracheer' | 'cheer_parents';
-
-type DanceModality = 'icu_dance_teams' | 'icu_doubles_hh';
-
-type Modality = CheerModality | DanceModality;
 
 interface ModalityConfig {
   label: string;
@@ -112,30 +108,9 @@ const MODALITY_CONFIG: Record<Modality, ModalityConfig> = {
     skillLevels: ['cheer_parents'],
     autoCategory: 'mixed',
   },
-  // ── ICU Dance ──────────────────────────────────────────────────────────────
-  icu_dance_teams: {
-    label: 'ICU Dance Teams (POM / Hip Hop / Jazz / High Kick)',
-    ageGroups: ['junior', 'senior', 'open'],
-    skillLevels: ['icu_dance'],
-    autoCategory: null,
-    allowedCategories: ['pom', 'hip_hop', 'jazz', 'high_kick'],
-    defaultScoring: 'icu_dance',
-  },
-  icu_doubles_hh: {
-    label: 'ICU Doubles HH',
-    ageGroups: ['junior', 'senior', 'open'],
-    skillLevels: ['icu_dance'],
-    autoCategory: 'doubles_hh',
-    defaultScoring: 'icu_doubles',
-  },
 };
 
 const CHEER_MODALITY_OPTIONS = (Object.entries(MODALITY_CONFIG) as [Modality, ModalityConfig][])
-  .filter(([v]) => !['icu_dance_teams', 'icu_doubles_hh'].includes(v))
-  .map(([value, { label }]) => ({ value, label }));
-
-const DANCE_MODALITY_OPTIONS = (Object.entries(MODALITY_CONFIG) as [Modality, ModalityConfig][])
-  .filter(([v]) => ['icu_dance_teams', 'icu_doubles_hh'].includes(v))
   .map(([value, { label }]) => ({ value, label }));
 
 function modalityFromSkillLevel(sl: string): Modality {
@@ -149,7 +124,6 @@ function modalityFromSkillLevel(sl: string): Modality {
   if (sl === 'best_cheerleader') return 'best_cheerleader';
   if (sl === 'paracheer') return 'paracheer';
   if (sl === 'cheer_parents') return 'cheer_parents';
-  if (sl === 'icu_dance') return 'icu_dance_teams';
   return 'elite';
 }
 
@@ -208,10 +182,8 @@ const SCORING_OPTIONS = toOptions(SCORING_SYSTEM_LABELS);
 
 export function DivisionModal({ open, onClose, onSaved, competitionId, sheetMode, initial }: Props) {
   const isEdit = !!initial;
-  const isDanceCompetition = sheetMode === 'icu_dance';
-
-  const [modality, setModality] = useState<Modality>(isDanceCompetition ? 'icu_dance_teams' : 'elite');
-  const MODALITY_OPTIONS = isDanceCompetition ? DANCE_MODALITY_OPTIONS : CHEER_MODALITY_OPTIONS;
+  const [modality, setModality] = useState<Modality>('elite');
+  const MODALITY_OPTIONS = CHEER_MODALITY_OPTIONS;
   const config = MODALITY_CONFIG[modality];
 
   const {
@@ -229,7 +201,7 @@ export function DivisionModal({ open, onClose, onSaved, competitionId, sheetMode
     if (!open) return;
     const initModality = initial?.skill_level
       ? modalityFromSkillLevel(initial.skill_level)
-      : isDanceCompetition ? 'icu_dance_teams' : 'elite';
+      : 'elite';
     setModality(initModality);
     reset(
       initial

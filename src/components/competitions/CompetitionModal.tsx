@@ -22,8 +22,8 @@ const schema = z.object({
   end_datetime:    z.string().optional(),
   venue:           z.string().min(2, 'Requerido'),
   city:            z.string().min(2, 'Requerido'),
-  scoring_family:  z.enum(['united', 'united_intl', 'iasf_567', 'icu', 'partner_stunt', 'future_flyer', 'best_cheer', 'icu_dance']),
-  sheet_mode:      z.enum(['grupal', 'individual', 'icu_dance', 'hybrid']),
+  scoring_family:  z.enum(['united', 'united_intl', 'iasf_567', 'partner_stunt', 'future_flyer', 'best_cheer']),
+  sheet_mode:      z.enum(['grupal', 'individual', 'hybrid']),
   service_type:    z.enum(['full', 'registration_only', 'judging_only']),
   notes:           z.string().optional(),
   organization:    z.string().optional(),
@@ -49,33 +49,28 @@ function formatDateTimeLocal(d: Date): string {
 }
 
 // Default sheet_mode for each scoring_family
-const FAMILY_TO_SHEET_MODE: Record<string, 'grupal' | 'individual' | 'icu_dance' | 'hybrid'> = {
+const FAMILY_TO_SHEET_MODE: Record<string, 'grupal' | 'individual' | 'hybrid'> = {
   united:        'grupal',
   united_intl:   'individual',
   iasf_567:      'individual',
-  icu:           'individual',
   partner_stunt: 'individual',
   future_flyer:  'individual',
   best_cheer:    'individual',
-  icu_dance:     'icu_dance',
 };
 
 const SCORING_FAMILY_OPTIONS = [
   { value: 'united_intl',   label: 'United Internacional' },
   { value: 'united',        label: 'United (local / grupal)' },
   { value: 'iasf_567',      label: 'IASF (N5, N6, N7)' },
-  { value: 'icu',           label: 'ICU' },
   { value: 'partner_stunt', label: 'Partner / Group Stunts' },
   { value: 'future_flyer',  label: 'Future Flyer' },
   { value: 'best_cheer',    label: 'Best Cheerleader' },
-  { value: 'icu_dance',     label: 'ICU Dance (POM / Hip Hop / Jazz / High Kick / Doubles HH)' },
 ];
 
 const SHEET_MODE_OPTIONS = [
   { value: 'individual', label: 'Individual — Dificultad + Ejecución por hoja (DV Championship, IASF)' },
   { value: 'grupal',     label: 'Grupal — Building / Tumbling / Overall (competencias locales)' },
   { value: 'hybrid',     label: 'Híbrida — Mezcla de planillas grupales e individuales' },
-  { value: 'icu_dance',  label: 'ICU Dance (fijado por sistema de calificación)' },
 ];
 
 const SERVICE_TYPE_OPTIONS = [
@@ -102,7 +97,7 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
       ? {
           ...initial,
           scoring_family: normalizeScoringFamily(initial.scoring_family),
-          sheet_mode: (initial.sheet_mode ?? 'individual') as 'grupal' | 'individual' | 'icu_dance' | 'hybrid',
+          sheet_mode: (initial.sheet_mode ?? 'individual') as 'grupal' | 'individual' | 'hybrid',
           organization: initial.organization ? String(initial.organization) : '',
           end_datetime: initial.end_datetime
             ? new Date(initial.end_datetime).toISOString().slice(0, 16)
@@ -144,7 +139,7 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
           ? {
               ...initial,
               scoring_family: normalizeScoringFamily(initial.scoring_family),
-              sheet_mode: (initial.sheet_mode ?? 'individual') as 'grupal' | 'individual' | 'icu_dance' | 'hybrid',
+              sheet_mode: (initial.sheet_mode ?? 'individual') as 'grupal' | 'individual' | 'hybrid',
               organization: initial.organization ? String(initial.organization) : defaultOrg,
               end_datetime: initial.end_datetime
                 ? new Date(initial.end_datetime).toISOString().slice(0, 16)
@@ -244,13 +239,9 @@ export function CompetitionModal({ open, onClose, onSaved, initial }: Props) {
               label="Modo de planillas"
               id="sheet_mode"
               options={SHEET_MODE_OPTIONS}
-              disabled={sheetMode === 'icu_dance'}
               error={errors.sheet_mode?.message}
               {...register('sheet_mode')}
             />
-            {sheetMode === 'icu_dance' && (
-              <p className="mt-1 text-xs text-zinc-400">Fijado automáticamente por ICU Dance.</p>
-            )}
           </div>
         </div>
 

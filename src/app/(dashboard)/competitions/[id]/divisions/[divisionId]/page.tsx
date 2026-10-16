@@ -38,8 +38,8 @@ import {
   type SheetType,
 } from '@/types/competitions';
 
-function getSheetSlug(sheetType: SheetType, iasfWorld: boolean): string {
-  if (iasfWorld) {
+function getSheetSlug(sheetType: SheetType, iasfWorld: boolean, isIntl: boolean): string {
+  if (iasfWorld || isIntl) {
     if (sheetType === 'building') return 'iasf-building';
     if (sheetType === 'tumbling') return 'iasf-tumbling';
     if (sheetType === 'overall')  return 'iasf-overall';
@@ -65,11 +65,6 @@ const SHEET_TYPE_ICONS: Record<SheetType, LucideIcon> = {
   building_combined:   ChevronsUp,
   tumbling_combined:   RotateCw,
   deductions_combined: ShieldCheck,
-  icu_dance:                Star,
-  icu_doubles:              Users2,
-  icu_dance_deductions:     ShieldCheck,
-  icu_dance_solo:           Star,
-  icu_dance_principiantes:  Star,
 };
 
 const SHEET_TYPE_ORDER: SheetType[] = [
@@ -77,7 +72,6 @@ const SHEET_TYPE_ORDER: SheetType[] = [
   'building_difficulty', 'building_execution', 'tumbling_difficulty', 'tumbling_execution',
   'deductions_only', 'safety_rules',
   'building_combined', 'tumbling_combined', 'deductions_combined',
-  'icu_dance', 'icu_doubles', 'icu_dance_deductions', 'icu_dance_solo', 'icu_dance_principiantes',
 ];
 
 const SHEET_TYPE_COLORS: Record<SheetType, string> = {
@@ -97,11 +91,6 @@ const SHEET_TYPE_COLORS: Record<SheetType, string> = {
   building_combined:   'text-blue-500',
   tumbling_combined:   'text-green-500',
   deductions_combined: 'text-amber-500',
-  icu_dance:                'text-blue-500',
-  icu_doubles:              'text-purple-500',
-  icu_dance_deductions:     'text-amber-500',
-  icu_dance_solo:           'text-sky-500',
-  icu_dance_principiantes:  'text-teal-500',
 };
 
 
@@ -287,8 +276,6 @@ export default function DivisionDetailPage() {
   const [scoreSheets, setScoreSheets]         = useState<Record<number, ScoreSheet>>({});
   // registrationId → judgeAssignmentId → JudgeScoreRecord (admin view only)
   const [judgeRecordsMap, setJudgeRecordsMap] = useState<Record<number, Record<number, JudgeScoreRecord>>>({});
-  const [icuRankings, setIcuRankings]         = useState<Record<number, RankingEntry>>({});
-  const isIcuDanceModeRef                 = useRef(false);
   const [loading, setLoading]             = useState(true);
   const [expandedRow, setExpandedRow]     = useState<number | null>(null);
 
@@ -300,13 +287,6 @@ export default function DivisionDetailPage() {
   const [deductionSheetId, setDeductionSheetId]     = useState<number | null>(null);
   const [judgesBySheet, setJudgesBySheet] = useState<Partial<Record<SheetType, JudgeAssignment[]>>>({});
 
-
-  const loadIcuRankings = useCallback(async () => {
-    const res = await competitionsRepository.getDivisionRankings(divisionId);
-    const map: Record<number, RankingEntry> = {};
-    res.data.entries.forEach((e) => { map[e.registration_id] = e; });
-    setIcuRankings(map);
-  }, [divisionId]);
 
   const loadSheets = useCallback(async () => {
     const res = await competitionsRepository.listScoreSheets({
@@ -328,14 +308,12 @@ export default function DivisionDetailPage() {
       });
       setJudgeRecordsMap(jrMap);
     }
-    if (isIcuDanceModeRef.current) await loadIcuRankings();
-  }, [divisionId, loadIcuRankings]);
+  }, [divisionId]);
 
   const load = useCallback(async () => {
     try {
       const divRes = await competitionsRepository.getDivision(divisionId);
       setDivision(divRes.data);
-      isIcuDanceModeRef.current = divRes.data.competition_sheet_mode === 'icu_dance';
       const [regRes, assignRes, meRes] = await Promise.all([
         competitionsRepository.listRegistrations({ division: String(divRes.data.id), page_size: '100' }),
         competitionsRepository.listJudgeAssignments({ competition: String(divRes.data.competition), page_size: '200' }),
@@ -496,18 +474,10 @@ export default function DivisionDetailPage() {
     }
   };
 
-  // Ranking: sorted by final_score desc; ICU divisions use IcuJudgeScore aggregates
   const ranked = registrations
     .filter((r) => scoreSheets[r.id])
     .map((r) => ({ reg: r, sheet: scoreSheets[r.id] }))
-    .sort((a, b) => {
-      if (isIcuDanceModeRef.current) {
-        const fa = parseFloat(icuRankings[a.reg.id]?.final_score ?? '0');
-        const fb = parseFloat(icuRankings[b.reg.id]?.final_score ?? '0');
-        return fb - fa;
-      }
-      return parseFloat(b.sheet.final_score ?? '0') - parseFloat(a.sheet.final_score ?? '0');
-    });
+    .sort((a, b) => parseFloat(b.sheet.final_score ?? '0') - parseFloat(a.sheet.final_score ?? '0'));
 
   if (loading) return <PageSpinner />;
   if (!division) return <div className="p-8 text-zinc-500">División no encontrada.</div>;
@@ -526,8 +496,8 @@ export default function DivisionDetailPage() {
     division.suggested_scoring_system
   ) as ScoringSystem;
   const isIasfWorld = activeScoringSystem === 'iasf_world_l6_7';
-  const isIcuDanceMode = division.competition_sheet_mode === 'icu_dance';
-  const isGrupalMode = !isIcuDanceMode && (division.competition_sheet_mode ?? 'grupal') !== 'individual';
+  const isIntl = (activeScoringSystem as string).startsWith('intl_');
+  const isGrupalMode = (division.competition_sheet_mode ?? 'grupal') !== 'individual';
   const hasJudging = division.competition_service_type !== 'registration_only';
   const hasRegistration = division.competition_service_type !== 'judging_only';
   const compId = division.competition;
@@ -588,16 +558,11 @@ export default function DivisionDetailPage() {
   };
   const canViewSheetInDivision = (st: SheetType) =>
     canViewSheetForDivision(compId, division.id, st) && isSheetAllowedInDivision(st);
-  const ICU_SHEET_TYPES = ['icu_dance', 'icu_doubles', 'icu_dance_deductions', 'icu_dance_solo', 'icu_dance_principiantes'];
-
   // For icon display: every active assignment for this competition is shown,
   // regardless of the assignment's division scope. Division scope enforcement
   // is a backend concern when the judge actually opens the scoresheet.
   // Prefer myApiAssignments (fresh from load()) over possibly-stale Redux assignments.
   const judgeEffectiveAssignments = isJudge && myApiAssignments.length > 0 ? myApiAssignments : assignments;
-
-  // ICU score sheet types (scoring, not deductions)
-  const ICU_SCORE_TYPES = ICU_SHEET_TYPES.filter((t) => t !== 'icu_dance_deductions');
 
   // Mirror _isAssignmentActive from useJudge: when dates are not set fall back to
   // competition_is_active; when dates are set use is_access_active.
@@ -609,34 +574,16 @@ export default function DivisionDetailPage() {
   const judgeVisibleSheets = judgeEffectiveAssignments
     .filter((a) => a.competition === compId && isAssignmentActive(a))
     .map((a) => {
-      // In ICU Dance mode, any ICU scoring assignment maps to the division's active scoring system.
-      // This way admins can assign 'icu_dance' and judges see the correct form for each division
-      // (e.g. icu_dance_principiantes, icu_dance_solo) without needing separate assignments per subtype.
-      if (isIcuDanceMode && ICU_SCORE_TYPES.includes(a.sheet_type)) {
-        return activeScoringSystem as SheetType;
-      }
-      // For partner_stunt / best_cheer divisions, remap any standard (non-ICU) assignment to the
-      // division's sheet. Judges assigned 'building' or 'tumbling' automatically get partner_stunt
-      // or best_cheer without needing a separate specific assignment.
-      if (
-        (activeScoringSystem === 'partner_stunt' || activeScoringSystem === 'best_cheer') &&
-        !ICU_SHEET_TYPES.includes(a.sheet_type)
-      ) {
+      // For partner_stunt / best_cheer divisions, remap any standard assignment to the
+      // division's sheet. Judges assigned 'building' or 'tumbling' automatically get
+      // partner_stunt or best_cheer without needing a separate specific assignment.
+      if (activeScoringSystem === 'partner_stunt' || activeScoringSystem === 'best_cheer') {
         return activeScoringSystem as SheetType;
       }
       return a.sheet_type;
     })
     .filter((sheetType, idx, arr) => arr.indexOf(sheetType) === idx) // dedupe
-    .filter((sheetType) => {
-      if (!isSheetAllowedInDivision(sheetType)) return false;
-      const isIcuSheet = ICU_SHEET_TYPES.includes(sheetType);
-      if (isIcuSheet !== isIcuDanceMode) return false;
-      if (isIcuDanceMode) {
-        if (sheetType === 'icu_dance_deductions') return true;
-        return sheetType === activeScoringSystem;
-      }
-      return true;
-    })
+    .filter((sheetType) => isSheetAllowedInDivision(sheetType))
     .sort((a, b) => SHEET_TYPE_ORDER.indexOf(a) - SHEET_TYPE_ORDER.indexOf(b));
 
   const judgeExpandedSheets: SheetType[] = judgeVisibleSheets.flatMap(
@@ -794,7 +741,7 @@ export default function DivisionDetailPage() {
                     onClick={() => {
                       if (isJudge && hasJudging) {
                         if (judgeExpandedSheets.length === 1) {
-                          router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/${getSheetSlug(judgeExpandedSheets[0], isIasfWorld)}`);
+                          router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/${getSheetSlug(judgeExpandedSheets[0], isIasfWorld, isIntl)}`);
                         } else if (judgeExpandedSheets.length > 1) {
                           setExpandedRow(isExpanded ? null : reg.id);
                         }
@@ -821,14 +768,10 @@ export default function DivisionDetailPage() {
                     {sheet ? (
                       <div className="text-right">
                         <p className="text-sm font-semibold text-zinc-900 tabular-nums">
-                          {isIcuDanceMode
-                            ? parseFloat(icuRankings[reg.id]?.final_score ?? '0').toFixed(2)
-                            : parseFloat(sheet.final_score ?? '0').toFixed(2)}
+                          {parseFloat(sheet.final_score ?? '0').toFixed(2)}
                         </p>
                         <p className="text-[10px] text-zinc-400">
-                          {isIcuDanceMode
-                            ? `${parseFloat(icuRankings[reg.id]?.percentage ?? '0').toFixed(1)}%`
-                            : `${parseFloat(sheet.percentage ?? '0').toFixed(1)}%`}
+                          {`${parseFloat(sheet.percentage ?? '0').toFixed(1)}%`}
                         </p>
                       </div>
                     ) : (
@@ -846,38 +789,38 @@ export default function DivisionDetailPage() {
                             {sheet ? <Pencil className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
                             {sheet ? 'Editar' : 'Calificar'}
                           </Button>
-                          {isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && isSheetAllowedInDivision('building') && (
+                          {isGrupalMode && !(isIasfWorld || isIntl) && activeScoringSystem !== 'partner_stunt' && isSheetAllowedInDivision('building') && (
                             <Button size="icon" variant="ghost" title="Planilla Building"
                               onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/building`)}>
                               <ChevronsUp className="h-3.5 w-3.5 text-blue-500" />
                             </Button>
                           )}
-                          {isGrupalMode && isIasfWorld && isSheetAllowedInDivision('building') && (
-                            <Button size="icon" variant="ghost" title="IASF World — Elevaciones"
+                          {isGrupalMode && (isIasfWorld || isIntl) && isSheetAllowedInDivision('building') && (
+                            <Button size="icon" variant="ghost" title="Elevaciones Internacional"
                               onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/iasf-building`)}>
                               <ChevronsUp className="h-3.5 w-3.5 text-blue-500" />
                             </Button>
                           )}
-                          {isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && isSheetAllowedInDivision('tumbling') && (
+                          {isGrupalMode && !(isIasfWorld || isIntl) && activeScoringSystem !== 'partner_stunt' && isSheetAllowedInDivision('tumbling') && (
                             <Button size="icon" variant="ghost" title="Planilla Tumbling"
                               onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/tumbling`)}>
                               <RotateCw className="h-3.5 w-3.5 text-green-500" />
                             </Button>
                           )}
-                          {isGrupalMode && isIasfWorld && isSheetAllowedInDivision('tumbling') && (
+                          {isGrupalMode && (isIasfWorld || isIntl) && isSheetAllowedInDivision('tumbling') && (
                             <Button size="icon" variant="ghost" title="IASF World — Gimnasia"
                               onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/iasf-tumbling`)}>
                               <RotateCw className="h-3.5 w-3.5 text-green-500" />
                             </Button>
                           )}
-                          {isGrupalMode && !isIasfWorld && activeScoringSystem !== 'partner_stunt' && isSheetAllowedInDivision('overall') && (
+                          {isGrupalMode && !(isIasfWorld || isIntl) && activeScoringSystem !== 'partner_stunt' && isSheetAllowedInDivision('overall') && (
                             <Button size="icon" variant="ghost" title="Planilla Overall"
                               onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/overall`)}>
                               <Star className="h-3.5 w-3.5 text-purple-500" />
                             </Button>
                           )}
-                          {isGrupalMode && isIasfWorld && isSheetAllowedInDivision('overall') && (
-                            <Button size="icon" variant="ghost" title="IASF World — General"
+                          {isGrupalMode && (isIasfWorld || isIntl) && isSheetAllowedInDivision('overall') && (
+                            <Button size="icon" variant="ghost" title="General Internacional"
                               onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/iasf-overall`)}>
                               <Star className="h-3.5 w-3.5 text-purple-500" />
                             </Button>
@@ -894,13 +837,13 @@ export default function DivisionDetailPage() {
                               <CircleMinus className="h-3.5 w-3.5 text-red-500" />
                             </Button>
                           )}
-                          {!isIcuDanceMode && isSheetAllowedInDivision('rangos') && (
+                          {isSheetAllowedInDivision('rangos') && (
                             <Button size="icon" variant="ghost" title="Planilla Rangos (Dificultad)"
                               onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/rangos`)}>
                               <Gauge className="h-3.5 w-3.5 text-amber-500" />
                             </Button>
                           )}
-                          {!isGrupalMode && !isIcuDanceMode && (
+                          {!isGrupalMode && (
                             <>
                               {isSheetAllowedInDivision('building_difficulty') && (
                                 <Button size="icon" variant="ghost" title="Dificultad — Elevaciones"
@@ -958,38 +901,6 @@ export default function DivisionDetailPage() {
                               )}
                             </>
                           )}
-                          {isIcuDanceMode && (
-                            <>
-                              {activeScoringSystem === 'icu_dance' && (
-                                <Button size="icon" variant="ghost" title="ICU Dance"
-                                  onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-dance`)}>
-                                  <Star className="h-3.5 w-3.5 text-blue-500" />
-                                </Button>
-                              )}
-                              {activeScoringSystem === 'icu_doubles' && (
-                                <Button size="icon" variant="ghost" title="ICU Doubles HH"
-                                  onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-doubles`)}>
-                                  <Users2 className="h-3.5 w-3.5 text-purple-500" />
-                                </Button>
-                              )}
-                              {activeScoringSystem === 'icu_dance_solo' && (
-                                <Button size="icon" variant="ghost" title="ICU Dance Solo / Dúo"
-                                  onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-dance-solo`)}>
-                                  <Star className="h-3.5 w-3.5 text-sky-500" />
-                                </Button>
-                              )}
-                              {activeScoringSystem === 'icu_dance_principiantes' && (
-                                <Button size="icon" variant="ghost" title="ICU Dance Principiantes"
-                                  onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-dance-principiantes`)}>
-                                  <Star className="h-3.5 w-3.5 text-teal-500" />
-                                </Button>
-                              )}
-                              <Button size="icon" variant="ghost" title="Deducciones ICU Dance"
-                                onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/icu-dance-deductions`)}>
-                                <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
-                              </Button>
-                            </>
-                          )}
                         </>
                       )}
                       {/* Judge: one icon per assigned sheet, purely data-driven */}
@@ -1001,7 +912,7 @@ export default function DivisionDetailPage() {
                             size="icon"
                             variant="ghost"
                             title={SHEET_TYPE_LABELS[sheetType]}
-                            onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/${getSheetSlug(sheetType, isIasfWorld)}`)}
+                            onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/${getSheetSlug(sheetType, isIasfWorld, isIntl)}`)}
                           >
                             <Icon className={`h-3.5 w-3.5 ${SHEET_TYPE_COLORS[sheetType]}`} />
                           </Button>
@@ -1044,7 +955,7 @@ export default function DivisionDetailPage() {
                     <div className="border-t border-zinc-100 bg-zinc-50 px-5 py-4 flex flex-col gap-4">
 
                       {/* Judge status — only render when this team has actual records */}
-                      {!isIcuDanceMode && (() => {
+                      {(() => {
                         const regRecords = judgeRecordsMap[reg.id] ?? {};
                         const judgeEntries = (Object.entries(effectiveJudgesBySheet) as [SheetType, JudgeAssignment[]][])
                           .sort(([a], [b]) => SHEET_TYPE_ORDER.indexOf(a) - SHEET_TYPE_ORDER.indexOf(b))
@@ -1118,16 +1029,6 @@ export default function DivisionDetailPage() {
                             <div className="flex justify-between text-zinc-600">
                               <span>Parejas</span>
                               <span className="tabular-nums font-medium">{parseFloat(sheet.partner_stunt_total).toFixed(2)}</span>
-                            </div>
-                          )}
-                          {(parseFloat(sheet.icu_dance_total) > 0 || (isIcuDanceMode && icuRankings[reg.id]?.has_score)) && (
-                            <div className="flex justify-between text-zinc-600">
-                              <span>ICU Dance {icuRankings[reg.id]?.judge_count ? `(${icuRankings[reg.id].judge_count} juez${(icuRankings[reg.id].judge_count ?? 0) !== 1 ? 'ces' : ''})` : ''}</span>
-                              <span className="tabular-nums font-medium">
-                                {isIcuDanceMode
-                                  ? parseFloat(icuRankings[reg.id]?.raw_score ?? '0').toFixed(2)
-                                  : parseFloat(sheet.icu_dance_total).toFixed(2)}
-                              </span>
                             </div>
                           )}
                         </div>
@@ -1230,7 +1131,7 @@ export default function DivisionDetailPage() {
                           return (
                             <button
                               key={sheetType}
-                              onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/${getSheetSlug(sheetType, isIasfWorld)}`)}
+                              onClick={() => router.push(`/competitions/${id}/divisions/${divisionId}/sheets/${reg.public_id}/${getSheetSlug(sheetType, isIasfWorld, isIntl)}`)}
                               className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:border-zinc-400 hover:bg-zinc-100 transition-colors"
                             >
                               <Icon className={`h-3.5 w-3.5 ${SHEET_TYPE_COLORS[sheetType]}`} />
@@ -1264,9 +1165,6 @@ export default function DivisionDetailPage() {
         const hasCreativity  = ranked.some(({ sheet }) => f(sheet.avg_creativity)      > 0);
         const hasShowmanship = ranked.some(({ sheet }) => f(sheet.avg_showmanship)     > 0);
         const hasPartner     = ranked.some(({ sheet }) => f(sheet.partner_stunt_total) > 0);
-        const hasIcuDance    = isIcuDanceMode
-          ? Object.values(icuRankings).some((e) => e.has_score)
-          : ranked.some(({ sheet }) => f(sheet.icu_dance_total) > 0);
 
         const hasBuildingData = ranked.some(({ sheet }) =>
           f(sheet.stunts_difficulty) > 0 || f(sheet.pyramids_difficulty) > 0 || f(sheet.tosses_difficulty) > 0
@@ -1452,7 +1350,6 @@ export default function DivisionDetailPage() {
                       {hasPartner     && <th className="px-4 py-3 text-right">Partner</th>}
                       {hasCreativity  && <th className="px-4 py-3 text-right">Creatividad</th>}
                       {hasShowmanship && <th className="px-4 py-3 text-right">Showmanship</th>}
-                      {hasIcuDance    && <th className="px-4 py-3 text-right">ICU Dance</th>}
                       <th className="px-4 py-3 text-right">Desc.</th>
                       <th className="px-4 py-3 text-right">P. final</th>
                       <th className="px-4 py-3 text-right">%</th>
@@ -1472,25 +1369,14 @@ export default function DivisionDetailPage() {
                         {hasPartner     && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">{f(sheet.partner_stunt_total).toFixed(2)}</td>}
                         {hasCreativity  && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">{f(sheet.avg_creativity).toFixed(2)}</td>}
                         {hasShowmanship && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">{f(sheet.avg_showmanship).toFixed(2)}</td>}
-                        {hasIcuDance    && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">
-                          {isIcuDanceMode
-                            ? parseFloat(icuRankings[reg.id]?.raw_score ?? '0').toFixed(2)
-                            : f(sheet.icu_dance_total).toFixed(2)}
-                        </td>}
                         <td className="px-4 py-3.5 text-right tabular-nums text-red-600">
-                          -{isIcuDanceMode
-                            ? parseFloat(icuRankings[reg.id]?.total_deductions ?? '0').toFixed(2)
-                            : f(sheet.total_deductions).toFixed(2)}
+                          -{f(sheet.total_deductions).toFixed(2)}
                         </td>
                         <td className="px-4 py-3.5 text-right tabular-nums font-semibold text-zinc-900">
-                          {isIcuDanceMode
-                            ? parseFloat(icuRankings[reg.id]?.final_score ?? '0').toFixed(2)
-                            : parseFloat(sheet.final_score ?? '0').toFixed(2)}
+                          {parseFloat(sheet.final_score ?? '0').toFixed(2)}
                         </td>
                         <td className="px-4 py-3.5 text-right tabular-nums text-zinc-500">
-                          {isIcuDanceMode
-                            ? `${parseFloat(icuRankings[reg.id]?.percentage ?? '0').toFixed(1)}%`
-                            : `${parseFloat(sheet.percentage ?? '0').toFixed(1)}%`}
+                          {`${parseFloat(sheet.percentage ?? '0').toFixed(1)}%`}
                         </td>
                       </tr>
                     ))}

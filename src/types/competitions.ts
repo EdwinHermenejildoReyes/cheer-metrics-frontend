@@ -3,9 +3,7 @@ export type SheetType =
   | 'building_difficulty' | 'building_execution'
   | 'tumbling_difficulty' | 'tumbling_execution'
   | 'deductions_only' | 'safety_rules'
-  | 'building_combined' | 'tumbling_combined' | 'deductions_combined'
-  | 'icu_dance' | 'icu_doubles'
-  | 'icu_dance_deductions' | 'icu_dance_solo' | 'icu_dance_principiantes';
+  | 'building_combined' | 'tumbling_combined' | 'deductions_combined';
 
 export const SHEET_TYPE_LABELS: Record<SheetType, string> = {
   building:             'Building',
@@ -24,11 +22,6 @@ export const SHEET_TYPE_LABELS: Record<SheetType, string> = {
   building_combined:    'Elevaciones (Dif. + Ejec.)',
   tumbling_combined:    'Gimnasia (Dif. + Ejec.)',
   deductions_combined:  'Reglas y Deducciones',
-  icu_dance:                 'ICU Dance',
-  icu_doubles:               'ICU Doubles',
-  icu_dance_deductions:      'ICU Dance — Juez de Seguridad',
-  icu_dance_solo:            'ICU Dance — Solo / Dúo',
-  icu_dance_principiantes:   'ICU Dance — Principiantes',
 };
 
 export const SHEET_TYPE_GROUPS: { label: string; types: SheetType[] }[] = [
@@ -39,7 +32,6 @@ export const SHEET_TYPE_GROUPS: { label: string; types: SheetType[] }[] = [
   { label: 'Best Cheer',   types: ['best_cheer'] },
   { label: 'Rangos',        types: ['rangos'] },
   { label: 'Deducciones',   types: ['deducciones', 'deductions_only', 'safety_rules'] },
-  { label: 'ICU Dance',     types: ['icu_dance', 'icu_doubles', 'icu_dance_deductions', 'icu_dance_solo', 'icu_dance_principiantes'] },
 ];
 
 export interface JudgeAssignment {
@@ -61,138 +53,33 @@ export interface JudgeAssignment {
   is_access_active: boolean;
 }
 
-export interface JudgePanel {
-  id: number;
-  competition: number;
-  name: string;
-  registration_ids: number[];
-}
-
-export type IcuSheetType = 'icu_dance' | 'icu_doubles' | 'icu_dance_solo' | 'icu_dance_principiantes';
-
-export interface IcuJudgeScore {
-  id: number;
-  registration: number;
-  judge: number;
-  judge_name: string;
-  panel: number | null;
-  panel_name: string | null;
-  sheet_type: IcuSheetType;
-  total: number;
-  // shared
-  icu_style_execution: string;
-  icu_skill_technique: string;
-  icu_synchronization: string;
-  icu_musicality: string;
-  icu_staging: string;
-  icu_complexity: string;
-  icu_audience_appeal: string;
-  // dance-only
-  icu_movement_technique: string;
-  icu_uniformity: string;
-  icu_spacing: string;
-  // doubles-only
-  icu_overall_movement: string;
-  icu_quality_of_movement: string;
-  icu_difficulty_of_skills: string;
-  // solo / dúo
-  icu_solo_facial: string;
-  icu_solo_costume: string;
-  icu_solo_overall_effect: string;
-  icu_solo_variety: string;
-  icu_solo_creativity: string;
-  icu_solo_music: string;
-  icu_solo_technique_exec: string;
-  icu_solo_technique_body: string;
-  icu_solo_technique_control: string;
-  // comments
-  notes: string;
-  icu_notes_style_execution: string;
-  icu_notes_skill_technique: string;
-  icu_notes_synchronization: string;
-  icu_notes_musicality: string;
-  icu_notes_staging: string;
-  icu_notes_complexity: string;
-  icu_notes_audience_appeal: string;
-  icu_notes_movement_technique: string;
-  icu_notes_uniformity: string;
-  icu_notes_spacing: string;
-  icu_notes_overall_movement: string;
-  icu_notes_quality_of_movement: string;
-  icu_notes_difficulty_of_skills: string;
-  icu_notes_solo_facial: string;
-  icu_notes_solo_costume: string;
-  icu_notes_solo_overall_effect: string;
-  icu_notes_solo_variety: string;
-  icu_notes_solo_creativity: string;
-  icu_notes_solo_music: string;
-  icu_notes_solo_technique_exec: string;
-  icu_notes_solo_technique_body: string;
-  icu_notes_solo_technique_control: string;
-}
-
-export interface IcuDanceDeductionSheet {
-  id?: number;
-  registration: number;
-  judge?: number | null;
-  judge_name?: string | null;
-  skill_025_count: number;
-  skill_050_count: number;
-  skill_100_count: number;
-  skill_150_count: number;
-  skill_200_count: number;
-  skill_250_count: number;
-  time_infraction: 'none' | 'low' | 'mid' | 'high';
-  safety_deduction: string;
-  image_policy_count: number;
-  conduct_deduction: string;
-  registration_deduction: string;
-  notes: string;
-  skill_total: string;
-  time_total: string;
-  total_deductions: string;
-  updated_at?: string;
-}
-
-export interface IcuAggregate {
-  count: number;
-  average: number | null;
-  scores: IcuJudgeScore[];
-}
-
-export type SheetMode = 'grupal' | 'individual' | 'icu_dance' | 'hybrid';
-export type CompetitionSheetMode = 'grupal' | 'individual' | 'icu_dance' | 'hybrid';
+export type SheetMode = 'grupal' | 'individual' | 'hybrid';
+export type CompetitionSheetMode = 'grupal' | 'individual' | 'hybrid';
 export type ServiceType = 'full' | 'registration_only' | 'judging_only';
 export type ScoringFamily =
   | 'united'
   | 'united_intl'
   | 'iasf_567'
-  | 'icu'
   | 'partner_stunt'
   | 'future_flyer'
-  | 'best_cheer'
-  | 'icu_dance';
+  | 'best_cheer';
 
 export const SCORING_FAMILY_LABELS: Record<ScoringFamily, string> = {
   united:        'United',
   united_intl:   'United Internacional',
   iasf_567:      'IASF (N5, N6, N7)',
-  icu:           'ICU',
   partner_stunt: 'Partner / Group Stunts',
   future_flyer:  'Future Flyer',
   best_cheer:    'Best Cheerleader',
-  icu_dance:     'ICU Dance',
 };
 
 export const SCORING_FAMILY_REGULATION: Record<ScoringFamily, string> = {
   united:        'IASF',
   united_intl:   'IASF',
   iasf_567:      'IASF',
-  icu:           'ICU',
   partner_stunt: 'IASF',
   future_flyer:  'IASF',
   best_cheer:    'IASF',
-  icu_dance:     'ICU',
 };
 
 export const GRUPAL_SHEET_TYPES: SheetType[] = [
@@ -206,18 +93,15 @@ export const INDIVIDUAL_SHEET_TYPES: SheetType[] = [
   'deductions_only', 'safety_rules',
   'rangos',
 ];
-export const ICU_DANCE_SHEET_TYPES: SheetType[] = ['icu_dance', 'icu_doubles', 'icu_dance_deductions', 'icu_dance_solo', 'icu_dance_principiantes'];
-
-export type Regulation = 'IASF' | 'ICU' | 'AMBAS';
+export type Regulation = 'IASF' | 'AMBAS';
 export type AgeGroup = 'tiny' | 'mini' | 'youth' | 'junior' | 'senior' | 'open';
 export type SkillLevel =
   | 'L1' | 'L2' | 'L3' | 'L4' | 'L4_2' | 'L5' | 'L6' | 'L7'
   | 'novice' | 'novice_plus' | 'prep' | 'escolar'
   | 'escolar_l3' | 'escolar_l4' | 'escolar_l5' | 'escolar_l6' | 'escolar_l7'
   | 'elite' | 'icc' | 'iasf_cat' | 'star'
-  | 'group_stunt' | 'future_flyer' | 'best_cheerleader' | 'paracheer' | 'cheer_parents'
-  | 'icu_dance';
-export type DivisionCategory = 'all_girl' | 'coed' | 'all_male' | 'non_tumbling' | 'mixed' | 'pom' | 'hip_hop' | 'jazz' | 'high_kick' | 'doubles_hh' | 'solo';
+  | 'group_stunt' | 'future_flyer' | 'best_cheerleader' | 'paracheer' | 'cheer_parents';
+export type DivisionCategory = 'all_girl' | 'coed' | 'all_male' | 'non_tumbling' | 'mixed';
 export type RegistrationStatus = 'pending' | 'confirmed' | 'withdrawn';
 
 // Deduction codes matching the Level Up / Adventure Brands United system
@@ -231,8 +115,7 @@ export type ScoringSystem =
   | 'tiny_novice' | 'mini_novice' | 'novice_plus' | 'prep' | 'escolar' | 'escolar_univ' | 'escolar_ab'
   | 'elite_l1' | 'elite_l2_7' | 'elite_nt' | 'partner_stunt' | 'best_cheer' | 'iasf_l6_7'
   | 'iasf_world_l6_7'
-  | 'intl_l1' | 'intl_l2' | 'intl_l2_7' | 'intl_nt'
-  | 'icu_dance' | 'icu_doubles' | 'icu_dance_solo' | 'icu_dance_principiantes';
+  | 'intl_l1' | 'intl_l2' | 'intl_l2_7' | 'intl_nt';
 
 // Keys of all sub-score fields on ScoreSheet
 export type ScoreFieldKey =
@@ -249,11 +132,7 @@ export type ScoreFieldKey =
   | 'pg_transitions' | 'pg_expressiveness'
   | 'bc_gym_difficulty' | 'bc_gym_execution'
   | 'bc_jumps_difficulty' | 'bc_jumps_execution'
-  | 'bc_dance' | 'bc_overall'
-  | 'icu_style_execution' | 'icu_movement_technique' | 'icu_skill_technique'
-  | 'icu_synchronization' | 'icu_uniformity' | 'icu_spacing'
-  | 'icu_musicality' | 'icu_staging' | 'icu_complexity' | 'icu_audience_appeal'
-  | 'icu_overall_movement' | 'icu_quality_of_movement' | 'icu_difficulty_of_skills';
+  | 'bc_dance' | 'bc_overall';
 
 export interface Organization {
   id: number;
@@ -424,35 +303,6 @@ export interface ScoreSheet {
   bc_jumps_execution:   string | null;
   bc_dance:             string | null;
   bc_overall:           string | null;
-  // ICU Dance — teams
-  icu_style_execution:    string | null;
-  icu_movement_technique: string | null;
-  icu_skill_technique:    string | null;
-  icu_synchronization:    string | null;
-  icu_uniformity:         string | null;
-  icu_spacing:            string | null;
-  icu_musicality:         string | null;
-  icu_staging:            string | null;
-  icu_complexity:         string | null;
-  icu_audience_appeal:    string | null;
-  // ICU Doubles extras
-  icu_overall_movement:    string | null;
-  icu_quality_of_movement: string | null;
-  icu_difficulty_of_skills: string | null;
-  // ICU judge comments (one per criterion)
-  icu_notes_style_execution:      string;
-  icu_notes_movement_technique:   string;
-  icu_notes_skill_technique:      string;
-  icu_notes_synchronization:      string;
-  icu_notes_uniformity:           string;
-  icu_notes_spacing:              string;
-  icu_notes_musicality:           string;
-  icu_notes_staging:              string;
-  icu_notes_complexity:           string;
-  icu_notes_audience_appeal:      string;
-  icu_notes_overall_movement:     string;
-  icu_notes_quality_of_movement:  string;
-  icu_notes_difficulty_of_skills: string;
   // Computed totals (read-only)
   building_total:       string;
   tumbling_total:       string;
@@ -461,7 +311,6 @@ export interface ScoreSheet {
   avg_showmanship:      string;
   cross_sheet_total:    string;
   partner_stunt_total:  string;
-  icu_dance_total:      string;
   raw_score:            string;
   max_raw:              string;
   scaled_score:         string;
@@ -546,7 +395,6 @@ export interface DivisionRankings {
   competition_id: number;
   competition_name: string;
   scoring_system: string;
-  is_icu: boolean;
   entries: RankingEntry[];
 }
 
@@ -586,7 +434,7 @@ export interface PaginatedResponse<T> {
 // ── Display labels ─────────────────────────────────────────────────────────────
 
 export const REGULATION_LABELS: Record<Regulation, string> = {
-  IASF: 'IASF', ICU: 'ICU', AMBAS: 'AMBAS',
+  IASF: 'IASF', AMBAS: 'AMBAS',
 };
 
 export const AGE_GROUP_LABELS: Record<AgeGroup, string> = {
@@ -611,14 +459,11 @@ export const SKILL_LEVEL_LABELS: Record<SkillLevel, string> = {
   best_cheerleader: 'Best Cheerleader',
   paracheer: 'Paracheer',
   cheer_parents: 'Padres Showoff',
-  icu_dance: 'ICU Dance',
 };
 
 export const CATEGORY_LABELS: Record<DivisionCategory, string> = {
   all_girl: 'All Girl', coed: 'Coed', all_male: 'All Male', non_tumbling: 'Non-Tumbling',
   mixed: 'Mixto',
-  pom: 'Pom', hip_hop: 'Hip Hop', jazz: 'Jazz', high_kick: 'High Kick',
-  doubles_hh: 'Doubles HH', solo: 'Solo / Dúo',
 };
 
 export const REGISTRATION_STATUS_LABELS: Record<RegistrationStatus, string> = {
@@ -712,10 +557,6 @@ export const SCORING_SYSTEM_LABELS: Record<ScoringSystem, string> = {
   intl_l2:         'Internacional Nivel 2',
   intl_l2_7:       'Internacional Nivel 3–7',
   intl_nt:         'Internacional Non-Tumbling',
-  icu_dance:                'ICU Dance (POM / Hip Hop / Jazz / High Kick)',
-  icu_doubles:              'ICU Doubles',
-  icu_dance_solo:           'ICU Dance Solo / Dúo',
-  icu_dance_principiantes:  'ICU Dance Principiantes',
 };
 
 // Active score fields per scoring system (mirrors backend SCORING_SYSTEM_CONFIG)
@@ -778,20 +619,6 @@ export const SCORING_SYSTEM_FIELDS: Record<ScoringSystem, ScoreFieldKey[]> = {
     'creativity_overall',
     'showmanship_overall',
   ],
-  icu_dance: [
-    'icu_style_execution', 'icu_movement_technique', 'icu_skill_technique',
-    'icu_synchronization', 'icu_uniformity', 'icu_spacing',
-    'icu_musicality', 'icu_staging', 'icu_complexity',
-    'icu_audience_appeal',
-  ],
-  icu_doubles: [
-    'icu_style_execution', 'icu_overall_movement', 'icu_skill_technique', 'icu_quality_of_movement',
-    'icu_synchronization',
-    'icu_musicality', 'icu_staging', 'icu_complexity', 'icu_difficulty_of_skills',
-    'icu_audience_appeal',
-  ],
-  icu_dance_solo:          [],
-  icu_dance_principiantes: [],
 };
 
 // Max value per field (used for live totals in the modal)
@@ -834,20 +661,6 @@ export const FIELD_MAXIMA: Record<ScoreFieldKey, number> = {
   bc_jumps_execution:   20,
   bc_dance:             5,
   bc_overall:           10,
-  // ICU Dance (all criteria max 10)
-  icu_style_execution:      10,
-  icu_movement_technique:   10,
-  icu_skill_technique:      10,
-  icu_synchronization:      10,
-  icu_uniformity:           10,
-  icu_spacing:              10,
-  icu_musicality:           10,
-  icu_staging:              10,
-  icu_complexity:           10,
-  icu_audience_appeal:      10,
-  icu_overall_movement:     10,
-  icu_quality_of_movement:  10,
-  icu_difficulty_of_skills: 10,
 };
 
 // Fields whose contribution to raw_score is averaged across the group, not summed

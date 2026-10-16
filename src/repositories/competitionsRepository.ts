@@ -1,5 +1,5 @@
 import api from '@/services/api';
-import type { AthleteInvoiceLine, FanPackage, FanPackageLine, GymInvoice, IcuAggregate, IcuDanceDeductionSheet, IcuJudgeScore, IcuSheetType, JudgePanel, JudgeScoreRecord } from '@/types/competitions';
+import type { AthleteInvoiceLine, FanPackage, FanPackageLine, GymInvoice, JudgeScoreRecord } from '@/types/competitions';
 
 export interface PublicResultDeduction {
   type: string;
@@ -373,62 +373,6 @@ class CompetitionsRepository {
   deleteFanPackageLine = (id: number) =>
     api.delete(`/fan-package-lines/${id}/`);
 
-  // ── ICU judge panels ───────────────────────────────────────────────────────
-
-  listJudgePanels = (params: Record<string, string | number>) =>
-    api.get<{ results: JudgePanel[] }>('/judge-panels/', { params });
-
-  createJudgePanel = (data: { competition: number; name: string }) =>
-    api.post<JudgePanel>('/judge-panels/', data);
-
-  updateJudgePanel = (id: number, data: Partial<JudgePanel>) =>
-    api.patch<JudgePanel>(`/judge-panels/${id}/`, data);
-
-  deleteJudgePanel = (id: number) =>
-    api.delete(`/judge-panels/${id}/`);
-
-  assignRegistrationsToPanel = (panelId: number, registrationIds: number[]) =>
-    api.post<JudgePanel>(`/judge-panels/${panelId}/assign-registrations/`, { registration_ids: registrationIds });
-
-  autoAssignPanels = (competitionId: number) =>
-    api.post<JudgePanel[]>('/judge-panels/auto-assign/', { competition: competitionId });
-
-  // ── ICU judge scores ───────────────────────────────────────────────────────
-
-  listIcuJudgeScores = (params: Record<string, string | number>) =>
-    api.get<{ results: IcuJudgeScore[] }>('/icu-judge-scores/', { params });
-
-  getIcuJudgeScore = (id: number) =>
-    api.get<IcuJudgeScore>(`/icu-judge-scores/${id}/`);
-
-  getMyIcuJudgeScore = (registrationId: number, sheetType: IcuSheetType, judgeId: number) =>
-    api.get<{ results: IcuJudgeScore[] }>('/icu-judge-scores/', {
-      params: { registration: registrationId, sheet_type: sheetType, judge: judgeId },
-    });
-
-  createIcuJudgeScore = (data: Partial<IcuJudgeScore>) =>
-    api.post<IcuJudgeScore>('/icu-judge-scores/', data);
-
-  updateIcuJudgeScore = (id: number, data: Partial<IcuJudgeScore>) =>
-    api.patch<IcuJudgeScore>(`/icu-judge-scores/${id}/`, data);
-
-  getIcuAggregate = (registrationId: number, sheetType: IcuSheetType) =>
-    api.get<IcuAggregate>('/icu-judge-scores/aggregate/', {
-      params: { registration: registrationId, sheet_type: sheetType },
-    });
-
-  // ── ICU Dance deduction sheets (safety judge) ───────────────────────────────
-
-  getIcuDeductionSheet = (registrationId: number) =>
-    api.get<{ results: IcuDanceDeductionSheet[] }>('/icu-dance-deductions/', {
-      params: { registration: registrationId },
-    });
-
-  createIcuDeductionSheet = (data: Partial<IcuDanceDeductionSheet>) =>
-    api.post<IcuDanceDeductionSheet>('/icu-dance-deductions/', data);
-
-  updateIcuDeductionSheet = (id: number, data: Partial<IcuDanceDeductionSheet>) =>
-    api.patch<IcuDanceDeductionSheet>(`/icu-dance-deductions/${id}/`, data);
 }
 
 export default new CompetitionsRepository();
