@@ -113,6 +113,7 @@ function getJudgeSheetStatus(sheetType: SheetType, sheet: ScoreSheet): { scored:
     case 'tumbling': case 'tumbling_combined': return { scored: f(sheet.tumbling_total) > 0, score: f(sheet.final_score) };
     case 'overall':       return { scored: f(sheet.overall_total)       > 0, score: f(sheet.final_score) };
     case 'partner_stunt': return { scored: f(sheet.partner_stunt_total) > 0, score: f(sheet.final_score) };
+    case 'best_cheer':    return { scored: f(sheet.best_cheer_total)    > 0, score: f(sheet.final_score) };
     case 'rangos':        return { scored: f(sheet.stunts_drivers) > 0, score: 0 };
     default:              return { scored: f(sheet.total_deductions) > 0, score: f(sheet.total_deductions) };
   }
@@ -155,6 +156,10 @@ function getJudgeRecordStatus(sheetType: SheetType, r: JudgeScoreRecord): { scor
     }
     case 'partner_stunt': {
       const s = f(r.pg_technique) + f(r.pg_difficulty) + f(r.pg_form_appearance) + f(r.pg_transitions) + f(r.pg_expressiveness);
+      return { scored: s > 0, score: s };
+    }
+    case 'best_cheer': {
+      const s = f(r.bc_gym_difficulty) + f(r.bc_gym_execution) + f(r.bc_jumps_difficulty) + f(r.bc_jumps_execution) + f(r.bc_dance) + f(r.bc_overall);
       return { scored: s > 0, score: s };
     }
     case 'rangos':
@@ -233,6 +238,15 @@ function getJudgeSheetFields(sheetType: SheetType, sheet: ScoreSource): Array<{ 
         { label: 'Forma',         value: sheet.pg_form_appearance },
         { label: 'Transiciones',  value: sheet.pg_transitions },
         { label: 'Expresividad',  value: sheet.pg_expressiveness },
+      ];
+    case 'best_cheer':
+      return [
+        { label: 'Gym Dif.',       value: sheet.bc_gym_difficulty },
+        { label: 'Gym Ejec.',      value: sheet.bc_gym_execution },
+        { label: 'Saltos Dif.',    value: sheet.bc_jumps_difficulty },
+        { label: 'Saltos Ejec.',   value: sheet.bc_jumps_execution },
+        { label: 'Dance',          value: sheet.bc_dance },
+        { label: 'Overall',        value: sheet.bc_overall },
       ];
     case 'rangos':
       return [
@@ -1159,11 +1173,13 @@ export default function DivisionDetailPage() {
         const allowsTumbling = !allowedSheets || allowedSheets.includes('tumbling');
         const allowsOverall  = !allowedSheets || allowedSheets.includes('overall');
 
+        const hasBestCheer   = ranked.some(({ sheet }) => f(sheet.best_cheer_total)    > 0);
         const hasBuilding    = allowsBuilding && ranked.some(({ sheet }) => f(sheet.building_total)      > 0);
         const hasTumbling    = allowsTumbling && ranked.some(({ sheet }) => f(sheet.tumbling_total)      > 0);
-        const hasOverall     = allowsOverall  && ranked.some(({ sheet }) => f(sheet.overall_total)       > 0);
-        const hasCreativity  = ranked.some(({ sheet }) => f(sheet.avg_creativity)      > 0);
-        const hasShowmanship = ranked.some(({ sheet }) => f(sheet.avg_showmanship)     > 0);
+        // Suppress overall/creativity/showmanship columns when Best Cheer data is present
+        const hasOverall     = !hasBestCheer && allowsOverall && ranked.some(({ sheet }) => f(sheet.overall_total)   > 0);
+        const hasCreativity  = !hasBestCheer && ranked.some(({ sheet }) => f(sheet.avg_creativity)      > 0);
+        const hasShowmanship = !hasBestCheer && ranked.some(({ sheet }) => f(sheet.avg_showmanship)     > 0);
         const hasPartner     = ranked.some(({ sheet }) => f(sheet.partner_stunt_total) > 0);
 
         const hasBuildingData = ranked.some(({ sheet }) =>
@@ -1348,6 +1364,7 @@ export default function DivisionDetailPage() {
                       {hasTumbling    && <th className="px-4 py-3 text-right">Gimnasia</th>}
                       {hasOverall     && <th className="px-4 py-3 text-right">General</th>}
                       {hasPartner     && <th className="px-4 py-3 text-right">Partner</th>}
+                      {hasBestCheer   && <th className="px-4 py-3 text-right">Best Cheer</th>}
                       {hasCreativity  && <th className="px-4 py-3 text-right">Creatividad</th>}
                       {hasShowmanship && <th className="px-4 py-3 text-right">Showmanship</th>}
                       <th className="px-4 py-3 text-right">Desc.</th>
@@ -1367,6 +1384,7 @@ export default function DivisionDetailPage() {
                         {hasTumbling    && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">{f(sheet.tumbling_total).toFixed(2)}</td>}
                         {hasOverall     && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">{f(sheet.overall_total).toFixed(2)}</td>}
                         {hasPartner     && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">{f(sheet.partner_stunt_total).toFixed(2)}</td>}
+                        {hasBestCheer   && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">{f(sheet.best_cheer_total).toFixed(2)}</td>}
                         {hasCreativity  && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">{f(sheet.avg_creativity).toFixed(2)}</td>}
                         {hasShowmanship && <td className="px-4 py-3.5 text-right tabular-nums text-zinc-600">{f(sheet.avg_showmanship).toFixed(2)}</td>}
                         <td className="px-4 py-3.5 text-right tabular-nums text-red-600">

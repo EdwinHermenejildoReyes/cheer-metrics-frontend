@@ -308,6 +308,7 @@ export interface ScoreSheet {
   avg_showmanship:      string;
   cross_sheet_total:    string;
   partner_stunt_total:  string;
+  best_cheer_total:     string;
   raw_score:            string;
   max_raw:              string;
   scaled_score:         string;
