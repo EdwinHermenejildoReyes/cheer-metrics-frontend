@@ -57,7 +57,6 @@ export type SheetMode = 'grupal' | 'individual' | 'hybrid';
 export type CompetitionSheetMode = 'grupal' | 'individual' | 'hybrid';
 export type ServiceType = 'full' | 'registration_only' | 'judging_only';
 export type ScoringFamily =
-  | 'united'
   | 'united_intl'
   | 'iasf_567'
   | 'partner_stunt'
@@ -65,7 +64,6 @@ export type ScoringFamily =
   | 'best_cheer';
 
 export const SCORING_FAMILY_LABELS: Record<ScoringFamily, string> = {
-  united:        'United',
   united_intl:   'United Internacional',
   iasf_567:      'IASF (N5, N6, N7)',
   partner_stunt: 'Partner / Group Stunts',
@@ -74,7 +72,6 @@ export const SCORING_FAMILY_LABELS: Record<ScoringFamily, string> = {
 };
 
 export const SCORING_FAMILY_REGULATION: Record<ScoringFamily, string> = {
-  united:        'IASF',
   united_intl:   'IASF',
   iasf_567:      'IASF',
   partner_stunt: 'IASF',

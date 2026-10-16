@@ -22,7 +22,7 @@ const schema = z.object({
   end_datetime:    z.string().optional(),
   venue:           z.string().min(2, 'Requerido'),
   city:            z.string().min(2, 'Requerido'),
-  scoring_family:  z.enum(['united', 'united_intl', 'iasf_567', 'partner_stunt', 'future_flyer', 'best_cheer']),
+  scoring_family:  z.enum(['united_intl', 'iasf_567', 'partner_stunt', 'future_flyer', 'best_cheer']),
   sheet_mode:      z.enum(['grupal', 'individual', 'hybrid']),
   service_type:    z.enum(['full', 'registration_only', 'judging_only']),
   notes:           z.string().optional(),
@@ -50,7 +50,6 @@ function formatDateTimeLocal(d: Date): string {
 
 // Default sheet_mode for each scoring_family
 const FAMILY_TO_SHEET_MODE: Record<string, 'grupal' | 'individual' | 'hybrid'> = {
-  united:        'grupal',
   united_intl:   'individual',
   iasf_567:      'individual',
   partner_stunt: 'individual',
@@ -60,7 +59,6 @@ const FAMILY_TO_SHEET_MODE: Record<string, 'grupal' | 'individual' | 'hybrid'> =
 
 const SCORING_FAMILY_OPTIONS = [
   { value: 'united_intl',   label: 'United Internacional' },
-  { value: 'united',        label: 'United (local / grupal)' },
   { value: 'iasf_567',      label: 'IASF (N5, N6, N7)' },
   { value: 'partner_stunt', label: 'Partner / Group Stunts' },
   { value: 'future_flyer',  label: 'Future Flyer' },
