@@ -194,11 +194,11 @@ export default function OverallSheetPage() {
   const [requirePayment, setRequirePayment] = useState(false);
 
   // ── Form state ────────────────────────────────────────────────────────────
-  const [formationsScore,    setFormationsScore]    = useState<number>(2.0);
+  const [formationsScore,    setFormationsScore]    = useState<number>(5.0);
   const [danceDifficulty,    setDanceDifficulty]    = useState<number>(0);   // 0 = not yet selected
   const [danceExecution,     setDanceExecution]     = useState<number>(0);
-  const [creativityOverall,  setCreativityOverall]  = useState<number>(1.5);
-  const [showmanshipOverall, setShowmanshipOverall] = useState<number>(1.0);
+  const [creativityOverall,  setCreativityOverall]  = useState<number>(INTL_CREATIVITY_MIN);
+  const [showmanshipOverall, setShowmanshipOverall] = useState<number>(INTL_SHOWMANSHIP_MIN);
   const [comments,           setComments]           = useState('');
   const [animacionCriteria,  setAnimacionCriteria]  = useState<number[]>([0, 0, 0, 0, 0]);
   const [formationErrors,    setFormationErrors]    = useState<{ time: string; formation: string }[]>([]);
@@ -236,8 +236,11 @@ export default function OverallSheetPage() {
     sysKey: string,
     isIntlSys: boolean,
   ) => {
+    const isIntlScale = sysKey !== 'escolar_ab';
     if (source.formations_score) {
       setFormationsScore(parseFloat(source.formations_score as string));
+    } else if (isIntlScale) {
+      setFormationsScore(5.0);
     }
     if (source.dance_difficulty) {
       const v = parseFloat(source.dance_difficulty as string);
@@ -250,11 +253,15 @@ export default function OverallSheetPage() {
     if (source.creativity_overall) {
       const [cMin, cMax] = [INTL_CREATIVITY_MIN, INTL_CREATIVITY_MAX];
       setCreativityOverall(Math.min(cMax, Math.max(cMin, parseFloat(source.creativity_overall as string))));
+    } else if (isIntlScale) {
+      setCreativityOverall(INTL_CREATIVITY_MIN);
     }
     if (source.showmanship_overall) {
       const sMax    = INTL_SHOWMANSHIP_MAX;
       const showMin = sysKey === 'escolar_ab' ? 0 : INTL_SHOWMANSHIP_MIN;
       setShowmanshipOverall(Math.min(sMax, Math.max(showMin, parseFloat(source.showmanship_overall as string))));
+    } else {
+      setShowmanshipOverall(sysKey === 'escolar_ab' ? 0 : INTL_SHOWMANSHIP_MIN);
     }
     if (source.notes) {
       try {
@@ -312,11 +319,6 @@ export default function OverallSheetPage() {
             setJudgeRecord(record);
             if (!reg) setTeamName('');
             populateFromScoreSource(record, sysKey, isIntlSys);
-            if (isIntlSys && !record.formations_score) {
-              setFormationsScore(5.0);
-              setCreativityOverall(INTL_CREATIVITY_MIN);
-              setShowmanshipOverall(INTL_SHOWMANSHIP_MIN);
-            }
             loadedFromRecord = true;
           } catch {
             // Fall through to ScoreSheet fallback below
@@ -329,10 +331,6 @@ export default function OverallSheetPage() {
             const sheet = sheetRes.data.results[0];
             setExistingSheet(sheet);
             populateFromScoreSource(sheet, sysKey, isIntlSys);
-          } else if (isIntlSys) {
-            setFormationsScore(5.0);
-            setCreativityOverall(INTL_CREATIVITY_MIN);
-            setShowmanshipOverall(INTL_SHOWMANSHIP_MIN);
           }
         }
       } else {
@@ -343,10 +341,6 @@ export default function OverallSheetPage() {
           setExistingSheet(sheet);
           if (!reg) setTeamName(sheet.team_name);
           populateFromScoreSource(sheet, sysKey, isIntlSys);
-        } else if (isIntlSys) {
-          setFormationsScore(5.0);
-          setCreativityOverall(INTL_CREATIVITY_MIN);
-          setShowmanshipOverall(INTL_SHOWMANSHIP_MIN);
         }
       }
     } finally {
