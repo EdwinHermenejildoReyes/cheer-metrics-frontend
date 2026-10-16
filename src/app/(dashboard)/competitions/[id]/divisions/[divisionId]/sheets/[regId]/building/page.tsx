@@ -740,10 +740,7 @@ export default function BuildingSheetPage() {
               Solo lectura
             </span>
           ) : (
-            <Button onClick={async () => {
-              const ok = await handleSave();
-              if (ok) window.location.href = `/competitions/${id}/divisions/${divisionId}`;
-            }} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
+            <Button onClick={() => handleSave()} loading={saving} disabled={requirePayment && unpaidAthletes.length > 0} className="print:hidden">
               <Save className="h-4 w-4" />
               Guardar
             </Button>
