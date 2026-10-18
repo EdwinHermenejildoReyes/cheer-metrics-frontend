@@ -354,6 +354,14 @@ export function OverallSheetPrintView(p: OverallPrintData) {
         </div>
       </div>
 
+      {/* ── Judge comments ──────────────────────────────────────────────────── */}
+      {p.formationsNotes && p.formationsNotes.trim() && (
+        <div style={{ margin: '10px 14px 0', padding: '8px 12px', backgroundColor: '#f9fafb', borderRadius: '6px', borderLeft: '3px solid #d4d4d8' }}>
+          <p style={{ fontSize: '8px', fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase' as const, letterSpacing: '0.06em', margin: '0 0 4px' }}>Comentarios del juez</p>
+          <p style={{ fontSize: '9.5px', color: '#3f3f46', margin: 0, whiteSpace: 'pre-wrap' as const, lineHeight: 1.5 }}>{p.formationsNotes}</p>
+        </div>
+      )}
+
       <p style={{ marginTop: '10px', padding: '5px 14px 0', fontSize: '8px', color: '#a1a1aa', textAlign: 'center', borderTop: '1px solid #e4e4e7' }}>
         Generado por Cheer Metrics · Ecuador
       </p>
