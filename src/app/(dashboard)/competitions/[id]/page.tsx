@@ -59,6 +59,11 @@ export default function CompetitionDetailPage() {
   const [judgeScope, setJudgeScope] = useState<'all' | 'specific'>('all');
   const [selectedDivIds, setSelectedDivIds] = useState<number[]>([]);
 
+  const [editingAssignment, setEditingAssignment] = useState<JudgeAssignment | null>(null);
+  const [editDivScope, setEditDivScope] = useState<'all' | 'specific'>('all');
+  const [editDivIds, setEditDivIds] = useState<number[]>([]);
+  const [savingEdit, setSavingEdit] = useState(false);
+
   const [conflictsOpen, setConflictsOpen] = useState(false);
   const [conflicts, setConflicts] = useState<RestConflict[]>([]);
   const [conflictsLoading, setConflictsLoading] = useState(false);
@@ -279,6 +284,30 @@ export default function CompetitionDetailPage() {
       await loadJudges();
     } catch {
       toast.error('No se pudo eliminar la asignación');
+    }
+  };
+
+  const openEditAssignment = (a: JudgeAssignment) => {
+    setEditingAssignment(a);
+    const hasSpecific = a.divisions.length > 0;
+    setEditDivScope(hasSpecific ? 'specific' : 'all');
+    setEditDivIds(hasSpecific ? a.divisions : []);
+  };
+
+  const handleSaveAssignmentDivisions = async () => {
+    if (!editingAssignment) return;
+    setSavingEdit(true);
+    try {
+      await competitionsRepository.patchJudgeAssignment(editingAssignment.id, {
+        divisions: editDivScope === 'all' ? [] : editDivIds,
+      });
+      toast.success('Asignación actualizada');
+      setEditingAssignment(null);
+      await loadJudges();
+    } catch {
+      toast.error('No se pudo actualizar la asignación');
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -902,17 +931,28 @@ export default function CompetitionDetailPage() {
                       sheetMode={competition?.sheet_mode}
                       disabledTypes={(() => {
                         if (!newJudgeUserId) return [];
-                        const existing = assignments.filter((a) => String(a.user) === newJudgeUserId).map((a) => a.sheet_type);
+                        const existingAssignments = assignments.filter((a) => String(a.user) === newJudgeUserId);
                         const disabled = new Set<SheetType>();
-                        for (const st of existing) {
-                          const group = SHEET_TYPE_GROUPS.find((g) => g.types.includes(st));
-                          if (!group) continue;
-                          const isGrupal = GRUPAL_SHEET_TYPES.includes(st);
-                          const conflicts = isGrupal
-                            ? group.types.filter((t) => !GRUPAL_SHEET_TYPES.includes(t))
-                            : group.types.filter((t) => GRUPAL_SHEET_TYPES.includes(t));
-                          conflicts.forEach((c) => disabled.add(c));
-                          disabled.add(st);
+                        for (const a of existingAssignments) {
+                          const st = a.sheet_type;
+                          // Always block exact duplicates unless the existing assignment
+                          // is division-scoped and we're also scoping to different divisions.
+                          // Simple rule: if assigning to all divisions, block exact duplicates.
+                          if (judgeScope === 'all' || a.divisions.length === 0) {
+                            disabled.add(st);
+                          }
+                          // Block grupal ↔ individual cross-types only when assigning to
+                          // all divisions (scope='all') — division-scoped assignments can
+                          // coexist with existing grupal/individual ones for other divisions.
+                          if (judgeScope === 'all') {
+                            const group = SHEET_TYPE_GROUPS.find((g) => g.types.includes(st));
+                            if (!group) continue;
+                            const isGrupal = GRUPAL_SHEET_TYPES.includes(st);
+                            const conflicting = isGrupal
+                              ? group.types.filter((t) => !GRUPAL_SHEET_TYPES.includes(t))
+                              : group.types.filter((t) => GRUPAL_SHEET_TYPES.includes(t));
+                            conflicting.forEach((c) => disabled.add(c));
+                          }
                         }
                         return [...disabled];
                       })()}
@@ -992,11 +1032,23 @@ export default function CompetitionDetailPage() {
                                           {a.panel_name}
                                         </span>
                                       )}
-                                      {a.divisions.length > 0 && (
+                                      {a.divisions.length > 0 ? (
                                         <span className="rounded bg-emerald-100 text-emerald-700 px-1 py-0.5 text-[10px] font-semibold leading-none">
                                           {a.divisions.map(did => divisions.find(d => d.id === did)?.name ?? String(did)).join(', ')}
                                         </span>
+                                      ) : (
+                                        <span className="rounded bg-zinc-200 text-zinc-500 px-1 py-0.5 text-[10px] font-semibold leading-none">
+                                          Todas
+                                        </span>
                                       )}
+                                      <button
+                                        type="button"
+                                        title="Editar divisiones"
+                                        onClick={() => openEditAssignment(a)}
+                                        className="text-zinc-400 hover:text-blue-500 transition-colors"
+                                      >
+                                        <Pencil className="h-3 w-3" />
+                                      </button>
                                       <button
                                         type="button"
                                         onClick={() => handleRemoveJudge(a.id)}
@@ -1025,6 +1077,55 @@ export default function CompetitionDetailPage() {
           )}
         </div>
       )}
+
+      {/* ── Modal: editar divisiones de una asignación ─────────────────── */}
+      <Modal
+        open={!!editingAssignment}
+        onClose={() => setEditingAssignment(null)}
+        title={editingAssignment ? `Editar divisiones — ${SHEET_TYPE_LABELS[editingAssignment.sheet_type]}` : ''}
+        size="sm"
+      >
+        {editingAssignment && (
+          <div className="space-y-4 pt-2">
+            <div>
+              <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-2 block">Divisiones</label>
+              <div className="flex rounded-lg border border-zinc-200 overflow-hidden text-sm mb-3">
+                <button
+                  type="button"
+                  className={`flex-1 py-1.5 text-center transition-colors ${editDivScope === 'all' ? 'bg-zinc-900 text-white font-semibold' : 'text-zinc-600 hover:bg-zinc-50'}`}
+                  onClick={() => { setEditDivScope('all'); setEditDivIds([]); }}
+                >
+                  Todas las divisiones
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 py-1.5 text-center transition-colors ${editDivScope === 'specific' ? 'bg-zinc-900 text-white font-semibold' : 'text-zinc-600 hover:bg-zinc-50'}`}
+                  onClick={() => setEditDivScope('specific')}
+                >
+                  Divisiones específicas
+                </button>
+              </div>
+              {editDivScope === 'specific' && (
+                <DivisionMultiSelect
+                  divisions={divisions}
+                  value={editDivIds}
+                  onChange={setEditDivIds}
+                />
+              )}
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="ghost" size="sm" onClick={() => setEditingAssignment(null)}>Cancelar</Button>
+              <Button
+                size="sm"
+                onClick={handleSaveAssignmentDivisions}
+                disabled={savingEdit || (editDivScope === 'specific' && editDivIds.length === 0)}
+              >
+                {savingEdit ? 'Guardando…' : 'Guardar'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       {/* ── Modal: confirmar generación de itinerario ───────────────────── */}
       <Modal

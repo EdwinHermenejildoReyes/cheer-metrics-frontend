@@ -292,6 +292,9 @@ class CompetitionsRepository {
   createJudgeAssignment = (data: Partial<JudgeAssignment>) =>
     api.post<JudgeAssignment>('/judge-assignments/', data);
 
+  patchJudgeAssignment = (id: number, data: Partial<JudgeAssignment>) =>
+    api.patch<JudgeAssignment>(`/judge-assignments/${id}/`, data);
+
   deleteJudgeAssignment = (id: number) =>
     api.delete(`/judge-assignments/${id}/`);
 
