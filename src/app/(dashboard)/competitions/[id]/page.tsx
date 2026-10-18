@@ -329,13 +329,7 @@ export default function CompetitionDetailPage() {
 
   const divisionsByBlock = blockNumbers.map((block) => {
     const inBlock = baseDivisions.filter((d) => (d.block ?? 1) === block);
-    return {
-      block,
-      divisions: [
-        ...inBlock.filter((d) => !isFullyScored(d)),
-        ...inBlock.filter((d) => isFullyScored(d)),
-      ],
-    };
+    return { block, divisions: inBlock };
   });
 
   const flatDivisions = [
