@@ -187,6 +187,7 @@ export interface Division {
   is_enable: boolean;
   allowed_sheet_types: SheetType[] | null;
   order: number;
+  block: number;
   scoring_locked: boolean;
   confirmed_count: number;
   scored_count: number;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, Fragment } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, X, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList, Receipt, Link as LinkIcon, Copy, Check, Printer, Trophy } from 'lucide-react';
 import { PrintButton } from '@/components/print/PrintButton';
@@ -318,18 +318,37 @@ export default function CompetitionDetailPage() {
     ? divisions.filter((d) => canViewDivision(competition.id, d.id))
     : divisions;
 
-  // Fully-scored: every confirmed registration has been judged by at least one judge.
-  // These sink to the bottom while preserving itinerary order within each group.
   const isFullyScored = (d: Division) =>
     d.confirmed_count > 0 && d.scored_count >= d.confirmed_count;
 
-  const visibleDivisions = [
+  const activeDivision = baseDivisions.find((d) => !isFullyScored(d)) ?? null;
+
+  // Block/jornada grouping — only active when divisions span multiple block values.
+  const blockNumbers = [...new Set(baseDivisions.map((d) => d.block ?? 1))].sort((a, b) => a - b);
+  const hasMultipleBlocks = blockNumbers.length > 1;
+
+  const divisionsByBlock = blockNumbers.map((block) => {
+    const inBlock = baseDivisions.filter((d) => (d.block ?? 1) === block);
+    return {
+      block,
+      divisions: [
+        ...inBlock.filter((d) => !isFullyScored(d)),
+        ...inBlock.filter((d) => isFullyScored(d)),
+      ],
+    };
+  });
+
+  const flatDivisions = [
     ...baseDivisions.filter((d) => !isFullyScored(d)),
     ...baseDivisions.filter((d) => isFullyScored(d)),
   ];
 
-  // First not-yet-fully-scored division = the one currently being judged.
-  const activeDivision = baseDivisions.find((d) => !isFullyScored(d)) ?? null;
+  const activeBlock = hasMultipleBlocks && activeDivision ? (activeDivision.block ?? 1) : null;
+  const activeBlockDivisions = activeBlock != null
+    ? baseDivisions.filter((d) => (d.block ?? 1) === activeBlock)
+    : null;
+  const activeBlockScored    = activeBlockDivisions ? activeBlockDivisions.reduce((s, d) => s + d.scored_count, 0) : 0;
+  const activeBlockConfirmed = activeBlockDivisions ? activeBlockDivisions.reduce((s, d) => s + d.confirmed_count, 0) : 0;
 
   return (
     <div className="flex flex-col gap-6 p-8">
@@ -475,39 +494,170 @@ export default function CompetitionDetailPage() {
           )}
         </div>
 
-        {/* Active division banner */}
+        {/* Active division / jornada banner */}
         {activeDivision && hasJudging && (
           <div
             className="flex items-center gap-4 rounded-xl px-5 py-3.5 border"
             style={{ backgroundColor: 'var(--brand-primary)', borderColor: 'var(--brand-primary)' }}
           >
             <Trophy className="h-5 w-5 shrink-0" style={{ color: 'var(--brand-primary-text)', opacity: 0.7 }} />
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
-                División en curso
-              </p>
-              <p className="text-sm font-bold truncate" style={{ color: 'var(--brand-primary-text)' }}>
-                {activeDivision.name}
-                {activeDivision.sub_group && (
-                  <span className="ml-2 text-xs font-semibold opacity-70">{activeDivision.sub_group}</span>
-                )}
-              </p>
-            </div>
-            <div className="text-right shrink-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
-                Progreso
-              </p>
-              <p className="text-sm font-bold tabular-nums" style={{ color: 'var(--brand-primary-text)' }}>
-                {activeDivision.scored_count} / {activeDivision.confirmed_count}
-              </p>
-            </div>
+            {hasMultipleBlocks ? (
+              <>
+                <div className="min-w-[80px] shrink-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
+                    Jornada en curso
+                  </p>
+                  <p className="text-sm font-bold" style={{ color: 'var(--brand-primary-text)' }}>
+                    Jornada {activeBlock}
+                  </p>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
+                    División activa
+                  </p>
+                  <p className="text-sm font-bold truncate" style={{ color: 'var(--brand-primary-text)' }}>
+                    {activeDivision.name}
+                    {activeDivision.sub_group && (
+                      <span className="ml-2 text-xs font-semibold opacity-70">{activeDivision.sub_group}</span>
+                    )}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
+                    Progreso jornada
+                  </p>
+                  <p className="text-sm font-bold tabular-nums" style={{ color: 'var(--brand-primary-text)' }}>
+                    {activeBlockScored} / {activeBlockConfirmed}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
+                    División en curso
+                  </p>
+                  <p className="text-sm font-bold truncate" style={{ color: 'var(--brand-primary-text)' }}>
+                    {activeDivision.name}
+                    {activeDivision.sub_group && (
+                      <span className="ml-2 text-xs font-semibold opacity-70">{activeDivision.sub_group}</span>
+                    )}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
+                    Progreso
+                  </p>
+                  <p className="text-sm font-bold tabular-nums" style={{ color: 'var(--brand-primary-text)' }}>
+                    {activeDivision.scored_count} / {activeDivision.confirmed_count}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         )}
 
-        {visibleDivisions.length === 0 ? (
+        {baseDivisions.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-14 text-zinc-400 rounded-xl border border-dashed border-zinc-200">
             <Users className="h-8 w-8" />
             <p className="text-sm">{isJudge ? 'No tienes divisiones asignadas.' : 'Sin divisiones. Agrega la primera.'}</p>
+          </div>
+        ) : hasMultipleBlocks ? (
+          <div className="flex flex-col gap-5">
+            {divisionsByBlock.map(({ block, divisions: blockDivs }) => {
+              const bConfirmed = blockDivs.reduce((s, d) => s + d.confirmed_count, 0);
+              const bScored    = blockDivs.reduce((s, d) => s + d.scored_count, 0);
+              const bDone      = bConfirmed > 0 && bScored >= bConfirmed;
+              return (
+                <Fragment key={block}>
+                  <div className="flex items-center gap-2.5 px-1">
+                    <span className={`text-[11px] font-bold uppercase tracking-widest ${bDone ? 'text-zinc-400' : block === activeBlock ? 'text-blue-600' : 'text-zinc-500'}`}>
+                      Jornada {block}
+                    </span>
+                    {bConfirmed > 0 && (
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${bDone ? 'bg-green-100 text-green-700' : 'bg-zinc-100 text-zinc-500'}`}>
+                        {bDone ? '✓ Completa' : `${bScored}/${bConfirmed}`}
+                      </span>
+                    )}
+                  </div>
+                  <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                          <th className="px-5 py-3">División</th>
+                          <th className="px-5 py-3">Edad</th>
+                          <th className="px-5 py-3">Nivel</th>
+                          <th className="px-5 py-3">Categoría</th>
+                          <th className="px-5 py-3">Sistema</th>
+                          <th className="px-5 py-3">Atletas</th>
+                          {hasJudging && <th className="px-5 py-3 text-right">Progreso</th>}
+                          <th className="px-5 py-3" />
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-100">
+                        {blockDivs.map((div) => {
+                          const fullyScored = isFullyScored(div);
+                          const isActive = activeDivision?.id === div.id;
+                          return (
+                            <tr
+                              key={div.id}
+                              className={`cursor-pointer transition-colors ${fullyScored ? 'opacity-50 bg-zinc-50 hover:opacity-70' : isActive ? 'bg-blue-50/40 hover:bg-blue-50/70' : 'hover:bg-zinc-50'}`}
+                              onClick={() => router.push(`/competitions/${id}/divisions/${div.public_id}`)}
+                            >
+                              <td className="px-5 py-3.5 font-medium text-zinc-900">
+                                <div className="flex items-center gap-2">
+                                  {isActive && <span className="inline-block h-2 w-2 rounded-full bg-blue-500 shrink-0" />}
+                                  {div.name}
+                                  {div.sub_group && (
+                                    <span className="ml-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-600">
+                                      {div.sub_group}
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-5 py-3.5 text-zinc-600">{AGE_GROUP_LABELS[div.age_group]}</td>
+                              <td className="px-5 py-3.5">
+                                <Badge variant="violet">{SKILL_LEVEL_LABELS[div.skill_level]}</Badge>
+                              </td>
+                              <td className="px-5 py-3.5 text-zinc-600">
+                                {CATEGORY_LABELS[div.category]}
+                                {div.is_non_tumbling && <span className="ml-1.5 rounded-full bg-yellow-100 text-yellow-800 px-1.5 py-0.5 text-[10px] font-medium">NT</span>}
+                              </td>
+                              <td className="px-5 py-3.5 text-xs text-zinc-500">
+                                {SCORING_SYSTEM_LABELS[(div.scoring_system || div.suggested_scoring_system) as ScoringSystem] ?? '–'}
+                              </td>
+                              <td className="px-5 py-3.5 text-zinc-500 text-xs">
+                                {div.min_athletes ?? '–'} – {div.max_athletes ?? '–'}
+                              </td>
+                              {hasJudging && div.confirmed_count > 0 && (
+                                <td className="px-5 py-3.5 text-xs text-right tabular-nums">
+                                  {fullyScored ? (
+                                    <span className="rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-semibold text-green-700">
+                                      ✓ Completa
+                                    </span>
+                                  ) : (
+                                    <span className="text-zinc-500">
+                                      {div.scored_count}/{div.confirmed_count}
+                                    </span>
+                                  )}
+                                </td>
+                              )}
+                              {!isJudge && (
+                                <td className="px-5 py-3.5 text-right">
+                                  <Button size="icon" variant="ghost" onClick={(e) => openEditDiv(e, div)}>
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </Button>
+                                </td>
+                              )}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </Fragment>
+              );
+            })}
           </div>
         ) : (
           <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
@@ -525,7 +675,7 @@ export default function CompetitionDetailPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
-                {visibleDivisions.map((div) => {
+                {flatDivisions.map((div) => {
                   const fullyScored = isFullyScored(div);
                   const isActive = activeDivision?.id === div.id;
                   return (
