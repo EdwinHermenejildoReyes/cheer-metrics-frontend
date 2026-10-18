@@ -314,9 +314,22 @@ export default function CompetitionDetailPage() {
   if (loading) return <PageSpinner />;
   if (!competition) return <div className="p-8 text-zinc-500">Competencia no encontrada.</div>;
 
-  const visibleDivisions = isJudge
+  const baseDivisions = isJudge
     ? divisions.filter((d) => canViewDivision(competition.id, d.id))
     : divisions;
+
+  // Fully-scored: every confirmed registration has been judged by at least one judge.
+  // These sink to the bottom while preserving itinerary order within each group.
+  const isFullyScored = (d: Division) =>
+    d.confirmed_count > 0 && d.scored_count >= d.confirmed_count;
+
+  const visibleDivisions = [
+    ...baseDivisions.filter((d) => !isFullyScored(d)),
+    ...baseDivisions.filter((d) => isFullyScored(d)),
+  ];
+
+  // First not-yet-fully-scored division = the one currently being judged.
+  const activeDivision = baseDivisions.find((d) => !isFullyScored(d)) ?? null;
 
   return (
     <div className="flex flex-col gap-6 p-8">
@@ -462,6 +475,35 @@ export default function CompetitionDetailPage() {
           )}
         </div>
 
+        {/* Active division banner */}
+        {activeDivision && hasJudging && (
+          <div
+            className="flex items-center gap-4 rounded-xl px-5 py-3.5 border"
+            style={{ backgroundColor: 'var(--brand-primary)', borderColor: 'var(--brand-primary)' }}
+          >
+            <Trophy className="h-5 w-5 shrink-0" style={{ color: 'var(--brand-primary-text)', opacity: 0.7 }} />
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
+                División en curso
+              </p>
+              <p className="text-sm font-bold truncate" style={{ color: 'var(--brand-primary-text)' }}>
+                {activeDivision.name}
+                {activeDivision.sub_group && (
+                  <span className="ml-2 text-xs font-semibold opacity-70">{activeDivision.sub_group}</span>
+                )}
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
+                Progreso
+              </p>
+              <p className="text-sm font-bold tabular-nums" style={{ color: 'var(--brand-primary-text)' }}>
+                {activeDivision.scored_count} / {activeDivision.confirmed_count}
+              </p>
+            </div>
+          </div>
+        )}
+
         {visibleDivisions.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-14 text-zinc-400 rounded-xl border border-dashed border-zinc-200">
             <Users className="h-8 w-8" />
@@ -478,23 +520,30 @@ export default function CompetitionDetailPage() {
                   <th className="px-5 py-3">Categoría</th>
                   <th className="px-5 py-3">Sistema</th>
                   <th className="px-5 py-3">Atletas</th>
+                  {hasJudging && <th className="px-5 py-3 text-right">Progreso</th>}
                   <th className="px-5 py-3" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
-                {visibleDivisions.map((div) => (
+                {visibleDivisions.map((div) => {
+                  const fullyScored = isFullyScored(div);
+                  const isActive = activeDivision?.id === div.id;
+                  return (
                   <tr
                     key={div.id}
-                    className="cursor-pointer hover:bg-zinc-50 transition-colors"
+                    className={`cursor-pointer transition-colors ${fullyScored ? 'opacity-50 bg-zinc-50 hover:opacity-70' : isActive ? 'bg-blue-50/40 hover:bg-blue-50/70' : 'hover:bg-zinc-50'}`}
                     onClick={() => router.push(`/competitions/${id}/divisions/${div.public_id}`)}
                   >
                     <td className="px-5 py-3.5 font-medium text-zinc-900">
-                      {div.name}
-                      {div.sub_group && (
-                        <span className="ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-600">
-                          {div.sub_group}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {isActive && <span className="inline-block h-2 w-2 rounded-full bg-blue-500 shrink-0" />}
+                        {div.name}
+                        {div.sub_group && (
+                          <span className="ml-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-600">
+                            {div.sub_group}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-3.5 text-zinc-600">{AGE_GROUP_LABELS[div.age_group]}</td>
                     <td className="px-5 py-3.5">
@@ -510,6 +559,19 @@ export default function CompetitionDetailPage() {
                     <td className="px-5 py-3.5 text-zinc-500 text-xs">
                       {div.min_athletes ?? '–'} – {div.max_athletes ?? '–'}
                     </td>
+                    {hasJudging && div.confirmed_count > 0 && (
+                      <td className="px-5 py-3.5 text-xs text-right tabular-nums">
+                        {fullyScored ? (
+                          <span className="rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-semibold text-green-700">
+                            ✓ Completa
+                          </span>
+                        ) : (
+                          <span className="text-zinc-500">
+                            {div.scored_count}/{div.confirmed_count}
+                          </span>
+                        )}
+                      </td>
+                    )}
                     {!isJudge && (
                       <td className="px-5 py-3.5 text-right">
                         <Button size="icon" variant="ghost" onClick={(e) => openEditDiv(e, div)}>
@@ -518,7 +580,8 @@ export default function CompetitionDetailPage() {
                       </td>
                     )}
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

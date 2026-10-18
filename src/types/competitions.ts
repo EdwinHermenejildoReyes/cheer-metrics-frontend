@@ -188,6 +188,8 @@ export interface Division {
   allowed_sheet_types: SheetType[] | null;
   order: number;
   scoring_locked: boolean;
+  confirmed_count: number;
+  scored_count: number;
 }
 
 export interface Gym {
