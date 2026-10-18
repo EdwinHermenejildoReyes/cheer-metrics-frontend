@@ -15,6 +15,7 @@ import { useBranding } from '@/contexts/BrandingContext';
 import { toastApiError, extractApiErrorText } from '@/utils/apiErrors';
 import type { JudgeScoreRecord, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
+import { FutureFlyerSkillPanel } from '@/components/skill-tables/FutureFlyerSkillPanel';
 
 // ── Per-category config (regulation: UCA National Experience 2025) ────────────
 
@@ -243,6 +244,7 @@ export default function PartnerStuntSheetPage() {
   const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
   const [judgeRecord,    setJudgeRecord]    = useState<JudgeScoreRecord | null>(null);
   const [skillLevel,     setSkillLevel]     = useState<string | undefined>(undefined);
+  const [subGroup,       setSubGroup]       = useState<string>('');
   const [loading,        setLoading]        = useState(true);
   const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
   const [requirePayment, setRequirePayment] = useState(false);
@@ -296,6 +298,7 @@ export default function PartnerStuntSheetPage() {
         setRequirePayment(reg.competition_require_payment);
       }
       setSkillLevel(divRes.data.skill_level);
+      setSubGroup(divRes.data.sub_group ?? '');
       setCompetitionIntId(divRes.data.competition);
       setScoringLocked(divRes.data.scoring_locked ?? false);
 
@@ -528,6 +531,11 @@ export default function PartnerStuntSheetPage() {
             <p className="text-xs text-zinc-400">de {MAX_TOTAL} pts</p>
           </div>
         </div>
+
+        {/* ── Future Flyer skill reference ─────────────────────────────── */}
+        {skillLevel === 'future_flyer' && subGroup && (
+          <FutureFlyerSkillPanel subGroup={subGroup} />
+        )}
 
         {/* ── Category scorers ─────────────────────────────────────────── */}
         {CATEGORIES.map(cat => (
