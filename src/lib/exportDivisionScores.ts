@@ -227,12 +227,13 @@ function buildWorksheet(
   judgeRecordsMap: Record<number, Record<number, JudgeScoreRecord>>,
 ) {
   const cols      = buildCols(layout);
-  const totalCols = cols.length + 1; // +1 for Juez
+  const totalCols = cols.length + 2; // +1 for Juez, +1 for Notas
   const merges: Merge[] = [];
 
   // ── Row 0: section labels ──────────────────────────────────────────────────
   const sectionRow: Row = Array(totalCols).fill(null);
   sectionRow[0] = 'Juez'; // merged down through row 1
+  sectionRow[totalCols - 1] = 'NOTAS';
 
   let ci = 0;
   while (ci < cols.length) {
@@ -246,14 +247,16 @@ function buildWorksheet(
     }
     ci = end + 1;
   }
-  // Merge Juez vertically across both header rows
+  // Merge Juez and Notas vertically across both header rows
   merges.push({ s: { r: 0, c: 0 }, e: { r: 1, c: 0 } });
+  merges.push({ s: { r: 0, c: totalCols - 1 }, e: { r: 1, c: totalCols - 1 } });
 
   // ── Row 1: field labels ────────────────────────────────────────────────────
   const fieldRow: Row = [''];
   for (const col of cols) {
     fieldRow.push(col.fieldLabel || col.sectionLabel);
   }
+  fieldRow.push('');
 
   const rows: Row[] = [sectionRow, fieldRow, Array(totalCols).fill(null)];
   let rowIdx = 3;
@@ -278,6 +281,7 @@ function buildWorksheet(
       const rec  = regRecords[judge.id];
       const judgeRow: Row = [judge.user_name];
       for (const col of cols) judgeRow.push(n2(col.getValue(rec)));
+      judgeRow.push(rec.notes || '');
       rows.push(judgeRow);
       rowIdx++;
     }
@@ -293,7 +297,7 @@ function buildWorksheet(
     if (col.sectionLabel === 'SHOWMANSHIP')  return { wch: 13 };
     if (col.fieldLabel === 'Σ')              return { wch: 8 };
     return { wch: 7 };
-  })];
+  }), { wch: 45 }];
 
   return { rows, merges, colWidths };
 }
@@ -331,7 +335,7 @@ function buildSheetHtml(
   judgeRecordsMap: Record<number, Record<number, JudgeScoreRecord>>,
 ): string {
   const cols      = buildCols(layout);
-  const totalCols = cols.length + 1;
+  const totalCols = cols.length + 2; // +1 for Juez, +1 for Notas
 
   // Check if any section has >1 column (needs a second header row)
   const needsRow2 = (() => {
@@ -369,6 +373,7 @@ function buildSheetHtml(
       ci += cnt;
     }
   }
+  row1 += `<th ${needsRow2 ? 'rowspan="2"' : ''} style="${thBase}text-align:left;min-width:150px;">NOTAS</th>`;
 
   // ── Header row 2 (field labels for non-special cols) ─────────────────────
   let row2 = '';
@@ -401,13 +406,14 @@ function buildSheetHtml(
       const rec = regRecords[judge.id];
       body += `<tr>
         <td style="${tdBase}text-align:left;color:#3f3f46;">${judge.user_name}</td>`;
-      cols.forEach((col, idx) => {
+      cols.forEach((col) => {
         const val    = n2(col.getValue(rec));
         const isSum  = col.fieldLabel === 'Σ';
         const isTotal = col.sectionLabel === 'TOTAL';
         const bg     = (isSum || isTotal) ? 'background:#f9fafb;font-weight:600;' : '';
         body += `<td style="${tdBase}${bg}color:${isTotal ? '#111' : '#3f3f46'};">${val}</td>`;
       });
+      body += `<td style="${tdBase}text-align:left;white-space:normal;min-width:150px;color:#3f3f46;">${rec.notes || ''}</td>`;
       body += '</tr>';
     }
 
