@@ -13,6 +13,7 @@ import { useJudge } from '@/hooks/useJudge';
 import { toastApiError, extractApiErrorText } from '@/utils/apiErrors';
 import type { JudgeScoreRecord, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
+import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 
 // ── Per-category config (FECU 2026 Best Cheer) ────────────────────────────────
 
@@ -240,6 +241,7 @@ export default function BestCheerSheetPage() {
   const [teamName,       setTeamName]       = useState<string>('');
   const [existingSheet,  setExistingSheet]  = useState<ScoreSheet | null>(null);
   const [judgeRecord,    setJudgeRecord]    = useState<JudgeScoreRecord | null>(null);
+  const [skillLevel,     setSkillLevel]     = useState<string | undefined>(undefined);
   const [loading,        setLoading]        = useState(true);
   const [unpaidAthletes, setUnpaidAthletes] = useState<UnpaidAthlete[]>([]);
   const [requirePayment, setRequirePayment] = useState(false);
@@ -294,6 +296,7 @@ export default function BestCheerSheetPage() {
         setUnpaidAthletes(reg.unpaid_athletes);
         setRequirePayment(reg.competition_require_payment);
       }
+      setSkillLevel(divRes.data.skill_level);
       setCompetitionIntId(divRes.data.competition);
       setScoringLocked(divRes.data.scoring_locked ?? false);
 
@@ -507,6 +510,9 @@ export default function BestCheerSheetPage() {
             <p className="text-xs text-zinc-400">de {MAX_TOTAL} pts</p>
           </div>
         </div>
+
+        {/* ── Gymnastics skill reference ───────────────────────────────── */}
+        <SkillReferencePanel skillLevel={skillLevel} sheetType="tumbling" />
 
         {/* ── Category scorers ─────────────────────────────────────────── */}
         {CATEGORIES.map(cat => (
