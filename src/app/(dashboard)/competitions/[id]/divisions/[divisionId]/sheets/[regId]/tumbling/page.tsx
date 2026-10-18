@@ -103,7 +103,7 @@ function TumblingExecInfoContent({ cats, dedOpts }: { cats: string[]; dedOpts?: 
 
 // ── Execution sub-component ───────────────────────────────────────────────────
 function ExecSection({
-  label, max, categories, deds, onChange, info, dedOpts,
+  label, max, categories, deds, onChange, info, dedOpts, locked,
 }: {
   label: string;
   max: number;
@@ -112,10 +112,29 @@ function ExecSection({
   onChange: (deds: ExecDeds) => void;
   info?: React.ReactNode;
   dedOpts?: number[];
+  locked?: boolean;
 }) {
   const opts     = dedOpts ?? EXEC_DED_OPTS;
-  const score    = execScore(max, deds);
+  const score    = locked ? 0 : execScore(max, deds);
   const totalDed = deds.reduce<number>((s, d) => s + (d ?? 0), 0);
+
+  if (locked) {
+    return (
+      <div className="rounded-xl border border-zinc-200 bg-zinc-50 overflow-hidden">
+        <div className="px-4 py-2.5 bg-zinc-100 border-b border-zinc-200">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold uppercase tracking-wide text-zinc-400">{label} — Ejecución</span>
+            <span className="text-sm font-semibold tabular-nums text-zinc-400">Máx: {fmt(max)}</span>
+          </div>
+        </div>
+        <div className="px-4 py-5 text-center">
+          <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">Drivers = 0.0 — Sin Gimnasia</p>
+          <p className="text-2xl font-bold tabular-nums text-zinc-300 mt-1">0.00</p>
+          <p className="text-xs text-zinc-400 mt-1">La ejecución es 0 cuando no hay drivers de dificultad</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
@@ -334,12 +353,15 @@ export default function TumblingSheetPage() {
   const [comments, setComments] = useState('');
 
   // ── Computed totals ───────────────────────────────────────────────────────
-  const standingExecTotal   = execScore(tCfg.standingExecMax, standingExecDeds);
+  // When drivers (habilidad) = 0, no gymnastic elements were performed → execution is 0.
+  const standingExecLocked  = tCfg.standingHasDiff && standingHabilidad === 0;
+  const standingExecTotal   = standingExecLocked ? 0 : execScore(tCfg.standingExecMax, standingExecDeds);
   const standingDiffEff     = tCfg.standingHasDiff ? standingRango : 0;
   const standingHabEff      = tCfg.standingHasDiff ? standingHabilidad : 0;
   const standingTotal       = parseFloat((standingDiffEff + standingHabEff + standingExecTotal).toFixed(2));
 
-  const runningExecTotal    = execScore(tCfg.runningExecMax, runningExecDeds);
+  const runningExecLocked   = tCfg.runningHasDiff && runningHabilidad === 0;
+  const runningExecTotal    = runningExecLocked ? 0 : execScore(tCfg.runningExecMax, runningExecDeds);
   const runningDiffEff      = tCfg.runningHasDiff ? runningRango : 0;
   const runningHabEff       = tCfg.runningHasDiff ? runningHabilidad : 0;
   const runningTotal        = parseFloat((runningDiffEff + runningHabEff + runningExecTotal).toFixed(2));
@@ -849,6 +871,7 @@ export default function TumblingSheetPage() {
                   onChange={setStandingExecDeds}
                   info={<TumblingExecInfoContent cats={STANDING_EXEC_CATS} dedOpts={tCfg.execDedOpts} />}
                   dedOpts={tCfg.execDedOpts}
+                  locked={standingExecLocked}
                 />
                 <SectionTotal
                   label="Total Estática"
@@ -910,6 +933,7 @@ export default function TumblingSheetPage() {
                   onChange={setRunningExecDeds}
                   info={<TumblingExecInfoContent cats={RUNNING_EXEC_CATS} dedOpts={tCfg.execDedOpts} />}
                   dedOpts={tCfg.execDedOpts}
+                  locked={runningExecLocked}
                 />
                 <SectionTotal
                   label="Total Carrera"
