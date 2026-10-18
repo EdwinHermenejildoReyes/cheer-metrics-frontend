@@ -632,8 +632,8 @@ export default function OverallSheetPage() {
                   })}
                 </div>
                 <div className="flex justify-between mt-2 text-[10px] text-zinc-400">
-                  <span>← Más errores</span>
-                  <span>Sin errores →</span>
+                  <span>← Sin errores</span>
+                  <span>Más errores →</span>
                 </div>
               </div>
             </div>
