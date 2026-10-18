@@ -67,7 +67,8 @@ export default function LoginPage() {
       const meRes = await authRepository.me();
       loginDoneRef.current = true;
       dispatch(setUser(meRes.data));
-      router.replace(loginTarget(meRes.data));
+      // Full navigation (not RSC) so the freshly-set cookie reaches Next.js middleware.
+      window.location.replace(loginTarget(meRes.data));
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
       if (status === 401) {
