@@ -325,8 +325,20 @@ export function ScoringSheetModal({
         if (sheetIdRef.current) {
           res = await competitionsRepository.updateScoreSheet(sheetIdRef.current, payload);
         } else {
-          res = await competitionsRepository.createScoreSheet({ ...payload, registration: registrationId });
-          sheetIdRef.current = res.data.id;
+          try {
+            res = await competitionsRepository.createScoreSheet({ ...payload, registration: registrationId });
+            sheetIdRef.current = res.data.id;
+          } catch {
+            // ScoreSheet already exists (auto-created by backend signal) but wasn't
+            // loaded into local state. Fetch it and update instead.
+            const existing = await competitionsRepository.listScoreSheets({
+              registration: String(registrationId),
+              page_size: '1',
+            });
+            if (!existing.data.results.length) throw new Error('No se encontró la planilla');
+            sheetIdRef.current = existing.data.results[0].id;
+            res = await competitionsRepository.updateScoreSheet(sheetIdRef.current, payload);
+          }
         }
         onSaved(res.data);
         setSaveStatus('saved');
