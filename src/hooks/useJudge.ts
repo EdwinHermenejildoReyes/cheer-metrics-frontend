@@ -1,5 +1,6 @@
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/core/rootReducer';
+import { SHEET_TYPE_GROUPS } from '@/types/competitions';
 import type { SheetType } from '@/types/competitions';
 
 // Roles combinados: un juez con el tipo compuesto puede ver todas las planillas del array.
@@ -65,11 +66,42 @@ export function useJudge() {
   /**
    * True when the judge has an active assignment for `sheetType` (or a compound role that expands
    * to include it) AND that specific assignment covers `divisionId`.
-   * Use this for per-sheet-type button visibility inside a division page instead of combining
-   * canViewSheet + canViewDivision (which would leak sheet types from other-division assignments).
+   *
+   * "Specific beats general" rule: if the judge has a division-scoped assignment for another
+   * sheet type in the same group that covers this division, the general (divisions=[]) assignment
+   * for sheetType is suppressed. This prevents showing the grupal `building` button for a division
+   * that was explicitly reassigned to `building_difficulty`.
    */
   const canViewSheetForDivision = (competitionId: number, divisionId: number, sheetType: SheetType): boolean => {
     if (!isJudge) return true;
+
+    // Check if any OTHER sheet type in the same group has a division-specific assignment for this division.
+    const group = SHEET_TYPE_GROUPS.find((g) => g.types.includes(sheetType));
+    if (group) {
+      const hasRivalSpecific = assignments.some((a) => {
+        if (a.competition !== competitionId || !_isAssignmentActive(a)) return false;
+        if (!group.types.includes(a.sheet_type) || a.sheet_type === sheetType) return false;
+        // Only count assignments that are division-specific (non-empty) and cover this division.
+        return a.divisions.length > 0 && a.divisions.includes(divisionId);
+      });
+
+      if (hasRivalSpecific) {
+        // A sibling sheet type is specifically assigned to this division — suppress general assignments
+        // and only allow sheetType if it also has a division-specific assignment covering this division.
+        return assignments.some((a) => {
+          if (a.competition !== competitionId || !_isAssignmentActive(a)) return false;
+          let matchesSheet = a.sheet_type === sheetType;
+          if (!matchesSheet) {
+            const expanded = COMPOUND_SHEET_MAP[a.sheet_type as SheetType];
+            matchesSheet = expanded?.includes(sheetType) ?? false;
+          }
+          if (!matchesSheet) return false;
+          return a.divisions.length > 0 && a.divisions.includes(divisionId);
+        });
+      }
+    }
+
+    // Standard logic (no suppression needed).
     return assignments.some((a) => {
       if (a.competition !== competitionId || !_isAssignmentActive(a)) return false;
       let matchesSheet = a.sheet_type === sheetType;

@@ -442,6 +442,24 @@ export default function BuildingSheetPage() {
       setCompetitionIntId(divRes.data.competition);
       setScoringLocked(divRes.data.scoring_locked ?? false);
 
+      // Redirect judge if a more specific individual assignment (building_difficulty /
+      // building_execution / building_combined) is scoped to this exact division.
+      // That means this division was reassigned to individual mode — the grupal sheet
+      // should not be accessible.
+      if (isJudgeRef.current) {
+        const divIntId  = divRes.data.id;
+        const compIntId = divRes.data.competition;
+        const hasSpecificIndividual = assignmentsRef.current.some((a) => {
+          if (a.competition !== compIntId) return false;
+          if (!['building_difficulty', 'building_execution', 'building_combined'].includes(a.sheet_type)) return false;
+          return a.divisions.length > 0 && a.divisions.includes(divIntId);
+        });
+        if (hasSpecificIndividual) {
+          router.replace(`/competitions/${id}/divisions/${divisionId}`);
+          return;
+        }
+      }
+
       // Initialize cross-sheet defaults from config so INTL divisions start at 8.0/3.5, not 1.5/1.0
       setCreativityBuilding(cfg.creativityMin);
       setShowmanshipBuilding(cfg.showmanshipMin);

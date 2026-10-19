@@ -469,6 +469,22 @@ export default function TumblingSheetPage() {
       setCompetitionIntId(divRes.data.competition);
       setScoringLocked(divRes.data.scoring_locked ?? false);
 
+      // Redirect judge if a more specific individual assignment (tumbling_difficulty /
+      // tumbling_execution / tumbling_combined) is scoped to this exact division.
+      if (isJudgeRef.current) {
+        const divIntId  = divRes.data.id;
+        const compIntId = divRes.data.competition;
+        const hasSpecificIndividual = assignmentsRef.current.some((a) => {
+          if (a.competition !== compIntId) return false;
+          if (!['tumbling_difficulty', 'tumbling_execution', 'tumbling_combined'].includes(a.sheet_type)) return false;
+          return a.divisions.length > 0 && a.divisions.includes(divIntId);
+        });
+        if (hasSpecificIndividual) {
+          router.replace(`/competitions/${id}/divisions/${divisionId}`);
+          return;
+        }
+      }
+
       // Config-based defaults
       if (tcfg.standingHasDiff && tcfg.standingRango.length > 0) setStandingRango(tcfg.standingRango[0].value);
       else setStandingRango(0);
