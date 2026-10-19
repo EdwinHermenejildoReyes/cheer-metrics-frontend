@@ -36,6 +36,7 @@ import {
   type RegistrationStatus,
   type ScoringSystem,
   type SheetType,
+  SHEET_TYPE_GROUPS,
 } from '@/types/competitions';
 
 function getSheetSlug(sheetType: SheetType, iasfWorld: boolean, isIntl: boolean): string {
@@ -598,6 +599,32 @@ export default function DivisionDetailPage() {
     })
     .filter((sheetType, idx, arr) => arr.indexOf(sheetType) === idx) // dedupe
     .filter((sheetType) => isSheetAllowedInDivision(sheetType))
+    // Division-aware filter: only show sheet types where the judge's assignment covers
+    // the current division. Uses judgeEffectiveAssignments (fresh from API) so stale
+    // Redux state doesn't bleed through. Also applies "specific beats general" rule:
+    // a general assignment (divisions=[]) is suppressed when another sheet type in the
+    // same group is specifically scoped to this division.
+    .filter((sheetType) => {
+      // partner_stunt / best_cheer are already normalized by the map above — always show.
+      if (activeScoringSystem === 'partner_stunt' || activeScoringSystem === 'best_cheer') return true;
+      const group = SHEET_TYPE_GROUPS.find((g) => g.types.includes(sheetType));
+      const hasRivalSpecific = group
+        ? judgeEffectiveAssignments.some(
+            (a) =>
+              a.competition === compId &&
+              isAssignmentActive(a) &&
+              group.types.includes(a.sheet_type) &&
+              a.sheet_type !== sheetType &&
+              a.divisions.length > 0 &&
+              a.divisions.includes(division.id),
+          )
+        : false;
+      return judgeEffectiveAssignments.some((a) => {
+        if (a.competition !== compId || !isAssignmentActive(a) || a.sheet_type !== sheetType) return false;
+        if (hasRivalSpecific) return a.divisions.length > 0 && a.divisions.includes(division.id);
+        return a.divisions.length === 0 || a.divisions.includes(division.id);
+      });
+    })
     .sort((a, b) => SHEET_TYPE_ORDER.indexOf(a) - SHEET_TYPE_ORDER.indexOf(b));
 
   const judgeExpandedSheets: SheetType[] = judgeVisibleSheets.flatMap(
