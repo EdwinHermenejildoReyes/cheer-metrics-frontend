@@ -935,15 +935,13 @@ export default function CompetitionDetailPage() {
                         const disabled = new Set<SheetType>();
                         for (const a of existingAssignments) {
                           const st = a.sheet_type;
-                          // Always block exact duplicates unless the existing assignment
-                          // is division-scoped and we're also scoping to different divisions.
-                          // Simple rule: if assigning to all divisions, block exact duplicates.
-                          if (judgeScope === 'all' || a.divisions.length === 0) {
-                            disabled.add(st);
-                          }
-                          // Block grupal ↔ individual cross-types only when assigning to
-                          // all divisions (scope='all') — division-scoped assignments can
-                          // coexist with existing grupal/individual ones for other divisions.
+                          // Always block the same sheet_type (unique constraint: user+competition+sheet_type).
+                          disabled.add(st);
+                          // When assigning to all divisions, also block the grupal/individual
+                          // counterpart — a judge can't have both grupal and individual for the
+                          // same category when they cover ALL divisions simultaneously.
+                          // When assigning to specific divisions this restriction is lifted:
+                          // individual for div X can coexist with grupal for the rest.
                           if (judgeScope === 'all') {
                             const group = SHEET_TYPE_GROUPS.find((g) => g.types.includes(st));
                             if (!group) continue;
