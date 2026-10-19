@@ -245,6 +245,38 @@ export default function CompetitionDetailPage() {
       toast.error('La fecha de inicio debe ser anterior a la fecha de fin.');
       return;
     }
+
+    // Detect conflicting general assignments when assigning to specific divisions.
+    // A "conflict" is: the judge already has a general assignment (divisions=[]) for
+    // another sheet type in the same group. Without restricting it, the judge would
+    // see BOTH the grupal and individual sheets for the same division.
+    if (judgeScope === 'specific' && selectedDivIds.length > 0) {
+      const judgeAssignments = assignments.filter((a) => String(a.user) === newJudgeUserId);
+      for (const sheet of newJudgeSheets) {
+        const group = SHEET_TYPE_GROUPS.find((g) => g.types.includes(sheet));
+        if (!group) continue;
+        const conflicting = judgeAssignments.find(
+          (a) => group.types.includes(a.sheet_type) && a.sheet_type !== sheet && a.divisions.length === 0,
+        );
+        if (!conflicting) continue;
+
+        const ok = await confirm({
+          title: 'Conflicto de asignación detectado',
+          message: `El juez ya tiene "${SHEET_TYPE_LABELS[conflicting.sheet_type]}" para todas las divisiones.\n\nSin restricción, verá ambas planillas para las divisiones que estás asignando.\n\n¿Deseas restringir "${SHEET_TYPE_LABELS[conflicting.sheet_type]}" para excluir automáticamente las divisiones seleccionadas?`,
+          confirmLabel: 'Sí, restringir',
+        });
+        if (!ok) continue;
+
+        const remainingDivIds = divisions.filter((d) => !selectedDivIds.includes(d.id)).map((d) => d.id);
+        if (remainingDivIds.length === 0) {
+          // All divisions are being reassigned — delete the general assignment entirely.
+          await competitionsRepository.deleteJudgeAssignment(conflicting.id);
+        } else {
+          await competitionsRepository.patchJudgeAssignment(conflicting.id, { divisions: remainingDivIds });
+        }
+      }
+    }
+
     setAddingJudge(true);
     try {
       await Promise.all(
