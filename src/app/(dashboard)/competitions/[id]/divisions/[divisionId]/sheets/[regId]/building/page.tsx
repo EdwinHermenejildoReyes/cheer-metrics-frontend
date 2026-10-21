@@ -17,6 +17,7 @@ import { toastApiError, extractApiErrorText } from '@/utils/apiErrors';
 import type { BuildingConfig } from '@/lib/scoringConfig';
 import type { Division, DivisionCategory, JudgeScoreRecord, Registration, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
+import { ShadowJudgeBanner } from '@/components/competitions/ShadowJudgeBanner';
 import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 import { getSkillTables } from '@/lib/skillTables';
 import type { BuildingPrintData } from '@/components/print/BuildingSheetPrintView';
@@ -799,6 +800,7 @@ export default function BuildingSheetPage() {
         </div>
       )}
       <PaymentWarningBanner unpaidAthletes={unpaidAthletes} requirePayment={requirePayment} />
+      {judgeRecord?.is_shadow && <div className="px-4 pt-3"><ShadowJudgeBanner /></div>}
       <SkillReferencePanel skillLevel={division?.skill_level} sheetType="building" />
 
       {/* Print-only view (hidden in browser, visible when printing) */}

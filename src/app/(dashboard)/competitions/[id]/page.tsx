@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, Fragment } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, X, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList, Receipt, Link as LinkIcon, Copy, Check, Printer, Trophy } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Users, UserCog, Trash2, X, ChevronDown, ChevronUp, Upload, TriangleAlert, ListOrdered, ClipboardList, Receipt, Link as LinkIcon, Copy, Check, Printer, Trophy, Star, EyeOff } from 'lucide-react';
 import { PrintButton } from '@/components/print/PrintButton';
 import { Modal } from '@/components/ui/modal';
 import { toast } from 'sonner';
@@ -55,6 +55,7 @@ export default function CompetitionDetailPage() {
   const [newJudgeSheets, setNewJudgeSheets] = useState<SheetType[]>([]);
   const [newJudgeFrom, setNewJudgeFrom] = useState('');
   const [newJudgeUntil, setNewJudgeUntil] = useState('');
+  const [newJudgeIsShadow, setNewJudgeIsShadow] = useState(false);
   const [addingJudge, setAddingJudge] = useState(false);
   const [judgeScope, setJudgeScope] = useState<'all' | 'specific'>('all');
   const [selectedDivIds, setSelectedDivIds] = useState<number[]>([]);
@@ -288,6 +289,7 @@ export default function CompetitionDetailPage() {
             divisions: selectedDivIds,
             access_from: new Date(newJudgeFrom).toISOString(),
             access_until: new Date(newJudgeUntil).toISOString(),
+            is_shadow: newJudgeIsShadow,
           })
         )
       );
@@ -297,6 +299,7 @@ export default function CompetitionDetailPage() {
       setNewJudgeSheets([]);
       setNewJudgeFrom('');
       setNewJudgeUntil('');
+      setNewJudgeIsShadow(false);
       setJudgeScope('all');
       setSelectedDivIds([]);
       await loadJudges();
@@ -485,6 +488,20 @@ export default function CompetitionDetailPage() {
                     >
                       <ClipboardList className="h-3.5 w-3.5 text-zinc-400" />
                       Backstage
+                    </button>
+                    <button
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
+                      onClick={() => { router.push(`/competitions/${id}/premiacion`); setOpenDropdown(null); }}
+                    >
+                      <Star className="h-3.5 w-3.5 text-zinc-400" />
+                      Premiación
+                    </button>
+                    <button
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
+                      onClick={() => { router.push(`/competitions/${id}/shadow-report`); setOpenDropdown(null); }}
+                    >
+                      <EyeOff className="h-3.5 w-3.5 text-zinc-400" />
+                      Jueces Sombra
                     </button>
                   </div>
                 )}
@@ -1011,8 +1028,17 @@ export default function CompetitionDetailPage() {
                     className="h-9 rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
                   />
                 </div>
-                <div className="col-span-2 flex justify-end lg:col-span-1 lg:self-end">
-                  <Button size="sm" onClick={handleAddJudge} disabled={!newJudgeUserId || newJudgeSheets.length === 0 || !newJudgeFrom || !newJudgeUntil || addingJudge}>
+                <div className="col-span-2 flex items-end gap-3 lg:col-span-1">
+                  <label className="flex items-center gap-2 cursor-pointer select-none text-sm text-zinc-700 mb-0.5">
+                    <input
+                      type="checkbox"
+                      checked={newJudgeIsShadow}
+                      onChange={(e) => setNewJudgeIsShadow(e.target.checked)}
+                      className="w-4 h-4 rounded border-zinc-300 text-violet-600 focus:ring-violet-500"
+                    />
+                    <span>Juez sombra</span>
+                  </label>
+                  <Button size="sm" onClick={handleAddJudge} disabled={!newJudgeUserId || newJudgeSheets.length === 0 || !newJudgeFrom || !newJudgeUntil || addingJudge} className="ml-auto">
                     <Plus className="h-4 w-4" />
                     Asignar
                   </Button>
@@ -1055,8 +1081,11 @@ export default function CompetitionDetailPage() {
                               <div key={rangeKey}>
                                 <div className="flex flex-wrap gap-1.5">
                                   {rg.items.map((a) => (
-                                    <span key={a.id} className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">
+                                    <span key={a.id} className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${a.is_shadow ? 'bg-violet-100 text-violet-800' : 'bg-zinc-100 text-zinc-700'}`}>
                                       {SHEET_TYPE_LABELS[a.sheet_type]}
+                                      {a.is_shadow && (
+                                        <span className="rounded bg-violet-200 text-violet-700 px-1 py-0.5 text-[10px] font-semibold leading-none">Sombra</span>
+                                      )}
                                       {a.panel_name && (
                                         <span className="rounded bg-blue-100 text-blue-700 px-1 py-0.5 text-[10px] font-semibold leading-none">
                                           {a.panel_name}

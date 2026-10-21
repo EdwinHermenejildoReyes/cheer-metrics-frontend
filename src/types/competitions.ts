@@ -51,6 +51,7 @@ export interface JudgeAssignment {
   access_from: string | null;
   access_until: string | null;
   is_access_active: boolean;
+  is_shadow: boolean;
 }
 
 export type SheetMode = 'grupal' | 'individual' | 'hybrid';
@@ -327,6 +328,7 @@ export interface JudgeScoreRecord {
   judge_assignment: number;
   judge_name: string;
   sheet_type: SheetType;
+  is_shadow: boolean;
   notes: string;
   updated_at: string;
   // Building
@@ -416,6 +418,32 @@ export interface GrandChampionData {
   competition_id: number;
   competition_name: string;
   entries: GrandChampionEntry[];
+}
+
+export interface ShadowJudgeRecord {
+  record_id: number;
+  team_name: string;
+  gym_name: string;
+  division_name: string;
+  performance_order: number | null;
+  comments: string;
+  official_final_score: string | null;
+  updated_at: string | null;
+  [key: string]: unknown;
+}
+
+export interface ShadowJudgeEntry {
+  assignment_id: number;
+  judge_name: string;
+  judge_email: string;
+  sheet_type: SheetType;
+  records: ShadowJudgeRecord[];
+}
+
+export interface ShadowReport {
+  competition_name: string;
+  competition_date: string;
+  shadow_judges: ShadowJudgeEntry[];
 }
 
 export interface HeroImage {

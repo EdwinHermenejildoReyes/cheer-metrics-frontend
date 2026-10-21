@@ -545,6 +545,7 @@ export default function DivisionDetailPage() {
             access_from: null,
             access_until: null,
             is_access_active: true,
+            is_shadow: record.is_shadow ?? false,
           });
         }
       });

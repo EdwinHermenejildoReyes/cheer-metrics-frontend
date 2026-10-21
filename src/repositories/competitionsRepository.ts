@@ -142,6 +142,7 @@ import type {
   Division,
   DivisionRankings,
   GrandChampionData,
+  ShadowReport,
   Gym,
   HeroImage,
   JudgeAssignment,
@@ -297,6 +298,12 @@ class CompetitionsRepository {
 
   deleteJudgeAssignment = (id: number) =>
     api.delete(`/judge-assignments/${id}/`);
+
+  sendShadowReport = (assignmentId: number) =>
+    api.post(`/judge-assignments/${assignmentId}/send-shadow-report/`);
+
+  getShadowReport = (competitionPublicId: string) =>
+    api.get<ShadowReport>(`/competitions/${competitionPublicId}/shadow-report/`);
 
   // Schedule conflict check
   getScheduleConflicts = (competitionId: string, minGap = 3) =>
