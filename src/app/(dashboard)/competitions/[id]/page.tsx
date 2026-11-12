@@ -409,7 +409,7 @@ export default function CompetitionDetailPage() {
   const activeBlockConfirmed = activeBlockDivisions ? activeBlockDivisions.reduce((s, d) => s + d.confirmed_count, 0) : 0;
 
   return (
-    <div className="flex flex-col gap-6 p-8">
+    <div className="flex flex-col gap-6 p-4 sm:p-8">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3">
@@ -420,8 +420,8 @@ export default function CompetitionDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-semibold text-zinc-900">{competition.name}</h1>
+            <h1 className="text-xl sm:text-2xl font-semibold text-zinc-900">{competition.name}</h1>
+            <div className="flex flex-wrap items-center gap-1.5 mt-1">
               {competition.scoring_family && (
                 <Badge variant="info">{SCORING_FAMILY_LABELS[competition.scoring_family]}</Badge>
               )}
@@ -739,14 +739,14 @@ export default function CompetitionDetailPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  <th className="px-5 py-3">División</th>
-                  <th className="px-5 py-3">Edad</th>
-                  <th className="px-5 py-3">Nivel</th>
-                  <th className="px-5 py-3">Categoría</th>
-                  <th className="px-5 py-3">Sistema</th>
-                  <th className="px-5 py-3">Atletas</th>
-                  {hasJudging && <th className="px-5 py-3 text-right">Progreso</th>}
-                  <th className="px-5 py-3" />
+                  <th className="px-3 sm:px-5 py-3">División</th>
+                  <th className="px-3 sm:px-5 py-3 hidden sm:table-cell">Edad</th>
+                  <th className="px-3 sm:px-5 py-3">Nivel</th>
+                  <th className="px-3 sm:px-5 py-3 hidden md:table-cell">Categoría</th>
+                  <th className="px-3 sm:px-5 py-3 hidden lg:table-cell">Sistema</th>
+                  <th className="px-3 sm:px-5 py-3 hidden lg:table-cell">Atletas</th>
+                  {hasJudging && <th className="px-3 sm:px-5 py-3 text-right">Progreso</th>}
+                  <th className="px-3 sm:px-5 py-3" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
@@ -759,7 +759,7 @@ export default function CompetitionDetailPage() {
                     className={`cursor-pointer transition-colors ${fullyScored ? 'opacity-50 bg-zinc-50 hover:opacity-70' : isActive ? 'bg-blue-50/40 hover:bg-blue-50/70' : 'hover:bg-zinc-50'}`}
                     onClick={() => router.push(`/competitions/${id}/divisions/${div.public_id}`)}
                   >
-                    <td className="px-5 py-3.5 font-medium text-zinc-900">
+                    <td className="px-3 sm:px-5 py-3 font-medium text-zinc-900">
                       <div className="flex items-center gap-2">
                         {isActive && <span className="inline-block h-2 w-2 rounded-full bg-blue-500 shrink-0" />}
                         {div.name}
@@ -770,22 +770,22 @@ export default function CompetitionDetailPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-5 py-3.5 text-zinc-600">{AGE_GROUP_LABELS[div.age_group]}</td>
-                    <td className="px-5 py-3.5">
+                    <td className="px-3 sm:px-5 py-3 text-zinc-600 hidden sm:table-cell">{AGE_GROUP_LABELS[div.age_group]}</td>
+                    <td className="px-3 sm:px-5 py-3">
                       <Badge variant="violet">{SKILL_LEVEL_LABELS[div.skill_level]}</Badge>
                     </td>
-                    <td className="px-5 py-3.5 text-zinc-600">
+                    <td className="px-3 sm:px-5 py-3 text-zinc-600 hidden md:table-cell">
                       {CATEGORY_LABELS[div.category]}
                       {div.is_non_tumbling && <span className="ml-1.5 rounded-full bg-yellow-100 text-yellow-800 px-1.5 py-0.5 text-[10px] font-medium">NT</span>}
                     </td>
-                    <td className="px-5 py-3.5 text-xs text-zinc-500">
+                    <td className="px-3 sm:px-5 py-3 text-xs text-zinc-500 hidden lg:table-cell">
                       {SCORING_SYSTEM_LABELS[(div.scoring_system || div.suggested_scoring_system) as ScoringSystem] ?? '–'}
                     </td>
-                    <td className="px-5 py-3.5 text-zinc-500 text-xs">
+                    <td className="px-3 sm:px-5 py-3 text-zinc-500 text-xs hidden lg:table-cell">
                       {div.min_athletes ?? '–'} – {div.max_athletes ?? '–'}
                     </td>
                     {hasJudging && div.confirmed_count > 0 && (
-                      <td className="px-5 py-3.5 text-xs text-right tabular-nums">
+                      <td className="px-3 sm:px-5 py-3 text-xs text-right tabular-nums">
                         {fullyScored ? (
                           <span className="rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-semibold text-green-700">
                             ✓ Completa
@@ -798,7 +798,7 @@ export default function CompetitionDetailPage() {
                       </td>
                     )}
                     {!isJudge && (
-                      <td className="px-5 py-3.5 text-right">
+                      <td className="px-3 sm:px-5 py-3 text-right">
                         <Button size="icon" variant="ghost" onClick={(e) => openEditDiv(e, div)}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>

@@ -779,7 +779,7 @@ export default function DivisionDetailPage() {
                 <div key={reg.id} className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                   {/* Row */}
                   <div
-                    className="flex items-center gap-4 px-5 py-3.5 cursor-pointer hover:bg-zinc-50"
+                    className="flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-3 sm:py-3.5 cursor-pointer hover:bg-zinc-50"
                     onClick={() => {
                       if (isJudge && hasJudging) {
                         if (judgeExpandedSheets.length === 1) {
@@ -802,13 +802,20 @@ export default function DivisionDetailPage() {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-zinc-500">{reg.gym_name}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-xs text-zinc-500 truncate">{reg.gym_name}</p>
+                        {sheet && (
+                          <span className="sm:hidden shrink-0 text-xs font-semibold text-zinc-700 tabular-nums">
+                            {parseFloat(sheet.final_score ?? '0').toFixed(2)}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <Badge variant={STATUS_VARIANT[reg.status]}>
+                    <Badge variant={STATUS_VARIANT[reg.status]} className="hidden sm:inline-flex">
                       {REGISTRATION_STATUS_LABELS[reg.status]}
                     </Badge>
                     {sheet ? (
-                      <div className="text-right">
+                      <div className="text-right hidden sm:block">
                         <p className="text-sm font-semibold text-zinc-900 tabular-nums">
                           {parseFloat(sheet.final_score ?? '0').toFixed(2)}
                         </p>
@@ -817,7 +824,7 @@ export default function DivisionDetailPage() {
                         </p>
                       </div>
                     ) : (
-                      <span className="text-xs text-zinc-400">Sin puntaje</span>
+                      <span className="text-xs text-zinc-400 hidden sm:inline">Sin puntaje</span>
                     )}
                     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                       {/* Admin: edit button + all mode-specific sheet shortcuts */}

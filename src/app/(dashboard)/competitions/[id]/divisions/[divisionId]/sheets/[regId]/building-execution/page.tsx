@@ -71,8 +71,8 @@ function ExecSection({ label, max, deds, onChange, cats = EXEC_CATS }: {
       </div>
       <div className="divide-y divide-zinc-100">
         {cats.map((cat, i) => (
-          <div key={cat} className="flex items-center gap-3 px-4 py-2.5">
-            <span className="w-28 shrink-0 text-sm text-zinc-700">{cat}</span>
+          <div key={cat} className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5">
+            <span className="w-20 sm:w-28 shrink-0 text-xs sm:text-sm text-zinc-700">{cat}</span>
             <div className="flex flex-1 gap-1.5">
               {EXEC_DED_OPTS.map((amt, aidx) => {
                 const active = deds[i] === amt;
