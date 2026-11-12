@@ -4,10 +4,38 @@ import { useRef, useState, useSyncExternalStore } from 'react';
 import { Mic } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
-type AnyWindow = Window & { webkitSpeechRecognition?: typeof SpeechRecognition };
+interface SpeechRecognitionInstance {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+  start(): void;
+  stop(): void;
+}
+interface SpeechRecognitionEvent {
+  results: SpeechRecognitionResultList;
+}
+interface SpeechRecognitionResultList {
+  [index: number]: SpeechRecognitionResult;
+  length: number;
+}
+interface SpeechRecognitionResult {
+  [index: number]: SpeechRecognitionAlternative;
+}
+interface SpeechRecognitionAlternative {
+  transcript: string;
+}
+type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
+type AnyWindow = Window & {
+  SpeechRecognition?: SpeechRecognitionConstructor;
+  webkitSpeechRecognition?: SpeechRecognitionConstructor;
+};
 
 function getSpeechSupport() {
-  return !!(window.SpeechRecognition ?? (window as AnyWindow).webkitSpeechRecognition);
+  const w = window as AnyWindow;
+  return !!(w.SpeechRecognition ?? w.webkitSpeechRecognition);
 }
 function getServerSpeechSupport() { return false; }
 function noopSubscribe() { return () => {}; }
@@ -33,7 +61,7 @@ export function VoiceTextarea({
 }: VoiceTextareaProps) {
   const isSupported = useSyncExternalStore(noopSubscribe, getSpeechSupport, getServerSpeechSupport);
   const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const baseValueRef = useRef('');
 
   const stopListening = () => {
@@ -43,8 +71,8 @@ export function VoiceTextarea({
   };
 
   const startListening = () => {
-    const SpeechRecognitionAPI =
-      window.SpeechRecognition ?? (window as AnyWindow).webkitSpeechRecognition;
+    const w = window as AnyWindow;
+    const SpeechRecognitionAPI = w.SpeechRecognition ?? w.webkitSpeechRecognition;
     if (!SpeechRecognitionAPI) return;
 
     baseValueRef.current = value;
@@ -55,10 +83,10 @@ export function VoiceTextarea({
     recognition.interimResults = false;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = Array.from(event.results)
-        .map((r) => r[0].transcript)
-        .join(' ')
-        .trim();
+      const results = event.results;
+      const parts: string[] = [];
+      for (let i = 0; i < results.length; i++) parts.push(results[i][0].transcript);
+      const transcript = parts.join(' ').trim();
       if (!transcript) return;
       const base = baseValueRef.current;
       onChange(base ? `${base} ${transcript}` : transcript);
