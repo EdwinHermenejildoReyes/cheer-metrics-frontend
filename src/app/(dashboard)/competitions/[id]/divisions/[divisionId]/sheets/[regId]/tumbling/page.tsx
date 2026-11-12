@@ -20,6 +20,7 @@ import type { Division, JudgeScoreRecord, ScoreSheet, UnpaidAthlete } from '@/ty
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
 import type { TumblingPrintData } from '@/components/print/TumblingSheetPrintView';
+import { VoiceTextarea } from '@/components/ui/VoiceTextarea';
 
 // ── Execution categories (same for all scoring systems) ──────────────────────
 const STANDING_EXEC_CATS = ['Aprox.', 'Con. Corporal', 'Aterrizajes', 'Sinc'];
@@ -1141,9 +1142,9 @@ export default function TumblingSheetPage() {
             <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Comentarios</span>
           </div>
           <div className="p-4">
-            <textarea
+            <VoiceTextarea
               value={comments}
-              onChange={(e) => setComments(e.target.value)}
+              onChange={(v) => setComments(v)}
               placeholder="Comentarios de la rutina..."
               rows={5}
               className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"

@@ -15,6 +15,7 @@ import { toastApiError, extractApiErrorText } from '@/utils/apiErrors';
 import type { JudgeScoreRecord, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 import { IASF_WORLD_FIELD_MAXIMA } from '@/lib/scoringConfig';
+import { VoiceTextarea } from '@/components/ui/VoiceTextarea';
 
 // ── IASF World: Tumbling categories ───────────────────────────────────────────
 
@@ -491,7 +492,7 @@ export default function IasfTumblingSheetPage() {
             <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Comentarios del juez</span>
           </div>
           <div className="p-4">
-            <textarea value={notes} onChange={e => setNotes(e.target.value)}
+            <VoiceTextarea value={notes} onChange={(v) => setNotes(v)}
               placeholder="Observaciones sobre la gimnasia..."
               rows={3}
               className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />

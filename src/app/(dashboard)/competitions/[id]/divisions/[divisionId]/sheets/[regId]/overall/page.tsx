@@ -19,6 +19,7 @@ import {
   INTL_CREATIVITY_MIN, INTL_CREATIVITY_MAX,
   INTL_SHOWMANSHIP_MIN, INTL_SHOWMANSHIP_MAX,
 } from '@/lib/scoringConfig';
+import { VoiceTextarea } from '@/components/ui/VoiceTextarea';
 
 // ── Formations scale (standard: 2.0 → 1.0 in steps of −0.1) ─────────────────
 const FORMATIONS_VALUES      = [2.0, 1.9, 1.8, 1.7, 1.6, 1.5, 1.4, 1.3, 1.2, 1.1, 1.0];
@@ -961,9 +962,9 @@ export default function OverallSheetPage() {
             <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Comentarios</span>
           </div>
           <div className="p-4">
-            <textarea
+            <VoiceTextarea
               value={comments}
-              onChange={(e) => setComments(e.target.value)}
+              onChange={(v) => setComments(v)}
               placeholder="Comentarios de la rutina..."
               rows={5}
               className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"

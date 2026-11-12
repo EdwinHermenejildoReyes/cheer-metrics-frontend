@@ -16,6 +16,7 @@ import type { TumblingConfig } from '@/lib/scoringConfig';
 import type { Division, JudgeScoreRecord, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
+import { VoiceTextarea } from '@/components/ui/VoiceTextarea';
 
 function fmt(n: number) { return n.toFixed(2); }
 
@@ -638,7 +639,7 @@ export default function TumblingDifficultyPage() {
             ].filter(s => s.show).map(({ key, label, value, set }) => (
               <div key={key} className="p-4">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">{label}</p>
-                <textarea value={value} onChange={e => set(e.target.value)} placeholder={`Observaciones sobre ${label}...`} rows={2}
+                <VoiceTextarea value={value} onChange={(v) => set(v)} placeholder={`Observaciones sobre ${label}...`} rows={2}
                   className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
               </div>
             ))}

@@ -14,6 +14,7 @@ import { toastApiError, extractApiErrorText } from '@/utils/apiErrors';
 import type { JudgeScoreRecord, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
+import { VoiceTextarea } from '@/components/ui/VoiceTextarea';
 
 // ── Per-category config (FECU 2026 Best Cheer) ────────────────────────────────
 
@@ -530,9 +531,9 @@ export default function BestCheerSheetPage() {
             <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Comentarios del juez</span>
           </div>
           <div className="p-4">
-            <textarea
+            <VoiceTextarea
               value={notes}
-              onChange={e => setNotes(e.target.value)}
+              onChange={(v) => setNotes(v)}
               placeholder="Observaciones sobre el desempeño del atleta..."
               rows={3}
               className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"

@@ -22,6 +22,7 @@ import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePan
 import { getSkillTables } from '@/lib/skillTables';
 import type { BuildingPrintData } from '@/components/print/BuildingSheetPrintView';
 import { InfoButton } from '@/components/ui/InfoButton';
+import { VoiceTextarea } from '@/components/ui/VoiceTextarea';
 
 // ── Execution categories (same for all scoring systems) ──────────────────────
 const EXEC_CATS      = ['Flyer', 'Base/Spotter', 'Transición', 'Sincronización'];
@@ -1598,9 +1599,9 @@ export default function BuildingSheetPage() {
             <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Comentarios</span>
           </div>
           <div className="p-4">
-            <textarea
+            <VoiceTextarea
               value={comments}
-              onChange={(e) => setComments(e.target.value)}
+              onChange={(v) => setComments(v)}
               placeholder="Comentarios de la rutina..."
               rows={5}
               className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900"
