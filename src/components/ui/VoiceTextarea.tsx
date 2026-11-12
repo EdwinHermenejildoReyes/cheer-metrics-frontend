@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Mic } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
@@ -45,6 +45,17 @@ function getSpeechSupport() {
 function getServerSpeechSupport() { return false; }
 function noopSubscribe() { return () => {}; }
 
+// Errors that indicate a real problem — stop recording and notify user.
+// no-speech and aborted are transient; let onend restart the session.
+const FATAL_ERRORS = new Set(['not-allowed', 'service-not-allowed', 'audio-capture', 'network']);
+
+const ERROR_MSGS: Record<string, string> = {
+  'network':             'Error de red — no se puede conectar con el servicio de voz.',
+  'not-allowed':         'Permiso de micrófono denegado.',
+  'service-not-allowed': 'El servicio de voz no está disponible en este navegador.',
+  'audio-capture':       'No se encontró micrófono.',
+};
+
 interface VoiceTextareaProps {
   value: string;
   onChange: (value: string) => void;
@@ -66,10 +77,21 @@ export function VoiceTextarea({
 }: VoiceTextareaProps) {
   const isSupported = useSyncExternalStore(noopSubscribe, getSpeechSupport, getServerSpeechSupport);
   const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
-  const baseValueRef = useRef('');
+  const recognitionRef  = useRef<SpeechRecognitionInstance | null>(null);
+  const baseValueRef    = useRef('');
+  // Tracks user intent: true = keep recording, false = user clicked stop (or error)
+  const shouldListenRef = useRef(false);
+
+  // Cleanup on unmount — stop any ongoing session silently
+  useEffect(() => {
+    return () => {
+      shouldListenRef.current = false;
+      recognitionRef.current?.stop();
+    };
+  }, []);
 
   const stopListening = () => {
+    shouldListenRef.current = false;
     recognitionRef.current?.stop();
     recognitionRef.current = null;
     setIsListening(false);
@@ -80,41 +102,56 @@ export function VoiceTextarea({
     const SpeechRecognitionAPI = w.SpeechRecognition ?? w.webkitSpeechRecognition;
     if (!SpeechRecognitionAPI) return;
 
-    baseValueRef.current = value;
+    shouldListenRef.current = true;
+    baseValueRef.current = value;  // capture base text once at session start
 
-    const recognition = new SpeechRecognitionAPI();
-    recognition.lang = 'es-ES';
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    const startSession = () => {
+      if (!shouldListenRef.current) return;
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const results = event.results;
-      const parts: string[] = [];
-      for (let i = 0; i < results.length; i++) parts.push(results[i][0].transcript);
-      const transcript = parts.join(' ').trim();
-      if (!transcript) return;
-      const base = baseValueRef.current;
-      const next = base ? `${base} ${transcript}` : transcript;
-      baseValueRef.current = next;
-      onChange(next);
-    };
+      const recognition = new SpeechRecognitionAPI();
+      recognition.lang = 'es-ES';
+      recognition.continuous = false;
+      recognition.interimResults = false;
 
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      setIsListening(false);
-      console.error('[VoiceTextarea] SpeechRecognition error:', event.error, event.message);
-      const msgs: Record<string, string> = {
-        'network':          'Error de red — no se puede conectar con el servicio de voz.',
-        'not-allowed':      'Permiso de micrófono denegado.',
-        'service-not-allowed': 'El servicio de voz no está disponible en este navegador.',
-        'no-speech':        'No se detectó audio. Intente hablar más cerca del micrófono.',
-        'audio-capture':    'No se encontró micrófono.',
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        const results = event.results;
+        const parts: string[] = [];
+        for (let i = 0; i < results.length; i++) parts.push(results[i][0].transcript);
+        const transcript = parts.join(' ').trim();
+        if (!transcript) return;
+        const base = baseValueRef.current;
+        const next = base ? `${base} ${transcript}` : transcript;
+        baseValueRef.current = next;
+        onChange(next);
       };
-      toast.error(msgs[event.error] ?? `Error de reconocimiento: ${event.error}`);
+
+      recognition.onend = () => {
+        recognitionRef.current = null;
+        if (shouldListenRef.current) {
+          // Auto-restart after each utterance — user is still in dictation mode.
+          // 150 ms gap prevents rapid-fire restart loops on consecutive errors.
+          setTimeout(() => {
+            if (shouldListenRef.current) startSession();
+          }, 150);
+        } else {
+          setIsListening(false);
+        }
+      };
+
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+        if (FATAL_ERRORS.has(event.error)) {
+          shouldListenRef.current = false;
+          setIsListening(false);
+          toast.error(ERROR_MSGS[event.error] ?? `Error de reconocimiento: ${event.error}`);
+        }
+        // no-speech / aborted: non-fatal — onend will fire next and restart the session
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
     };
 
-    recognitionRef.current = recognition;
-    recognition.start();
+    startSession();
     setIsListening(true);
   };
 
