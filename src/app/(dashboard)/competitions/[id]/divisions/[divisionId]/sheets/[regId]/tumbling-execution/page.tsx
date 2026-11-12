@@ -445,7 +445,7 @@ export default function TumblingExecutionPage() {
         {tCfg.hasStanding && (
           <section className="flex flex-col gap-3">
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">{tCfg.isCombinedSR ? 'Gimnasia Estática / Con Carrera' : 'Gimnasia Estática'}</h2>
-            <div className="grid grid-cols-[3fr_2fr] gap-5 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-5 items-start">
               <ExecSection label="Estática" max={tCfg.standingExecMax} categories={STANDING_CATS} deds={standingExecDeds} onChange={setStandingExecDeds} />
               <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="px-3 py-2 bg-zinc-50 border-b border-zinc-200">
@@ -462,7 +462,7 @@ export default function TumblingExecutionPage() {
         {tCfg.hasRunning && (
           <section className="flex flex-col gap-3" style={{ marginTop: '2.5rem' }}>
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Gimnasia con Carrera</h2>
-            <div className="grid grid-cols-[3fr_2fr] gap-5 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-5 items-start">
               <ExecSection label="Con Carrera" max={tCfg.runningExecMax} categories={RUNNING_CATS} deds={runningExecDeds} onChange={setRunningExecDeds} />
               <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="px-3 py-2 bg-zinc-50 border-b border-zinc-200">
@@ -479,7 +479,7 @@ export default function TumblingExecutionPage() {
         {tCfg.hasJumps && (
           <section className="flex flex-col gap-3" style={{ marginTop: '2.5rem' }}>
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Saltos</h2>
-            <div className="grid grid-cols-[3fr_2fr] gap-5 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-5 items-start">
               <ExecSection label="Saltos" max={tCfg.jumpsExecMax} categories={JUMPS_CATS} deds={jumpsExecDeds} onChange={setJumpsExecDeds} />
               <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="px-3 py-2 bg-zinc-50 border-b border-zinc-200">

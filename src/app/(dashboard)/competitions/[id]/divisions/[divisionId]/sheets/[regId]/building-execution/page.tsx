@@ -455,7 +455,7 @@ export default function BuildingExecutionPage() {
         {bCfg.hasStunts && (
           <section className="flex flex-col gap-3">
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Elevaciones — Ejecución</h2>
-            <div className="grid grid-cols-[3fr_2fr] gap-5 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-5 items-start">
               <ExecSection label="Elevaciones" max={bCfg.stuntsExecMax} deds={stuntsExecDeds} onChange={setStuntsExecDeds} />
               <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="px-3 py-2 bg-zinc-50 border-b border-zinc-200">
@@ -472,7 +472,7 @@ export default function BuildingExecutionPage() {
         {bCfg.hasPyramids && (
           <section className="flex flex-col gap-3" style={{ marginTop: '2.5rem' }}>
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Pirámides — Ejecución</h2>
-            <div className="grid grid-cols-[3fr_2fr] gap-5 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-5 items-start">
               <ExecSection label="Pirámides" max={bCfg.pyramidsExecMax} deds={pyramidsExecDeds} onChange={setPyramidsExecDeds} />
               <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="px-3 py-2 bg-zinc-50 border-b border-zinc-200">
@@ -489,7 +489,7 @@ export default function BuildingExecutionPage() {
         {bCfg.hasTosses && (
           <section className="flex flex-col gap-3" style={{ marginTop: '2.5rem' }}>
             <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-700">Lanzamientos — Ejecución</h2>
-            <div className="grid grid-cols-[3fr_2fr] gap-5 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-5 items-start">
               <ExecSection label="Lanzamientos" max={bCfg.tossesExecMax} deds={tossesExecDeds} onChange={setTossesExecDeds} cats={TOSS_EXEC_CATS} />
               <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                 <div className="px-3 py-2 bg-zinc-50 border-b border-zinc-200">

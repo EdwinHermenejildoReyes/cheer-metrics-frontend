@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Trophy, Building2, Users, LogOut, Landmark, UserCog, User as UserIcon, ClipboardList, LayoutDashboard, ImageIcon, Settings, Receipt, Monitor, Upload, Link2, Mail } from 'lucide-react';
@@ -43,9 +44,16 @@ const JUDGE_COMPETITION_SUBNAV = [
   { slug: 'backstage', label: 'Backstage', icon: Monitor, staffOnly: false },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+
+  useEffect(() => { onClose(); }, [pathname, onClose]);
   const dispatch = useDispatch();
   const user = useSelector((s: RootState) => s.auth.user);
   const { isJudge, isAdmin } = useJudge();
@@ -96,7 +104,20 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="flex h-screen w-56 flex-col border-r border-plt-border bg-plt-bg">
+    <>
+    {isOpen && (
+      <div
+        className="fixed inset-0 z-40 bg-black/50 md:hidden"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+    )}
+    <aside className={cn(
+      'flex flex-col border-r border-plt-border bg-plt-bg',
+      'fixed inset-y-0 left-0 z-50 w-72 transition-transform duration-300',
+      'md:static md:inset-auto md:z-auto md:w-56 md:h-screen md:translate-x-0 md:transition-none',
+      isOpen ? 'translate-x-0' : '-translate-x-full',
+    )}>
       <div className="flex h-16 items-center border-b border-plt-border px-5">
         <span className="text-base font-semibold tracking-tight text-plt-text">Cheer Metrics</span>
       </div>
@@ -174,5 +195,6 @@ export function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }

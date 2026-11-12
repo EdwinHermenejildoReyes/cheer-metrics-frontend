@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector, useDispatch } from 'react-redux';
 import { BrandingProvider } from '@/contexts/BrandingContext';
@@ -23,6 +23,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   // Without this guard, the useEffect fires with isAuthenticated=false (initial state)
   // before localStorage is read, causing a redirect loop on slow machines.
   const isRehydrated    = useSelector((s: RootState & { _persist?: { rehydrated: boolean } }) => s._persist?.rehydrated ?? false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
 
   useEffect(() => {
     if (!isRehydrated) return;
@@ -55,9 +57,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     <BrandingProvider>
       <ConfirmProvider>
       <div className="dashboard-shell flex h-screen overflow-hidden">
-        <div className="print:hidden"><Sidebar /></div>
+        <div className="print:hidden"><Sidebar isOpen={sidebarOpen} onClose={closeSidebar} /></div>
         <div className="flex flex-1 flex-col overflow-hidden">
-          <div className="print:hidden"><BrandingBar /></div>
+          <div className="print:hidden"><BrandingBar onMenuClick={() => setSidebarOpen(true)} /></div>
           <main className="dashboard-main flex flex-1 flex-col overflow-y-auto bg-plt-surface">
             {children}
           </main>

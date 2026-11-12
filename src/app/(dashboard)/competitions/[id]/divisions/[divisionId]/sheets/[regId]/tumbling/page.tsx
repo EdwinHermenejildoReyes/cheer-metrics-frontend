@@ -862,7 +862,7 @@ export default function TumblingSheetPage() {
                 </div>
               </InfoButton>
             </div>
-            <div className="grid grid-cols-2 gap-5 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
               {tCfg.standingHasDiff ? (
                 <TumblingDiffCard
                   label="Estática"
@@ -924,7 +924,7 @@ export default function TumblingSheetPage() {
                 </div>
               </InfoButton>
             </div>
-            <div className="grid grid-cols-2 gap-5 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
               {tCfg.runningHasDiff ? (
                 <TumblingDiffCard
                   label="Con Carrera"
@@ -986,7 +986,7 @@ export default function TumblingSheetPage() {
                 </div>
               </InfoButton>
             </div>
-            <div className="grid grid-cols-2 gap-5 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
               {tCfg.jumpsHasDiff && tCfg.jumpsDiffOpts.length > 0 ? (
                 <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
                   <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">

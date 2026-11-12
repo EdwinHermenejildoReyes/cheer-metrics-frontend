@@ -1076,7 +1076,7 @@ export default function BuildingSheetPage() {
           {!bCfg.hasStunts ? (
             <NoAplicaBadge label="Sin Stunts — No Aplica para esta División" />
           ) : (
-            <div className="grid grid-cols-2 gap-5 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
 
               {/* LEFT: Difficulty */}
               {!bCfg.stuntsHasDiff ? (
@@ -1278,7 +1278,7 @@ export default function BuildingSheetPage() {
           {!bCfg.hasPyramids ? (
             <NoAplicaBadge label="Sin Pirámides — No Aplica para esta División" />
           ) : (
-            <div className="grid grid-cols-2 gap-5 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
 
               {/* LEFT: Difficulty */}
               {!bCfg.pyramidsHasDiff ? (
@@ -1422,7 +1422,7 @@ export default function BuildingSheetPage() {
                 </div>
               </InfoButton>
             </h2>
-            <div className="grid grid-cols-2 gap-5 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
 
               {/* LEFT: Difficulty */}
               <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
