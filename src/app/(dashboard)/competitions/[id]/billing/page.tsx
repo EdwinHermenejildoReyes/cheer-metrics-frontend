@@ -101,6 +101,7 @@ export default function BillingListPage() {
         </div>
       ) : (
         <div className="overflow-hidden border rounded-xl">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600 text-left">
               <tr>
@@ -147,6 +148,7 @@ export default function BillingListPage() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

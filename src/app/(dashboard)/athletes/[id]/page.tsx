@@ -98,7 +98,7 @@ export default function AthleteDetailPage() {
       {/* Info card */}
       <div className="rounded-xl border border-zinc-200 bg-white p-6">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-400 mb-4">Datos personales</h2>
-        <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 text-sm">
           <div>
             <p className="text-zinc-500">Fecha de nacimiento</p>
             <p className="font-medium text-zinc-900">
@@ -152,6 +152,7 @@ export default function AthleteDetailPage() {
           </div>
         ) : (
           <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
@@ -178,6 +179,7 @@ export default function AthleteDetailPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>

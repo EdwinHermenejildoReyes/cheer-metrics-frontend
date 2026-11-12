@@ -456,7 +456,7 @@ export default function DeduccionesSheetPage() {
                 SECCIÓN 1 — Caídas, Tiempos y Pista
                 ══════════════════════════════════════════════════════════════ */}
             <h2 className="text-2xl font-bold text-zinc-900 mb-4">Deducciones</h2>
-            <div className="grid grid-cols-[260px_1fr] gap-4 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-4 items-start">
 
               {/* ═══ LEFT — Caídas + Tiempos palette (direct-add) ═══════════ */}
               <div className="flex flex-col gap-3 sticky top-20 max-h-[calc(100vh-5rem)] overflow-y-auto overflow-x-hidden pr-2.5">
@@ -576,7 +576,8 @@ export default function DeduccionesSheetPage() {
               </div>
 
               {/* ═══ CENTER — Pista (click cell → dropdown) ═════════════════ */}
-              <div className="flex flex-col rounded-xl border border-zinc-200 bg-white overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+              <div className="flex flex-col rounded-xl border border-zinc-200 bg-white overflow-hidden shadow-sm" style={{ minWidth: '480px' }}>
 
                 {/* Column headers */}
                 <div className="flex items-stretch border-b border-zinc-200 bg-zinc-50">
@@ -726,6 +727,7 @@ export default function DeduccionesSheetPage() {
                   </p>
                 </div>
               </div>
+              </div>
 
             </div>
 
@@ -734,7 +736,7 @@ export default function DeduccionesSheetPage() {
                 ══════════════════════════════════════════════════════════════ */}
             <div className="mt-8 pt-8 border-t border-zinc-200">
               <h2 className="text-2xl font-bold text-zinc-900 mb-6">Infracciones a las reglas / Ilegalidades</h2>
-              <div className="grid grid-cols-[220px_1fr] gap-6 items-start">
+              <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 items-start">
 
                 {/* LEFT palette */}
                 <div className="flex flex-col gap-4 sticky top-20">

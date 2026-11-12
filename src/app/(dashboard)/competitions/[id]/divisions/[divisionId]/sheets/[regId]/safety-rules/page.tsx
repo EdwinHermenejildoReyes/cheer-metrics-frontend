@@ -278,7 +278,7 @@ export default function SafetyRulesPage() {
         )}
 
         {sheet && (
-          <div className="grid grid-cols-[220px_1fr] gap-6 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 items-start">
             {/* LEFT — palette */}
             <div className="flex flex-col gap-4 sticky top-20">
               {[
@@ -342,7 +342,7 @@ export default function SafetyRulesPage() {
             {/* RIGHT — recorded deductions */}
             <div className="flex flex-col gap-4">
               {/* Summary cards */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
                   { label: 'Ilegales', types: ILLEGAL, color: 'amber' as ColorKey },
                   { label: 'Admin',    types: ADMIN,   color: 'zinc'  as ColorKey },

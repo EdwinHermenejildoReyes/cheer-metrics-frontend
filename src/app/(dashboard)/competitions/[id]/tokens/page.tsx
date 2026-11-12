@@ -102,7 +102,7 @@ export default function TokensPage() {
         <p className="text-sm text-zinc-500">
           Genera un link para que los gimnasios se inscriban sin necesitar una cuenta.
         </p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="col-span-2 sm:col-span-1">
             <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">
               Expira el *

@@ -182,7 +182,7 @@ export default function ProfilePage() {
       <div className="rounded-2xl border border-zinc-200 bg-white px-6 py-6 flex flex-col gap-4">
         <h2 className="text-sm font-semibold text-zinc-700">Información personal</h2>
         <form onSubmit={infoForm.handleSubmit(onInfoSubmit)} className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
               label="Nombre"
               id="first_name"
@@ -216,7 +216,7 @@ export default function ProfilePage() {
       {/* ── Role & status ───────────────────────────────────────────────────── */}
       <div className="rounded-2xl border border-zinc-200 bg-white px-6 py-6 flex flex-col gap-3">
         <h2 className="text-sm font-semibold text-zinc-700">Rol y estado</h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
             <span className="text-xs font-medium uppercase tracking-wide text-zinc-400">Rol</span>
             <span className="text-sm font-medium text-zinc-900">

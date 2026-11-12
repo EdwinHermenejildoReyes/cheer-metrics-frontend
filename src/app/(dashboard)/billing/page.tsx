@@ -100,6 +100,7 @@ export default function BillingOverviewPage() {
         <div className="text-center py-16 text-gray-400 text-sm">No hay facturas generadas.</div>
       ) : (
         <div className="border rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600 text-left">
               <tr>
@@ -140,6 +141,7 @@ export default function BillingOverviewPage() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

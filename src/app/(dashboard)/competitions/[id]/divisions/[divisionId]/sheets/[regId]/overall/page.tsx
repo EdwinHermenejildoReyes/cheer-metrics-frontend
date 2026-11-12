@@ -111,6 +111,7 @@ function DanceLevelSelector({
           ))}
         </div>
       </div>
+      <div className="overflow-x-auto">
       <div className={`grid divide-x divide-zinc-200 ${levels.length === 2 ? 'grid-cols-2' : levels.length === 4 ? 'grid-cols-4' : 'grid-cols-3'}`}>
         {levels.map(({ label: lbl, sublabel, value: v }) => {
           const active = value === v;
@@ -133,6 +134,7 @@ function DanceLevelSelector({
             </button>
           );
         })}
+      </div>
       </div>
       {/* Fine-grained slider */}
       <div className="px-4 py-3 border-t border-zinc-100 flex items-center gap-3">
@@ -789,7 +791,7 @@ export default function OverallSheetPage() {
             <p className="text-xs text-zinc-400 mt-0.5">Puntuado por este juez — se promedia con los otros dos jueces</p>
           </div>
 
-          <div className={`grid gap-4 ${isEscolarAB ? 'grid-cols-1 max-w-md' : 'grid-cols-2'}`}>
+          <div className={`grid gap-4 ${isEscolarAB ? 'grid-cols-1 max-w-md' : 'grid-cols-1 sm:grid-cols-2'}`}>
             {/* Creativity (hidden for escolar_ab) */}
             {!isEscolarAB && (
               <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
@@ -994,25 +996,27 @@ export default function OverallSheetPage() {
                 Estadísticas de la Competencia
               </span>
             </div>
-            <div className="grid grid-cols-3 divide-x divide-zinc-100 text-center">
-              <div className="px-4 py-4">
-                <p className="text-[10px] text-zinc-400 uppercase tracking-wide mb-1">Puntaje Bruto</p>
-                <p className="text-2xl font-bold tabular-nums text-zinc-900">
-                  {safeNum(existingSheet.raw_score)}
-                </p>
-                <p className="text-xs text-zinc-400 mt-0.5">/ {safeNum(existingSheet.max_raw)}</p>
-              </div>
-              <div className="px-4 py-4">
-                <p className="text-[10px] text-zinc-400 uppercase tracking-wide mb-1">Descuentos</p>
-                <p className="text-2xl font-bold tabular-nums text-red-600">
-                  −{safeNum(existingSheet.total_deductions)}
-                </p>
-              </div>
-              <div className="px-4 py-4">
-                <p className="text-[10px] text-zinc-400 uppercase tracking-wide mb-1">% de Perfección</p>
-                <p className="text-2xl font-bold tabular-nums text-zinc-900">
-                  {existingSheet.percentage != null ? `${existingSheet.percentage}%` : '—'}
-                </p>
+            <div className="overflow-x-auto">
+              <div className="grid grid-cols-3 divide-x divide-zinc-100 text-center">
+                <div className="px-4 py-4">
+                  <p className="text-[10px] text-zinc-400 uppercase tracking-wide mb-1">Puntaje Bruto</p>
+                  <p className="text-2xl font-bold tabular-nums text-zinc-900">
+                    {safeNum(existingSheet.raw_score)}
+                  </p>
+                  <p className="text-xs text-zinc-400 mt-0.5">/ {safeNum(existingSheet.max_raw)}</p>
+                </div>
+                <div className="px-4 py-4">
+                  <p className="text-[10px] text-zinc-400 uppercase tracking-wide mb-1">Descuentos</p>
+                  <p className="text-2xl font-bold tabular-nums text-red-600">
+                    −{safeNum(existingSheet.total_deductions)}
+                  </p>
+                </div>
+                <div className="px-4 py-4">
+                  <p className="text-[10px] text-zinc-400 uppercase tracking-wide mb-1">% de Perfección</p>
+                  <p className="text-2xl font-bold tabular-nums text-zinc-900">
+                    {existingSheet.percentage != null ? `${existingSheet.percentage}%` : '—'}
+                  </p>
+                </div>
               </div>
             </div>
             <div className="border-t border-zinc-700 flex items-center justify-between px-6 py-4 rounded-b-xl bg-zinc-800">

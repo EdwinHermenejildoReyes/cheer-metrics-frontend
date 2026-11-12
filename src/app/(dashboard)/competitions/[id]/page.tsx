@@ -653,6 +653,7 @@ export default function CompetitionDetailPage() {
                     )}
                   </div>
                   <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
+                    <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
@@ -726,6 +727,7 @@ export default function CompetitionDetailPage() {
                         })}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </Fragment>
               );
@@ -733,6 +735,7 @@ export default function CompetitionDetailPage() {
           </div>
         ) : (
           <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
@@ -806,6 +809,7 @@ export default function CompetitionDetailPage() {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>
@@ -846,6 +850,7 @@ export default function CompetitionDetailPage() {
                       Los siguientes atletas no tienen suficiente descanso entre dos presentaciones consecutivas (mínimo 3 salidas).
                     </p>
                   </div>
+                  <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-zinc-100 bg-zinc-50 text-left text-xs font-medium text-zinc-500">
@@ -882,6 +887,7 @@ export default function CompetitionDetailPage() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                   <div className="px-5 py-3 border-t border-zinc-100 bg-zinc-50">
                     <button
                       type="button"
@@ -921,7 +927,7 @@ export default function CompetitionDetailPage() {
           {judgesOpen && (
             <div className="rounded-xl border border-zinc-200 bg-white">
               {/* Add form */}
-              <div className="grid grid-cols-2 gap-3 px-5 py-4 border-b border-zinc-100 bg-zinc-50 lg:flex lg:items-start">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-5 py-4 border-b border-zinc-100 bg-zinc-50 lg:flex lg:items-start">
                 <div className="col-span-2 lg:w-72">
                   <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Usuario</label>
                   <div className="relative">
@@ -1242,7 +1248,7 @@ export default function CompetitionDetailPage() {
         {/* Create form */}
         <div className="flex flex-col gap-3 pb-4 border-b border-zinc-100 mb-4">
           <p className="text-xs text-zinc-500">Genera un link para que los gimnasios se inscriban sin necesitar una cuenta.</p>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="col-span-2 sm:col-span-1">
               <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wide mb-1 block">Expira el *</label>
               <input

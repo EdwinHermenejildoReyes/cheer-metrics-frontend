@@ -138,6 +138,7 @@ export default function BillingDetailPage() {
       <section>
         <h2 className="text-base font-semibold mb-3">Atletas</h2>
         <div className="border rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600 text-left">
               <tr>
@@ -177,6 +178,7 @@ export default function BillingDetailPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       </section>
 
@@ -184,6 +186,7 @@ export default function BillingDetailPage() {
       <section>
         <h2 className="text-base font-semibold mb-3">Equipos</h2>
         <div className="border rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600 text-left">
               <tr>
@@ -202,6 +205,7 @@ export default function BillingDetailPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       </section>
 
@@ -234,6 +238,7 @@ export default function BillingDetailPage() {
           <p className="text-sm text-gray-400 py-4 text-center border rounded-xl">Sin paquetes fan asignados.</p>
         ) : (
           <div className="border rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-gray-600 text-left">
                 <tr>
@@ -260,6 +265,7 @@ export default function BillingDetailPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </section>

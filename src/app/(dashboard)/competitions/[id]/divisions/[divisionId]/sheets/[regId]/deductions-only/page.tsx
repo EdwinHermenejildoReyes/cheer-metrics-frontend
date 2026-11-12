@@ -227,7 +227,7 @@ export default function DeductionsOnlyPage() {
 
         {sheet && (
           <>
-            <div className="grid grid-cols-[200px_1fr] gap-4 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-start">
 
               {/* ═══ LEFT — Caídas + Tiempos palette ═══════════════════════════ */}
               <div className="flex flex-col gap-3 sticky top-20">
@@ -300,7 +300,8 @@ export default function DeductionsOnlyPage() {
               </div>
 
               {/* ═══ CENTER — Pista ══════════════════════════════════════════════ */}
-              <div className="flex flex-col rounded-xl border border-zinc-200 bg-white overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+              <div className="flex flex-col rounded-xl border border-zinc-200 bg-white overflow-hidden shadow-sm" style={{ minWidth: '480px' }}>
                 <div className="flex items-stretch border-b border-zinc-200 bg-zinc-50">
                   <div className="w-20 shrink-0 flex items-center justify-center px-2 border-r border-zinc-200"><p className="text-[10px] font-bold uppercase tracking-widest text-zinc-700">Tiempo</p></div>
                   <div className="flex-1 grid grid-cols-3">
@@ -439,6 +440,7 @@ export default function DeductionsOnlyPage() {
                   </p>
                 </div>
               </div>
+              </div>
 
             </div>
 
@@ -453,6 +455,7 @@ export default function DeductionsOnlyPage() {
                 </div>
               ) : (
                 <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+                  <div className="overflow-x-auto">
                   <div className="grid grid-cols-[11rem_6.5rem_1fr_5rem_2.5rem] gap-0 border-b border-zinc-200 bg-zinc-50 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
                     <span>Tiempo / Zona</span><span className="text-center">Código</span><span>Descripción</span><span className="text-right">Monto</span><span />
                   </div>
@@ -485,6 +488,7 @@ export default function DeductionsOnlyPage() {
                         </div>
                       );
                     })}
+                  </div>
                   </div>
                 </div>
               )}

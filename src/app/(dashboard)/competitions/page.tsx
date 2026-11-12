@@ -71,6 +71,7 @@ export default function CompetitionsPage() {
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
@@ -134,6 +135,7 @@ export default function CompetitionsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

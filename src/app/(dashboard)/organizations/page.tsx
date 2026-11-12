@@ -208,7 +208,7 @@ function OrgModal({ editing, onClose, onSaved }: {
           </div>
 
           {/* Colors */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <ColorField label="Color primario" value={form.primary_color} onChange={(v) => set('primary_color', v)} />
             <ColorField label="Texto sobre primario" value={form.text_on_primary} onChange={(v) => set('text_on_primary', v)} />
             <ColorField label="Color secundario" value={form.secondary_color} onChange={(v) => set('secondary_color', v)} />

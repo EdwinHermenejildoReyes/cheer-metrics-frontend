@@ -586,22 +586,24 @@ export default function BestCheerSheetPage() {
             <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
               <span className="text-sm font-semibold uppercase tracking-wide text-zinc-700">Puntaje final de competencia</span>
             </div>
-            <div className="grid grid-cols-3 divide-x divide-zinc-100 text-center">
-              <div className="px-4 py-4">
-                <p className="text-[10px] text-zinc-400 uppercase tracking-wide mb-1">Puntaje Bruto</p>
-                <p className="text-2xl font-bold tabular-nums text-zinc-900">
-                  {parseFloat(existingSheet.raw_score).toFixed(0)}
-                </p>
-              </div>
-              <div className="px-4 py-4">
-                <p className="text-[10px] text-zinc-400 uppercase tracking-wide mb-1">Descuentos</p>
-                <p className="text-2xl font-bold tabular-nums text-red-600">
-                  −{parseFloat(existingSheet.total_deductions).toFixed(2)}
-                </p>
-              </div>
-              <div className="px-4 py-4">
-                <p className="text-[10px] text-zinc-400 uppercase tracking-wide mb-1">% Perfección</p>
-                <p className="text-2xl font-bold tabular-nums text-zinc-900">{existingSheet.percentage}%</p>
+            <div className="overflow-x-auto">
+              <div className="grid grid-cols-3 divide-x divide-zinc-100 text-center">
+                <div className="px-4 py-4">
+                  <p className="text-[10px] text-zinc-400 uppercase tracking-wide mb-1">Puntaje Bruto</p>
+                  <p className="text-2xl font-bold tabular-nums text-zinc-900">
+                    {parseFloat(existingSheet.raw_score).toFixed(0)}
+                  </p>
+                </div>
+                <div className="px-4 py-4">
+                  <p className="text-[10px] text-zinc-400 uppercase tracking-wide mb-1">Descuentos</p>
+                  <p className="text-2xl font-bold tabular-nums text-red-600">
+                    −{parseFloat(existingSheet.total_deductions).toFixed(2)}
+                  </p>
+                </div>
+                <div className="px-4 py-4">
+                  <p className="text-[10px] text-zinc-400 uppercase tracking-wide mb-1">% Perfección</p>
+                  <p className="text-2xl font-bold tabular-nums text-zinc-900">{existingSheet.percentage}%</p>
+                </div>
               </div>
             </div>
             <div className="border-t border-zinc-700 flex items-center justify-between px-6 py-4 rounded-b-xl bg-zinc-800">

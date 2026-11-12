@@ -1036,7 +1036,7 @@ export default function DivisionDetailPage() {
                       {/* Section totals */}
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-2">Desglose de puntaje</p>
-                        <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 text-sm">
                           {parseFloat(sheet.building_total) > 0 && (
                             <div className="flex justify-between text-zinc-600">
                               <span>Elevaciones</span>

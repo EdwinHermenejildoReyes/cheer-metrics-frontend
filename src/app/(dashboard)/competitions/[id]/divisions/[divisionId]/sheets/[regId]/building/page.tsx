@@ -1514,7 +1514,7 @@ export default function BuildingSheetPage() {
             <p className="text-xs text-zinc-400 mt-0.5">Puntuado por este juez — se promedia con los otros dos jueces</p>
           </div>
 
-          <div className={`grid gap-4 ${bCfg.hasCreativity ? 'grid-cols-2' : 'grid-cols-1 max-w-md'}`}>
+          <div className={`grid gap-4 ${bCfg.hasCreativity ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 max-w-md'}`}>
             {/* Creativity (hidden for escolar_ab) */}
             {bCfg.hasCreativity && (
               <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">

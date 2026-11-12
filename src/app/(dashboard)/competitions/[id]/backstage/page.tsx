@@ -189,7 +189,7 @@ export default function BackstagePage() {
 
                   {/* Construction groups result */}
                   {groups && (
-                    <div className="grid grid-cols-3 gap-2 rounded-lg border border-zinc-100 bg-zinc-50 p-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 rounded-lg border border-zinc-100 bg-zinc-50 p-3">
                       <div className="text-center">
                         <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Mayoría</p>
                         <p className="text-2xl font-black text-zinc-900 tabular-nums">{groups.mayoria}</p>

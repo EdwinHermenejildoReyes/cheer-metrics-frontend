@@ -154,6 +154,7 @@ export default function DivisionRankingsPage() {
           </div>
         ) : (
           <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-zinc-100 bg-zinc-50">
@@ -171,6 +172,7 @@ export default function DivisionRankingsPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
 

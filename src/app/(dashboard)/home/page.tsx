@@ -94,7 +94,7 @@ function CompBreakdownCard({ comp, regs, sheeted }: {
               <div className="h-full rounded-full bg-green-500 transition-all" style={{ width: `${pct}%` }} />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {[
               { label: 'Inscripciones', value: total,   color: 'text-zinc-900' },
               { label: 'Con planilla',  value: sheeted, color: 'text-green-600' },

@@ -139,7 +139,7 @@ function ResultsPanel({ result, isJudging }: { result: ImportInscripcionResult; 
 
       {/* Stats grid */}
       {!isAborted && (
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {isJudging ? (
             <>
               {[
@@ -181,6 +181,7 @@ function ResultsPanel({ result, isJudging }: { result: ImportInscripcionResult; 
           <div className="bg-red-50 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-red-600">
             Filas con error ({result.errors.length})
           </div>
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-red-100 bg-white text-left text-xs font-medium text-zinc-500">
@@ -201,6 +202,7 @@ function ResultsPanel({ result, isJudging }: { result: ImportInscripcionResult; 
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>
