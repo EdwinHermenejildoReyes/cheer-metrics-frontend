@@ -2,6 +2,7 @@
 
 import { useRef, useState, useSyncExternalStore } from 'react';
 import { Mic } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
 
 interface SpeechRecognitionInstance {
@@ -78,7 +79,7 @@ export function VoiceTextarea({
     baseValueRef.current = value;
 
     const recognition = new SpeechRecognitionAPI();
-    recognition.lang = 'es-EC';
+    recognition.lang = 'es-ES';
     recognition.continuous = true;
     recognition.interimResults = false;
 
@@ -93,7 +94,10 @@ export function VoiceTextarea({
     };
 
     recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
+    recognition.onerror = () => {
+      setIsListening(false);
+      toast.error('No se pudo transcribir. Verifique el micrófono y la conexión.');
+    };
 
     recognitionRef.current = recognition;
     recognition.start();
