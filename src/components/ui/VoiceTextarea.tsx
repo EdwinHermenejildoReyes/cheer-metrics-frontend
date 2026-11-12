@@ -5,13 +5,17 @@ import { Mic } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
 
+interface SpeechRecognitionErrorEvent {
+  error: string;
+  message: string;
+}
 interface SpeechRecognitionInstance {
   lang: string;
   continuous: boolean;
   interimResults: boolean;
   onresult: ((event: SpeechRecognitionEvent) => void) | null;
   onend: (() => void) | null;
-  onerror: (() => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
   start(): void;
   stop(): void;
 }
@@ -80,7 +84,7 @@ export function VoiceTextarea({
 
     const recognition = new SpeechRecognitionAPI();
     recognition.lang = 'es-ES';
-    recognition.continuous = true;
+    recognition.continuous = false;
     recognition.interimResults = false;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -90,13 +94,23 @@ export function VoiceTextarea({
       const transcript = parts.join(' ').trim();
       if (!transcript) return;
       const base = baseValueRef.current;
-      onChange(base ? `${base} ${transcript}` : transcript);
+      const next = base ? `${base} ${transcript}` : transcript;
+      baseValueRef.current = next;
+      onChange(next);
     };
 
     recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       setIsListening(false);
-      toast.error('No se pudo transcribir. Verifique el micrófono y la conexión.');
+      console.error('[VoiceTextarea] SpeechRecognition error:', event.error, event.message);
+      const msgs: Record<string, string> = {
+        'network':          'Error de red — no se puede conectar con el servicio de voz.',
+        'not-allowed':      'Permiso de micrófono denegado.',
+        'service-not-allowed': 'El servicio de voz no está disponible en este navegador.',
+        'no-speech':        'No se detectó audio. Intente hablar más cerca del micrófono.',
+        'audio-capture':    'No se encontró micrófono.',
+      };
+      toast.error(msgs[event.error] ?? `Error de reconocimiento: ${event.error}`);
     };
 
     recognitionRef.current = recognition;
