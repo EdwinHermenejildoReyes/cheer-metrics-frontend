@@ -16,6 +16,7 @@ import type { BuildingConfig } from '@/lib/scoringConfig';
 import type { Division, JudgeScoreRecord, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
+import { VoiceTextarea } from '@/components/ui/VoiceTextarea';
 
 const EXEC_CATS      = ['Flyer', 'Base/Spotter', 'Transición', 'Sincronización'];
 const TOSS_EXEC_CATS = ['Flyer', 'Base/Spotter', 'Altura'];
@@ -461,7 +462,7 @@ export default function BuildingExecutionPage() {
                   <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Observaciones</span>
                 </div>
                 <div className="p-3">
-                  <AutoResizeTextarea value={stuntsNotes} onChange={setStuntsNotes} placeholder="Observaciones sobre Elevaciones..." />
+                  <VoiceTextarea value={stuntsNotes} onChange={setStuntsNotes} placeholder="Observaciones sobre Elevaciones..." rows={3} className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
                 </div>
               </div>
             </div>
@@ -478,7 +479,7 @@ export default function BuildingExecutionPage() {
                   <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Observaciones</span>
                 </div>
                 <div className="p-3">
-                  <AutoResizeTextarea value={pyramidsNotes} onChange={setPyramidsNotes} placeholder="Observaciones sobre Pirámides..." />
+                  <VoiceTextarea value={pyramidsNotes} onChange={setPyramidsNotes} placeholder="Observaciones sobre Pirámides..." rows={3} className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
                 </div>
               </div>
             </div>
@@ -495,7 +496,7 @@ export default function BuildingExecutionPage() {
                   <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Observaciones</span>
                 </div>
                 <div className="p-3">
-                  <AutoResizeTextarea value={tossesNotes} onChange={setTossesNotes} placeholder="Observaciones sobre Lanzamientos..." />
+                  <VoiceTextarea value={tossesNotes} onChange={setTossesNotes} placeholder="Observaciones sobre Lanzamientos..." rows={3} className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
                 </div>
               </div>
             </div>

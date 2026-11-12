@@ -16,6 +16,7 @@ import type { TumblingConfig } from '@/lib/scoringConfig';
 import type { Division, JudgeScoreRecord, ScoreSheet, UnpaidAthlete } from '@/types/competitions';
 import { PaymentWarningBanner } from '@/components/competitions/PaymentWarningBanner';
 import { SkillReferencePanel } from '@/components/skill-tables/SkillReferencePanel';
+import { VoiceTextarea } from '@/components/ui/VoiceTextarea';
 
 const EXEC_DED_OPTS   = [0.05, 0.10, 0.20, 0.30];
 const EXEC_DED_LABELS = ['Mínimos', 'Menores', 'Múltiples', 'Generalizados'];
@@ -451,7 +452,7 @@ export default function TumblingExecutionPage() {
                   <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Observaciones</span>
                 </div>
                 <div className="p-3">
-                  <AutoResizeTextarea value={standingNotes} onChange={setStandingNotes} placeholder="Observaciones sobre Estática..." />
+                  <VoiceTextarea value={standingNotes} onChange={setStandingNotes} placeholder="Observaciones sobre Estática..." rows={3} className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
                 </div>
               </div>
             </div>
@@ -468,7 +469,7 @@ export default function TumblingExecutionPage() {
                   <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Observaciones</span>
                 </div>
                 <div className="p-3">
-                  <AutoResizeTextarea value={runningNotes} onChange={setRunningNotes} placeholder="Observaciones sobre Con Carrera..." />
+                  <VoiceTextarea value={runningNotes} onChange={setRunningNotes} placeholder="Observaciones sobre Con Carrera..." rows={3} className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
                 </div>
               </div>
             </div>
@@ -485,7 +486,7 @@ export default function TumblingExecutionPage() {
                   <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Observaciones</span>
                 </div>
                 <div className="p-3">
-                  <AutoResizeTextarea value={jumpsNotes} onChange={setJumpsNotes} placeholder="Observaciones sobre Saltos..." />
+                  <VoiceTextarea value={jumpsNotes} onChange={setJumpsNotes} placeholder="Observaciones sobre Saltos..." rows={3} className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900" />
                 </div>
               </div>
             </div>
