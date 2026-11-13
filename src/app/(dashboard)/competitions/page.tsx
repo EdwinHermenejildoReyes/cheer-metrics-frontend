@@ -47,7 +47,7 @@ export default function CompetitionsPage() {
   const openNew = () => { setEditing(undefined); setModalOpen(true); };
 
   return (
-    <div className="flex flex-col gap-6 p-8">
+    <div className="flex flex-col gap-6 p-4 sm:p-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-zinc-900">Competencias</h1>
@@ -56,7 +56,7 @@ export default function CompetitionsPage() {
         {isAdmin && (
           <Button onClick={openNew}>
             <Plus className="h-4 w-4" />
-            Nueva competencia
+            <span className="hidden sm:inline">Nueva competencia</span>
           </Button>
         )}
       </div>
@@ -71,7 +71,53 @@ export default function CompetitionsPage() {
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
-          <div className="overflow-x-auto">
+          {/* Mobile card list */}
+          <div className="sm:hidden divide-y divide-zinc-100">
+            {competitions.filter((c) => canViewCompetition(c.id)).map((c) => (
+              <div
+                key={c.id}
+                className="flex items-center gap-3 px-4 py-3.5 cursor-pointer hover:bg-zinc-50 transition-colors"
+                onClick={() => router.push(`/competitions/${c.public_id}`)}
+              >
+                {c.organization_detail && (
+                  <div
+                    className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 overflow-hidden"
+                    style={{ backgroundColor: c.organization_detail.primary_color }}
+                  >
+                    {c.organization_detail.logo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={c.organization_detail.logo} alt="" className="h-full w-full object-contain p-0.5" />
+                    ) : (
+                      <span className="text-[10px] font-black" style={{ color: c.organization_detail.text_on_primary }}>
+                        {c.organization_detail.name.charAt(0)}
+                      </span>
+                    )}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-zinc-900 truncate">{c.name}</p>
+                  <div className="flex items-center gap-3 mt-0.5 text-xs text-zinc-500">
+                    <span className="flex items-center gap-1">
+                      <CalendarDays className="h-3 w-3" />
+                      {new Date(c.date + 'T00:00:00').toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {c.city}
+                    </span>
+                  </div>
+                </div>
+                <Badge variant="info" className="shrink-0">{c.regulation}</Badge>
+                {!isJudge && (
+                  <Button size="icon" variant="ghost" onClick={(e) => openEdit(e, c)}>
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
