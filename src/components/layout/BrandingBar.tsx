@@ -5,12 +5,14 @@ import { useBranding } from '@/contexts/BrandingContext';
 
 export function BrandingBar({ onMenuClick }: { onMenuClick: () => void }) {
   const { organization } = useBranding();
-  if (!organization) return null;
+
+  const bgColor   = organization?.primary_color   ?? '#18181b';
+  const textColor = organization?.text_on_primary ?? '#ffffff';
 
   return (
     <div
       className="flex items-center gap-3 px-4 py-2 text-sm font-semibold shrink-0"
-      style={{ backgroundColor: organization.primary_color, color: organization.text_on_primary }}
+      style={{ backgroundColor: bgColor, color: textColor }}
     >
       <button
         onClick={onMenuClick}
@@ -19,7 +21,7 @@ export function BrandingBar({ onMenuClick }: { onMenuClick: () => void }) {
       >
         <Menu className="h-5 w-5" />
       </button>
-      {organization.logo && (
+      {organization?.logo && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={organization.logo}
@@ -27,7 +29,7 @@ export function BrandingBar({ onMenuClick }: { onMenuClick: () => void }) {
           className="h-7 w-auto object-contain"
         />
       )}
-      <span>{organization.name}</span>
+      {organization && <span>{organization.name}</span>}
     </div>
   );
 }
