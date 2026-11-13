@@ -411,7 +411,7 @@ export default function CompetitionDetailPage() {
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-8">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div className="flex items-start gap-3">
           <button
             onClick={() => router.push('/competitions')}
@@ -442,7 +442,7 @@ export default function CompetitionDetailPage() {
               <div className="relative">
                 <Button variant="secondary" size="sm" onClick={() => toggleDropdown('itinerario')}>
                   <ListOrdered className="h-3.5 w-3.5" />
-                  Itinerario
+                  <span className="hidden sm:inline">Itinerario</span>
                   <ChevronDown className={`h-3 w-3 transition-transform duration-150 ${openDropdown === 'itinerario' ? 'rotate-180' : ''}`} />
                 </Button>
                 {openDropdown === 'itinerario' && (
@@ -470,7 +470,7 @@ export default function CompetitionDetailPage() {
               <div className="relative">
                 <Button variant="secondary" size="sm" onClick={() => toggleDropdown('ver')}>
                   <Trophy className="h-3.5 w-3.5" />
-                  Ver
+                  <span className="hidden sm:inline">Ver</span>
                   <ChevronDown className={`h-3 w-3 transition-transform duration-150 ${openDropdown === 'ver' ? 'rotate-180' : ''}`} />
                 </Button>
                 {openDropdown === 'ver' && (
@@ -511,7 +511,7 @@ export default function CompetitionDetailPage() {
               <div className="relative">
                 <Button variant="secondary" size="sm" onClick={() => toggleDropdown('admin')}>
                   <UserCog className="h-3.5 w-3.5" />
-                  Administrar
+                  <span className="hidden sm:inline">Administrar</span>
                   <ChevronDown className={`h-3 w-3 transition-transform duration-150 ${openDropdown === 'admin' ? 'rotate-180' : ''}`} />
                 </Button>
                 {openDropdown === 'admin' && (
@@ -547,7 +547,7 @@ export default function CompetitionDetailPage() {
 
               <Button variant="secondary" size="sm" onClick={() => setCompModalOpen(true)}>
                 <Pencil className="h-3.5 w-3.5" />
-                Editar
+                <span className="hidden sm:inline">Editar</span>
               </Button>
             </>
           )}
@@ -569,25 +569,25 @@ export default function CompetitionDetailPage() {
         {/* Active division / jornada banner */}
         {activeDivision && hasJudging && (
           <div
-            className="flex items-center gap-4 rounded-xl px-5 py-3.5 border"
+            className="flex items-center gap-2 sm:gap-4 rounded-xl px-3 sm:px-5 py-3 sm:py-3.5 border"
             style={{ backgroundColor: 'var(--brand-primary)', borderColor: 'var(--brand-primary)' }}
           >
-            <Trophy className="h-5 w-5 shrink-0" style={{ color: 'var(--brand-primary-text)', opacity: 0.7 }} />
+            <Trophy className="hidden sm:block h-5 w-5 shrink-0" style={{ color: 'var(--brand-primary-text)', opacity: 0.7 }} />
             {hasMultipleBlocks ? (
               <>
-                <div className="min-w-[80px] shrink-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
-                    Jornada en curso
+                <div className="min-w-[56px] sm:min-w-[80px] shrink-0">
+                  <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
+                    Jornada
                   </p>
                   <p className="text-sm font-bold" style={{ color: 'var(--brand-primary-text)' }}>
-                    Jornada {activeBlock}
+                    {activeBlock}
                   </p>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
+                  <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
                     División activa
                   </p>
-                  <p className="text-sm font-bold truncate" style={{ color: 'var(--brand-primary-text)' }}>
+                  <p className="text-xs sm:text-sm font-bold truncate" style={{ color: 'var(--brand-primary-text)' }}>
                     {activeDivision.name}
                     {activeDivision.sub_group && (
                       <span className="ml-2 text-xs font-semibold opacity-70">{activeDivision.sub_group}</span>
@@ -595,8 +595,8 @@ export default function CompetitionDetailPage() {
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
-                    Progreso jornada
+                  <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
+                    Progreso
                   </p>
                   <p className="text-sm font-bold tabular-nums" style={{ color: 'var(--brand-primary-text)' }}>
                     {activeBlockScored} / {activeBlockConfirmed}
@@ -606,10 +606,10 @@ export default function CompetitionDetailPage() {
             ) : (
               <>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
+                  <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
                     División en curso
                   </p>
-                  <p className="text-sm font-bold truncate" style={{ color: 'var(--brand-primary-text)' }}>
+                  <p className="text-xs sm:text-sm font-bold truncate" style={{ color: 'var(--brand-primary-text)' }}>
                     {activeDivision.name}
                     {activeDivision.sub_group && (
                       <span className="ml-2 text-xs font-semibold opacity-70">{activeDivision.sub_group}</span>
@@ -617,7 +617,7 @@ export default function CompetitionDetailPage() {
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
+                  <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--brand-primary-text)', opacity: 0.65 }}>
                     Progreso
                   </p>
                   <p className="text-sm font-bold tabular-nums" style={{ color: 'var(--brand-primary-text)' }}>
@@ -657,14 +657,14 @@ export default function CompetitionDetailPage() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                          <th className="px-5 py-3">División</th>
-                          <th className="px-5 py-3">Edad</th>
-                          <th className="px-5 py-3">Nivel</th>
-                          <th className="px-5 py-3">Categoría</th>
-                          <th className="px-5 py-3">Sistema</th>
-                          <th className="px-5 py-3">Atletas</th>
-                          {hasJudging && <th className="px-5 py-3 text-right">Progreso</th>}
-                          <th className="px-5 py-3" />
+                          <th className="px-3 sm:px-5 py-3">División</th>
+                          <th className="px-3 sm:px-5 py-3 hidden sm:table-cell">Edad</th>
+                          <th className="px-3 sm:px-5 py-3">Nivel</th>
+                          <th className="px-3 sm:px-5 py-3 hidden md:table-cell">Categoría</th>
+                          <th className="px-3 sm:px-5 py-3 hidden lg:table-cell">Sistema</th>
+                          <th className="px-3 sm:px-5 py-3 hidden lg:table-cell">Atletas</th>
+                          {hasJudging && <th className="px-3 sm:px-5 py-3 text-right">Progreso</th>}
+                          <th className="px-3 sm:px-5 py-3" />
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-zinc-100">
@@ -677,7 +677,7 @@ export default function CompetitionDetailPage() {
                               className={`cursor-pointer transition-colors ${fullyScored ? 'opacity-50 bg-zinc-50 hover:opacity-70' : isActive ? 'bg-blue-50/40 hover:bg-blue-50/70' : 'hover:bg-zinc-50'}`}
                               onClick={() => router.push(`/competitions/${id}/divisions/${div.public_id}`)}
                             >
-                              <td className="px-5 py-3.5 font-medium text-zinc-900">
+                              <td className="px-3 sm:px-5 py-3 font-medium text-zinc-900">
                                 <div className="flex items-center gap-2">
                                   {isActive && <span className="inline-block h-2 w-2 rounded-full bg-blue-500 shrink-0" />}
                                   {div.name}
@@ -688,22 +688,22 @@ export default function CompetitionDetailPage() {
                                   )}
                                 </div>
                               </td>
-                              <td className="px-5 py-3.5 text-zinc-600">{AGE_GROUP_LABELS[div.age_group]}</td>
-                              <td className="px-5 py-3.5">
+                              <td className="px-3 sm:px-5 py-3 text-zinc-600 hidden sm:table-cell">{AGE_GROUP_LABELS[div.age_group]}</td>
+                              <td className="px-3 sm:px-5 py-3">
                                 <Badge variant="violet">{SKILL_LEVEL_LABELS[div.skill_level]}</Badge>
                               </td>
-                              <td className="px-5 py-3.5 text-zinc-600">
+                              <td className="px-3 sm:px-5 py-3 text-zinc-600 hidden md:table-cell">
                                 {CATEGORY_LABELS[div.category]}
                                 {div.is_non_tumbling && <span className="ml-1.5 rounded-full bg-yellow-100 text-yellow-800 px-1.5 py-0.5 text-[10px] font-medium">NT</span>}
                               </td>
-                              <td className="px-5 py-3.5 text-xs text-zinc-500">
+                              <td className="px-3 sm:px-5 py-3 text-xs text-zinc-500 hidden lg:table-cell">
                                 {SCORING_SYSTEM_LABELS[(div.scoring_system || div.suggested_scoring_system) as ScoringSystem] ?? '–'}
                               </td>
-                              <td className="px-5 py-3.5 text-zinc-500 text-xs">
+                              <td className="px-3 sm:px-5 py-3 text-zinc-500 text-xs hidden lg:table-cell">
                                 {div.min_athletes ?? '–'} – {div.max_athletes ?? '–'}
                               </td>
                               {hasJudging && div.confirmed_count > 0 && (
-                                <td className="px-5 py-3.5 text-xs text-right tabular-nums">
+                                <td className="px-3 sm:px-5 py-3 text-xs text-right tabular-nums">
                                   {fullyScored ? (
                                     <span className="rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-semibold text-green-700">
                                       ✓ Completa
@@ -716,7 +716,7 @@ export default function CompetitionDetailPage() {
                                 </td>
                               )}
                               {!isJudge && (
-                                <td className="px-5 py-3.5 text-right">
+                                <td className="px-3 sm:px-5 py-3 text-right">
                                   <Button size="icon" variant="ghost" onClick={(e) => openEditDiv(e, div)}>
                                     <Pencil className="h-3.5 w-3.5" />
                                   </Button>
