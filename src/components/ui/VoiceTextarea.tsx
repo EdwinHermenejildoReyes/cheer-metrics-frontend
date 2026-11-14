@@ -21,6 +21,7 @@ interface SpeechRecognitionInstance {
 }
 interface SpeechRecognitionEvent {
   results: SpeechRecognitionResultList;
+  resultIndex: number;
 }
 interface SpeechRecognitionResultList {
   [index: number]: SpeechRecognitionResult;
@@ -28,6 +29,7 @@ interface SpeechRecognitionResultList {
 }
 interface SpeechRecognitionResult {
   [index: number]: SpeechRecognitionAlternative;
+  isFinal: boolean;
 }
 interface SpeechRecognitionAlternative {
   transcript: string;
@@ -114,13 +116,17 @@ export function VoiceTextarea({
       recognition.interimResults = false;
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
-        const results = event.results;
+        // Start from resultIndex to avoid reprocessing already-handled results.
+        // External mics can fire onresult multiple times before onend, each time
+        // with the full accumulated list — iterating from 0 would cause duplicates.
         const parts: string[] = [];
-        for (let i = 0; i < results.length; i++) parts.push(results[i][0].transcript);
-        const transcript = parts.join(' ').trim();
-        if (!transcript) return;
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) parts.push(event.results[i][0].transcript);
+        }
+        const newPart = parts.join(' ').trim();
+        if (!newPart) return;
         const base = baseValueRef.current;
-        const next = base ? `${base} ${transcript}` : transcript;
+        const next = base ? `${base} ${newPart}` : newPart;
         baseValueRef.current = next;
         onChange(next);
       };
